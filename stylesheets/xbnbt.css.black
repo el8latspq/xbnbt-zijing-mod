@@ -1,0 +1,1005 @@
+/* ----- xbnbt.css by =Xotic= for use with XBNBT 81b.3.5  ---- */
+
+/* ----- general ----- */
+	/* ----- standard body elements ----- */
+/*		body{background-color: #1E90FF}*/
+/*		body{background-color: #ffbc80}*/
+		body{background-color: #ccccff}
+		body{font-family: "tahoma", "arial", "helvetica", "sans-serif";}
+		body{font-size:12pt}
+		body{color:black}
+		body{font-weight:normal}
+	/* ----- standard heading elements ----- */
+	/*	h1{font-size:20pt; color: Black}*/
+		h1{font-size:18pt; color: Black}
+		h1{font-weight:normal}
+		h1{letter-spacing: 0.025cm}
+		h1{text-align:center}
+
+		h2{font-size:15pt; color: Black}
+		h2{font-weight:normal}
+		h2{letter-spacing: 0.025cm}
+		h2{text-align:center}
+
+		h3{font-size:12pt; color: Black}
+		h3{font-weight:normal}
+		h3{letter-spacing: 0.025cm}
+		h3{text-align:center}
+		h3{white-space:normal}
+		
+		h4{font-size:9pt; color: Black}
+		h4{font-weight:normal}
+		h4{letter-spacing: 0.025cm}
+		h4{text-align:center}
+	/* ----- standard text elements ----- */
+		p{font-family: "tahoma", "arial", "helvetica", "sans-serif";}
+		p{font-size:9pt}
+		p{color:black}
+	/*	p{font-weight:bold}*/
+		span{font-size:9pt}
+	/*	span{font-weight:bold}*/
+	/* ----- standard hypertext elements ----- */
+		a{text-decoration:underline}
+		a{font-size:9pt}
+		a{font-weight:bold}
+		a{color:black}
+		a:hover{text-decoration:underline}
+		a:hover{color:red}
+	/*	a:hover{color:#404040}		*/
+	/* ----- standard input elements ----- */
+		input{font-family: "tahoma", "arial", "helvetica", "sans-serif";}
+		input{font-size:9pt}
+		input{overflow:hidden}
+		textarea{font-family: "tahoma", "arial", "helvetica", "sans-serif";}
+		textarea{font-size:9pt}
+		iframe{width:100%; height:42px}
+		iframe{border-width:0px}
+		iframe{overflow:hidden} 
+	/* ----- standard image elements ----- */
+		img{border-width:0px}
+		img{vertical-align:top}
+		img{max-width:750px}
+	/* ----- standard table elements ----- */
+		table{margin-left:auto; margin-right:auto}
+		table{border-width:2pt}
+		table{border-collapse:collapse}
+	/*	table{background-color:#dee3e7}*/
+		table{background-color:#efefef}
+	/*	table{border:2px solid #ffa24a } ----- optional border around entire table ----- */
+	/* ----- standard table rows ----- */
+		tr{}
+	/* ----- standard table headers ----- */
+/*		th{background-color:#ffa24a}*/
+		th{background-color:#8080ff}
+	/*	th{white-space:nowrap}*/
+		th{white-space:normal}
+		th{font-family: "tahoma", "arial", "helvetica", "sans-serif";}
+		th{font-size:9pt}
+	/*	th{font-weight:bold}*/
+		th{color:black}
+		th{padding: 5px 5px 5px 5px}
+		th{border:1px solid black}
+		th{vertical-align:middle}
+	/* ----- standard table data ----- */
+		td{font-size:9pt}
+		td{padding: 5px 10px 5px 10px}
+		td{white-space:nowrap}
+		td{border:1px solid black}
+
+		code{font-family: "tahoma", "arial", "helvetica", "sans-serif";}
+		code{font-size:9pt}
+	/* ----- specific text elements ----- */
+		p.delete{text-align:center}
+		p.deleted{text-align:center}
+		p.search_results{text-align:center}
+		p.search_filter{text-align:center}
+		p.results{font-family: "tahoma", "arial", "helvetica", "sans-serif"; font-size:9pt; text-align:center}
+		p.denied{text-align:center}
+		p.unauthorized{text-align:center}
+		p.js_warning{text-align:center; font-size:medium}
+		p.redirect{text-align:center}
+		p.not_exist{text-align:center}
+	/* ----- specific hypertext elements ----- */
+		a.top_title{font-size:16pt}
+		a.top_title{text-decoration:none}
+		a.top_title:hover{text-decoration:none}
+		a.sort{font-size:8pt}
+		a.sort{color:red}
+		a.sort:hover{color:white}
+		a.hot{color:red}
+		a.hot{text-decoration:none}
+		a.hot:hover{text-decoration:underline}
+		a.classic_level_1{color:#9400d3}
+		a.classic_level_1{text-decoration:none}
+		a.classic_level_1:hover{text-decoration:underline}
+		a.classic_level_2{color:#820084}
+		a.classic_level_2{text-decoration:none}
+		a.classic_level_2:hover{text-decoration:underline}
+		a.classic_level_3{color:#77b300}
+		a.classic_level_3{text-decoration:none}
+		a.classic_level_3:hover{text-decoration:underline}
+		a.req{color:red}
+		a.req{text-decoration:none}
+		a.req:hover{text-decoration:underline}
+		a.noreq{color:blue}
+		a.noreq{text-decoration:none}
+		a.noreq:hover{text-decoration:underline}
+		a.bookmark{color:green}
+		a.bookmark{text-decoration:none}
+		a.bookmark:hover{text-decoration:underline}
+		a.friend{color:#8B008B}
+		a.friend{text-decoration:none}
+		a.friend:hover{text-decoration:underline}
+		a.black{color:black}
+		a.black{text-decoration:none}
+		a.black:hover{text-decoration:underline}
+		a.red{color:red}
+		a.red{text-decoration:none}
+		a.red:hover{text-decoration:underline}
+		a.green{color:green}
+		a.green{text-decoration:none}
+		a.green:hover{text-decoration:underline}
+		a.blue{color:blue}
+		a.blue{text-decoration:none}
+		a.blue:hover{text-decoration:underline}
+		a.rss_valid{}
+		a.rss_valid:hover{}			
+		a.username{color: blue}
+		a.username{text-decoration:none}
+		a.username:hover{text-decoration:underline}
+		a.friends{color: #ff8c00}
+/*		a.friends{font-size: 8pt}*/
+		a.friends{text-decoration:none}
+		a.friends:hover{text-decoration:none}
+		a.retired{color: #1cc6d5}
+/*		a.retired{font-size: 8pt}*/
+		a.retired{text-decoration:none}
+		a.retired:hover{text-decoration:none}
+		a.vip{color: #009f00}
+/*		a.vip{font-size: 8pt}*/
+		a.vip{text-decoration:none}
+		a.vip:hover{text-decoration:none}
+		a.leader{color: #a0522d}
+/*		a.leader{font-size: 8pt}*/
+		a.leader{text-decoration:none}
+		a.leader:hover{text-decoration:none}
+		a.admin{color: #4b0082}
+/*		a.admin{font-size: 8pt}*/
+		a.admin{text-decoration:none}
+		a.admin:hover{text-decoration:none}
+		a.moderator{color: #0066ff}
+/*		a.moderator{font-size: 8pt}*/
+		a.moderator{text-decoration:none}
+		a.moderator:hover{text-decoration:none}
+		a.uploader{color: #dc143c}
+/*		a.uploader{font-size: 8pt}*/
+		a.uploader{text-decoration:none}
+		a.uploader:hover{text-decoration:none}
+		a.member{color: black}
+/*		a.member{font-size: 8pt}*/
+		a.member{text-decoration:none}
+		a.member:hover{text-decoration:none}
+		a.share_warned{color: #708090}
+/*		a.share_warned{font-size: 8pt}*/
+		a.share_warned{text-decoration:none}
+		a.share_warned:hover{text-decoration:none}
+		a.number{text-decoration:none}
+		a.number:hover{text-decoration:underline}
+	/* ----- specific div elements ----- */
+	/* ----- specific table elements ----- */
+		table.quote{margin:5px 0px 5px 0px}
+		table.top_header{width:100%}
+		table.top_bar{width:100%}
+		table.top_bar{border:1px solid black}
+		table.top_bar{margin-top:10px;margin-bottom:10px}
+	/* ----- specific table rows ----- */
+		tr.top_header{background-color:#ccccff}
+		tr.own{background-color:#bbaf9b}
+		tr.even{background-color:#dee3e7}
+		tr.odd{background-color:#efefef}
+		tr.top_bar{background-color:#efefef}
+	/* --- specific table headers --- */
+		th.tag{background-color:#8080ff}
+		th.name{background-color:#8080ff}
+		th.download{background-color:#8080ff}
+		th.number{background-color:#8080ff}
+		th.date{background-color:#8080ff}
+		th.bytes{background-color:#8080ff}
+		th.percent{background-color:#8080ff; white-space:nowrap}
+		th.uploader{background-color:#8080ff}
+	/* ----- specific table data ----- */
+		td.top_avatar{background:#ccccff}
+		td.top_avatar{border:0px}
+		td.top_avatar{text-align:center}
+		td.top_avatar{padding: 0px 5px 0px 5px}
+		td.static_header{background:#ccccff}
+		td.static_header{border:0px}
+		td.static_header{width:100%}
+		td.static_header{text-align:center}
+		
+		td.quote{background-color: #efefef}
+		td.quote{border:1px black dotted}
+		td.quote{white-space: normal}
+
+		td.even{background-color:#dee3e7}
+		td.odd{background-color:#efefef}
+
+		td.top_login{text-align:left}
+		td.top_login{width:100%}
+		td.top_login{border:0px}
+		td.top_tool{text-align:right}
+		td.top_tool{vertical-align:top}
+		td.top_tool{border:0px}
+
+		td.tag{font-size:9pt}
+		td.tag{text-align:center}
+		td.tag{padding:0px 0px 0px 0px}
+		
+		td.admin{font-size:9pt}
+		td.admin{text-align:center}
+		td.admin{padding: 5px 5px 5px 5px}
+			
+		td.hash{font-size:9pt}
+		td.hash{text-align:left}
+
+		td.name{font-size:9pt}
+		td.name{border-right:0px}
+		td.name{padding: 5px 0px 5px 5px}
+		td.name{white-space:normal} /* change to normal to wrap long lines */
+		td.name{text-align:left}
+
+		td.uploader{font-size:9pt}
+		td.uploader{text-align:center}
+		td.uploader{padding: 5px 5px 5px 5px}
+
+		td.download{font-size:9pt}
+		td.download{border-left:0px}
+/*		td.download{text-align:center}*/
+		td.download{text-align:right}
+		td.download{padding: 5px 5px 5px 5px}
+
+		td.number{font-size:9pt}
+		td.number{text-align:center}
+		td.number{padding: 5px 5px 5px 5px}
+
+		td.number_red{color:red}
+		td.number_red{text-align:center}
+		td.number_red{font-size:9pt}
+		td.number_red{padding: 5px 5px 5px 5px}
+		td.number_red{border:1px solid black}
+
+		td.number_green{color:green}
+		td.number_green{text-align:center}
+		td.number_green{font-size:9pt}
+		td.number_green{padding: 5px 5px 5px 5px}
+		td.number_green{border:1px solid black}
+
+		td.number_blue{color:blue}
+		td.number_blue{text-align:center}
+		td.number_blue{font-size:9pt}
+		td.number_blue{padding: 5px 5px 5px 5px}
+		td.number_blue{border:1px solid black}
+
+		td.percent{font-size:9pt}
+		td.percent{text-align:center; white-space:nowrap}
+
+		td.date{font-size:9pt}
+		td.date{white-space:normal}
+		td.date{text-align:center}
+		td.date{padding: 5px 5px 5px 5px}
+
+		td.bytes{font-size:9pt}
+		td.bytes{text-align:center}
+		td.bytes{white-space:normal}
+		td.bytes{padding: 5px 5px 5px 5px}
+
+	/* ----- specific image elements ----- */
+		img.avatar{width: 200px}
+		img.avatar{margin:0px 0px 0px 0px}
+		img.percent{border-width: 0px; white-space:nowrap}
+		img.tag{border-width: 0px}
+		img.code{margin:2px 2px 2px 2px} 
+	/* ----- specific span elements ----- */
+		span.top_subtitle{font-size:9pt}
+		span.top_subtitle{vertical-align:bottom}
+		span.pipe{color:#ccccff}
+		span.pagenum_pipe{color:black}
+		span.underlined{text-decoration:underline}
+		span.nowrap{white-space:normal}
+		span.ip{color:blue}
+		span.filtered_by{color:black}
+		span.search_results_alt{text-align:center}		
+		span.top_login1{font-size:9pt}
+/*		span.top_login1{font-weight:bold}*/
+		span.top_login2{font-size:9pt}
+/*		span.top_login2{font-weight:bold}*/
+		span.friends{color: #ff8c00}
+		span.friends{font-weight: bold}
+/*		span.friends{font-size: 8pt}*/
+		span.retired{color: #1cc6d5}
+		span.retired{font-weight: bold}
+/*		span.retired{font-size: 8pt}*/
+		span.vip{color: #009f00}
+		span.vip{font-weight: bold}
+/*		span.vip{font-size: 8pt}*/
+		span.leader{color: #a0522d}
+		span.leader{font-weight: bold}
+/*		span.leader{font-size: 8pt}*/
+		span.admin{color: #4b0082}
+		span.admin{font-weight: bold}
+/*		span.admin{font-size: 8pt}*/
+		span.moderator{color: #0066ff}
+		span.moderator{font-weight: bold}
+/*		span.moderator{font-size: 8pt}*/
+		span.uploader{color: #dc143c}
+		span.uploader{font-weight: bold}
+/*		span.uploader{font-size: 8pt}*/
+		span.member{color: black}
+		span.member{font-weight: bold}
+/*		span.member{font-size: 8pt}*/
+		span.share_warned{color: #708090}
+		span.share_warned{font-weight: bold}
+/*		span.share_warned{font-size: 8pt}*/
+		span.black{color:black}
+		span.blue{color:blue}
+		span.green{color:green}
+		span.red{color:red}
+		span.italic{font-style:italic}
+		span.user_title{color: red; font-weight: bold}
+	/* ----- specific fieldset elements ----- */	
+		fieldset.quote{margin:5px 0px 5px 0px}
+		fieldset.quote{background-color: #efefef}
+		fieldset.quote{border:1px black dotted}
+		fieldset.quote{white-space: normal}
+		legend{background-color: #efefef}
+		legend{border:1px black dotted}
+
+/* ----- header  ----- */
+		div.static_header{}
+		hr.header{}
+
+/* ----- footer  ----- */
+		hr.footer{}
+
+/* ----- navbar  ----- */
+		table.navbar{margin-top: 5px}
+		table.navbar{margin-bottom: 5px}
+		table.navbar{background-color: #f5f4eb}
+	/*	tr.navbar{background-color: #ccccff}*/
+		td.navbar_index{border: 0px}
+		a.navbar_index{font-size: 10pt}
+		td.navbar_login{border: 0px}
+		a.navbar_login{font-size: 10pt}
+		td.navbar_offer{border: 0px}
+		a.navbar_offer{font-size: 10pt}
+		td.navbar_upload{border: 0px}
+		a.navbar_upload{font-size: 10pt}
+		td.navbar_logout{border: 0px}
+		a.navbar_logout{font-size: 10pt}
+		td.navbar_signup{border: 0px}
+		a.navbar_signup{font-size: 10pt}
+		td.navbar_rss{border: 0px}
+		a.navbar_rss{font-size: 10pt}
+		td.navbar_xml{border: 0px}
+		a.navbar_xml{font-size: 10pt}
+		td.navbar_info{border: 0px}
+		a.navbar_info{font-size: 10pt}
+		td.navbar_rules{border: 0px}
+		a.navbar_rules{font-size: 10pt}
+		td.navbar_faq{border: 0px}
+		a.navbar_faq{font-size: 10pt}
+		td.navbar_staff{border: 0px}
+		a.navbar_staff{font-size: 10pt}
+		td.navbar_log{border: 0px}
+		a.navbar_log{font-size: 10pt}
+		td.navbar_admin{border: 0px}
+		a.navbar_admin{font-size: 10pt}
+		td.navbar_users{border: 0px}
+		a.navbar_users{font-size: 10pt}
+		td.navbar_tags{border: 0px}
+		a.navbar_tags{font-size: 10pt}
+		td.navbar_language{border: 0px}
+		a.navbar_language{font-size: 10pt}
+		td.navbar_xstats{border: 0px}
+		a.navbar_xstats{font-size: 10pt}
+		td.navbar_xtorrent{border: 0px}
+		a.navbar_xtorrent{font-size: 10pt}
+		a.navbar_rules{color: blue}
+		a.navbar_faq{color: red}
+		
+/* ----- index.html  ----- */
+	/* ----- navbar ----- */
+
+
+	/* ----- footer ----- */
+		p.links{text-align:center} /* used in footer.html */
+		p.users_online{color:blue; text-align:center}
+		p.powered_by{text-align:center}
+		p.gen_index{text-align:center}
+		p.html_valid_index{text-align:center}
+	/* ----- specific ----- */
+		table.main_table{width:100%}
+		table.main_table{background-color: #f5f4eb}
+		table.torrent_table{text-align:center}
+		table.index_filter{text-align:left}
+		table.index_filter{background-color: #f5f4eb}
+		table.index_announce{margin-top: 5px; margin-bottom: 5px}
+		table.index_messages_unread{margin-top: 5px; margin-bottom: 5px}
+		table.index_warned{margin-top: 5px; margin-bottom: 5px}
+		table.index_ratio_warned{margin-top: 5px; margin-bottom: 5px}
+		tr.top_global{background-color:#A2A2FF}
+/*		tr.top_global{background-color:#ccccff}*/
+		tr.top{background-color:#ccccff}
+		tr.top_float{background-color:#dee3e7}
+		tr.normal{background-color:#efefef}
+	/*	tr.top{background-color:#dee3e7}*/
+	/*	tr.normal:hover{background-color:#dee3e7}*/
+	/*	tr.hl{background-color:#dee3e7}*/
+		tr.hl{background-color:#efefef}
+	/*	tr.hl:hover{background-color:#dee3e7}*/
+		td.main_table_torrent{padding: 10px 10px 10px 10px}
+		td.index_announce{background-color: blue}
+		td.index_announce{border: 0px}
+		td.index_messages_unread{background-color: red}
+		td.index_messages_unread{border: 0px}
+		td.index_warned{background-color: red}
+		td.index_warned{color: white; font-weight: bold}
+		td.index_warned{border: 0px}
+		td.index_ratio_warned{background-color: yellow}
+		td.index_ratio_warned{color: black; font-weight: bold}
+		td.index_ratio_warned{border: 0px}
+		td.index_filter{border: 0px}
+		td.index_filter{padding: 5px 2px 5px 2px}
+		td.index_filter_selected{border: 0px}
+		td.index_filter_selected{padding: 5px 2px 5px 2px}
+		td.index_filter_selected{background-color:#ccccff}
+		a.stats{color:black}
+		a.stats{font-size:9pt}
+		a.stats{text-decoration:none}
+		a.stats:hover{text-decoration:underline}
+		a.stats_top{color:black}
+		a.stats_top{font-size:9pt}
+		a.stats_top{text-decoration:none}
+		a.stats_top:hover{text-decoration:underline}
+		a.stats_free{color:blue}
+		a.stats_free{font-size:9pt}
+		a.stats_free{text-decoration:none}
+		a.stats_free:hover{text-decoration:underline}
+		a.stats_hl{color:#9400d3}
+		a.stats_hl{font-size:9pt}
+		a.stats_hl{text-decoration:none}
+		a.stats_hl:hover{text-decoration:underline}
+		a.index_announce{color: white}
+		a.index_announce{text-decoration:none}
+		a.index_messages_unread{color: white}
+		a.index_messages_unread{text-decoration:none}
+		a.index_filter{text-decoration:none}
+		a.filter_by{text-decoration:none}
+		a.imdb{font-size:8pt;font-weight:normal}
+	/*	a.table_header{color:white}*/
+		a.number6_green{color:green; vertical-align:middle}
+		a.number6_green{text-decoration:none}
+		a.number6_green:hover{text-decoration:underline}
+		a.number6_blue{color:blue; vertical-align:middle}
+		a.number6_blue{text-decoration:none}
+		a.number6_blue:hover{text-decoration:underline}
+		div.index_filter{text-align:center}
+		div.torrent_delete{text-align:center}
+		p.pagenum_top{color:blue; text-align:center}
+		p.pagenum_bottom{color:blue; text-align:center}
+		p.pagenum_top_bar{color:blue; text-align:center; white-space: normal}
+		p.subfilter{color:blue; text-align:center}
+		form.search_index_top{text-align:center}
+		form.search_index{text-align:center}
+		p.no_files{text-align:center; font-size:large; color:Red}
+
+		span.hot{font-size:9pt}
+		span.hot{color:red}
+		span.hot{font-weight:bold}
+		span.new{font-size:9pt}
+		span.new{color:red}
+		span.new{font-weight:bold}
+		span.req{font-size:9pt}
+		span.req{color:red}
+		span.req{font-weight:bold}
+		span.classic_level_1{color:#9400d3}
+		span.classic_level_1{font-weight:bold}
+		span.classic_level_2{color:#820084}
+		span.classic_level_2{font-weight:bold}
+		span.classic_level_3{color:#77b300}
+		span.classic_level_3{font-weight:bold}
+		span.top{color:red}
+		span.top{font-size:9pt}
+		span.top{font-weight:bold}
+		
+		span.number6{font-size:8pt; color:black; vertical-align:middle}
+		span.number6_red{font-size:8pt; color:red; vertical-align:middle}
+		span.number6_green{font-size:8pt; color:green; vertical-align:middle}
+		span.number6_blue{font-size:8pt; color:blue; vertical-align:middle}
+
+		span.free_down_free{background:blue}
+		span.free_down_free{padding-left:3px; padding-right:3px}
+		span.free_down_free{color:white}
+		span.free_down{background:darkorange}
+		span.free_down{padding-left:3px; padding-right:3px}
+		span.free_down{color:white}
+		span.free_up{background:green}
+		span.free_up{padding-left:3px; padding-right:3px}
+		span.free_up{color:white}
+/* ----- users.html ----- */
+	/* ----- navbar ----- */
+
+					
+		/* ----- specific ----- */
+		p.pagenum_top_users{text-align:center}
+		p.pagenum_bottom_users{text-align:center; color:blue; white-space: normal}
+		p.pagenum_top_bar_users{text-align:center}
+		form.search_users_top{text-align:center}
+		form.search_users{text-align:center}
+		p.search_users{text-align:center}
+		p.no_users{color:red; font-size:large; text-align:center}
+		div.users_table{text-align:center}
+		div.create_users{text-align:center}
+		div.input_create_users{text-align:left}
+		div.create_users_buttons{text-align:center}
+		div.edit_users{text-align:center}
+		div.edit_users_button{text-align:center}
+/*		div.edit_input_users{text-align:left}*/
+		table.create_users{border:0px solid black}
+		table.edit_users{border:0px solid black}
+		th.username{padding: 5px 5px 5px 5px}
+		th.access{padding: 5px 5px 5px 5px}
+		th.group{padding: 5px 5px 5px 5px}
+		th.mail{padding: 5px 5px 5px 5px}
+/*		th.create_users{text-align:right}*/
+		th.create_users{vertical-align:top}
+		th.create_users{white-space:nowrap}
+		th.create_users{padding: 5px 10px 5px 10px}
+/*		th.edit_users{text-align:right}*/
+		th.edit_users{vertical-align:top}
+		th.edit_users{white-space:nowrap}
+		th.edit_users{padding: 5px 10px 5px 10px}
+		tr.create_users{}
+		tr.edit_users{}
+		td.create_users{text-align:left}
+		td.create_users{white-space:normal}
+		td.edit_users{text-align:left}
+		td.edit_users{white-space:normal}
+		td.username{padding: 5px 5px 5px 5px}
+		td.access{padding: 5px 5px 5px 5px}
+		td.group{padding: 5px 5px 5px 5px}
+		td.mail{padding: 5px 5px 5px 5px}
+		td.username{text-align:left}
+		p.return_users{text-align:center}
+		p.gen_users{text-align:center}
+		p.html_valid_users{text-align:center}
+		p.failed_message_users{text-align:center}
+		p.created_message_users{text-align:center}
+		p.create_users{text-align:center}
+		p.edit_users{text-align:left}
+		p.deleted_users{text-align:center}
+		
+		span.search_users{}
+		hr.users_hr{}
+
+/* ----- login.html ----- */
+	/* ----- navbar ----- */
+
+					
+	/* ----- specific ----- */
+		div.bonus_function{text-align:center}
+		p.bonustrade{text-align:center}
+		p.invite{text-align:center}
+		form.search_login_top{text-align:center}
+		form.search_login{text-align:center}
+		p.logout{text-align:center}
+		div.login_table{text-align:center}
+		div.login_button{text-align:center}
+		p.return_login{text-align:center}
+		p.gen_login{text-align:center}
+		p.html_valid_login{text-align:center}
+		form.get_user_perpage{text-align:center}
+		tr.user_detail{background-color:#f5f4eb}
+		td.user_table{text-align:left}
+		td.user_detail{border:0px}
+		td.torrent_name{text-align:left}
+		td.torrent_name{white-space:normal}
+		td.torrent_name{padding: 5px 5px 5px 5px}
+
+/* ----- log.html ----- */
+	/* ----- specific ----- */
+		a.log{text-decoration: none}
+		a.log{color: blue}
+		p.logtitle{text-align:left}
+		p.logtitle{font-size: 15px}
+		p.logtitle{font-weight: bold}
+		table.log_main{width: 800px}
+		table.log_table{width: 100%}
+		table.log_table{border: 0px}
+		td.log_top{padding: 0px 0px 0px 0px}
+		td.log_title{background-color: #f5f4eb}
+		td.log_title{border: 0px}
+		td.log_title{padding: 0px 0px 0px 0px}
+		td.log_table{border: 0px}
+		td.log_table{padding: 0px 0px 0px 0px}
+		td.log_name{border: 0px}
+		td.log_name{width: 100%}
+		td.log_content{white-space:normal}
+		td.log_content{word-wrap:break-word}
+
+
+/* ----- admin.html ----- */
+	/* ----- navbar ----- */
+		
+					
+	/* ----- specific ----- */
+		a.tracker_reset{color:red}
+		a.tracker_reset:hover{color:white}
+		a.tracker_kill{color:red}
+		a.tracker_kill:hover{color:white}			
+		a.count_peers{color:red}
+		a.count_peers:hover{color:white}
+		p.tracker_kill{text-align:center}
+		p.tracker_kill_warning{color:red; font-size:large; text-align:center}
+		p.updated_rss{text-align:center}
+		p.update_rss_files{text-align:center}
+		p.admin_free_rule{text-align:right}
+		p.admin_access{text-align:right}
+		p.admin_add_gift{text-align:left}
+		tr.admin_functions{background-color:#f5f4eb}
+		td.admin_functions{border:0px}
+		td.admin_function{text-align:center}
+		td.admin_free_rule{text-align:left}
+		td.tracker_link_type{font-size:9pt}
+		td.tracker_link_type{text-align:center; background-color:#dee3e7}
+		td.tracker_connection{font-size:9pt}
+		td.tracker_connection{text-align:center; background-color:#efefef}
+		td.tracker_reset{font-size:9pt}
+		td.tracker_reset{text-align:center}
+		div.admin_table{text-align:center}
+		div.admin_access{text-align:center}
+		p.return_admin{text-align:center}
+		p.gen_admin{text-align:center}
+		p.html_valid_admin{text-align:center}	
+		p.admin_links_message{text-align:center}
+		p.admin_not_owner{text-align:center}
+		p.button_list{text-align:center}
+		
+/* ----- comments.html ----- */
+	/* ----- navbar ----- */
+
+				
+	/* ----- specific ----- */
+		p.return_comments{text-align:center}
+		p.gen_comments{text-align:center}
+		p.html_valid_comments{text-align:center}
+		div.comments_table{text-align:center}
+		tr.com_body{background-color:#dee3e7}
+		tr.com_header{background-color:#f5f4eb}
+		td.com_body{text-align:left}
+		td.com_body{white-space:normal}
+		td.com_body{word-wrap:break-word}
+		td.com_header{text-align:left}
+		td.com_header{border:0px}
+		div.comments_table_posted{text-align:center}
+		p.comments_table_posted{text-align:center}
+		table.comments_table_posted{width: 600px}
+		p.comments_posted{text-align:center}
+		p.fill_all{text-align:center}
+		div.comments_info_table{text-align:center}
+		p.comments_info_table{text-align:center}
+		table.comments_info_table{border:0px solid black}
+		tr.comments_info_table{}
+		td.comments_info_table{text-align:left}
+		div.comments_table{text-align:center}
+		p.comments_table{text-align:center}
+		table.comments_table{}
+		tr.comments_table{}
+		td.comments_table{text-align:left}
+		div.comments_table_post{text-align:center}
+		p.comments_table_post{text-align:center}
+		table.comments_table_post{border:0px solid black}
+		tr.comments_table_post{}
+		td.comments_table_post{text-align:left}
+		div.comments_table_post_button{text-align:center}	
+
+/* ----- messages.html ----- */
+		table.messages_table_posted{width:800px}
+		tr.messages_read{background-color:#dee3e7}
+		tr.messages_body{background-color:#dee3e7}
+		td.messages_body{white-space:normal}
+		td.messages_body{word-wrap:break-word}
+		td.messages_title{width:100%}
+		td.messages_delete{text-align:right}
+
+		p.messages_table_post{text-align:center}
+		p.messages_table_posted{text-align:center}
+		p.messages_posted{text-align:center}
+		div.messages_table_post_button{text-align:center}	
+
+/* ----- info.html ----- */
+	/* ----- navbar ----- */
+
+				
+	/* ----- specific ----- */
+		a.post{font-size:9pt}
+		a.post{color:purple}
+		a.post{text-decoration:none}
+		a.post:hover{text-decoration:underline}
+		table.post_info_table{width:100%}
+		table.post_table{width:100%}
+/*		table.post_table{border:1px solid black}*/
+		div.info_table{text-align:center}
+		div.change_post{text-align:center}
+		div.change_post_button{text-align:center}
+
+
+		p.changed_post{text-align:center}
+		p.return_info{text-align:center}
+		p.gen_info{text-align:center}
+		p.html_valid_info{text-align:center}
+/*		tr.info_tracker_version{background-color:#dee3e7}*/
+/*		tr.info_server_time{background-color:#efefef}*/
+/*		tr.info_uptime{background-color:#dee3e7}*/
+/*		tr.info_tracker_title{background-color:#efefef}*/
+/*		tr.info_tracker_desc{background-color:#dee3e7}*/
+/*		tr.info_forced_announce_url{background-color:#efefef}*/
+/*		tr.info_announce_url{background-color:#dee3e7}*/
+/*		tr.info_torrent_size{background-color:#efefef}*/
+/*		tr.info_torrents{background-color:#dee3e7}*/
+/*		tr.info_rss{background-color:#efefef}*/
+/*		tr.info_total_peers{background-color:#dee3e7}*/
+/*		tr.info_unique_peers{background-color:#efefef}*/
+/*		tr.info_reg_users{background-color:#dee3e7}*/
+/*		tr.info_stats_announces{background-color:#efefef}*/
+/*		tr.info_stats_scrapes{background-color:#dee3e7}*/
+		tr.post_info{background-color: #f5f4eb}
+		tr.postheader{background-color: #efefef}
+		tr.postheader_read{background-color: #dee3e7}
+		tr.postheader_read{border:1px solid black}
+		td.post{border: 0px}
+		td.post{width: 100%}
+		td.post{padding-right: 0px}
+		td.post{vertical-align: top}
+		td.posttime{border:0px}
+		td.posttime{padding: 5px 5px 5px 5px}
+		td.postname{border:0px}
+		td.postname{width: 100%}
+		td.postname{padding: 5px 5px 5px 5px}
+		td.postadmin{border:0px}
+		td.postadmin{padding: 5px 5px 5px 5px}
+		td.postcontent{white-space: normal}
+		td.postcontent{background-color: #dee3e7}
+		td.info{border: 0px}
+		td.info{padding-left: 0px}
+		td.info{vertical-align: top}
+		td.info_field{text-align:left}
+		td.change_post{text-align:left}
+		td.change_post{white-space:normal}
+		td.change_post{word-wrap:break-word}
+		th.change_post{text-align:right}
+		th.change_post{vertical-align:top}
+		th.change_post{white-space:nowrap}
+		th.change_post{padding: 5px 10px 5px 10px}
+		th.info_field{text-align:right}
+		th.info_field{white-space: nowrap}
+
+/* ----- rules.html ----- */
+	/* ----- specific ----- */
+		div.change_rules{text-align:center}
+		div.change_rules_button{text-align:center}
+		a.rules{text-decoration: none}
+		a.rules{color: blue}
+		p.rulestitle{text-align:left}
+		p.rulestitle{font-size: 15px}
+		p.rulestitle{font-weight: bold}
+		p.change_rules_input{text-align:left}
+		p.changed_rules{text-align:center}
+		table.rules_main{width: 800px}
+		table.rules_table{width: 100%}
+		table.rules_table{border: 0px}
+		td.change_rules{text-align:left}
+		td.change_rules{white-space:normal}
+		td.change_rules{word-wrap:break-word}
+		th.change_rules{text-align:right}
+		th.change_rules{vertical-align:top}
+		th.change_rules{white-space:nowrap}
+		th.change_rules{padding: 5px 10px 5px 10px}
+		td.rules_top{padding: 0px 0px 0px 0px}
+		td.rules_title{background-color: #f5f4eb}
+		td.rules_title{border: 0px}
+		td.rules_title{padding: 0px 0px 0px 0px}
+		td.rules_table{border: 0px}
+		td.rules_table{padding: 0px 0px 0px 0px}
+		td.rules_name{border: 0px}
+		td.rules_name{width: 100%}
+		td.rules_admin{border: 0px}
+		td.rules_admin{text-align: center}
+		td.rules_content{white-space:normal}
+		td.rules_content{word-wrap:break-word}
+		
+/* ----- faq.html ----- */
+	/* ----- specific ----- */
+		div.change_faq{text-align:center}
+		div.change_faq_button{text-align:center}
+		a.faq{text-decoration: none}
+		a.faq{color: blue}
+		p.faqtitle{text-align:left}
+		p.faqtitle{font-size: 15px}
+		p.faqtitle{font-weight: bold}
+		p.change_faq_input{text-align:left}
+		p.changed_faq{text-align:center}
+		table.faq_main{width: 800px}
+		table.faq_table{width: 100%}
+		table.faq_table{border: 0px}
+		td.change_faq{text-align:left}
+		td.change_faq{white-space:normal}
+		td.change_faq{word-wrap:break-word}
+		th.change_faq{text-align:right}
+		th.change_faq{vertical-align:top}
+		th.change_faq{white-space:nowrap}
+		th.change_faq{padding: 5px 10px 5px 10px}
+		td.faq_top{padding: 0px 0px 0px 0px}
+		td.faq_title{background-color: #f5f4eb}
+		td.faq_title{border: 0px}
+		td.faq_title{padding: 0px 0px 0px 0px}
+		td.faq_table{border: 0px}
+		td.faq_table{padding: 0px 0px 0px 0px}
+		td.faq_name{border: 0px}
+		td.faq_name{width: 100%}
+		td.faq_admin{border: 0px}
+		td.faq_admin{text-align: center}
+		td.faq_content{white-space:normal}
+		td.faq_content{word-wrap:break-word}
+
+/* ----- messages.html ----- */
+	/* ----- specific ----- */		
+		th.messages_table_post{text-align:right}
+		th.messages_table_post{vertical-align:top}
+		th.messages_table_post{white-space:nowrap}
+		th.messages_table_post{padding: 5px 10px 5px 10px}
+
+/* ----- staff.html ----- */
+	/* ----- specific ----- */
+		table.staff_main{width: 800px}
+		table.staff_table{width: 100%}
+		table.staff_table{border: 0px}
+		p.stafftitle{text-align:left}
+		p.stafftitle{font-size: 15px}
+		p.stafftitle{font-weight: bold}
+		td.staff_title{background-color: #f5f4eb}
+		td.staff_title{border: 0px}
+		td.staff_title{padding: 0px 0px 0px 0px}
+		td.staff_table{padding: 0px 0px 0px 0px}
+		td.staff{border: 0px}
+
+/* ----- stats.html ----- */
+	/* ----- navbar ----- */
+
+					
+	/* ----- specific ----- */
+		td.path{text-align:left}
+		td.ip{text-align:center}
+		td.connected{text-align:right}
+		div.stats_table{text-align:center}	
+		p.contents{}
+		p.seeders{}
+		p.file_comment{}
+		p.file_info{}
+		table.file_info{width:800px}
+		table.change_info{width:800px}
+		table.change_info{border:0px solid black}
+		table.changed_stats{border:0px solid black}
+	/*	table.file_info{background-color: #efefef}*/
+	
+		td.file_info{text-align:left}
+		td.file_info{white-space:normal}
+		td.file_info{width: 100%}
+		td.file_info{word-wrap:break-word}
+		th.file_info{text-align:right}
+		th.file_info{vertical-align:top}
+		th.file_info{white-space:nowrap}
+		th.file_info{padding: 5px 10px 5px 10px}
+
+		td.change_info{text-align:left}
+		td.change_info{white-space:normal}
+		td.change_info{width: 100%}
+		td.change_info{word-wrap:break-word}
+		th.change_info{text-align:right}
+		th.change_info{vertical-align:top}
+		th.change_info{white-space:nowrap}
+		th.change_info{padding: 5px 10px 5px 10px}
+		tr.file_comment{background-color:#dee3e7}
+		td.file_comment{text-align:left}
+		p.return_stats{text-align:center}
+		p.gen_stats{text-align:center}
+		p.html_valid_stats{text-align:center}
+		div.changed_stats{text-align:center}
+		li.changed_stats{text-align:left}
+		p.changed_stats{text-align:center}
+		div.change_info{text-align:center}
+		div.change_info_button{text-align:center}
+		p.change_info{}
+		a.dynstat_link{}
+		a.dynstat_link:hover{color:green}
+		a.download_link{color:black}
+		a.download_link{text-decoration:none}
+		a.download_link:hover{color:red}
+		a.download_link:hover{text-decoration:underline}
+		a.delete_link{color:black}
+		a.delete_link:hover{color:red}
+		td.ip{padding: 5px 5px 5px 5px}
+		td.client{padding: 5px 5px 5px 5px}
+		td.percent{padding: 5px 5px 5px 5px}
+		td.updated{padding: 5px 5px 5px 5px}
+		td.connected{padding: 5px 5px 5px 5px}
+		th.ip{background-color:#8080ff}
+		th.client{background-color:#8080ff}
+		th.connected{background-color:#8080ff}
+		hr.stats_hr{}
+		td.upload_sub{padding: 0px 0px 0px 0px}
+		table.subs{width:100%}
+		tr.subs{padding: 0px 0px 0px 0px}
+		td.subs{border-width:0px}
+		td.subs{text-align:left}
+		td.subs{padding: 0px 0px 0px 0px}
+		table.stats_version{width:100%}
+		td.file_info_version{text-align:center}
+		td.torrent_name_version{width:100%}
+		td.torrent_name_version{text-align:left}
+		td.torrent_name_version{white-space:normal}
+		td.torrent_name_version{padding: 5px 5px 5px 5px}
+		
+/* ----- upload.html ----- */
+	/* ----- navbar ----- */
+
+					
+	/* ----- specific ----- */
+		p.failed{color:red; font-size:x-large; text-align:center}
+		p.success{color:green; font-size:x-large; text-align:center}
+		p.return{text-align:center}
+		div.seeding_instructions{text-align:center}
+		table.seeding_instructions{border:0px solid black}
+		table.seeding_instructions_note{border:0px solid black}
+		p.seeding_instructions_head{font-size:large; text-align:center}
+		p.seeding_instructions_lead{text-align:left}
+		p.seeding_instructions{text-align:center}
+		li.seeding_instructions{text-align:left}
+		p.return_upload{text-align:center}
+		p.gen_upload{text-align:center}
+		p.html_valid_upload{text-align:center}
+		p.body_upload{text-align:center}
+		div.torrent_upload{text-align:center}
+		p.torrent_upload{text-align:left}
+		p.torrent_upload_category{text-align:left}
+		table.torrent_upload{border:0px solid black}
+		table.torrent_upload{width:800px}
+		td.torrent_upload{text-align:left}
+		td.torrent_upload{white-space:normal}
+		td.torrent_upload{width: 100%}
+		td.torrent_upload{word-wrap:break-word}
+		th.torrent_upload{text-align:right}
+		th.torrent_upload{vertical-align:top}
+		th.torrent_upload{white-space:nowrap}
+		th.torrent_upload{padding: 5px 10px 5px 10px}
+		li.torrent_upload{text-align:left; font-weight:normal}
+		li.announce{text-align:left}
+	
+/* ----- signup.html ----- */
+	/* ----- navbar ----- */
+
+					
+	/* ----- specific ----- */	
+/*		div.signup_form{text-align:center}*/
+		div.signup_form_button{text-align:center}
+		div.signup_input{text-align:left}
+/*		table.signup_form{border:0px solid black; text-align:left}*/
+		li.signup{text-align:left}
+		p.signup_form{text-align:left}
+		p.signup_form_header{text-align:center}		
+		p.signup_form_button{text-align:left}
+		p.return_signup{text-align:center}
+		p.gen_signup{text-align:center}
+		p.html_valid_signup{text-align:center}
+		p.signup_failed{text-align:center}
+		p.signup_ok{text-align:center}
