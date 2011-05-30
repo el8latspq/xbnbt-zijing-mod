@@ -603,12 +603,37 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 									else
 										UTIL_DeleteFile( string( m_strAllowedDir + vecQuery[1] ).c_str( ) );
 								}
-								if( bOffer )
-									UTIL_LogFilePrint( "deleteOffer: %s deleted offer %s\n", pRequest->user.strLogin.c_str( ), vecQuery[1].c_str( ) );
-								else
-									UTIL_LogFilePrint( "deleteTorrent: %s deleted torrent %s\n", pRequest->user.strLogin.c_str( ), vecQuery[1].c_str( ) );
 							}
 
+							if( !bOffer )
+							{
+								CMySQLQuery *pQueryUsers = new CMySQLQuery( "SELECT buid FROM bookmarks WHERE bid=" + cstrDelID );
+		
+								vector<string> vecQueryUsers;
+							
+								vecQueryUsers.reserve(1);
+
+								vecQueryUsers = pQueryUsers->nextRow( );
+								
+								while( vecQueryUsers.size( ) == 1 && !vecQueryUsers[0].empty( ) )
+								{
+									if( !pRequest->user.strUID.empty( ) && vecQuery[2] != vecQueryUsers[0] )
+									{
+										string strTitle = gmapLANG_CFG["admin_delete_torrent_title"];
+										string strMessage = UTIL_Xsprintf( gmapLANG_CFG["admin_delete_torrent_bookmarked"].c_str( ), UTIL_AccessToString( pRequest->user.ucAccess ).c_str( ), pRequest->user.strLogin.c_str( ), vecQuery[1].c_str( ), "" );
+										sendMessage( "", "0", vecQueryUsers[0], "127.0.0.1", strTitle, strMessage );
+									}
+
+									vecQueryUsers = pQueryUsers->nextRow( );
+								}
+
+								delete pQueryUsers;
+							}
+
+							if( bOffer )
+								UTIL_LogFilePrint( "deleteOffer: %s deleted offer %s\n", pRequest->user.strLogin.c_str( ), vecQuery[1].c_str( ) );
+							else
+								UTIL_LogFilePrint( "deleteTorrent: %s deleted torrent %s\n", pRequest->user.strLogin.c_str( ), vecQuery[1].c_str( ) );
 							// Delete the torrent entry from the databases
 
 							deleteTag( cstrDelID, bOffer );
@@ -1027,7 +1052,11 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 		{
 			pResponse->strContent += "<td class=\"user_detail\"><a class=\"user_detail\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?show=friends\">" + gmapLANG_CFG["user_detail_friends"] + "</td>\n";
 			pResponse->strContent += "<td class=\"user_detail\"><a class=\"user_detail\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?show=friendeds\">" + gmapLANG_CFG["user_detail_friendeds"] + "</td>\n";
-			pResponse->strContent += "<td class=\"user_detail\"><a class=\"user_detail\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?show=invites\">" + gmapLANG_CFG["user_detail_invites"] + "</td>\n";
+		}
+
+		if( ( pRequest->user.ucAccess & m_ucAccessAdmin ) || pRequest->user.strUID == user.strUID )
+		{
+			pResponse->strContent += "<td class=\"user_detail\"><a class=\"user_detail\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?uid=" + user.strUID + "&amp;show=invites\">" + gmapLANG_CFG["user_detail_invites"] + "</td>\n";
 		}
 		
 		pResponse->strContent += "</tr></table>\n<p>\n";
@@ -1269,59 +1298,62 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 		}
 		else if( cstrDetailShow == "invites" )
 		{
-			if( pRequest->user.strUID == user.strUID && ( pRequest->user.ucAccess & m_ucAccessView ) )
+			if( ( pRequest->user.strUID == user.strUID && ( pRequest->user.ucAccess & m_ucAccessView ) ) || ( pRequest->user.ucAccess & m_ucAccessAdmin ) )
 			{
 				const string cstrInvite( pRequest->mapParams["invite"] );
 				
-				if( cstrInvite.empty( ) )
+				if( pRequest->user.strUID == user.strUID )
 				{
-					pResponse->strContent += "<div class=\"invite_function\">\n";
-					pResponse->strContent += "<form name=\"invite\" method=\"get\" action=\"" + string( RESPONSE_STR_LOGIN_HTML ) + "\" onSubmit=\"return validate( this )\">";
-					pResponse->strContent += "<p class=\"invite\"><input name=\"show\" type=hidden value=\"" + cstrDetailShow + "\"></p>\n";
-					pResponse->strContent += "<p class=\"invite\"><span>" + UTIL_Xsprintf( gmapLANG_CFG["invite_function_invites_left"].c_str( ), string( "<span class=\"red\">" + user.strInvites + "</span>" ).c_str( ) );
-					pResponse->strContent += "<input name=\"invite\"alt=\"[" + gmapLANG_CFG["invite_function_create_invite"] + "]\" type=submit value=\"" + gmapLANG_CFG["invite_function_create_invite"] + "\"";
-					if( CFG_GetInt( "bnbt_invite_enable", 0 ) == 0 || !( user.ucAccess & m_ucAccessInvites ) || (unsigned int)atoi( user.strInvites.c_str( ) ) == 0 || ( m_bRatioRestrict && checkShareRatio( user.ulDownloaded, user.flShareRatio ) ) )
-						pResponse->strContent += " disabled=\"yes\"";
-					pResponse->strContent += ">";
-					if( CFG_GetInt( "bnbt_invite_enable", 0 ) == 0 || !( user.ucAccess & m_ucAccessInvites ) )
-						pResponse->strContent += "<span class=\"red\">" + gmapLANG_CFG["invite_function_invite_close"] + "</span>";
-					pResponse->strContent += "</span></p>";
-
-					pResponse->strContent += "</form>\n</div>\n";
-				}
-				else
-				{
-					if( pRequest->mapParams["invite"] == gmapLANG_CFG["invite_function_create_invite"] )
+					if( cstrInvite.empty( ) )
 					{
-						if( (unsigned int)atoi( user.strInvites.c_str( ) ) > 0 && CFG_GetInt( "bnbt_invite_enable", 0 ) == 1 && ( user.ucAccess & m_ucAccessInvites ) && !( m_bRatioRestrict && checkShareRatio( user.ulDownloaded, user.flShareRatio ) ) )
+						pResponse->strContent += "<div class=\"invite_function\">\n";
+						pResponse->strContent += "<form name=\"invite\" method=\"get\" action=\"" + string( RESPONSE_STR_LOGIN_HTML ) + "\" onSubmit=\"return validate( this )\">";
+						pResponse->strContent += "<p class=\"invite\"><input name=\"show\" type=hidden value=\"" + cstrDetailShow + "\"></p>\n";
+						pResponse->strContent += "<p class=\"invite\"><span>" + UTIL_Xsprintf( gmapLANG_CFG["invite_function_invites_left"].c_str( ), string( "<span class=\"red\">" + user.strInvites + "</span>" ).c_str( ) );
+						pResponse->strContent += "<input name=\"invite\"alt=\"[" + gmapLANG_CFG["invite_function_create_invite"] + "]\" type=submit value=\"" + gmapLANG_CFG["invite_function_create_invite"] + "\"";
+						if( CFG_GetInt( "bnbt_invite_enable", 0 ) == 0 || !( user.ucAccess & m_ucAccessInvites ) || (unsigned int)atoi( user.strInvites.c_str( ) ) == 0 || ( m_bRatioRestrict && checkShareRatio( user.ulDownloaded, user.flShareRatio ) ) )
+							pResponse->strContent += " disabled=\"yes\"";
+						pResponse->strContent += ">";
+						if( CFG_GetInt( "bnbt_invite_enable", 0 ) == 0 || !( user.ucAccess & m_ucAccessInvites ) )
+							pResponse->strContent += "<span class=\"red\">" + gmapLANG_CFG["invite_function_invite_close"] + "</span>";
+						pResponse->strContent += "</span></p>";
+
+						pResponse->strContent += "</form>\n</div>\n";
+					}
+					else
+					{
+						if( pRequest->mapParams["invite"] == gmapLANG_CFG["invite_function_create_invite"] )
 						{
-							unsigned char szMD5[16];
-							memset( szMD5, 0, sizeof( szMD5 ) / sizeof( unsigned char ) );
-							MD5_CTX md5;
+							if( (unsigned int)atoi( user.strInvites.c_str( ) ) > 0 && CFG_GetInt( "bnbt_invite_enable", 0 ) == 1 && ( user.ucAccess & m_ucAccessInvites ) && !( m_bRatioRestrict && checkShareRatio( user.ulDownloaded, user.flShareRatio ) ) )
+							{
+								unsigned char szMD5[16];
+								memset( szMD5, 0, sizeof( szMD5 ) / sizeof( unsigned char ) );
+								MD5_CTX md5;
 
-							time_t tNow = time( 0 );
-							char pTime[256];
-							memset( pTime, 0, sizeof( pTime ) / sizeof( char ) );
-							strftime( pTime, sizeof( pTime ) / sizeof( char ), "%Y-%m-%d %H:%M:%S", localtime( &tNow ) );
-							const string cstrA1( user.strLogin + ":" + gstrRealm + ":" + pTime );
+								time_t tNow = time( 0 );
+								char pTime[256];
+								memset( pTime, 0, sizeof( pTime ) / sizeof( char ) );
+								strftime( pTime, sizeof( pTime ) / sizeof( char ), "%Y-%m-%d %H:%M:%S", localtime( &tNow ) );
+								const string cstrA1( user.strLogin + ":" + gstrRealm + ":" + pTime );
 
-							MD5Init( &md5 );
-							MD5Update( &md5, (const unsigned char *)cstrA1.c_str( ), (unsigned int)cstrA1.size( ) );
-							MD5Final( szMD5, &md5 );
+								MD5Init( &md5 );
+								MD5Update( &md5, (const unsigned char *)cstrA1.c_str( ), (unsigned int)cstrA1.size( ) );
+								MD5Final( szMD5, &md5 );
+								
+								CMySQLQuery mq01( "INSERT INTO invites (bcode,bownerid,bcreated) VALUES(\'" + UTIL_StringToMySQL( UTIL_HashToString( string( (char *)szMD5, sizeof( szMD5 ) / sizeof( unsigned char ) ) ) ) + "\'," + UTIL_StringToMySQL( user.strUID ) + ",NOW())" );
+								CMySQLQuery mq02( "UPDATE users SET binvites=binvites-1 WHERE buid=" + user.strUID + " AND binvites>0" );
+							}
 							
-							CMySQLQuery mq01( "INSERT INTO invites (bcode,bownerid,bcreated) VALUES(\'" + UTIL_StringToMySQL( UTIL_HashToString( string( (char *)szMD5, sizeof( szMD5 ) / sizeof( unsigned char ) ) ) ) + "\'," + UTIL_StringToMySQL( user.strUID ) + ",NOW())" );
-							CMySQLQuery mq02( "UPDATE users SET binvites=binvites-1 WHERE buid=" + user.strUID + " AND binvites>0" );
+							pResponse->strContent += "<script type=\"text/javascript\">\n";
+							pResponse->strContent += "<!--\n";
+							
+							pResponse->strContent += "window.location=\"" + RESPONSE_STR_LOGIN_HTML + "?show=invites\"\n";
+
+							pResponse->strContent += "//-->\n";
+							pResponse->strContent += "</script>\n\n";
+
+							return;
 						}
-						
-						pResponse->strContent += "<script type=\"text/javascript\">\n";
-						pResponse->strContent += "<!--\n";
-						
-						pResponse->strContent += "window.location=\"" + RESPONSE_STR_LOGIN_HTML + "?show=invites\"\n";
-
-						pResponse->strContent += "//-->\n";
-						pResponse->strContent += "</script>\n\n";
-
-						return;
 					}
 				}
 				
@@ -2058,16 +2090,16 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 								if( pTorrents[ulKey].iFreeDown != 100 )
 								{
 									if( pTorrents[ulKey].iDefaultDown == 0 && !( bFreeGlobal && iFreeDownGlobal == 0 ) )
-										pResponse->strContent += " <span class=\"free_down_free\" title=\"" + gmapLANG_CFG["free_down_free"] + "\">" + gmapLANG_CFG["free_down_free_short"] + "</span>";
+										pResponse->strContent += "<span class=\"free_down_free\" title=\"" + gmapLANG_CFG["free_down_free"] + "\">" + gmapLANG_CFG["free_down_free_short"] + "</span>";
 									else if( pTorrents[ulKey].iFreeDown > 0 )
-										pResponse->strContent += " <span class=\"free_down\" title=\"" + UTIL_Xsprintf( gmapLANG_CFG["free_down"].c_str( ), CAtomInt( pTorrents[ulKey].iFreeDown ).toString( ).c_str( ) ) + "\">" + UTIL_Xsprintf( gmapLANG_CFG["free_down_short"].c_str( ), CAtomInt( pTorrents[ulKey].iFreeDown ).toString( ).c_str( ) )+ "</span>";
+										pResponse->strContent += "<span class=\"free_down\" title=\"" + UTIL_Xsprintf( gmapLANG_CFG["free_down"].c_str( ), CAtomInt( pTorrents[ulKey].iFreeDown ).toString( ).c_str( ) ) + "\">" + UTIL_Xsprintf( gmapLANG_CFG["free_down_short"].c_str( ), CAtomInt( pTorrents[ulKey].iFreeDown ).toString( ).c_str( ) )+ "</span>";
 								}
 								if( pTorrents[ulKey].iFreeUp != 100 )
-									pResponse->strContent += " <span class=\"free_up\" title=\"" + UTIL_Xsprintf( gmapLANG_CFG["free_up"].c_str( ), CAtomInt( pTorrents[ulKey].iFreeUp ).toString( ).c_str( ) ) + "\"> " + UTIL_Xsprintf( gmapLANG_CFG["free_up_short"].c_str( ), CAtomInt( pTorrents[ulKey].iFreeUp ).toString( ).c_str( ) )+ "</span>";
+									pResponse->strContent += "<span class=\"free_up\" title=\"" + UTIL_Xsprintf( gmapLANG_CFG["free_up"].c_str( ), CAtomInt( pTorrents[ulKey].iFreeUp ).toString( ).c_str( ) ) + "\"> " + UTIL_Xsprintf( gmapLANG_CFG["free_up_short"].c_str( ), CAtomInt( pTorrents[ulKey].iFreeUp ).toString( ).c_str( ) )+ "</span>";
 								if( day_left >= 0 && ( pTorrents[ulKey].iDefaultDown > pTorrents[ulKey].iFreeDown || pTorrents[ulKey].iDefaultUp < pTorrents[ulKey].iFreeUp ) )
 								{
-									pResponse->strContent += "<span title=\"" + gmapLANG_CFG["free_recover"];
-									pResponse->strContent += UTIL_Xsprintf( gmapLANG_CFG["free_down"].c_str( ), CAtomInt( pTorrents[ulKey].iDefaultDown ).toString( ).c_str( ) ) + UTIL_Xsprintf( gmapLANG_CFG["free_up"].c_str( ), CAtomInt( pTorrents[ulKey].iDefaultUp ).toString( ).c_str( ) ) + "\"> ";
+									pResponse->strContent += "<span class=\"free_recover\" title=\"" + gmapLANG_CFG["free_recover"];
+									pResponse->strContent += UTIL_Xsprintf( gmapLANG_CFG["free_down"].c_str( ), CAtomInt( pTorrents[ulKey].iDefaultDown ).toString( ).c_str( ) ) + UTIL_Xsprintf( gmapLANG_CFG["free_up"].c_str( ), CAtomInt( pTorrents[ulKey].iDefaultUp ).toString( ).c_str( ) ) + "\">";
 									if( day_left > 0 )
 										pResponse->strContent += UTIL_Xsprintf( gmapLANG_CFG["free_day_left"].c_str( ), CAtomInt( day_left ).toString( ).c_str( ), CAtomInt( hour_left ).toString( ).c_str( ) );
 									else if( hour_left > 0 )
@@ -2329,16 +2361,16 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 									if( pTorrents[ulKey].iFreeDown != 100 )
 									{
 										if( pTorrents[ulKey].iDefaultDown == 0 && !( bFreeGlobal && iFreeDownGlobal == 0 ) )
-											pResponse->strContent += " <span class=\"free_down_free\" title=\"" + gmapLANG_CFG["free_down_free"] + "\">" + gmapLANG_CFG["free_down_free_short"] + "</span>";
+											pResponse->strContent += "<span class=\"free_down_free\" title=\"" + gmapLANG_CFG["free_down_free"] + "\">" + gmapLANG_CFG["free_down_free_short"] + "</span>";
 										else if( pTorrents[ulKey].iFreeDown > 0 )
-											pResponse->strContent += " <span class=\"free_down\" title=\"" + UTIL_Xsprintf( gmapLANG_CFG["free_down"].c_str( ), CAtomInt( pTorrents[ulKey].iFreeDown ).toString( ).c_str( ) ) + "\">" + UTIL_Xsprintf( gmapLANG_CFG["free_down_short"].c_str( ), CAtomInt( pTorrents[ulKey].iFreeDown ).toString( ).c_str( ) )+ "</span>";
+											pResponse->strContent += "<span class=\"free_down\" title=\"" + UTIL_Xsprintf( gmapLANG_CFG["free_down"].c_str( ), CAtomInt( pTorrents[ulKey].iFreeDown ).toString( ).c_str( ) ) + "\">" + UTIL_Xsprintf( gmapLANG_CFG["free_down_short"].c_str( ), CAtomInt( pTorrents[ulKey].iFreeDown ).toString( ).c_str( ) )+ "</span>";
 									}
 									if( pTorrents[ulKey].iFreeUp != 100 )
-										pResponse->strContent += " <span class=\"free_up\" title=\"" + UTIL_Xsprintf( gmapLANG_CFG["free_up"].c_str( ), CAtomInt( pTorrents[ulKey].iFreeUp ).toString( ).c_str( ) ) + "\"> " + UTIL_Xsprintf( gmapLANG_CFG["free_up_short"].c_str( ), CAtomInt( pTorrents[ulKey].iFreeUp ).toString( ).c_str( ) )+ "</span>";
+										pResponse->strContent += "<span class=\"free_up\" title=\"" + UTIL_Xsprintf( gmapLANG_CFG["free_up"].c_str( ), CAtomInt( pTorrents[ulKey].iFreeUp ).toString( ).c_str( ) ) + "\"> " + UTIL_Xsprintf( gmapLANG_CFG["free_up_short"].c_str( ), CAtomInt( pTorrents[ulKey].iFreeUp ).toString( ).c_str( ) )+ "</span>";
 									if( day_left >= 0 && ( pTorrents[ulKey].iDefaultDown > pTorrents[ulKey].iFreeDown || pTorrents[ulKey].iDefaultUp < pTorrents[ulKey].iFreeUp ) )
 									{
-										pResponse->strContent += "<span title=\"" + gmapLANG_CFG["free_recover"];
-										pResponse->strContent += UTIL_Xsprintf( gmapLANG_CFG["free_down"].c_str( ), CAtomInt( pTorrents[ulKey].iDefaultDown ).toString( ).c_str( ) ) + UTIL_Xsprintf( gmapLANG_CFG["free_up"].c_str( ), CAtomInt( pTorrents[ulKey].iDefaultUp ).toString( ).c_str( ) ) + "\"> ";
+										pResponse->strContent += "<span class=\"free_recover\" title=\"" + gmapLANG_CFG["free_recover"];
+										pResponse->strContent += UTIL_Xsprintf( gmapLANG_CFG["free_down"].c_str( ), CAtomInt( pTorrents[ulKey].iDefaultDown ).toString( ).c_str( ) ) + UTIL_Xsprintf( gmapLANG_CFG["free_up"].c_str( ), CAtomInt( pTorrents[ulKey].iDefaultUp ).toString( ).c_str( ) ) + "\">";
 										if( day_left > 0 )
 											pResponse->strContent += UTIL_Xsprintf( gmapLANG_CFG["free_day_left"].c_str( ), CAtomInt( day_left ).toString( ).c_str( ), CAtomInt( hour_left ).toString( ).c_str( ) );
 										else if( hour_left > 0 )
@@ -2589,16 +2621,16 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 										if( pTorrents[ulKey].iFreeDown != 100 )
 										{
 											if( pTorrents[ulKey].iDefaultDown == 0 && !( bFreeGlobal && iFreeDownGlobal == 0 ) )
-												pResponse->strContent += " <span class=\"free_down_free\" title=\"" + gmapLANG_CFG["free_down_free"] + "\">" + gmapLANG_CFG["free_down_free_short"] + "</span>";
+												pResponse->strContent += "<span class=\"free_down_free\" title=\"" + gmapLANG_CFG["free_down_free"] + "\">" + gmapLANG_CFG["free_down_free_short"] + "</span>";
 											else if( pTorrents[ulKey].iFreeDown > 0 )
-												pResponse->strContent += " <span class=\"free_down\" title=\"" + UTIL_Xsprintf( gmapLANG_CFG["free_down"].c_str( ), CAtomInt( pTorrents[ulKey].iFreeDown ).toString( ).c_str( ) ) + "\">" + UTIL_Xsprintf( gmapLANG_CFG["free_down_short"].c_str( ), CAtomInt( pTorrents[ulKey].iFreeDown ).toString( ).c_str( ) )+ "</span>";
+												pResponse->strContent += "<span class=\"free_down\" title=\"" + UTIL_Xsprintf( gmapLANG_CFG["free_down"].c_str( ), CAtomInt( pTorrents[ulKey].iFreeDown ).toString( ).c_str( ) ) + "\">" + UTIL_Xsprintf( gmapLANG_CFG["free_down_short"].c_str( ), CAtomInt( pTorrents[ulKey].iFreeDown ).toString( ).c_str( ) )+ "</span>";
 										}
 										if( pTorrents[ulKey].iFreeUp != 100 )
-											pResponse->strContent += " <span class=\"free_up\" title=\"" + UTIL_Xsprintf( gmapLANG_CFG["free_up"].c_str( ), CAtomInt( pTorrents[ulKey].iFreeUp ).toString( ).c_str( ) ) + "\"> " + UTIL_Xsprintf( gmapLANG_CFG["free_up_short"].c_str( ), CAtomInt( pTorrents[ulKey].iFreeUp ).toString( ).c_str( ) )+ "</span>";
+											pResponse->strContent += "<span class=\"free_up\" title=\"" + UTIL_Xsprintf( gmapLANG_CFG["free_up"].c_str( ), CAtomInt( pTorrents[ulKey].iFreeUp ).toString( ).c_str( ) ) + "\"> " + UTIL_Xsprintf( gmapLANG_CFG["free_up_short"].c_str( ), CAtomInt( pTorrents[ulKey].iFreeUp ).toString( ).c_str( ) )+ "</span>";
 										if( day_left >= 0 && ( pTorrents[ulKey].iDefaultDown > pTorrents[ulKey].iFreeDown || pTorrents[ulKey].iDefaultUp < pTorrents[ulKey].iFreeUp ) )
 										{
-											pResponse->strContent += "<span title=\"" + gmapLANG_CFG["free_recover"];
-											pResponse->strContent += UTIL_Xsprintf( gmapLANG_CFG["free_down"].c_str( ), CAtomInt( pTorrents[ulKey].iDefaultDown ).toString( ).c_str( ) ) + UTIL_Xsprintf( gmapLANG_CFG["free_up"].c_str( ), CAtomInt( pTorrents[ulKey].iDefaultUp ).toString( ).c_str( ) ) + "\"> ";
+											pResponse->strContent += "<span class=\"free_recover\" title=\"" + gmapLANG_CFG["free_recover"];
+											pResponse->strContent += UTIL_Xsprintf( gmapLANG_CFG["free_down"].c_str( ), CAtomInt( pTorrents[ulKey].iDefaultDown ).toString( ).c_str( ) ) + UTIL_Xsprintf( gmapLANG_CFG["free_up"].c_str( ), CAtomInt( pTorrents[ulKey].iDefaultUp ).toString( ).c_str( ) ) + "\">";
 											if( day_left > 0 )
 												pResponse->strContent += UTIL_Xsprintf( gmapLANG_CFG["free_day_left"].c_str( ), CAtomInt( day_left ).toString( ).c_str( ), CAtomInt( hour_left ).toString( ).c_str( ) );
 											else if( hour_left > 0 )
@@ -2854,16 +2886,16 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 										if( pTorrents[ulKey].iFreeDown != 100 )
 										{
 											if( pTorrents[ulKey].iDefaultDown == 0 && !( bFreeGlobal && iFreeDownGlobal == 0 ) )
-												pResponse->strContent += " <span class=\"free_down_free\" title=\"" + gmapLANG_CFG["free_down_free"] + "\">" + gmapLANG_CFG["free_down_free_short"] + "</span>";
+												pResponse->strContent += "<span class=\"free_down_free\" title=\"" + gmapLANG_CFG["free_down_free"] + "\">" + gmapLANG_CFG["free_down_free_short"] + "</span>";
 											else if( pTorrents[ulKey].iFreeDown > 0 )
-												pResponse->strContent += " <span class=\"free_down\" title=\"" + UTIL_Xsprintf( gmapLANG_CFG["free_down"].c_str( ), CAtomInt( pTorrents[ulKey].iFreeDown ).toString( ).c_str( ) ) + "\">" + UTIL_Xsprintf( gmapLANG_CFG["free_down_short"].c_str( ), CAtomInt( pTorrents[ulKey].iFreeDown ).toString( ).c_str( ) )+ "</span>";
+												pResponse->strContent += "<span class=\"free_down\" title=\"" + UTIL_Xsprintf( gmapLANG_CFG["free_down"].c_str( ), CAtomInt( pTorrents[ulKey].iFreeDown ).toString( ).c_str( ) ) + "\">" + UTIL_Xsprintf( gmapLANG_CFG["free_down_short"].c_str( ), CAtomInt( pTorrents[ulKey].iFreeDown ).toString( ).c_str( ) )+ "</span>";
 										}
 										if( pTorrents[ulKey].iFreeUp != 100 )
-											pResponse->strContent += " <span class=\"free_up\" title=\"" + UTIL_Xsprintf( gmapLANG_CFG["free_up"].c_str( ), CAtomInt( pTorrents[ulKey].iFreeUp ).toString( ).c_str( ) ) + "\"> " + UTIL_Xsprintf( gmapLANG_CFG["free_up_short"].c_str( ), CAtomInt( pTorrents[ulKey].iFreeUp ).toString( ).c_str( ) )+ "</span>";
+											pResponse->strContent += "<span class=\"free_up\" title=\"" + UTIL_Xsprintf( gmapLANG_CFG["free_up"].c_str( ), CAtomInt( pTorrents[ulKey].iFreeUp ).toString( ).c_str( ) ) + "\"> " + UTIL_Xsprintf( gmapLANG_CFG["free_up_short"].c_str( ), CAtomInt( pTorrents[ulKey].iFreeUp ).toString( ).c_str( ) )+ "</span>";
 										if( day_left >= 0 && ( pTorrents[ulKey].iDefaultDown > pTorrents[ulKey].iFreeDown || pTorrents[ulKey].iDefaultUp < pTorrents[ulKey].iFreeUp ) )
 										{
-											pResponse->strContent += "<span title=\"" + gmapLANG_CFG["free_recover"];
-											pResponse->strContent += UTIL_Xsprintf( gmapLANG_CFG["free_down"].c_str( ), CAtomInt( pTorrents[ulKey].iDefaultDown ).toString( ).c_str( ) ) + UTIL_Xsprintf( gmapLANG_CFG["free_up"].c_str( ), CAtomInt( pTorrents[ulKey].iDefaultUp ).toString( ).c_str( ) ) + "\"> ";
+											pResponse->strContent += "<span class=\"free_recover\" title=\"" + gmapLANG_CFG["free_recover"];
+											pResponse->strContent += UTIL_Xsprintf( gmapLANG_CFG["free_down"].c_str( ), CAtomInt( pTorrents[ulKey].iDefaultDown ).toString( ).c_str( ) ) + UTIL_Xsprintf( gmapLANG_CFG["free_up"].c_str( ), CAtomInt( pTorrents[ulKey].iDefaultUp ).toString( ).c_str( ) ) + "\">";
 											if( day_left > 0 )
 												pResponse->strContent += UTIL_Xsprintf( gmapLANG_CFG["free_day_left"].c_str( ), CAtomInt( day_left ).toString( ).c_str( ), CAtomInt( hour_left ).toString( ).c_str( ) );
 											else if( hour_left > 0 )
@@ -3142,17 +3174,17 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 										if( pTorrents[ulKey].iFreeDown != 100 )
 										{
 											if( pTorrents[ulKey].iDefaultDown == 0 && !( bFreeGlobal && iFreeDownGlobal == 0 ) )
-												pResponse->strContent += " <span class=\"free_down_free\" title=\"" + gmapLANG_CFG["free_down_free"] + "\">" + gmapLANG_CFG["free_down_free_short"] + "</span>";
+												pResponse->strContent += "<span class=\"free_down_free\" title=\"" + gmapLANG_CFG["free_down_free"] + "\">" + gmapLANG_CFG["free_down_free_short"] + "</span>";
 											else if( pTorrents[ulKey].iFreeDown > 0 )
-												pResponse->strContent += " <span class=\"free_down\" title=\"" + UTIL_Xsprintf( gmapLANG_CFG["free_down"].c_str( ), CAtomInt( pTorrents[ulKey].iFreeDown ).toString( ).c_str( ) ) + "\">" + UTIL_Xsprintf( gmapLANG_CFG["free_down_short"].c_str( ), CAtomInt( pTorrents[ulKey].iFreeDown ).toString( ).c_str( ) )+ "</span>";
+												pResponse->strContent += "<span class=\"free_down\" title=\"" + UTIL_Xsprintf( gmapLANG_CFG["free_down"].c_str( ), CAtomInt( pTorrents[ulKey].iFreeDown ).toString( ).c_str( ) ) + "\">" + UTIL_Xsprintf( gmapLANG_CFG["free_down_short"].c_str( ), CAtomInt( pTorrents[ulKey].iFreeDown ).toString( ).c_str( ) )+ "</span>";
 										}
 										if( pTorrents[ulKey].iFreeUp != 100 )
 
-											pResponse->strContent += " <span class=\"free_up\" title=\"" + UTIL_Xsprintf( gmapLANG_CFG["free_up"].c_str( ), CAtomInt( pTorrents[ulKey].iFreeUp ).toString( ).c_str( ) ) + "\"> " + UTIL_Xsprintf( gmapLANG_CFG["free_up_short"].c_str( ), CAtomInt( pTorrents[ulKey].iFreeUp ).toString( ).c_str( ) )+ "</span>";
+											pResponse->strContent += "<span class=\"free_up\" title=\"" + UTIL_Xsprintf( gmapLANG_CFG["free_up"].c_str( ), CAtomInt( pTorrents[ulKey].iFreeUp ).toString( ).c_str( ) ) + "\"> " + UTIL_Xsprintf( gmapLANG_CFG["free_up_short"].c_str( ), CAtomInt( pTorrents[ulKey].iFreeUp ).toString( ).c_str( ) )+ "</span>";
 										if( day_left >= 0 && ( pTorrents[ulKey].iDefaultDown > pTorrents[ulKey].iFreeDown || pTorrents[ulKey].iDefaultUp < pTorrents[ulKey].iFreeUp ) )
 										{
-											pResponse->strContent += "<span title=\"" + gmapLANG_CFG["free_recover"];
-											pResponse->strContent += UTIL_Xsprintf( gmapLANG_CFG["free_down"].c_str( ), CAtomInt( pTorrents[ulKey].iDefaultDown ).toString( ).c_str( ) ) + UTIL_Xsprintf( gmapLANG_CFG["free_up"].c_str( ), CAtomInt( pTorrents[ulKey].iDefaultUp ).toString( ).c_str( ) ) + "\"> ";
+											pResponse->strContent += "<span class=\"free_recover\" title=\"" + gmapLANG_CFG["free_recover"];
+											pResponse->strContent += UTIL_Xsprintf( gmapLANG_CFG["free_down"].c_str( ), CAtomInt( pTorrents[ulKey].iDefaultDown ).toString( ).c_str( ) ) + UTIL_Xsprintf( gmapLANG_CFG["free_up"].c_str( ), CAtomInt( pTorrents[ulKey].iDefaultUp ).toString( ).c_str( ) ) + "\">";
 											if( day_left > 0 )
 												pResponse->strContent += UTIL_Xsprintf( gmapLANG_CFG["free_day_left"].c_str( ), CAtomInt( day_left ).toString( ).c_str( ), CAtomInt( hour_left ).toString( ).c_str( ) );
 											else if( hour_left > 0 )

@@ -184,9 +184,9 @@ void CTracker :: serverResponseSubUploadGET( struct request_t *pRequest, struct 
 		
 		pResponse->strContent += "<form name=\"subupload\" method=\"post\" action=\"http://nvidia.njuftp.org/upload2.aspx\" enctype=\"multipart/form-data\">\n";
 		pResponse->strContent += "<input name=\"id\" id=\"inputID\" type=hidden value=\"" + cstrID + "\">\n";
-		pResponse->strContent += "<input name=\"inputFile\" id=\"inputFile\" type=file size=30>\n";
+		pResponse->strContent += "<input name=\"inputFile\" id=\"inputFile\" type=file size=25>\n";
 		pResponse->strContent += "<span>" + gmapLANG_CFG["upload_sub_name"] + "</span>";
-		pResponse->strContent += "<input name=\"name\" id=\"inputName\" type=text size=30>\n";
+		pResponse->strContent += "<input name=\"name\" id=\"inputName\" type=text size=25>\n";
 		pResponse->strContent += Button_Submit( "submit_subupload", string( gmapLANG_CFG["upload"] ) );
 		pResponse->strContent += "<br><span style=\"padding: 0px 0px 0px 0px;\">" + gmapLANG_CFG["upload_sub_note"] + "</span>";
 		pResponse->strContent += "</form>\n";
@@ -1155,20 +1155,20 @@ void CTracker :: serverResponseUploadPOST( struct request_t *pRequest, struct re
 
 						if( !strIMDbID.empty( ) )
 						{
-							CMySQLQuery *pQuery = new CMySQLQuery( "SELECT bimdb,bimdbid from allowed WHERE bimdbid=\'" + UTIL_StringToMySQL( strIMDbID ) + "\' GROUP BY bimdbid UNION SELECT bimdb,bimdbid from offer WHERE bimdbid=\'" + UTIL_StringToMySQL( strIMDbID ) + "\' GROUP BY bimdbid" );
+							CMySQLQuery *pQuery = new CMySQLQuery( "SELECT bimdb,bimdbid,bimdbupdated from allowed WHERE bimdbid=\'" + UTIL_StringToMySQL( strIMDbID ) + "\' GROUP BY bimdbid UNION SELECT bimdb,bimdbid,bimdbupdated from offer WHERE bimdbid=\'" + UTIL_StringToMySQL( strIMDbID ) + "\' GROUP BY bimdbid" );
 		
 							vector<string> vecQuery;
 
-							vecQuery.reserve(2);
+							vecQuery.reserve(3);
 
 							vecQuery = pQuery->nextRow( );
 						
 							delete pQuery;
 						
-							if( vecQuery.size( ) == 2 )
+							if( vecQuery.size( ) == 3 )
 							{
 								strIMDb = vecQuery[0];
-								CMySQLQuery mq01( "UPDATE " + strDatabase + " SET bimdb=\'" + UTIL_StringToMySQL( strIMDb ) + "\',bimdbid=\'" + UTIL_StringToMySQL( strIMDbID ) + "\',bimdbupdated=NOW() WHERE bid=" + strUploadedID );
+								CMySQLQuery mq01( "UPDATE " + strDatabase + " SET bimdb=\'" + UTIL_StringToMySQL( strIMDb ) + "\',bimdbid=\'" + UTIL_StringToMySQL( strIMDbID ) + "\',bimdbupdated=\'" + vecQuery[2] + "\' WHERE bid=" + strUploadedID );
 							}
 							else
 							{

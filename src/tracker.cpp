@@ -275,6 +275,13 @@ CTracker :: CTracker( )
 	favicon.strDir = CFG_GetString( "favicon_dir", string( ) );
 	favicon.strExt = getFileExt( favicon.strName );
 
+	userbar.strName = CFG_GetString( "userbar", string( ) );
+	userbar.strDir = CFG_GetString( "userbar_dir", string( ) );
+	
+	if( !userbar.strDir.empty( ) && userbar.strDir[userbar.strDir.size( ) - 1] != PATH_SEP )
+		userbar.strDir += PATH_SEP;
+
+
 	// CSS
 	style.strName = CFG_GetString( "bnbt_style_sheet", string( ) );
 	style.strURL = CFG_GetString( "bnbt_style_sheet_url", string( ) );
@@ -3373,6 +3380,14 @@ void CTracker :: RefreshStatic( )
 		for( unsigned int uiCount = 0; uiCount < sizeof(cuiFavIconIco) / sizeof(int); uiCount++ )
 			favicon.strFile += (const unsigned char)cuiFavIconIco[uiCount];
 
+	if( !userbar.strName.empty( ) )
+	{
+		if( !userbar.strDir.empty( ) )
+			userbar.strFile = UTIL_ReadFile( ( userbar.strDir + RESPONSE_STR_SEPERATOR + userbar.strName ).c_str( ) );
+		else
+			userbar.strFile = UTIL_ReadFile( userbar.strName.c_str( ) );
+	}
+
 	// XBNBT - Serve HTTP interface requests using the internal file server
 	if( m_bServeLocal )
 	{
@@ -4309,6 +4324,7 @@ void CTracker :: serverResponseGET( struct request_t *pRequest, struct response_
 	else if( pRequest->strURL.substr( 0, 10 ) == RESPONSE_STR_TORRENTS ) ucResponse = RESPONSE_TORRENTS;
 	else if( pRequest->strURL.substr( 0, 8 ) == RESPONSE_STR_OFFERS ) ucResponse = RESPONSE_OFFERS;
 	else if( pRequest->strURL.substr( 0, 7 ) == RESPONSE_STR_FILES ) ucResponse = RESPONSE_FILES;
+	else if( pRequest->strURL.substr( 0, 9 ) == RESPONSE_STR_USERBAR ) ucResponse = RESPONSE_USERBAR;
 	else if( !imagefill.strName.empty( ) && pRequest->strURL == RESPONSE_STR_SEPERATOR + imagefill.strName ) ucResponse = RESPONSE_IMAGEFILL;
 	else if( imagefill.strName.empty( ) && pRequest->strURL == "/imagebarfill.png" ) ucResponse = RESPONSE_IMAGEFILL;
 	else if( !imagetrans.strName.empty( ) && pRequest->strURL == RESPONSE_STR_SEPERATOR + imagetrans.strName ) ucResponse = RESPONSE_IMAGETRANS;
@@ -4594,6 +4610,10 @@ void CTracker :: serverResponseGET( struct request_t *pRequest, struct response_
 		serverResponseFile( pRequest, pResponse );
 		gtXStats.file.uiFiles++;
 
+
+		break;
+	case RESPONSE_USERBAR:
+		serverResponseUserbar( pRequest, pResponse );
 
 		break;
 	case RESPONSE_IMAGEFILL:
@@ -6684,11 +6704,11 @@ void CTracker :: HTML_Common_Begin( struct request_t *pRequest, struct response_
 	
 	vector<string> vecQueryUser;
 	
-	vecQueryUser.reserve(11);
+	vecQueryUser.reserve(12);
 	
 	if( !pRequest->user.strUID.empty( ) )
 	{
-		pQueryUser = new CMySQLQuery( "SELECT buploaded,bdownloaded,bbonus,bseeding,bleeching,UNIX_TIMESTAMP(blast_index),UNIX_TIMESTAMP(blast_offer),binvites,btalk,btalkref,btalktorrent FROM users WHERE buid=" + pRequest->user.strUID );
+		pQueryUser = new CMySQLQuery( "SELECT buploaded,bdownloaded,bbonus,bseeding,bleeching,UNIX_TIMESTAMP(blast_index),UNIX_TIMESTAMP(blast_index_2),UNIX_TIMESTAMP(blast_offer),binvites,btalk,btalkref,btalktorrent FROM users WHERE buid=" + pRequest->user.strUID );
 		
 		vecQueryUser = pQueryUser->nextRow( );
 	}
@@ -6711,10 +6731,14 @@ void CTracker :: HTML_Common_Begin( struct request_t *pRequest, struct response_
 		int64 ulBonus;
 
 		pResponse->strContent += "<span class=\"top_login2\">" + UTIL_Xsprintf( gmapLANG_CFG["login2"].c_str( ), getUserLink( pRequest->user.strUID, pRequest->user.strLogin ).c_str( ) );
-		if( vecQueryUser.size( ) == 11 )
-			pResponse->strContent += " " + UTIL_Xsprintf( gmapLANG_CFG["login2_tools"].c_str( ), string( "<a class=\"bookmark\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?show=bookmarks\">" ).c_str( ), "</a>", string( "<a class=\"friend\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?show=friends\">" ).c_str( ), "</a>", string( "<a class=\"blue\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?show=invites\">" ).c_str( ), string( vecQueryUser[7] + "</a>" ).c_str( ), string( "<a class=\"red\" title=\"" + gmapLANG_CFG["navbar_logout"] + "\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?logout=1\">" ).c_str( ), "</a>" );
+		if( vecQueryUser.size( ) == 12 )
+		{
+			pRequest->user.strInvites = vecQueryUser[8];
+
+			pResponse->strContent += " " + UTIL_Xsprintf( gmapLANG_CFG["login2_tools"].c_str( ), string( "<a class=\"bookmark\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?show=bookmarks\">" ).c_str( ), "</a>", string( "<a class=\"friend\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?show=friends\">" ).c_str( ), "</a>", string( "<a class=\"blue\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?show=invites\">" ).c_str( ), string( vecQueryUser[8] + "</a>" ).c_str( ), string( "<a class=\"red\" title=\"" + gmapLANG_CFG["navbar_logout"] + "\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?logout=1\">" ).c_str( ), "</a>" );
+		}
 		pResponse->strContent += "<br>" + UTIL_Xsprintf( gmapLANG_CFG["show_ip"].c_str( ), string( "<span class=\"ip\">" + pRequest->strIP + "</span>" ).c_str( ) ) + " " + strLocation + "<br>";
-		if( vecQueryUser.size( ) == 11 )
+		if( vecQueryUser.size( ) == 12 )
 		{
 			ulUploaded = UTIL_StringTo64( vecQueryUser[0].c_str( ) );
 			ulDownloaded = UTIL_StringTo64( vecQueryUser[1].c_str( ) );
@@ -6730,6 +6754,11 @@ void CTracker :: HTML_Common_Begin( struct request_t *pRequest, struct response_
 			else
 				flShareRatio = (float)ulUploaded / (float)ulDownloaded;
 			
+			pRequest->user.ulUploaded = ulUploaded;
+			pRequest->user.ulDownloaded = ulDownloaded;
+			pRequest->user.ulBonus = ulBonus;
+			pRequest->user.flShareRatio = flShareRatio;
+
 			char szFloat[16];
 			string strShareRatio = string( );
 			if( ( -1.001 < flShareRatio ) && ( flShareRatio < -0.999 ) )
@@ -6829,20 +6858,20 @@ void CTracker :: HTML_Common_Begin( struct request_t *pRequest, struct response_
 	
 	if( !pRequest->user.strUID.empty( ) )
 	{
-		if( vecQueryUser.size( ) == 11 )
+		if( vecQueryUser.size( ) == 12 )
 		{
 			pResponse->strContent += "<br><span class=\"top_tool\">" + gmapLANG_CFG["talk_page"] + ": ";
 			pResponse->strContent += "<a href=\"" + RESPONSE_STR_TALK_HTML + "\">" + gmapLANG_CFG["talk_show_home"] + "</a>";
-			if( vecQueryUser[8] != "0" )
-				pResponse->strContent += "<span class=\"hot\">(" + vecQueryUser[8] + ")</span>";
-			pResponse->strContent += "<span class=\"pipe\"> | </span>";
-			pResponse->strContent += "<a href=\"" + RESPONSE_STR_TALK_HTML + "?show=mentions\">" + gmapLANG_CFG["talk_show_mentions"] + "</a>";
 			if( vecQueryUser[9] != "0" )
 				pResponse->strContent += "<span class=\"hot\">(" + vecQueryUser[9] + ")</span>";
 			pResponse->strContent += "<span class=\"pipe\"> | </span>";
-			pResponse->strContent += "<a href=\"" + RESPONSE_STR_TALK_HTML + "?show=torrents\">" + gmapLANG_CFG["talk_show_torrents"] + "</a>";
+			pResponse->strContent += "<a href=\"" + RESPONSE_STR_TALK_HTML + "?show=mentions\">" + gmapLANG_CFG["talk_show_mentions"] + "</a>";
 			if( vecQueryUser[10] != "0" )
 				pResponse->strContent += "<span class=\"hot\">(" + vecQueryUser[10] + ")</span>";
+			pResponse->strContent += "<span class=\"pipe\"> | </span>";
+			pResponse->strContent += "<a href=\"" + RESPONSE_STR_TALK_HTML + "?show=torrents\">" + gmapLANG_CFG["talk_show_torrents"] + "</a>";
+			if( vecQueryUser[11] != "0" )
+				pResponse->strContent += "<span class=\"hot\">(" + vecQueryUser[11] + ")</span>";
 			pResponse->strContent += "<span class=\"pipe\"> | </span>";
 			pResponse->strContent += "<a href=\"" + RESPONSE_STR_TALK_HTML + "?show=all\">" + gmapLANG_CFG["talk_show_all"] + "</a>";
 			pResponse->strContent += "</span>";
@@ -6854,12 +6883,26 @@ void CTracker :: HTML_Common_Begin( struct request_t *pRequest, struct response_
 	bool bNewIndex = false;
 	bool bNewOffer = false;
 	int64 last_time_index = 0;
+	int64 last_time_index_2 = 0;
 	int64 last_time_offer = 0;
 	
-	if( vecQueryUser.size( ) == 11 )
+	time_t now_t = time( 0 );
+
+	if( vecQueryUser.size( ) == 12 )
 	{
 		last_time_index = UTIL_StringTo64( vecQueryUser[5].c_str( ) );
-		last_time_offer = UTIL_StringTo64( vecQueryUser[6].c_str( ) );
+		last_time_index_2 = UTIL_StringTo64( vecQueryUser[6].c_str( ) );
+		last_time_offer = UTIL_StringTo64( vecQueryUser[7].c_str( ) );
+		if( last_time_index_2 > 0 )
+		{
+			if( now_t - last_time_index_2 > 0 && now_t - last_time_index_2 > CFG_GetInt( "bnbt_new_torrent_interval", 300 ) )
+			{
+				last_time_index = last_time_index_2;
+				CMySQLQuery mq01( "UPDATE users SET blast_index=blast_index_2,blast_index_2=0 WHERE buid=" + pRequest->user.strUID );
+			}
+		}
+		else if( bIndex )
+			CMySQLQuery mq02( "UPDATE users SET blast_index_2=NOW() WHERE buid=" + pRequest->user.strUID );
 	}
 	else
 	{
@@ -7691,7 +7734,7 @@ void CCache :: resetCache( bool bOffer )
 		
 		ulSize = 0;
 	
-		CMySQLQuery *pQuery = new CMySQLQuery( "SELECT bid,bfilename,bname,badded,bsize,bfiles,btag,btitle,bip,buploader,buploaderid,bimdb,bimdbid,bdefault_down,bdefault_up,bfree_down,bfree_up,UNIX_TIMESTAMP(bfree_to),btop,bclassic,breq,bnodownload,bseeders,bseeders6,bleechers,bleechers6,bcompleted,bcomments from allowed ORDER BY badded DESC" );
+		CMySQLQuery *pQuery = new CMySQLQuery( "SELECT bid,bfilename,bname,badded,bsize,bfiles,btag,btitle,bip,buploader,buploaderid,bimdb,bimdbid,bdefault_down,bdefault_up,bfree_down,bfree_up,UNIX_TIMESTAMP(bfree_to),btop,bclassic,breq,bnodownload,bseeders,bseeders6,bleechers,bleechers6,bcompleted,bcomments FROM allowed ORDER BY bid DESC" );
 				
 		vector<string> vecQuery;
 
@@ -7851,7 +7894,7 @@ void CCache :: resetCache( bool bOffer )
 		
 		ulSizeOffers = 0;
 		
-		CMySQLQuery *pQuery = new CMySQLQuery( "SELECT bid,bhash,bfilename,bname,badded,bsize,bfiles,btag,btitle,buploader,buploaderid,UNIX_TIMESTAMP(bseeded),bcomments FROM offer ORDER BY badded DESC" );
+		CMySQLQuery *pQuery = new CMySQLQuery( "SELECT bid,bhash,bfilename,bname,badded,bsize,bfiles,btag,btitle,buploader,buploaderid,UNIX_TIMESTAMP(bseeded),bcomments FROM offer ORDER BY bid DESC" );
 						
 		vector<string> vecQuery;
 		
@@ -8036,7 +8079,7 @@ time_t CCache :: getLatest( bool bOffer )
 //		
 //		pTorrents = pNew;
 
-//		CMySQLQuery *pQuery = new CMySQLQuery( "SELECT bid,bfilename,bname,badded,bsize,bfiles,btag,btitle,bip,buploader,buploaderid,bimdb,bimdbid,bdefault_down,bdefault_up,bfree_down,bfree_up,UNIX_TIMESTAMP(bfree_to),btop,bhl,bclassic,breq,bnodownload,bseeders,bleechers,bcompleted,bcomments from allowed WHERE bid=" + cstrID );
+//		CMySQLQuery *pQuery = new CMySQLQuery( "SELECT bid,bfilename,bname,badded,bsize,bfiles,btag,btitle,bip,buploader,buploaderid,bimdb,bimdbid,bdefault_down,bdefault_up,bfree_down,bfree_up,UNIX_TIMESTAMP(bfree_to),btop,bhl,bclassic,breq,bnodownload,bseeders,bleechers,bcompleted,bcomments FROM allowed WHERE bid=" + cstrID );
 //				
 //		vector<string> vecQuery;
 
@@ -8473,7 +8516,7 @@ void CCache :: setRow( const string &cstrID, bool bOffer )
 		{
 			if( pTorrents[ulKey].strID == cstrID )
 			{
-				CMySQLQuery *pQuery = new CMySQLQuery( "SELECT bid,bfilename,bname,badded,bsize,bfiles,btag,btitle,bip,buploader,buploaderid,bimdb,bimdbid,bdefault_down,bdefault_up,bfree_down,bfree_up,UNIX_TIMESTAMP(bfree_to),btop,bclassic,breq,bnodownload,bseeders,bseeders6,bleechers,bleechers6,bcompleted,bcomments from allowed WHERE bid=" + cstrID );
+				CMySQLQuery *pQuery = new CMySQLQuery( "SELECT bid,bfilename,bname,badded,bsize,bfiles,btag,btitle,bip,buploader,buploaderid,bimdb,bimdbid,bdefault_down,bdefault_up,bfree_down,bfree_up,UNIX_TIMESTAMP(bfree_to),btop,bclassic,breq,bnodownload,bseeders,bseeders6,bleechers,bleechers6,bcompleted,bcomments FROM allowed WHERE bid=" + cstrID );
 				
 				vector<string> vecQuery;
 
@@ -8925,7 +8968,7 @@ void CCache :: resetCacheUsers( )
 		
 		ulSizeUsers = 0;
 		
-		CMySQLQuery *pQuery = new CMySQLQuery( "SELECT buid,busername,bcreated,bemail,baccess,bgroup,buploaded,bdownloaded,bbonus,bseedbonus,UNIX_TIMESTAMP(blast),UNIX_TIMESTAMP(bwarned),binviter,binviterid FROM users ORDER BY bcreated DESC" );
+		CMySQLQuery *pQuery = new CMySQLQuery( "SELECT buid,busername,bcreated,bemail,baccess,bgroup,buploaded,bdownloaded,bbonus,bseedbonus,UNIX_TIMESTAMP(blast),UNIX_TIMESTAMP(bwarned),binviter,binviterid FROM users ORDER BY buid DESC" );
 		
 		vector<string> vecQuery;
 

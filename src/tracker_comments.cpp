@@ -1159,7 +1159,7 @@ void CTracker :: serverResponseCommentsPOST( struct request_t *pRequest, struct 
 				
 				CMySQLQuery mq01( "UPDATE " + strDatabase + " SET bcomments=bcomments+1 WHERE bid=" + cstrID );
 
-				if( !vecQuery[3].empty( ) )
+				if( !vecQuery[3].empty( ) && vecQuery[3] != pRequest->user.strUID )
 				{
 					CMySQLQuery *pQueryPrefs = new CMySQLQuery( "SELECT bmsgcomment FROM users_prefs WHERE buid=" + vecQuery[3] );
 				

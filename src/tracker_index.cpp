@@ -193,7 +193,7 @@ void CTracker :: serverResponseIndex( struct request_t *pRequest, struct respons
 								UTIL_MoveFile( string( m_strAllowedDir + strFileName ).c_str( ), string( m_strArchiveDir + strFileName ).c_str( ) );
 						}
 
-						CMySQLQuery *pQueryUsers = new CMySQLQuery( "SELECT buid FROM users WHERE buid=" + vecQuery[2] );
+						CMySQLQuery *pQueryUsers = new CMySQLQuery( "SELECT buid FROM users WHERE buid=" + vecQuery[2] + " UNION SELECT buid FROM bookmarks WHERE bid=" + strDelID + " GROUP BY buid" );
 	
 						vector<string> vecQueryUsers;
 					
@@ -201,18 +201,28 @@ void CTracker :: serverResponseIndex( struct request_t *pRequest, struct respons
 
 						vecQueryUsers = pQueryUsers->nextRow( );
 						
-						delete pQueryUsers;
-						
-						if( vecQueryUsers.size( ) == 1 && !vecQueryUsers[0].empty( ) )
+						while( vecQueryUsers.size( ) == 1 && !vecQueryUsers[0].empty( ) )
 						{
-							if( !pRequest->user.strLogin.empty( ) )
+							if( !pRequest->user.strUID.empty( ) )
 							{
 								string strTitle = gmapLANG_CFG["admin_delete_torrent_title"];
-								string strMessage = UTIL_Xsprintf( gmapLANG_CFG["admin_delete_torrent"].c_str( ), UTIL_AccessToString( pRequest->user.ucAccess ).c_str( ), pRequest->user.strLogin.c_str( ), strFileName.c_str( ), strDelReason.c_str( ) );
-								
-								sendMessage( pRequest->user.strLogin, pRequest->user.strUID, vecQueryUsers[0], pRequest->strIP, strTitle, strMessage );
+								string strMessage = string( );
+								if( vecQuery[2] == vecQueryUsers[0] )
+								{
+									strMessage = UTIL_Xsprintf( gmapLANG_CFG["admin_delete_torrent"].c_str( ), UTIL_AccessToString( pRequest->user.ucAccess ).c_str( ), pRequest->user.strLogin.c_str( ), strFileName.c_str( ), strDelReason.c_str( ) );
+									sendMessage( pRequest->user.strLogin, pRequest->user.strUID, vecQueryUsers[0], pRequest->strIP, strTitle, strMessage );
+								}
+								else
+								{
+									strMessage = UTIL_Xsprintf( gmapLANG_CFG["admin_delete_torrent_bookmarked"].c_str( ), UTIL_AccessToString( pRequest->user.ucAccess ).c_str( ), pRequest->user.strLogin.c_str( ), strFileName.c_str( ), strDelReason.c_str( ) );
+									sendMessage( "", "0", vecQueryUsers[0], "127.0.0.1", strTitle, strMessage );
+								}
 							}
+
+							vecQueryUsers = pQueryUsers->nextRow( );
 						}
+
+						delete pQueryUsers;
 							
 						UTIL_LogFilePrint( "deleteTorrent: %s deleted torrent %s\n", pRequest->user.strLogin.c_str( ), strFileName.c_str( ) );
 						UTIL_LogFilePrint( "deleteTorrent: delete reason %s\n", strDelReason.c_str( ) );
@@ -678,7 +688,37 @@ void CTracker :: serverResponseIndex( struct request_t *pRequest, struct respons
 // 		pResponse->strContent += "  element_filter.innerHTML=check('id_index_filter','" + gmapLANG_CFG["index_filter_show"] + "','" + gmapLANG_CFG["index_filter_hide"] + "');\n";
 		pResponse->strContent += "  hided = \"false\";\n";
 		pResponse->strContent += "}\n\n";
-		
+
+		pResponse->strContent += "if (window.XMLHttpRequest)\n";
+		pResponse->strContent += "{// code for IE7+, Firefox, Chrome, Opera, Safari\n";
+		pResponse->strContent += "  xmlhttp=new XMLHttpRequest(); }\n";
+		pResponse->strContent += "else\n";
+		pResponse->strContent += "{// code for IE6, IE5\n";
+		pResponse->strContent += "  xmlhttp=new ActiveXObject(\"Microsoft.XMLHTTP\"); }\n";
+
+		// bookmark
+		pResponse->strContent += "function bookmark(id,bookmark_link,nobookmark_link) {\n";
+		pResponse->strContent += "  var bookmarkLink = document.getElementById( 'bookmark'+id );\n";
+		pResponse->strContent += "  xmlhttp.onreadystatechange=function() {\n";
+		pResponse->strContent += "    if (xmlhttp.readyState==4) {\n";
+		pResponse->strContent += "      if (xmlhttp.status==200) {\n";
+		pResponse->strContent += "        if (bookmarkLink.title == bookmark_link) {\n";
+		pResponse->strContent += "          bookmarkLink.title = nobookmark_link;\n";
+		pResponse->strContent += "          bookmarkLink.innerHTML = '" + gmapLANG_CFG["bookmarked_icon"] + "'; }\n";
+		pResponse->strContent += "        else {\n";
+		pResponse->strContent += "          bookmarkLink.title = bookmark_link;\n";
+		pResponse->strContent += "          bookmarkLink.innerHTML = '" + gmapLANG_CFG["bookmark_icon"] + "'; }\n";
+		pResponse->strContent += "      }\n";
+		pResponse->strContent += "    }\n";
+		pResponse->strContent += "  }\n";
+		pResponse->strContent += "  if (bookmarkLink.title == bookmark_link) {\n";
+		pResponse->strContent += "    xmlhttp.open(\"GET\",\"" + RESPONSE_STR_LOGIN_HTML + "?bookmark=\" + id,true);\n";
+		pResponse->strContent += "    xmlhttp.send(); }\n";
+		pResponse->strContent += "  else {\n";
+		pResponse->strContent += "    xmlhttp.open(\"GET\",\"" + RESPONSE_STR_LOGIN_HTML + "?nobookmark=\" + id,true);\n";
+		pResponse->strContent += "    xmlhttp.send(); }\n";
+		pResponse->strContent += "}\n";
+
 		pResponse->strContent += "//-->\n";
 		pResponse->strContent += "</script>\n\n";
 		
@@ -723,8 +763,6 @@ void CTracker :: serverResponseIndex( struct request_t *pRequest, struct respons
 				last_time_info = UTIL_StringTo64( vecQueryUser[4].c_str( ) );
 				warned = UTIL_StringTo64( vecQueryUser[5].c_str( ) );
 			}
-			
-			CMySQLQuery mq01( "UPDATE users SET blast_index=NOW() WHERE buid=" + pRequest->user.strUID );
 		}
 		
 		bool bAnnounce = false;
@@ -863,6 +901,29 @@ void CTracker :: serverResponseIndex( struct request_t *pRequest, struct respons
 				
 			if( !mapPrefs["baddedpassed"].empty( ) && mapPrefs["baddedpassed"] == "1" )
 				bAddedPassed = true;
+		}
+
+		vector<string> vecBookmark;
+		vecBookmark.reserve(64);
+
+		if( !pRequest->user.strUID.empty( ) && ( pRequest->user.ucAccess & m_ucAccessBookmark ) )
+		{
+			CMySQLQuery *pQuery = new CMySQLQuery( "SELECT bid FROM bookmarks WHERE buid=" + pRequest->user.strUID );
+		
+			vector<string> vecQuery;
+		
+			vecQuery.reserve(1);
+
+			vecQuery = pQuery->nextRow( );
+
+			while( vecQuery.size( ) == 1 )
+			{
+				vecBookmark.push_back( vecQuery[0] );
+
+				vecQuery = pQuery->nextRow( );
+			}
+			
+			delete pQuery;
 		}
 		
 		vector<string> vecSearch;
@@ -2519,7 +2580,7 @@ void CTracker :: serverResponseIndex( struct request_t *pRequest, struct respons
 					strChiName.erase( );
 					pResponse->strContent += "<td class=\"name\">";
 					UTIL_StripName( pTorrents[ulKey].strName.c_str( ), strEngName, strChiName );
-					if( !pRequest->user.strLogin.empty( ) && ( int64 )tTimeAdded > last_time )
+					if( !pRequest->user.strUID.empty( ) && ( int64 )tTimeAdded > last_time )
 						pResponse->strContent += "<span class=\"new\">(" + gmapLANG_CFG["new"] + ") </span>";
 					if( pTorrents[ulKey].bReq )
 						pResponse->strContent += "<span class=\"req\">[" + gmapLANG_CFG["section_reqseeders"] + "] </span>";
@@ -2564,16 +2625,16 @@ void CTracker :: serverResponseIndex( struct request_t *pRequest, struct respons
 						if( pTorrents[ulKey].iFreeDown != 100 )
 						{
 							if( pTorrents[ulKey].iDefaultDown == 0 && !( bFreeGlobal && iFreeDownGlobal == 0 ) )
-								pResponse->strContent += " <span class=\"free_down_free\" title=\"" + gmapLANG_CFG["free_down_free"] + "\">" + gmapLANG_CFG["free_down_free_short"] + "</span>";
+								pResponse->strContent += "<span class=\"free_down_free\" title=\"" + gmapLANG_CFG["free_down_free"] + "\">" + gmapLANG_CFG["free_down_free_short"] + "</span>";
 							else if( pTorrents[ulKey].iFreeDown > 0 )
-								pResponse->strContent += " <span class=\"free_down\" title=\"" + UTIL_Xsprintf( gmapLANG_CFG["free_down"].c_str( ), CAtomInt( pTorrents[ulKey].iFreeDown ).toString( ).c_str( ) ) + "\">" + UTIL_Xsprintf( gmapLANG_CFG["free_down_short"].c_str( ), CAtomInt( pTorrents[ulKey].iFreeDown ).toString( ).c_str( ) )+ "</span>";
+								pResponse->strContent += "<span class=\"free_down\" title=\"" + UTIL_Xsprintf( gmapLANG_CFG["free_down"].c_str( ), CAtomInt( pTorrents[ulKey].iFreeDown ).toString( ).c_str( ) ) + "\">" + UTIL_Xsprintf( gmapLANG_CFG["free_down_short"].c_str( ), CAtomInt( pTorrents[ulKey].iFreeDown ).toString( ).c_str( ) )+ "</span>";
 						}
 						if( pTorrents[ulKey].iFreeUp != 100 )
-							pResponse->strContent += " <span class=\"free_up\" title=\"" + UTIL_Xsprintf( gmapLANG_CFG["free_up"].c_str( ), CAtomInt( pTorrents[ulKey].iFreeUp ).toString( ).c_str( ) ) + "\"> " + UTIL_Xsprintf( gmapLANG_CFG["free_up_short"].c_str( ), CAtomInt( pTorrents[ulKey].iFreeUp ).toString( ).c_str( ) )+ "</span>";
+							pResponse->strContent += "<span class=\"free_up\" title=\"" + UTIL_Xsprintf( gmapLANG_CFG["free_up"].c_str( ), CAtomInt( pTorrents[ulKey].iFreeUp ).toString( ).c_str( ) ) + "\"> " + UTIL_Xsprintf( gmapLANG_CFG["free_up_short"].c_str( ), CAtomInt( pTorrents[ulKey].iFreeUp ).toString( ).c_str( ) )+ "</span>";
 						if( day_left >= 0 && ( pTorrents[ulKey].iDefaultDown > pTorrents[ulKey].iFreeDown || pTorrents[ulKey].iDefaultUp < pTorrents[ulKey].iFreeUp ) )
 						{
-							pResponse->strContent += "<span title=\"" + gmapLANG_CFG["free_recover"];
-							pResponse->strContent += UTIL_Xsprintf( gmapLANG_CFG["free_down"].c_str( ), CAtomInt( pTorrents[ulKey].iDefaultDown ).toString( ).c_str( ) ) + UTIL_Xsprintf( gmapLANG_CFG["free_up"].c_str( ), CAtomInt( pTorrents[ulKey].iDefaultUp ).toString( ).c_str( ) ) + "\"> ";
+							pResponse->strContent += "<span class=\"free_recover\" title=\"" + gmapLANG_CFG["free_recover"];
+							pResponse->strContent += UTIL_Xsprintf( gmapLANG_CFG["free_down"].c_str( ), CAtomInt( pTorrents[ulKey].iDefaultDown ).toString( ).c_str( ) ) + UTIL_Xsprintf( gmapLANG_CFG["free_up"].c_str( ), CAtomInt( pTorrents[ulKey].iDefaultUp ).toString( ).c_str( ) ) + "\">";
 							if( day_left > 0 )
 								pResponse->strContent += UTIL_Xsprintf( gmapLANG_CFG["free_day_left"].c_str( ), CAtomInt( day_left ).toString( ).c_str( ), CAtomInt( hour_left ).toString( ).c_str( ) );
 							else if( hour_left > 0 )
@@ -2586,19 +2647,41 @@ void CTracker :: serverResponseIndex( struct request_t *pRequest, struct respons
 					
 					pResponse->strContent += "</td>\n";
 
+					pResponse->strContent += "<td class=\"download\">";
+
 					if( m_bAllowTorrentDownloads && ( pRequest->user.ucAccess & m_ucAccessDownTorrents ) && pTorrents[ulKey].bAllow )
 					{
 						// The Trinity Edition - Modification Begins
 						// The following adds "[" and "]" around the DL (download) link
 						
-						pResponse->strContent += "<td class=\"download\"><a class=\"download\" title=\"" + gmapLANG_CFG["stats_download_torrent"] + ": " + pTorrents[ulKey].strFileName + "\" href=\"";
+						pResponse->strContent += "<a class=\"download\" title=\"" + gmapLANG_CFG["stats_download_torrent"] + ": " + pTorrents[ulKey].strFileName + "\" href=\"";
 						pResponse->strContent += RESPONSE_STR_TORRENTS + pTorrents[ulKey].strID + ".torrent";
 
 					//	pResponse->strContent += "\">" + gmapLANG_CFG["download"] + "</a>]</td>\n";
 						pResponse->strContent += "\">" + gmapLANG_CFG["download_icon"] + "</a>";
 					}
-					else
-						pResponse->strContent += "<td class=\"download\">";
+
+					if( pRequest->user.ucAccess & m_ucAccessBookmark )
+					{
+						bool bBookmarked = false;
+
+						if( UTIL_MatchVector( pTorrents[ulKey].strID, vecBookmark, MATCH_METHOD_NONCASE_EQ ) )
+							bBookmarked = true;
+						
+						pResponse->strContent += "<a id=\"bookmark" + pTorrents[ulKey].strID + "\" title=\"";
+
+						if( bBookmarked )
+							pResponse->strContent += gmapLANG_CFG["stats_no_bookmark"];
+						else
+							pResponse->strContent += gmapLANG_CFG["stats_bookmark"];
+
+						pResponse->strContent += "\" class=\"bookmark_icon\" href=\"javascript: ;\" onclick=\"javascript: bookmark('" + pTorrents[ulKey].strID + "','" + gmapLANG_CFG["stats_bookmark"] + "','" + gmapLANG_CFG["stats_no_bookmark"] + "');\">";
+						if( UTIL_MatchVector( pTorrents[ulKey].strID, vecBookmark, MATCH_METHOD_NONCASE_EQ ) )
+							pResponse->strContent += gmapLANG_CFG["bookmarked_icon"] + "</a>";
+						else
+							pResponse->strContent += gmapLANG_CFG["bookmark_icon"] + "</a>";
+					}
+
 					if( !pTorrents[ulKey].strIMDb.empty( ) )
 						pResponse->strContent += "<br><a class=\"imdb\" target=\"_blank\" href=\"" + gmapLANG_CFG["imdb_url"] + pTorrents[ulKey].strIMDbID + "/\">" + gmapLANG_CFG["imdb"] + ": " + pTorrents[ulKey].strIMDb + "</a>";
 					pResponse->strContent += "</td>\n";

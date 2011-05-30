@@ -15,7 +15,8 @@
 #define CS_MAKERESPONSE		3
 #define CS_SEND				4
 
-#define GPBUF_SIZE			8192
+// #define GPBUF_SIZE			8192
+#define GPBUF_SIZE			65536
 
 extern char gpBuf[GPBUF_SIZE];
 

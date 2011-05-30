@@ -494,6 +494,7 @@
 		a.index_filter{text-decoration:none}
 		a.filter_by{text-decoration:none}
 		a.imdb{font-size:8pt;font-weight:normal}
+		a.bookmark_icon{margin-left:2px}
 	/*	a.table_header{color:white}*/
 		a.number6_green{color:green; vertical-align:middle}
 		a.number6_green{text-decoration:none}
@@ -573,13 +574,20 @@
 
 		span.free_down_free{background:blue}
 		span.free_down_free{padding-left:3px; padding-right:3px}
+		span.free_down_free{margin-left:0.5em}
 		span.free_down_free{color:white}
+		span.free_down_free{font-size:8pt}
 		span.free_down{background:darkorange}
 		span.free_down{padding-left:3px; padding-right:3px}
+		span.free_down{margin-left:0.5em}
 		span.free_down{color:white}
+		span.free_down{font-size:8pt}
 		span.free_up{background:green}
 		span.free_up{padding-left:3px; padding-right:3px}
+		span.free_up{margin-left:0.5em}
 		span.free_up{color:white}
+		span.free_up{font-size:8pt}
+		span.free_recover{margin-left: 0.5em}
 /* ----- users.html ----- */
 	/* ----- navbar ----- */
 
@@ -798,16 +806,28 @@
 		div.talk_table_posted{background-color:#eeeeff}
 		table.talk_table_posted{width: 600px}
 		table.talk_table_posted{table-layout:fixed}
+		table.talk_table_reply{width: 100%}
 		tr.talk_body{background-color:#eeeeff}
-		tr.talk_body:hover{background-color:#dee3e7}
+/*		tr.talk_body:hover{background-color:#dee3e7}*/
+		td.talk_body{width:100%}
 		td.talk_body{text-align:left}
 		td.talk_body{border-left:0px; border-right:0px}
 		td.talk_body{padding:5px 5px 5px 5px}
 		td.talk_body{white-space:normal}
 		td.talk_body{word-wrap:break-word}
-		td.talk_function{width:40px}
-		td.talk_function{border-left:0px; border-right:0px}
-		td.talk_function{padding:5px 5px 5px 0px}
+
+		tr.talk_body_reply{background-color:#dee3e7}
+/*		tr.talk_body_reply:hover{background-color:#dee3e7}*/
+		td.talk_body_reply{text-align:left}
+		td.talk_body_reply{border-left:0px; border-right:0px}
+/*		td.talk_body_reply{border-top:1px solid #ccccff; border-bottom:1px solid #ccccff}*/
+		td.talk_body_reply{border-top:1px solid #ccccff; border-bottom:0px}
+		td.talk_body_reply{padding:5px 5px 5px 5px}
+		td.talk_body_reply{white-space:normal}
+		td.talk_body_reply{word-wrap:break-word}
+
+		span.talk_header{margin-right:0.5em}
+		div.talk_function{float:right}
 		
 		div.talk_table_posted{text-align:center}
 		p.talk_table_posted{text-align:center}
@@ -821,20 +841,29 @@
 		div.talk_table_post{text-align:center}
 		p.talk_table_post{text-align:center}
 		table.talk_table_post{width: 600px}
+		table.talk_table_post{table-layout:fixed}
 		textarea.talk{width:594px}
 /*		td.talk_table_header{width:100%}*/
 		td.talk_table_header{text-align:left}
 		td.talk_table_header{padding:0px 0px 0px 0px}
 		td.talk_table_header{border:0px}
-		td.talk_table_header{padding-left:0px}
 		td.talk_table_left{text-align:right}
 		td.talk_table_left{padding:0px 0px 0px 0px}
 		td.talk_table_left{border:0px}
-		td.talk_table_left{padding-right:0px}
+		td.talk_table_tag{text-align:left}
+		td.talk_table_tag{padding:0px 0px 0px 0px}
+		td.talk_table_tag{border:0px}
 		tr.talk_table_post{background-color:#f5f4eb}
-		td.talk_table_post{text-align:center}
+		td.talk_table_post{text-align:left}
 		td.talk_table_post{padding:0px 0px 0px 0px}
 		td.talk_table_post{border:0px}
+		div.talk_table_rt{background-color: #dedeff}
+		div.talk_table_rt{border:1px dashed purple}
+		div.talk_table_rt{margin:5px 5px 5px 5px}
+		div.talk_table_rt{padding:5px 5px 5px 5px}
+		div.talk_table_rt{font-style: italic}
+		div.talk_table_rt{white-space:normal}
+		div.talk_table_rt{word-wrap:break-word}
 		div.talk_table_post_button{text-align:right}
 		
 /*		td.talk_function{font-size:8pt}	*/
@@ -843,6 +872,7 @@
 		span.talk_table_header{font-weight: bold}
 		span.talk_table_header{color:purple}
 		span.talk_table_left{font-weight: bold}
+		span.talk_table_hint{font-style: italic}
 		
 /*		span.talk{font-weight: bold}*/
 		a.talk_time{font-size:8pt}
@@ -859,11 +889,14 @@
 		a.talk_link:hover{text-decoration:none}
 		
 		a.talk_tag{color:purple}
+		a.talk_tag{text-decoration:none}
 		a.talk_tag:hover{color:white}
 		a.talk_tag:hover{background-color:purple}
 		a.talk_tag:hover{text-decoration:none}
 		
 		a.talk_torrent_link{color:purple}
+		a.talk_torrent_link{text-decoration:none}
+		a.talk_torrent_link{border-bottom:1px dotted}
 		a.talk_torrent_link:hover{color:white}
 		a.talk_torrent_link:hover{background-color:purple}
 		a.talk_torrent_link:hover{text-decoration:none}
@@ -878,6 +911,7 @@
 		a.talk_reply_link{text-decoration:none}
 		a.talk_reply_link{color:#808028}
 		a.talk_reply_link{border-bottom:1px dotted}
+		a.talk_reply_link{margin-left:0.5em}
 		a.talk_reply_link:hover{border-bottom:1px solid}
 		a.talk_reply_link:hover{color:purple}
 		
@@ -886,33 +920,46 @@
 		a.talk_rt_link{text-decoration:none}
 		a.talk_rt_link{color:#808028}
 		a.talk_rt_link{border-bottom:1px dotted}
+		a.talk_rt_link{margin-left:0.5em}
 		a.talk_rt_link:hover{border-bottom:1px solid}
 		a.talk_rt_link:hover{color:purple}
 		
-		a.talk_reply{font-size:9pt}
-		a.talk_reply{text-decoration:none}
-		a.talk_reply{color:black}
+		a.talk_reply{font-size:8pt}
+		a.talk_reply{font-weight: normal}
+		a.talk_reply{color:blue}
+		a.talk_reply{margin-left:0.5em}
+		a.talk_reply:hover{color:white}
+		a.talk_reply:hover{background-color:blue}
+		a.talk_reply:hover{text-decoration:none}
 		
-		a.talk_rt{font-size:9pt}
-		a.talk_rt{text-decoration:none}
-		a.talk_rt{color:black}
+		a.talk_rt{font-size:8pt}
+		a.talk_rt{font-weight: normal}
+		a.talk_rt{color:blue}
+		a.talk_rt{margin-left:0.5em}
+		a.talk_rt:hover{color:white}
+		a.talk_rt:hover{background-color:blue}
+		a.talk_rt:hover{text-decoration:none}
 		
-		a.talk_delete{font-size:9pt}
-		a.talk_delete{text-decoration:none}
+		a.talk_delete{font-size:8pt}
+		a.talk_delete{font-weight: normal}
 		a.talk_delete{color:red}
+		a.talk_delete{margin-left:0.5em}
+		a.talk_delete:hover{color:white}
+		a.talk_delete:hover{background-color:red}
+		a.talk_delete:hover{text-decoration:none}
 		
 		a.talk_more{font-size:9pt}
 		a.talk_more{color:purple}
 		a.talk_more:hover{color:white}
 		a.talk_more:hover{background-color:purple}
 		
-		div.talk_reply{background-color:#eeeeff}
-		div.talk_reply{border:1px solid #ccccff}
+		div.talk_reply{background-color:#dee3e7}
+		div.talk_reply{border:1px dotted purple}
 		div.talk_reply{margin:5px 5px 5px 5px}
 		div.talk_reply{padding:5px 5px 5px 5px}
 		
-		div.talk_rt{background-color:#eeeeff}
-		div.talk_rt{border:1px solid #ccccff}
+		div.talk_rt{background-color:#dedeff}
+		div.talk_rt{border:1px dashed purple}
 		div.talk_rt{margin:5px 5px 5px 5px}
 		div.talk_rt{padding:5px 5px 5px 5px}
 		
@@ -1041,11 +1088,18 @@
 /*		td.vote{text-align:center}*/
 		table.vote_table{width:300px}
 		table.vote_table{table-layout:fixed}
+		tr.voteoptioned{color:blue; font-weight:bold}
 		td.vote{white-space:normal}
 		td.vote{word-wrap:break-word}
+		td.voteinput{text-align:left}
+		td.voteinput{border: 0px}
+		td.voteoption{border: 0px}
+		td.votecount{text-align:left}
+		td.votecount{border: 0px}
 		p.votetitle{text-align:center}
 		p.votetitle{font-weight:bold}
 		p.votetitle{font-size:12px}
+		p.votebonus{text-align:center}
 		p.votebutton{text-align:center}
 		p.votetotal{text-align:center}
 		p.votetotal{font-size:12px}

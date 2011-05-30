@@ -654,15 +654,20 @@ void CTracker :: serverResponseSignupSchoolGET( struct request_t *pRequest, stru
 		pResponse->strContent += "<td class=\"signup_form\">\n";
 		pResponse->strContent += "<select id=\"signup_type\" name=\"us_type\" onchange=\"sample(this.options[this.options.selectedIndex].value)\">\n";
 		unsigned char ucIndex = 0;
+		if( CFG_GetInt( "bnbt_signup_lily_enable", 0 ) == 0 )
+			ucIndex = 1;
 		string strSignupMail = gmapLANG_CFG["signup_type"+CAtomInt( ucIndex ).toString( )];
 		while( !strSignupMail.empty( ) )
 		{
-			pResponse->strContent += "<option value=\"" + CAtomInt( ucIndex ).toString( ) + "\">" + gmapLANG_CFG["signup_type"+CAtomInt( ucIndex ).toString( )] + "\n";
+			pResponse->strContent += "<option value=\"" + CAtomInt( ucIndex ).toString( ) + "\">" + strSignupMail + "\n";
 			strSignupMail = gmapLANG_CFG["signup_type"+CAtomInt( ++ucIndex ).toString( )];
 		}
 		pResponse->strContent += "</select>\n";
 		pResponse->strContent += "<input id=\"signup_mail\" name=\"us_mail\" type=text size=24>\n";
-		pResponse->strContent += "<span id=\"type_note\">" + gmapLANG_CFG["signup_type_note0"] + "</span>";
+		ucIndex = 0;
+		if( CFG_GetInt( "bnbt_signup_lily_enable", 0 ) == 0 )
+			ucIndex = 1;
+		pResponse->strContent += "<span id=\"type_note\">" + gmapLANG_CFG["signup_type_note"+CAtomInt( ucIndex ).toString( )] + "</span>";
 		pResponse->strContent += "</td>\n</tr>\n";
 		pResponse->strContent += "<tr class=\"signup_form\">\n";
 		pResponse->strContent += "<th class=\"signup_form\">\n" + gmapLANG_CFG["signup_name"] + "</th>\n";
@@ -670,7 +675,7 @@ void CTracker :: serverResponseSignupSchoolGET( struct request_t *pRequest, stru
 		pResponse->strContent += "<input id=\"signup_name\" name=\"us_login\" alt=\"[" + gmapLANG_CFG["signup_name"] + "]\" type=text size=24 maxlength=" + CAtomInt( m_uiNameLength ).toString( ) + ">\n";
 		pResponse->strContent += gmapLANG_CFG["signup_name_note"];
 		pResponse->strContent += "</td>\n</tr>\n";
-		ucIndex = 0;
+		
 		strSignupMail = gmapLANG_CFG["signup_type"+CAtomInt( ucIndex ).toString( )];
 		while( !strSignupMail.empty( ) )
 		{
@@ -806,7 +811,7 @@ void CTracker :: serverResponseSignupSchoolPOST( struct request_t *pRequest, str
 		return;
 	}
 	
-	if( cstrType == "0" && !cstrMail.empty( ) )
+	if( cstrType == "0" && CFG_GetInt( "bnbt_signup_lily_enable", 0 ) == 1 && !cstrMail.empty( ) )
 	{
 		cstrLilyID = cstrMail;
 		cstrMail = cstrLilyID + gmapLANG_CFG["signup_mail0"];

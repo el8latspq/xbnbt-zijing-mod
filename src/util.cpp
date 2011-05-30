@@ -1574,10 +1574,23 @@ const bool UTIL_MatchVector( const string &cstrText, vector<string> &vecMatch, c
 			}
 			return false;
 		}
+		case MATCH_METHOD_NONCASE_EQ:
+		{
+			const string cstrTextLower( UTIL_ToLower( cstrText ) );
+			
+			for( vector<string> :: iterator ulVecKey = vecMatch.begin( ); ulVecKey != vecMatch.end( ); ulVecKey++ )
+			{
+				if( cstrTextLower == UTIL_ToLower( *ulVecKey ) )
+					return true;
+			}
+			return false;
+		}
 		default:
 			return true;
 		}
 	}
+	if( cucMatchMethod == MATCH_METHOD_NONCASE_EQ )
+		return false;
 	return true;
 }
 

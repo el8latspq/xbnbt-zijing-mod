@@ -230,7 +230,7 @@ bool CServer :: Update( const bool &bBlock )
 //		if( bBlock )
 //			MILLISLEEP( 10 );
 			
-		nfds = epoll_wait( epfd, events, 128, 10 );
+		nfds = epoll_wait( epfd, events, 128, 5 );
 		
 		for( int i = 0; i < nfds; i++ )
 		{

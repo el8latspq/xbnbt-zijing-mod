@@ -100,8 +100,9 @@ void CTracker :: serverResponseTorrent( struct request_t *pRequest, struct respo
 	string strTorrent = pRequest->strURL.substr( 10 );
 
 	const string :: size_type ciExt( strTorrent.rfind( "." ) );
+	const string cstrExt( getFileExt( strTorrent ) );
 
-	if( ciExt != string :: npos )
+	if( ciExt != string :: npos && UTIL_ToLower( cstrExt ) == ".torrent" )
 		strTorrent = strTorrent.substr( 0, ciExt );
 	
 	if( strTorrent.find_first_not_of( "1234567890" ) != string :: npos )
@@ -300,8 +301,9 @@ void CTracker :: serverResponseOffer( struct request_t *pRequest, struct respons
 	string strTorrent = pRequest->strURL.substr( 8 );
 
 	const string :: size_type ciExt( strTorrent.rfind( "." ) );
+	const string cstrExt( getFileExt( strTorrent ) );
 
-	if( ciExt != string :: npos )
+	if( ciExt != string :: npos && UTIL_ToLower( cstrExt ) == ".torrent" )
 		strTorrent = strTorrent.substr( 0, ciExt );
 	
 	if( strTorrent.find_first_not_of( "1234567890" ) != string :: npos )

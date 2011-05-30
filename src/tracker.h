@@ -89,6 +89,7 @@
 #define RESPONSE_RECOVER	39
 #define RESPONSE_ANNOUNCEMENTS	40
 #define RESPONSE_VOTES		41
+#define RESPONSE_USERBAR	42
 
 
 // Common strings
@@ -97,6 +98,7 @@
 #define STR_TORRENTS string( "torrents" )
 #define STR_OFFERS string( "offers" )
 #define STR_FILES string( "files" )
+#define STR_USERBAR string( "userbar" )
 #define LOGIN_HTML string( "login.html" )
 #define INDEX_HTML string( "index.html" )
 #define STATS_HTML string( "stats.html" )
@@ -137,6 +139,7 @@
 #define RESPONSE_STR_TORRENTS RESPONSE_STR_SEPERATOR + STR_TORRENTS + RESPONSE_STR_SEPERATOR
 #define RESPONSE_STR_OFFERS RESPONSE_STR_SEPERATOR + STR_OFFERS + RESPONSE_STR_SEPERATOR
 #define RESPONSE_STR_FILES RESPONSE_STR_SEPERATOR + STR_FILES + RESPONSE_STR_SEPERATOR
+#define RESPONSE_STR_USERBAR RESPONSE_STR_SEPERATOR + STR_USERBAR + RESPONSE_STR_SEPERATOR
 #define RESPONSE_STR_LOGIN_HTML RESPONSE_STR_SEPERATOR + LOGIN_HTML
 #define RESPONSE_STR_INDEX_HTML RESPONSE_STR_SEPERATOR + INDEX_HTML
 #define RESPONSE_STR_STATS_HTML RESPONSE_STR_SEPERATOR + STATS_HTML
@@ -270,8 +273,10 @@
 
 #define MATCH_METHOD_NONCASE_AND 0
 #define MATCH_METHOD_NONCASE_OR 1
-#define MATCH_METHOD_AND 2
-#define MATCH_METHOD_OR 3
+#define MATCH_METHOD_NONCASE_EQ 2
+#define MATCH_METHOD_AND 3
+#define MATCH_METHOD_OR 4
+#define MATCH_METHOD_EQ 5
 
 // XBNBT Structure for holding file details and data
 struct localfile_t
@@ -593,7 +598,7 @@ public:
 	const string getUserLinkFull( const string &strUID, const string &strUsername );
 	const string getUserLinkTalk( const string &strUID, const string &strUsername );
 	const string TransferMentions( const string &cstrTalk, const string &cstrTalkID );
-	const string GenerateTalk( const vector<string> &vecQuery, const unsigned char cucAccess, const string &cstrUID, const string &cstrJoined, bool bTalker = true, bool bFunc = true );
+	const string GenerateTalk( const vector<string> &vecQuery, const unsigned char cucAccess, const string &cstrUID, const string &cstrJoined, bool bTalker = true, bool bFunc = true, bool bReply = true );
 	void InitPasskey( const string &strLogin );
 	void deleteUser( const string &strUID );
 	void CountUniquePeers( );
@@ -617,6 +622,7 @@ public:
 	void serverResponseTorrent( struct request_t *pRequest, struct response_t *pResponse );
 	void serverResponseOffer( struct request_t *pRequest, struct response_t *pResponse );
 	void serverResponseFile( struct request_t *pRequest, struct response_t *pResponse );
+	void serverResponseUserbar( struct request_t *pRequest, struct response_t *pResponse );
 
 
 	void serverResponseRobots( struct request_t *pRequest, struct response_t *pResponse );
@@ -961,6 +967,8 @@ private:
 	struct localfile_t imagefill;
 	// image bar trans
 	struct localfile_t imagetrans;
+	// userbar.png
+	struct localfile_t userbar;
 
 	// XBNBT Stats
 	struct localfile_t statsdump;

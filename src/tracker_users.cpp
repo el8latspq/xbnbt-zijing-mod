@@ -226,6 +226,7 @@ void CTracker :: serverResponseUsersGET( struct request_t *pRequest, struct resp
 				const string cstrSort( pRequest->mapParams["sort"] );
 				const string cstrPerPage( pRequest->mapParams["per_page"] );
 				const string cstrSearchMode( pRequest->mapParams["smode"] );
+				const string cstrShow( pRequest->mapParams["show"] );
 
 				string strPageParameters = USERS_HTML;
 				
@@ -236,6 +237,7 @@ void CTracker :: serverResponseUsersGET( struct request_t *pRequest, struct resp
 				vecParams.push_back( pair<string, string>( string( "search" ), cstrSearch ) );
 				vecParams.push_back( pair<string, string>( string( "sort" ), cstrSort ) );
 				vecParams.push_back( pair<string, string>( string( "smode" ), cstrSearchMode ) );
+				vecParams.push_back( pair<string, string>( string( "show" ), cstrShow ) );
 				
 				strPageParameters += UTIL_HTMLJoin( vecParams, string( "?" ), string( "&" ), string( "=" ) );
 
@@ -492,6 +494,7 @@ void CTracker :: serverResponseUsersGET( struct request_t *pRequest, struct resp
 //			const string cstrLowerSearch( UTIL_ToLower( cstrSearch ) );
 //			const string cstrSearchResp( UTIL_StringToEscaped( cstrSearch ) );
 			const string cstrSearchMode( pRequest->mapParams["smode"] );
+			const string cstrShow( pRequest->mapParams["show"] );
 
 			vector<string> vecSearch;
 			vecSearch.reserve(64);
@@ -555,6 +558,33 @@ void CTracker :: serverResponseUsersGET( struct request_t *pRequest, struct resp
 //				// Found a user! Increment the count.
 //				ulFound++;
 //			}
+//
+			pResponse->strContent += "<p class=\"subfilter\">";
+			pResponse->strContent += "<a";
+			if( cstrShow.empty( ) )
+				pResponse->strContent += " class=\"blue\"";
+			pResponse->strContent += " href=\"" + RESPONSE_STR_USERS_HTML + "\">" + gmapLANG_CFG["users_show_all"] + "</a>";
+			pResponse->strContent += "<span class=\"pipe\"> | </span>";
+			pResponse->strContent += "<a";
+			if( cstrShow == "invited" )
+				pResponse->strContent += " class=\"blue\"";
+			pResponse->strContent += " href=\"" + RESPONSE_STR_USERS_HTML + "?show=invited\">" + gmapLANG_CFG["users_show_invited"] + "</a>";
+			pResponse->strContent += "<span class=\"pipe\"> | </span>";
+			pResponse->strContent += "<a";
+			if( cstrShow == "sharewarned" )
+				pResponse->strContent += " class=\"blue\"";
+			pResponse->strContent += " href=\"" + RESPONSE_STR_USERS_HTML + "?show=sharewarned\">" + gmapLANG_CFG["users_show_sharewarned"] + "</a>";
+			pResponse->strContent += "<span class=\"pipe\"> | </span>";
+			pResponse->strContent += "<a";
+			if( cstrShow == "warned" )
+				pResponse->strContent += " class=\"blue\"";
+			pResponse->strContent += " href=\"" + RESPONSE_STR_USERS_HTML + "?show=warned\">" + gmapLANG_CFG["users_show_warned"] + "</a>";
+			pResponse->strContent += "<span class=\"pipe\"> | </span>";
+			pResponse->strContent += "<a";
+			if( cstrShow == "banned" )
+				pResponse->strContent += " class=\"blue\"";
+			pResponse->strContent += " href=\"" + RESPONSE_STR_USERS_HTML + "?show=banned\">" + gmapLANG_CFG["users_show_banned"] + "</a>";
+			pResponse->strContent += "</p>";
 
 			// Top search
 			if( m_bSearch )
@@ -566,6 +596,9 @@ void CTracker :: serverResponseUsersGET( struct request_t *pRequest, struct resp
 
 				if( !cstrSort.empty( ) )
 					pResponse->strContent += "<p><input name=\"sort\" type=hidden value=\"" + cstrSort + "\"></p>\n";
+
+				if( !cstrShow.empty( ) )
+					pResponse->strContent += "<p><input name=\"show\" type=hidden value=\"" + cstrShow + "\"></p>\n";
 
 //				if( m_bUseButtons )
 //				{
@@ -592,13 +625,14 @@ void CTracker :: serverResponseUsersGET( struct request_t *pRequest, struct resp
 			}
 			
 			// What was the search criteria used?
-			pResponse->strContent += "<p class=\"search_filter\">\n";
-
 			if( !vecSearch.empty() )
+			{
+				pResponse->strContent += "<p class=\"search_filter\">\n";
 				pResponse->strContent += "<span class=\"search_results_alt\">" + gmapLANG_CFG["result_search"] + ": \"</span><span class=\"filtered_by\">" + UTIL_RemoveHTML( cstrSearch ) + "</span>\"\n";
+				pResponse->strContent += "</p>\n\n";
+			}
 
-			pResponse->strContent += "</p>\n\n";
-			
+
 			string :: size_type iCountGoesHere = string :: npos;
 		
 			iCountGoesHere = pResponse->strContent.size( );
@@ -623,6 +657,15 @@ void CTracker :: serverResponseUsersGET( struct request_t *pRequest, struct resp
 				if( cstrSearchMode == "name" && !UTIL_MatchVector( pUsersT[ulKey].strLogin, vecSearch, MATCH_METHOD_NONCASE_AND ) )
 					continue;
 				if( cstrSearchMode == "mail" && !UTIL_MatchVector( pUsersT[ulKey].strMail, vecSearch, MATCH_METHOD_NONCASE_AND ) )
+					continue;
+				if( cstrShow == "invited" && pUsersT[ulKey].strInviter.empty( ) )
+					continue;
+				bool bShareRatioWarned = checkShareRatio( pUsersT[ulKey].ulDownloaded, pUsersT[ulKey].flShareRatio );
+				if( cstrShow == "sharewarned" && !( m_bRatioRestrict && bShareRatioWarned ) )
+					continue;
+				if( cstrShow == "warned" && !pUsersT[ulKey].tWarned )
+					continue;
+				if( cstrShow == "banned" && pUsersT[ulKey].ucAccess & ACCESS_VIEW )
 					continue;
 			
 //				if( !vecSearch.empty( ) )
@@ -657,6 +700,7 @@ void CTracker :: serverResponseUsersGET( struct request_t *pRequest, struct resp
 						vecParams.push_back( pair<string, string>( string( "per_page" ), cstrPerPage ) );
 						vecParams.push_back( pair<string, string>( string( "search" ), cstrSearch ) );
 						vecParams.push_back( pair<string, string>( string( "smode" ), cstrSearchMode ) );
+						vecParams.push_back( pair<string, string>( string( "show" ), cstrShow ) );
 						
 						strJoined = UTIL_RemoveHTML( UTIL_HTMLJoin( vecParams, string( "&" ), string( "&" ), string( "=" ) ) );
 						
@@ -870,7 +914,7 @@ void CTracker :: serverResponseUsersGET( struct request_t *pRequest, struct resp
 
 						// strip year and seconds from time
 						if( !pUsersT[ulKey].strCreated.empty( ) )
-							pResponse->strContent += pUsersT[ulKey].strCreated.substr( 5, pUsersT[ulKey].strCreated.size( ) - 8 );
+							pResponse->strContent += pUsersT[ulKey].strCreated.substr( 2, pUsersT[ulKey].strCreated.size( ) - 5 );
 						
 						pResponse->strContent += "</td>\n";
 						
@@ -879,7 +923,7 @@ void CTracker :: serverResponseUsersGET( struct request_t *pRequest, struct resp
 							char pTime[256];
 							memset( pTime, 0, sizeof( pTime ) / sizeof( char ) );
 							strftime( pTime, sizeof( pTime ) / sizeof( char ), "%Y-%m-%d %H:%M:%S", localtime( &pUsersT[ulKey].tLast ) );
-							pResponse->strContent += "<td class=\"date\">" + string( pTime ).substr( 5, string( pTime ).size( ) - 8 ) + "</td>\n";
+							pResponse->strContent += "<td class=\"date\">" + string( pTime ).substr( 2, string( pTime ).size( ) - 5 ) + "</td>\n";
 						}
 						else
 							pResponse->strContent += "<td class=\"date\">" + gmapLANG_CFG["na"] + "</td>\n";
@@ -889,7 +933,7 @@ void CTracker :: serverResponseUsersGET( struct request_t *pRequest, struct resp
 							char pTime[256];
 							memset( pTime, 0, sizeof( pTime ) / sizeof( char ) );
 							strftime( pTime, sizeof( pTime ) / sizeof( char ), "%Y-%m-%d %H:%M:%S", localtime( &pUsersT[ulKey].tWarned ) );
-							pResponse->strContent += "<td class=\"date\">" + string( pTime ).substr( 5, string( pTime ).size( ) - 8 ) + "</td>\n";
+							pResponse->strContent += "<td class=\"date\">" + string( pTime ).substr( 2, string( pTime ).size( ) - 5 ) + "</td>\n";
 						}
 						else
 							pResponse->strContent += "<td class=\"date\">" + gmapLANG_CFG["na"] + "</td>\n";
@@ -943,6 +987,7 @@ void CTracker :: serverResponseUsersGET( struct request_t *pRequest, struct resp
 			vecParams.push_back( pair<string, string>( string( "sort" ), cstrSort ) );
 			vecParams.push_back( pair<string, string>( string( "search" ), cstrSearch ) );
 			vecParams.push_back( pair<string, string>( string( "smode" ), cstrSearchMode ) );
+			vecParams.push_back( pair<string, string>( string( "show" ), cstrShow ) );
 			
 			strJoined = UTIL_RemoveHTML( UTIL_HTMLJoin( vecParams, string( "&" ), string( "&" ), string( "=" ) ) );
 			

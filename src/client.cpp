@@ -608,7 +608,11 @@ CClient :: CClient( SOCKET &sckClient, struct sockaddr_in6 &sinAddress, const un
 	m_bBlocked = false;
 	
 	if( UTIL_IsIPBanList( rqst.strIP, gpServer->m_pIPBlockedList ) )
+	{
 		m_bBlocked = true;
+		
+		return;
+	}
 	
 	epfd_client = epoll_create(128);
 	
@@ -621,6 +625,8 @@ CClient :: CClient( SOCKET &sckClient, struct sockaddr_in6 &sinAddress, const un
 		UTIL_LogPrint( "client warning: epoll_ctl add (error %s)\n", GetLastErrorString( ) );
 
 		m_bFailed = true;
+		
+		return;
 	}
 		
 	Reset( );
@@ -650,7 +656,7 @@ bool CClient :: Update( )
 		if( gbDebug && ( gucDebugLevel & DEBUG_CLIENT ) )
                         UTIL_LogPrint( "client warning: epoll_ctl add failed\n" );
 
-                return true;
+		return true;
         }
 	
 	if( m_bBlocked )
@@ -722,7 +728,7 @@ bool CClient :: Update( )
 		if( gbDebug && ( gucDebugLevel & DEBUG_CLIENT ) )
 			UTIL_LogPrint( "client: receive headers\n" );
 
-		nfds = epoll_wait( epfd_client, events, 128, 0 );
+		nfds = epoll_wait( epfd_client, events, 16, 0 );
 
 		for( int i = 0; i < nfds; i++ )
 		{
@@ -1047,7 +1053,7 @@ bool CClient :: Update( )
 			return true;
 		}
 
-		nfds = epoll_wait( epfd_client, events, 128, 0 );
+		nfds = epoll_wait( epfd_client, events, 16, 0 );
 
 		for( int i = 0; i < nfds; i++ )
 		{
@@ -1273,7 +1279,7 @@ bool CClient :: Update( )
 		if( gbDebug )
 			UTIL_LogPrint( "client - send\n" );
 
-		nfds = epoll_wait( epfd_client, events, 128, 0 );
+		nfds = epoll_wait( epfd_client, events, 16, 0 );
 
 		for( int i = 0; i < nfds; i++ )
 		{

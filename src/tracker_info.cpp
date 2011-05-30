@@ -100,6 +100,20 @@ void CTracker :: serverResponseInfoGET( struct request_t *pRequest, struct respo
 		pResponse->strContent += "    display( id ); }\n";
 		pResponse->strContent += "}\n";
 		
+		pResponse->strContent += "function validatebonus(theform,min,max,bonus) {\n";
+		pResponse->strContent += "  var element0 = document.getElementById( 'vote' + theform.vote_for.value + '_option0' );\n";
+		pResponse->strContent += "  var votebonus = theform.vote_bonus.value;\n";
+		pResponse->strContent += "  if( min > 0 && max > 0 ) {\n";
+		pResponse->strContent += "    if( ( Math.floor( votebonus ) == votebonus && votebonus >= min && votebonus <= max && votebonus * 100 <= bonus ) || element0.checked )\n";
+		pResponse->strContent += "      return true;\n";
+		pResponse->strContent += "    else {\n";
+		pResponse->strContent += "      alert('" + gmapLANG_CFG["vote_bonus_notvalid"] + "');\n";
+		pResponse->strContent += "      return false; }\n";
+		pResponse->strContent += "  }\n";
+		pResponse->strContent += "  else\n";
+		pResponse->strContent += "    return true;\n";
+		pResponse->strContent += "}\n";
+		
 		pResponse->strContent += "//-->\n";
 		pResponse->strContent += "</script>\n\n";
 		
@@ -268,18 +282,18 @@ void CTracker :: serverResponseInfoGET( struct request_t *pRequest, struct respo
 			pResponse->strContent += "<table class=\"vote_table\" summary=\"tvote\">\n";
 			pResponse->strContent += "<tr><th colspan=2>" + gmapLANG_CFG["info_vote"] + "</th></tr>\n";
 		
-			if(  pRequest->user.ucAccess & m_ucAccessAdmin )
-			{
+//			if(  pRequest->user.ucAccess & m_ucAccessAdmin )
+//			{
 				pResponse->strContent += "<tr class=\"voteheader\">\n";
-				pResponse->strContent += "<td class=\"admin\" colspan=2>[<a class=\"black\" href=\"" + RESPONSE_STR_VOTES_HTML + "\">" + gmapLANG_CFG["vote_admin"] + "</a>]</td>";
+				pResponse->strContent += "<td class=\"admin\" colspan=2>[<a class=\"black\" href=\"" + RESPONSE_STR_VOTES_HTML + "\">" + gmapLANG_CFG["vote_all"] + "</a>]</td>";
 				pResponse->strContent += "</tr>\n";
-			}
+//			}
 		
-			CMySQLQuery *pQueryVotes = new CMySQLQuery( "SELECT bid,btitle,bopen,bclosed,UNIX_TIMESTAMP(bclosed),bvotecount FROM votes WHERE bopen!=0 AND bclosed=0 ORDER BY bopen DESC" );
+			CMySQLQuery *pQueryVotes = new CMySQLQuery( "SELECT bid,btitle,bopen,bclosed,UNIX_TIMESTAMP(bclosed),bvotebonus_min,bvotebonus_max,bvotecount FROM votes WHERE bopen!=0 AND bclosed=0 ORDER BY bopen DESC" );
 		
 			vector<string> vecQueryVotes;
 	
-			vecQueryVotes.reserve(6);
+			vecQueryVotes.reserve(8);
 		
 			vecQueryVotes = pQueryVotes->nextRow( );
 		
@@ -287,32 +301,39 @@ void CTracker :: serverResponseInfoGET( struct request_t *pRequest, struct respo
 			{
 				delete pQueryVotes;
 			
-				pQueryVotes = new CMySQLQuery( "SELECT bid,btitle,bopen,bclosed,UNIX_TIMESTAMP(bclosed),bvotecount FROM votes WHERE bopen!=0 ORDER BY bopen DESC LIMIT 1" );
+				pQueryVotes = new CMySQLQuery( "SELECT bid,btitle,bopen,bclosed,UNIX_TIMESTAMP(bclosed),bvotebonus_min,bvotebonus_max,bvotecount FROM votes WHERE bopen!=0 ORDER BY bopen DESC LIMIT 1" );
 			
 				vecQueryVotes = pQueryVotes->nextRow( );
 			}
 		
-			while( vecQueryVotes.size( ) == 6 )
+			while( vecQueryVotes.size( ) == 8 )
 			{
 				string strOption = string( );
+				string strBonus = string( );
 			
 				if( !pRequest->user.strUID.empty( ) )
 				{
-					CMySQLQuery *pQueryTicket = new CMySQLQuery( "SELECT boptionid FROM votesticket WHERE bid=" + vecQueryVotes[0] + " AND buid=" + pRequest->user.strUID + " ORDER BY boptionid" );
+					CMySQLQuery *pQueryTicket = new CMySQLQuery( "SELECT boptionid,bvotebonus FROM votesticket WHERE bid=" + vecQueryVotes[0] + " AND buid=" + pRequest->user.strUID + " ORDER BY boptionid" );
 		
 					vector<string> vecQueryTicket;
 
-					vecQueryTicket.reserve(1);
+					vecQueryTicket.reserve(2);
 
 					vecQueryTicket = pQueryTicket->nextRow( );
 			
 					delete pQueryTicket;
 			
-					if( vecQueryTicket.size( ) == 1 )
+					if( vecQueryTicket.size( ) == 2 )
+					{
 						strOption = vecQueryTicket[0];
+						strBonus = vecQueryTicket[1];
+					}
 				}
 				else
+				{
 					strOption = "0";
+					strBonus = "0";
+				}
 			
 	//			pResponse->strContent += "<tr class=\"voteheader\">\n";
 	//			pResponse->strContent += "<th class=\"votetime\">" + gmapLANG_CFG["vote_time_open"] + "</th>\n";
@@ -333,32 +354,52 @@ void CTracker :: serverResponseInfoGET( struct request_t *pRequest, struct respo
 				if( vecQueryVote.size( ) == 3 )
 				{
 					string strSkip = string( );
+					bool bChecked = false;
 				
 					if( strOption.empty( ) && vecQueryVotes[4] == "0" )
 					{
-						pResponse->strContent += "<form name=\"vote\" method=\"post\" action=\"" + RESPONSE_STR_VOTES_HTML + "\" enctype=\"multipart/form-data\">\n";
+						pResponse->strContent += "<form name=\"vote\" method=\"post\" action=\"" + RESPONSE_STR_VOTES_HTML + "\" onSubmit=\"return validatebonus(this," + vecQueryVotes[5] + "," + vecQueryVotes[6] + "," + CAtomLong( pRequest->user.ulBonus ).toString( ) + ")\" enctype=\"multipart/form-data\">\n";
 						pResponse->strContent += "<input name=\"vote_for\" type=hidden value=\"" + vecQueryVotes[0] + "\">\n";
 					}
 					pResponse->strContent += "<tr class=\"vote\">";
 					pResponse->strContent += "<td class=\"vote\" colspan=2>";
 					pResponse->strContent += "<p class=\"votetitle\">" + UTIL_RemoveHTML( vecQueryVotes[1] ) + "</p>";
 
+					pResponse->strContent += "<table class=\"voteoption\">\n";
+
 					while( vecQueryVote.size( ) == 3 )
 					{
 						if( vecQueryVote[0] != "0" )
 						{
-							pResponse->strContent += "<p class=\"voteoption\">";
+							pResponse->strContent += "<tr class=\"voteoption";
 							if( strOption.empty( ) && vecQueryVotes[4] == "0" )
-								pResponse->strContent += "<input name=\"vote_selectd\" type=radio value=\"" + vecQueryVote[0] + "\">" + UTIL_RemoveHTML( vecQueryVote[1] );
+							{
+								pResponse->strContent += "\">";
+								pResponse->strContent += "<td class=\"voteinput\"><input name=\"vote_select\" type=radio value=\"" + vecQueryVote[0] + "\"";
+								if( !bChecked )
+								{
+									pResponse->strContent += " checked";
+									bChecked = true;
+								}
+								pResponse->strContent += ">" + UTIL_RemoveHTML( vecQueryVote[1] ) + "</td>";
+							}
 							else
-								pResponse->strContent += UTIL_RemoveHTML( vecQueryVote[1] ) + ": " + vecQueryVote[2] + " / " + vecQueryVotes[5];
-					
-							pResponse->strContent += "</p>\n";
+							{
+								if( vecQueryVote[0] == strOption )
+									pResponse->strContent += "ed";
+								pResponse->strContent += "\">";
+								pResponse->strContent += "<td class=\"voteoption\">";
+								pResponse->strContent += UTIL_RemoveHTML( vecQueryVote[1] ) + "</td><td class=\"votecount\">" + vecQueryVote[2];
+								if( vecQueryVote[0] == strOption && strBonus != "0" )
+									pResponse->strContent += " " + UTIL_Xsprintf( gmapLANG_CFG["vote_bonus_value"].c_str( ), strBonus.c_str( ) );
+								pResponse->strContent += "</td>";
+							}
+							pResponse->strContent += "</tr>";
 						}
 						else
 						{
 							if( strOption.empty( ) && vecQueryVotes[4] == "0" )
-								strSkip = "<p class=\"voteoption\"><input name=\"vote_selectd\" type=radio value=\"" + vecQueryVote[0] + "\">" + UTIL_RemoveHTML( vecQueryVote[1] ) + "</p>\n";
+								strSkip = "<tr class=\"voteoption\"><td class=\"voteoption\"><input id=\"vote" + vecQueryVotes[0] + "_option0\" name=\"vote_select\" type=radio value=\"" + vecQueryVote[0] + "\">" + UTIL_RemoveHTML( vecQueryVote[1] ) + "</td></tr>\n";
 						}
 				
 						vecQueryVote = pQueryVote->nextRow( );
@@ -366,10 +407,20 @@ void CTracker :: serverResponseInfoGET( struct request_t *pRequest, struct respo
 					if( strOption.empty( ) && vecQueryVotes[4] == "0" )
 					{
 						pResponse->strContent += strSkip;
+						pResponse->strContent += "</table>\n";
+						if( vecQueryVotes[5] != "0" && vecQueryVotes[6] != "0" )
+						{
+							pResponse->strContent += "<p class=\"votebonus\">";
+							pResponse->strContent += gmapLANG_CFG["vote_bonus"] + "<input name=\"vote_bonus\" type=text size=5 value=\"" + vecQueryVotes[5] + "\"><br>";
+							pResponse->strContent += UTIL_Xsprintf( gmapLANG_CFG["vote_bonus_tip"].c_str( ), vecQueryVotes[5].c_str( ), vecQueryVotes[6].c_str( ) ) + "</p>";
+						}
 						pResponse->strContent += "<p class=\"votebutton\">" + Button_Submit( "submit_vote", string( gmapLANG_CFG["vote"] ) ) + "</p>";
 					}
 					else
-						pResponse->strContent += "<p class=\"votetotal\">" + UTIL_Xsprintf( gmapLANG_CFG["vote_total"].c_str( ), vecQueryVotes[5].c_str( ) ) + "</p>";
+					{
+						pResponse->strContent += "</table>\n";
+						pResponse->strContent += "<p class=\"votetotal\">" + UTIL_Xsprintf( gmapLANG_CFG["vote_total"].c_str( ), vecQueryVotes[7].c_str( ) ) + "</p>";
+					}
 					pResponse->strContent += "</td>\n</tr>\n";
 					if( strOption.empty( ) && vecQueryVotes[4] == "0" )
 						pResponse->strContent += "</form>\n";
@@ -492,7 +543,8 @@ void CTracker :: serverResponseAnnouncementsGET( struct request_t *pRequest, str
 		if( IsIPBanned( pRequest, pResponse, btv, gmapLANG_CFG["info_page"], string( CSS_INFO ), NOT_INDEX ) )
 			return;
 
-	if( !pRequest->user.strUID.empty( ) && ( m_ucInfoAccess == 0 || ( pRequest->user.ucAccess & m_ucInfoAccess ) ) )
+//	if( !pRequest->user.strUID.empty( ) && ( m_ucInfoAccess == 0 || ( pRequest->user.ucAccess & m_ucInfoAccess ) ) )
+	if( ( m_ucInfoAccess == 0 || ( pRequest->user.ucAccess & m_ucInfoAccess ) ) )
 	{
 		// Output common HTML head
 		HTML_Common_Begin(  pRequest, pResponse, gmapLANG_CFG["info_page"], string( CSS_INFO ), string( ), NOT_INDEX, CODE_200 );
@@ -577,9 +629,8 @@ void CTracker :: serverResponseAnnouncementsGET( struct request_t *pRequest, str
 				
 				if( vecQueryAnn.size( ) == 1 )
 					CMySQLQuery mq01( "DELETE FROM announcements WHERE bid=" + vecQueryAnn[0] );
-				pResponse->strContent += "<p class=\"delete\">" + UTIL_Xsprintf( gmapLANG_CFG["post_deleted"].c_str( ), string( "<a title=\"" + gmapLANG_CFG["navbar_info"] + "\" href=\"" + RESPONSE_STR_ANNOUNCEMENTS_HTML + "\">" ).c_str( ), "</a>" ) + "</p>\n";
-				
-				JS_ReturnToPage( pRequest, pResponse, ANNOUNCEMENTS_HTML );
+//				pResponse->strContent += "<p class=\"delete\">" + UTIL_Xsprintf( gmapLANG_CFG["post_deleted"].c_str( ), string( "<a title=\"" + gmapLANG_CFG["navbar_info"] + "\" href=\"" + RESPONSE_STR_ANNOUNCEMENTS_HTML + "\">" ).c_str( ), "</a>" ) + "</p>\n";
+				pResponse->strContent += "<script type=\"text/javascript\">window.location=\"" + RESPONSE_STR_ANNOUNCEMENTS_HTML + "\"</script>\n\n";
 				
 				// Output common HTML tail
 				HTML_Common_End( pRequest, pResponse, btv, NOT_INDEX, string( CSS_INFO ) );
@@ -907,7 +958,8 @@ void CTracker :: serverResponseVotesGET( struct request_t *pRequest, struct resp
 		if( IsIPBanned( pRequest, pResponse, btv, gmapLANG_CFG["info_page"], string( CSS_INFO ), NOT_INDEX ) )
 			return;
 
-	if( !pRequest->user.strUID.empty( ) && ( pRequest->user.ucAccess & m_ucAccessAdmin ) )
+//	if( !pRequest->user.strUID.empty( ) && ( pRequest->user.ucAccess & m_ucAccessAdmin ) )
+	if( !pRequest->user.strUID.empty( ) && ( m_ucInfoAccess == 0 || ( pRequest->user.ucAccess & m_ucInfoAccess ) ) )
 	{
 		// Output common HTML head
 		HTML_Common_Begin(  pRequest, pResponse, gmapLANG_CFG["info_page"], string( CSS_INFO ), string( ), NOT_INDEX, CODE_200 );
@@ -945,10 +997,10 @@ void CTracker :: serverResponseVotesGET( struct request_t *pRequest, struct resp
 		pResponse->strContent += "//-->\n";
 		pResponse->strContent += "</script>\n\n";
 		
-//		if( pRequest->user.ucAccess & m_ucAccessAdmin )
-//		{
+		if( pRequest->user.ucAccess & m_ucAccessAdmin )
+		{
 			if( !cstrAction.empty( ) )
-				{
+			{
 				if( cstrAction == "new" )
 				{
 					unsigned int uiOptionMax = (unsigned int)CFG_GetInt( "bnbt_vote_option_max", 16 );
@@ -969,6 +1021,11 @@ void CTracker :: serverResponseVotesGET( struct request_t *pRequest, struct resp
 						pResponse->strContent += "<td class=\"change_vote\">" + CAtomInt( uiOption ).toString( ) + "</td>";
 						pResponse->strContent += "<td class=\"change_vote\"><input name=\"option" + CAtomInt( uiOption ).toString( ) + "\" type=text size=96 maxlength=" + CAtomInt( MAX_FILENAME_LEN ).toString( ) + " value=\"\"></td>\n</tr>\n";
 					}
+					pResponse->strContent += "<tr class=\"change_vote\">\n";
+					pResponse->strContent += "<td class=\"change_vote\">" + gmapLANG_CFG["vote_bonus"] + "</td>\n";
+					pResponse->strContent += "<td class=\"change_vote\">" + gmapLANG_CFG["vote_bonus_min"] + "<input name=\"bonus_min\" value=\"0\">";
+					pResponse->strContent += gmapLANG_CFG["vote_bonus_max"] + "<input name=\"bonus_max\" value=\"0\">";
+					pResponse->strContent += "</td></tr>\n";
 					pResponse->strContent += "<tr class=\"change_vote\">\n";
 					pResponse->strContent += "<td class=\"change_vote\" colspan=2>\n";
 					pResponse->strContent += Button_Submit( "submit_vote_new", string( gmapLANG_CFG["vote_new"] ) );
@@ -993,10 +1050,14 @@ void CTracker :: serverResponseVotesGET( struct request_t *pRequest, struct resp
 					delete pQueryVotes;
 				
 					if( vecQueryVotes.size( ) == 1 )
+					{
 						CMySQLQuery mq01( "DELETE FROM votes WHERE bid=" + vecQueryVotes[0] );
-					pResponse->strContent += "<p class=\"delete\">" + UTIL_Xsprintf( gmapLANG_CFG["vote_deleted"].c_str( ), string( "<a title=\"" + gmapLANG_CFG["navbar_info"] + "\" href=\"" + RESPONSE_STR_VOTES_HTML + "\">" ).c_str( ), "</a>" ) + "</p>\n";
+						CMySQLQuery mq02( "DELETE FROM votesoption WHERE bid=" + vecQueryVotes[0] );
+						CMySQLQuery mq03( "DELETE FROM votesticket WHERE bid=" + vecQueryVotes[0] );
+					}
+//					pResponse->strContent += "<p class=\"delete\">" + UTIL_Xsprintf( gmapLANG_CFG["vote_deleted"].c_str( ), string( "<a title=\"" + gmapLANG_CFG["navbar_info"] + "\" href=\"" + RESPONSE_STR_VOTES_HTML + "\">" ).c_str( ), "</a>" ) + "</p>\n";
 				
-					JS_ReturnToPage( pRequest, pResponse, VOTES_HTML );
+					pResponse->strContent += "<script type=\"text/javascript\">window.location=\"" + RESPONSE_STR_VOTES_HTML + "\"</script>\n\n";
 				
 					// Output common HTML tail
 					HTML_Common_End( pRequest, pResponse, btv, NOT_INDEX, string( CSS_INFO ) );
@@ -1011,17 +1072,17 @@ void CTracker :: serverResponseVotesGET( struct request_t *pRequest, struct resp
 					
 						unsigned int uiOption = 0;
 					
-						CMySQLQuery *pQueryVotes = new CMySQLQuery( "SELECT bid,btitle FROM votes WHERE bid=" + cstrVote );
+						CMySQLQuery *pQueryVotes = new CMySQLQuery( "SELECT bid,btitle,bvotebonus_min,bvotebonus_max FROM votes WHERE bid=" + cstrVote );
 		
 						vector<string> vecQueryVotes;
 				
-						vecQueryVotes.reserve(2);
+						vecQueryVotes.reserve(4);
 
 						vecQueryVotes = pQueryVotes->nextRow( );
 					
 						delete pQueryVotes;
 					
-						if( vecQueryVotes.size( ) == 2 )
+						if( vecQueryVotes.size( ) == 4 )
 						{
 							CMySQLQuery *pQueryVote = new CMySQLQuery( "SELECT boptionid,boption,bvotecount FROM votesoption WHERE bid=" + vecQueryVotes[0] + " ORDER BY boptionid" );
 		
@@ -1065,6 +1126,11 @@ void CTracker :: serverResponseVotesGET( struct request_t *pRequest, struct resp
 							delete pQueryVote;
 						
 							pResponse->strContent += "<tr class=\"change_vote\">\n";
+							pResponse->strContent += "<td class=\"change_vote\">" + gmapLANG_CFG["vote_bonus"] + "</td>\n";
+							pResponse->strContent += "<td class=\"change_vote\">" + gmapLANG_CFG["vote_bonus_min"] + "<input name=\"bonus_min\" value=\"" + vecQueryVotes[2] + "\">";
+							pResponse->strContent += gmapLANG_CFG["vote_bonus_max"] + "<input name=\"bonus_max\" value=\"" + vecQueryVotes[3] + "\">";
+							pResponse->strContent += "</td></tr>\n";
+							pResponse->strContent += "<tr class=\"change_vote\">\n";
 							pResponse->strContent += "<td class=\"change_vote\" colspan=2>\n";
 							pResponse->strContent += Button_Submit( "submit_vote_edit", string( gmapLANG_CFG["vote_edit"] ) );
 							pResponse->strContent += "</td></tr>\n";
@@ -1100,9 +1166,9 @@ void CTracker :: serverResponseVotesGET( struct request_t *pRequest, struct resp
 								CMySQLQuery mq02( "UPDATE votes SET bclosed=0 WHERE bid=" + cstrVote );
 						}
 					
-						pResponse->strContent += "<p class=\"delete\">" + UTIL_Xsprintf( gmapLANG_CFG["vote_deleted"].c_str( ), string( "<a title=\"" + gmapLANG_CFG["navbar_info"] + "\" href=\"" + RESPONSE_STR_VOTES_HTML + "\">" ).c_str( ), "</a>" ) + "</p>\n";
+//						pResponse->strContent += "<p class=\"delete\">" + UTIL_Xsprintf( gmapLANG_CFG["vote_deleted"].c_str( ), string( "<a title=\"" + gmapLANG_CFG["navbar_info"] + "\" href=\"" + RESPONSE_STR_VOTES_HTML + "\">" ).c_str( ), "</a>" ) + "</p>\n";
 				
-						JS_ReturnToPage( pRequest, pResponse, VOTES_HTML );
+						pResponse->strContent += "<script type=\"text/javascript\">window.location=\"" + RESPONSE_STR_VOTES_HTML + "\"</script>\n\n";
 				
 						// Output common HTML tail
 						HTML_Common_End( pRequest, pResponse, btv, NOT_INDEX, string( CSS_INFO ) );
@@ -1130,9 +1196,9 @@ void CTracker :: serverResponseVotesGET( struct request_t *pRequest, struct resp
 								CMySQLQuery mq01( "UPDATE votes SET bclosed=NOW() WHERE bid=" + cstrVote );
 						}
 					
-						pResponse->strContent += "<p class=\"delete\">" + UTIL_Xsprintf( gmapLANG_CFG["vote_deleted"].c_str( ), string( "<a title=\"" + gmapLANG_CFG["navbar_info"] + "\" href=\"" + RESPONSE_STR_VOTES_HTML + "\">" ).c_str( ), "</a>" ) + "</p>\n";
+//						pResponse->strContent += "<p class=\"delete\">" + UTIL_Xsprintf( gmapLANG_CFG["vote_deleted"].c_str( ), string( "<a title=\"" + gmapLANG_CFG["navbar_info"] + "\" href=\"" + RESPONSE_STR_VOTES_HTML + "\">" ).c_str( ), "</a>" ) + "</p>\n";
 				
-						JS_ReturnToPage( pRequest, pResponse, VOTES_HTML );
+						pResponse->strContent += "<script type=\"text/javascript\">window.location=\"" + RESPONSE_STR_VOTES_HTML + "\"</script>\n\n";
 				
 						// Output common HTML tail
 						HTML_Common_End( pRequest, pResponse, btv, NOT_INDEX, string( CSS_INFO ) );
@@ -1146,18 +1212,23 @@ void CTracker :: serverResponseVotesGET( struct request_t *pRequest, struct resp
 			
 				return;
 			}
-//		}
+		}
 			
 		pResponse->strContent += "<table class=\"vote_table_admin\">\n";
 		
-//		if(  pRequest->user.ucAccess & m_ucAccessAdmin )
-//		{
+		if(  pRequest->user.ucAccess & m_ucAccessAdmin )
+		{
 			pResponse->strContent += "<tr>\n";
 			pResponse->strContent += "<td class=\"admin\" colspan=9>[<a class=\"black\" href=\"" + RESPONSE_STR_VOTES_HTML + "?action=new\">" + gmapLANG_CFG["vote_new"] + "</a>] [<a class=\"red\" href=\"javascript: ;\" onClick=\"javascript: if( confirm('" + gmapLANG_CFG["vote_delete_q"] + "') ) window.location='" + RESPONSE_STR_VOTES_HTML + "?action=del'\">" + gmapLANG_CFG["vote_del"] + "</a>]</td>";
 			pResponse->strContent += "</tr>\n";
-//		}
+		}
 			
-		CMySQLQuery *pQueryVotes = new CMySQLQuery( "SELECT bid,btitle,bcreated,bopen,bclosed,UNIX_TIMESTAMP(bopen),UNIX_TIMESTAMP(bclosed),bvotecount FROM votes ORDER BY bcreated DESC" );
+		CMySQLQuery *pQueryVotes = 0;
+
+		if(  pRequest->user.ucAccess & m_ucAccessAdmin )
+			pQueryVotes = new CMySQLQuery( "SELECT bid,btitle,bcreated,bopen,bclosed,UNIX_TIMESTAMP(bopen),UNIX_TIMESTAMP(bclosed),bvotecount FROM votes ORDER BY bcreated DESC" );
+		else
+			pQueryVotes = new CMySQLQuery( "SELECT bid,btitle,bcreated,bopen,bclosed,UNIX_TIMESTAMP(bopen),UNIX_TIMESTAMP(bclosed),bvotecount FROM votes WHERE bclosed>0 ORDER BY bcreated DESC" );
 		
 		vector<string> vecQueryVotes;
 	
@@ -1187,14 +1258,14 @@ void CTracker :: serverResponseVotesGET( struct request_t *pRequest, struct resp
 			}
 			pResponse->strContent += "</th>\n";
 			
-//			if( pRequest->user.ucAccess & m_ucAccessAdmin )
-//			{
+			if( pRequest->user.ucAccess & m_ucAccessAdmin )
+			{
 				pResponse->strContent += "<td class=\"voteadmin\">[<a href=\"" + RESPONSE_STR_VOTES_HTML + "?vote=" + vecQueryVotes[0] + "&amp;action=edit\">" + gmapLANG_CFG["vote_edit"] + "</a>]";
 				if( vecQueryVotes[5] != "0" && vecQueryVotes[6] == "0" )
 					pResponse->strContent += "[<a href=\"" + RESPONSE_STR_VOTES_HTML + "?vote=" + vecQueryVotes[0] + "&amp;action=close\">" + gmapLANG_CFG["vote_close"] + "</a>]</td>";
 				else
 					pResponse->strContent += "[<a href=\"" + RESPONSE_STR_VOTES_HTML + "?vote=" + vecQueryVotes[0] + "&amp;action=open\">" + gmapLANG_CFG["vote_open"] + "</a>]";
-//			}
+			}
 			
 			pResponse->strContent += "</tr>\n";
 			
@@ -1216,21 +1287,25 @@ void CTracker :: serverResponseVotesGET( struct request_t *pRequest, struct resp
 				
 				pResponse->strContent += "<p class=\"votetitle\">" + UTIL_RemoveHTML( vecQueryVotes[1] ) + "</p>";
 
+				pResponse->strContent += "<table class=\"voteoption\">\n";
+
 				while( vecQueryVote.size( ) == 3 )
 				{
 					if( vecQueryVote[0] != "0" )
 					{
-						pResponse->strContent += "<p class=\"voteoption\">";
+						pResponse->strContent += "<tr class=\"voteoption\">";
 					
-						pResponse->strContent += UTIL_RemoveHTML( vecQueryVote[1] ) + ": " + vecQueryVote[2] + " / " + vecQueryVotes[7];
+						pResponse->strContent += "<td class=\"voteoption\">" + UTIL_RemoveHTML( vecQueryVote[1] ) + "</td><td class=\"votecount\">" + vecQueryVote[2] + "</td>";
 					
-						pResponse->strContent += "</p>\n";
+						pResponse->strContent += "</tr>\n";
 					}
 					else
 						strSkip = "<p class=\"votetotal\">" + UTIL_RemoveHTML( vecQueryVote[1] ) + ": " + vecQueryVote[2] + "</p>\n";
 					
 					vecQueryVote = pQueryVote->nextRow( );
 				}
+				pResponse->strContent += "</table>";
+
 				pResponse->strContent += "<p class=\"votetotal\">" + UTIL_Xsprintf( gmapLANG_CFG["vote_total"].c_str( ), vecQueryVotes[7].c_str( ) ) + "</p>";
 				
 				pResponse->strContent += strSkip;
@@ -1278,6 +1353,9 @@ void CTracker :: serverResponseVotesPOST( struct request_t *pRequest, struct res
 		string strAction = string( );
 		string strTitle = string( );
 		string strOption = string( );
+		string strBonusMin = string( );
+		string strBonusMax = string( );
+		string strBonus = string( );
 		string strSelected = string( );
 		string strVoteFor = string( );
 		vector< pair<string, string> > vecOption;
@@ -1328,7 +1406,13 @@ void CTracker :: serverResponseVotesPOST( struct request_t *pRequest, struct res
 								strAction = pData->toString( );
 							else if( strName == "title" )
 								strTitle = pData->toString( );
-							else if( strName == "vote_selectd" )
+							else if( strName == "bonus_min" )
+								strBonusMin = pData->toString( );
+							else if( strName == "bonus_max" )
+								strBonusMax = pData->toString( );
+							else if( strName == "vote_bonus" )
+								strBonus = pData->toString( );
+							else if( strName == "vote_select" )
 								strSelected = pData->toString( );
 							else if( strName == "vote_for" )
 								strVoteFor = pData->toString( );
@@ -1383,9 +1467,24 @@ void CTracker :: serverResponseVotesPOST( struct request_t *pRequest, struct res
 			
 			if( !strTitle.empty( ) && !vecOption.empty( ) )
 			{
+				int64 uiBonusMin = 0, uiBonusMax = 0;
+				bool bNum = true;
+				for( int i = 0; i < strBonusMin.length( ) && bNum; i++ )
+					if( !isdigit( strBonusMin[i] ) )
+						bNum  = false;
+				for( int i = 0; i < strBonusMax.length( ) && bNum; i++ )
+					if( !isdigit( strBonusMax[i] ) )
+						bNum  = false;
+
+				uiBonusMin = UTIL_StringTo64( strBonusMin.c_str( ) );
+				uiBonusMax = UTIL_StringTo64( strBonusMax.c_str( ) );
+
+				if( bNum && uiBonusMin > uiBonusMax )
+					bNum = false;
+
 				if( strAction == "new" )
 				{
-					CMySQLQuery *pQueryVote = new CMySQLQuery( "INSERT INTO votes (btitle,bcreated) VALUES('" + UTIL_StringToMySQL( strTitle ) + "',NOW())" );
+					CMySQLQuery *pQueryVote = new CMySQLQuery( "INSERT INTO votes (btitle,bcreated,bvotebonus_min,bvotebonus_max) VALUES('" + UTIL_StringToMySQL( strTitle ) + "',NOW()," + CAtomInt( uiBonusMin ).toString( ) + "," + CAtomInt( uiBonusMax ).toString( ) + ")" );
 				
 					unsigned long ulLast = pQueryVote->lastInsertID( );
 				
@@ -1400,7 +1499,10 @@ void CTracker :: serverResponseVotesPOST( struct request_t *pRequest, struct res
 				}
 				else if( strAction == "edit" && !strVote.empty( ) )
 				{
-					CMySQLQuery mq01( "UPDATE votes SET btitle='" + UTIL_StringToMySQL( strTitle ) + "' WHERE bid=" + strVote );
+					if( bNum )
+						CMySQLQuery mq01( "UPDATE votes SET btitle='" + UTIL_StringToMySQL( strTitle ) + "',bvotebonus_min=" + CAtomInt( uiBonusMin ).toString( ) + ",bvotebonus_max=" + CAtomInt( uiBonusMax ).toString( ) + " WHERE bid=" + strVote );
+					else
+						CMySQLQuery mq02( "UPDATE votes SET btitle='" + UTIL_StringToMySQL( strTitle ) + "' WHERE bid=" + strVote );
 					
 					for( vector< pair< string, string > > :: iterator ulOption = vecOption.begin( ); ulOption != vecOption.end( ); ulOption++ )
 					{
@@ -1437,6 +1539,26 @@ void CTracker :: serverResponseVotesPOST( struct request_t *pRequest, struct res
 			
 			if( vecQueryTicket.size( ) == 0 )
 			{
+				bool bNum = true;
+				for( int i = 0; i < strBonus.length( ) && bNum; i++ )
+					if( !isdigit( strBonus[i] ) )
+						bNum  = false;
+
+				CMySQLQuery *pQueryUser = new CMySQLQuery( "SELECT bbonus FROM users WHERE buid=" + pRequest->user.strUID );
+		
+				vector<string> vecQueryUser;
+	
+				vecQueryUser.reserve(1);
+
+				vecQueryUser = pQueryUser->nextRow( );
+				
+				delete pQueryUser;
+
+				int64 ulBonus = 0;
+
+				if( vecQueryUser.size( ) == 1 && !vecQueryUser[0].empty( ) )
+					ulBonus = UTIL_StringTo64( vecQueryUser[0].c_str( ) );
+
 				CMySQLQuery *pQueryVote = new CMySQLQuery( "SELECT boptionid FROM votesoption WHERE bid=" + strVoteFor + " AND boptionid=" + strSelected );
 		
 				vector<string> vecQueryVote;
@@ -1446,13 +1568,31 @@ void CTracker :: serverResponseVotesPOST( struct request_t *pRequest, struct res
 				vecQueryVote = pQueryVote->nextRow( );
 				
 				delete pQueryVote;
+
+				bool bVoted = false;
 				
 				if( vecQueryVote.size( ) == 1 )
 				{
-					if( strSelected != "0" )
-						CMySQLQuery mq01( "UPDATE votes SET bvotecount=bvotecount+1 WHERE bid=" + strVoteFor );
-					CMySQLQuery mq02( "UPDATE votesoption SET bvotecount=bvotecount+1 WHERE bid=" + strVoteFor + " AND boptionid=" + strSelected );
-					CMySQLQuery mq03( "INSERT INTO votesticket (bid,buid,boptionid,bvotetime) VALUES(" + strVoteFor + "," + pRequest->user.strUID + "," + strSelected + ",NOW())" );
+					if( !strBonus.empty( ) && bNum && strSelected != "0" )
+					{
+						if( ulBonus / 100 > UTIL_StringTo64( strBonus.c_str( ) ) )
+						{
+							CMySQLQuery mq01( "INSERT INTO votesticket (bid,buid,boptionid,bvotebonus,bvotetime) VALUES(" + strVoteFor + "," + pRequest->user.strUID + "," + strSelected + "," + strBonus + ",NOW())" );
+							CMySQLQuery mq02( "UPDATE users SET bbonus=bbonus-" + CAtomLong( UTIL_StringTo64( strBonus.c_str( ) ) * 100 ).toString( ) + " WHERE buid=" + pRequest->user.strUID );
+							bVoted = true;
+						}
+					}
+					else
+					{
+						CMySQLQuery mq03( "INSERT INTO votesticket (bid,buid,boptionid,bvotetime) VALUES(" + strVoteFor + "," + pRequest->user.strUID + "," + strSelected + ",NOW())" );
+						bVoted = true;
+					}
+					if( bVoted )
+					{
+						if( strSelected != "0" )
+							CMySQLQuery mq04( "UPDATE votes SET bvotecount=bvotecount+1 WHERE bid=" + strVoteFor );
+						CMySQLQuery mq05( "UPDATE votesoption SET bvotecount=bvotecount+1 WHERE bid=" + strVoteFor + " AND boptionid=" + strSelected );
+					}
 				}
 			}
 			
