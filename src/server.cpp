@@ -390,7 +390,7 @@ bool CServer :: AddListener( struct sockaddr_in6 sin )
 #endif
 
 	// listen on the socket
-	if( listen( sckListener, 1 ) == SOCKET_ERROR )
+	if( listen( sckListener, CFG_GetInt( "bnbt_listen_backlog", 1 ) ) == SOCKET_ERROR )
 	{
 		UTIL_LogPrint( ( gmapLANG_CFG["unable_to_listen"] + "\n" ).c_str( ), GetLastErrorString( ) );
 
