@@ -419,6 +419,7 @@ extern unsigned int guiMaxRecvSize;
 extern string gstrStyle;
 extern string gstrCharSet;
 extern string gstrRealm;
+extern string gstrPasswordKey;
 
 // The Trinity Edition - Modification Begins
 // Sets the NT Service Name variable as a global variable

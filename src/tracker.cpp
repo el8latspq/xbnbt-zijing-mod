@@ -2964,7 +2964,7 @@ const string CTracker :: addUser( const string &strLogin, const string &strPass,
 	string strQuery = "INSERT INTO users (busername,bmd5,bcreated,bemail,baccess,buploaded,bdownloaded,bbonus) VALUES(\'" + UTIL_StringToMySQL( strLogin ) + "\'";
 
 	// calculate md5 hash of A1
-	const string cstrA1( strLogin + ":" + gstrRealm + ":" + strPass );
+	const string cstrA1( strLogin + ":" + gstrPasswordKey + ":" + strPass );
 
 	unsigned char szMD5[16];
 	memset( szMD5, 0, sizeof( szMD5 ) / sizeof( unsigned char ) );
@@ -4738,7 +4738,9 @@ void CTracker :: serverResponseRSS( struct request_t *pRequest, struct response_
 			return;
 	}
 	
+	const string strSearch( pRequest->mapParams["search"] );
 	const string strUploader( pRequest->mapParams["uploader"] );
+	const string strMatch( pRequest->mapParams["match"] );
 	
 	const string strChannelTag( pRequest->mapParams["tag"] );
 	const string strMedium( pRequest->mapParams["medium"] );
@@ -4748,10 +4750,11 @@ void CTracker :: serverResponseRSS( struct request_t *pRequest, struct response_
 	const string cstrDay( pRequest->mapParams["day"] );
 	const string cstrPasskey( pRequest->mapParams["passkey"] );
 	
+	vector<string> vecSearch;
+	vecSearch.reserve(64);
 	vector<string> vecUploader;
 	vecUploader.reserve(64);
 	vector<string> vecFilter;
-
 	vecFilter.reserve(64);
 	vector<string> vecMedium;
 	vecMedium.reserve(64);
@@ -4760,6 +4763,7 @@ void CTracker :: serverResponseRSS( struct request_t *pRequest, struct response_
 	vector<string> vecEncode;
 	vecEncode.reserve(64);
 	
+	vecSearch = UTIL_SplitToVector( strSearch, " " );
 	vecUploader = UTIL_SplitToVector( strUploader, " " );
 	vecFilter = UTIL_SplitToVector( strChannelTag, " " );
 	vecMedium = UTIL_SplitToVector( strMedium, " " );
@@ -4797,22 +4801,29 @@ void CTracker :: serverResponseRSS( struct request_t *pRequest, struct response_
 		// title
 //		strData += "<title>" + m_strTitle + ( !strChannelTag.empty( ) ? " - " + strChannelTag : string( ) ) + "</title>\n";
 		strData += "<title>" + m_strTitle;
+
+		string strTitle = string( );
 		
-		if( !vecUploader.empty( ) || !vecFilter.empty( ) || !vecMedium.empty( ) || !vecQuality.empty( ) || !vecEncode.empty( ) )
-			strData += " - ";
-		
+		if( !vecSearch.empty( ) )
+		{
+		 	strTitle += UTIL_RemoveHTML( strSearch );
+		}
+
 		if( !vecUploader.empty( ) )
 		{
-		 	strData += UTIL_RemoveHTML( strUploader );
+			if( !strTitle.empty( ) )
+				strTitle += " - ";
+
+		 	strTitle += UTIL_RemoveHTML( strUploader );
 		}
 			
-		if( !vecUploader.empty( ) && !vecFilter.empty() )
-			strData += " - ";
-		
 		if( !vecFilter.empty( ) )
 		{
 			if( !m_vecTags.empty( ) )
 			{
+				if( !strTitle.empty( ) )
+					strTitle += " - ";
+
 				string strNameIndex = string( );
 				string strTag = string( );
 				
@@ -4826,86 +4837,89 @@ void CTracker :: serverResponseRSS( struct request_t *pRequest, struct response_
 						if( (*ulKey).length( ) > 2 )
 						{
 							if( *ulKey == strNameIndex )
-								strData += UTIL_RemoveHTML( strTag );
+								strTitle += UTIL_RemoveHTML( strTag );
 						}
 						else
 						{
 							if( *ulKey + "01" == strNameIndex )
-								strData += UTIL_RemoveHTML( strTag.substr( 0, strTag.find( ' ' ) ) );
+								strTitle += UTIL_RemoveHTML( strTag.substr( 0, strTag.find( ' ' ) ) );
 						}
 
 					}
 
 					if( ulKey + 1 != vecFilter.end( ) )
-						strData += " &amp; ";
+						strTitle += " &amp; ";
 				}
 			}
 		}
-
-		if( ( !vecUploader.empty( ) || !vecFilter.empty( ) ) && !vecMedium.empty( ) )
-			strData += " - ";
 		
 		if( !vecMedium.empty( ) )
 		{
 			if( !m_vecMediums.empty( ) )
 			{
+				if( !strTitle.empty( ) )
+					strTitle += " - ";
+
 				for( vector<string> :: iterator ulKey = vecMedium.begin( ); ulKey != vecMedium.end( ); ulKey++ )
 				{
 					for( vector< string > :: iterator ulTagKey = m_vecMediums.begin( ); ulTagKey != m_vecMediums.end( ); ulTagKey++ )
 					{
 						if( *ulKey == *ulTagKey )
-							strData += gmapLANG_CFG["medium_"+*ulTagKey];
+							strTitle += gmapLANG_CFG["medium_"+*ulTagKey];
 					}
 
 					if( ulKey + 1 != vecMedium.end( ) )
-						strData += " &amp; ";
+						strTitle += " &amp; ";
 				}
 			}
 		}
-		
-		if( ( !vecUploader.empty( ) || !vecFilter.empty( ) || !vecMedium.empty( ) ) && !vecQuality.empty( ) )
-			strData += " - ";
 		
 		if( !vecQuality.empty( ) )
 		{
 			if( !m_vecQualities.empty( ) )
 			{
+				if( !strTitle.empty( ) )
+					strTitle += " - ";
+
 				for( vector<string> :: iterator ulKey = vecQuality.begin( ); ulKey != vecQuality.end( ); ulKey++ )
 				{
 					for( vector< string > :: iterator ulTagKey = m_vecQualities.begin( ); ulTagKey != m_vecQualities.end( ); ulTagKey++ )
 					{
 						if( *ulKey == *ulTagKey )
-							strData += gmapLANG_CFG["quality_"+*ulTagKey];
+							strTitle += gmapLANG_CFG["quality_"+*ulTagKey];
 					}
 
 					if( ulKey + 1 != vecQuality.end( ) )
-						strData += " &amp; ";
+						strTitle += " &amp; ";
 				}
 			}
 		}
-		
-		if( ( !vecUploader.empty( ) || !vecFilter.empty( ) || !vecMedium.empty( ) || !vecQuality.empty( ) ) && !vecEncode.empty( ) )
-			strData += " - ";
 		
 		if( !vecEncode.empty( ) )
 		{
 			if( !m_vecEncodes.empty( ) )
 			{
+				if( !strTitle.empty( ) )
+					strTitle += " - ";
+
 				for( vector<string> :: iterator ulKey = vecEncode.begin( ); ulKey != vecEncode.end( ); ulKey++ )
 				{
 					for( vector< string > :: iterator ulTagKey = m_vecEncodes.begin( ); ulTagKey != m_vecEncodes.end( ); ulTagKey++ )
 					{
 						if( *ulKey == *ulTagKey )
-							strData += gmapLANG_CFG["encode_"+*ulTagKey];
+							strTitle += gmapLANG_CFG["encode_"+*ulTagKey];
 					}
 
 					if( ulKey + 1 != vecEncode.end( ) )
-						strData += " &amp; ";
+						strTitle += " &amp; ";
 				}
 			}
 		}
 		
-		strData += "</title>\n";
+		if( !strTitle.empty( ) )
+			strTitle = " - " + strTitle;
+
+		strData += strTitle + "</title>\n";
 
 		// link
 		if( !rssdump.strURL.empty( ) )
@@ -5077,12 +5091,21 @@ void CTracker :: serverResponseRSS( struct request_t *pRequest, struct response_
 		
 		time_t now_t = time( 0 );
 
+		unsigned char ucMatchMethod = MATCH_METHOD_NONCASE_AND;
+
+		if( strMatch == "or" )
+			ucMatchMethod = MATCH_METHOD_NONCASE_OR;
+		else if( strMatch == "eor" )
+			ucMatchMethod = MATCH_METHOD_NONCASE_EQ;
+
 		for( unsigned long ulLoop = 0; ulLoop < culKeySize; ulLoop++ )
 		{
 			if( ulCount >= ulLimit )
 				break;
 			
-			if( !UTIL_MatchVector( pTorrents[ulLoop].strUploader, vecUploader, MATCH_METHOD_NONCASE_AND ) )
+			if( !vecSearch.empty( ) && !UTIL_MatchVector( pTorrents[ulLoop].strName, vecSearch, ucMatchMethod ) )
+				continue;
+			if( !vecUploader.empty( ) && !UTIL_MatchVector( pTorrents[ulLoop].strUploader, vecUploader, ucMatchMethod ) )
 				continue;
 				
 			if( !vecFilter.empty( ) )  
@@ -6685,7 +6708,7 @@ void CTracker :: HTML_Common_Begin( struct request_t *pRequest, struct response_
 	
 	if( pRequest->strIP.find( ":" ) == string :: npos )
 	{
-		if( pRequest->strIP.find( "172.21." ) == 0 || pRequest->strIP.find( "58.192." ) == 0 )
+		if( pRequest->strIP.find( "172.21." ) == 0 || pRequest->strIP.find( "58.192." ) == 0 || pRequest->strIP.find( "180.209." ) == 0 )
 			strLocation = gmapLANG_CFG["location_ipv4_nju_bras"];
 		else
 			strLocation = gmapLANG_CFG["location_ipv4_nju"];
@@ -6818,7 +6841,9 @@ void CTracker :: HTML_Common_Begin( struct request_t *pRequest, struct response_
 		const string cstrMedium( pRequest->mapParams["medium"] );
 		const string cstrQuality( pRequest->mapParams["quality"] );
 		const string cstrEncode( pRequest->mapParams["encode"] );
+		const string cstrSearch( pRequest->mapParams["search"] );
 		const string cstrUploader( pRequest->mapParams["uploader"] );
+		const string cstrMatch( pRequest->mapParams["match"] );
 		const string cstrNoTag( pRequest->mapParams["notag"] );
 
 		string strPageParameters = string( );
@@ -6843,7 +6868,9 @@ void CTracker :: HTML_Common_Begin( struct request_t *pRequest, struct response_
 		vecParams.push_back( pair<string, string>( string( "medium" ), cstrMedium ) );
 		vecParams.push_back( pair<string, string>( string( "quality" ), cstrQuality ) );
 		vecParams.push_back( pair<string, string>( string( "encode" ), cstrEncode ) );
+		vecParams.push_back( pair<string, string>( string( "search" ), cstrSearch ) );
 		vecParams.push_back( pair<string, string>( string( "uploader" ), cstrUploader ) );
+		vecParams.push_back( pair<string, string>( string( "match" ), cstrMatch ) );
 		
 		strPageParameters += UTIL_HTMLJoin( vecParams, string( "?" ), string( "&" ), string( "=" ) );
 			
@@ -6898,7 +6925,11 @@ void CTracker :: HTML_Common_Begin( struct request_t *pRequest, struct response_
 			if( now_t - last_time_index_2 > 0 && now_t - last_time_index_2 > CFG_GetInt( "bnbt_new_torrent_interval", 300 ) )
 			{
 				last_time_index = last_time_index_2;
-				CMySQLQuery mq01( "UPDATE users SET blast_index=blast_index_2,blast_index_2=0 WHERE buid=" + pRequest->user.strUID );
+				string strQuery = "UPDATE users SET blast_index=blast_index_2";
+				if( bIndex )
+					strQuery += ",blast_index_2=NOW()";
+				strQuery += " WHERE buid=" + pRequest->user.strUID;
+				CMySQLQuery mq01( strQuery );
 			}
 		}
 		else if( bIndex )

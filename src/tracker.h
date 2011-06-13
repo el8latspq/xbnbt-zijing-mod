@@ -598,7 +598,7 @@ public:
 	const string getUserLinkFull( const string &strUID, const string &strUsername );
 	const string getUserLinkTalk( const string &strUID, const string &strUsername );
 	const string TransferMentions( const string &cstrTalk, const string &cstrTalkID );
-	const string GenerateTalk( const vector<string> &vecQuery, const unsigned char cucAccess, const string &cstrUID, const string &cstrJoined, bool bTalker = true, bool bFunc = true, bool bReply = true );
+	const string GenerateTalk( const vector<string> &vecQuery, const unsigned char cucAccess, const string &cstrUID, const string &cstrJoined, bool bTalker = true, bool bFunc = true, bool bHistory = false, bool bReplys = false );
 	void InitPasskey( const string &strLogin );
 	void deleteUser( const string &strUID );
 	void CountUniquePeers( );

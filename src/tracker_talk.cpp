@@ -147,8 +147,8 @@ void CTracker :: serverResponseTalkGET( struct request_t *pRequest, struct respo
 		// post
 		pResponse->strContent += "function post(formId,textareaId,submitId,hintId) {\n";
 		pResponse->strContent += "  var the_timeout;\n";
-		pResponse->strContent += "  if (validate( document.postatalk )) {\n";
-		pResponse->strContent += "    var postForm = document.getElementById( formId );\n";
+		pResponse->strContent += "  var postForm = document.getElementById( formId );\n";
+		pResponse->strContent += "  if (validate( postForm )) {\n";
 		pResponse->strContent += "    var postTextarea = document.getElementById( textareaId );\n";
 		pResponse->strContent += "    var postSubmit = document.getElementById( submitId );\n";
 		pResponse->strContent += "    var hintElement = document.getElementById( hintId );\n";
@@ -184,11 +184,12 @@ void CTracker :: serverResponseTalkGET( struct request_t *pRequest, struct respo
 		pResponse->strContent += "          document.getElementById( 'rt_hint' ).innerHTML = '';\n";
 //		pResponse->strContent += "          window.scrollTo(0,0);\n";
 //		pResponse->strContent += "          window.location.hash = \"#\";\n";
-		pResponse->strContent += "          hintElement.innerHTML = '" + gmapLANG_CFG["talk_hint_succeed"] + "';\n";
+		pResponse->strContent += "          if(hintElement)\n";
+		pResponse->strContent += "            hintElement.innerHTML = '" + gmapLANG_CFG["talk_hint_succeed"] + "';\n";
 		pResponse->strContent += "          postSubmit.disabled = false;\n";
 		pResponse->strContent += "          postTextarea.disabled = false;\n";
 		pResponse->strContent += "          charleft(document.postatalk,'talk_left','submit_talk');\n";
-		pResponse->strContent += "          document.postatalk.talk.focus();\n";
+		pResponse->strContent += "          postTextarea.focus();\n";
 		pResponse->strContent += "          load('div','divTalk',postForm.action+'?'+post_data); }\n";
 		pResponse->strContent += "    }\n";
 		pResponse->strContent += "    xmlhttp.open(\"POST\",postForm.action,true);\n";
@@ -196,7 +197,8 @@ void CTracker :: serverResponseTalkGET( struct request_t *pRequest, struct respo
 		pResponse->strContent += "    xmlhttp.setRequestHeader(\"Content-Type\", \"application/x-www-form-urlencoded\");\n";
 //		pResponse->strContent += "    xmlhttp.setRequestHeader(\"Connection\", \"close\");\n";
 		pResponse->strContent += "    xmlhttp.send(post_data);\n";
-		pResponse->strContent += "    hintElement.innerHTML = '" + gmapLANG_CFG["talk_hint_sending"] + "';\n";
+		pResponse->strContent += "    if(hintElement)\n";
+		pResponse->strContent += "      hintElement.innerHTML = '" + gmapLANG_CFG["talk_hint_sending"] + "';\n";
 		pResponse->strContent += "    postSubmit.disabled = true;\n";
 		pResponse->strContent += "    postTextarea.disabled = true;\n";
 		pResponse->strContent += "    posted = false;\n";
@@ -204,7 +206,117 @@ void CTracker :: serverResponseTalkGET( struct request_t *pRequest, struct respo
 		pResponse->strContent += "    the_timeout= setTimeout( funcTimeout, 15000 );\n";
 		pResponse->strContent += "  }\n";
 		pResponse->strContent += "}\n\n";
-		
+
+		// post reply
+		pResponse->strContent += "function postreply(formId,textareaId,submitId,hintId) {\n";
+		pResponse->strContent += "  var the_timeout;\n";
+		pResponse->strContent += "  var postForm = document.getElementById( formId );\n";
+		pResponse->strContent += "  if (validate( postForm )) {\n";
+		pResponse->strContent += "    var postTextarea = document.getElementById( textareaId );\n";
+		pResponse->strContent += "    var postSubmit = document.getElementById( submitId );\n";
+		pResponse->strContent += "    var hintElement = document.getElementById( hintId );\n";
+		pResponse->strContent += "    var post_data = '';\n";
+		pResponse->strContent += "    var textData = postTextarea.value;\n";
+		pResponse->strContent += "    var i = 0;\n";
+		pResponse->strContent += "    for(i=0;i<textData.length;i++) {\n";
+		pResponse->strContent += "      if(textData.charAt(i) != ' ')\n";
+		pResponse->strContent += "        break;\n";
+		pResponse->strContent += "    }\n";
+		pResponse->strContent += "    textData = textData.substring(i,textData.length);\n";
+		pResponse->strContent += "    for(i=textData.length;i>0;i--) {\n";
+		pResponse->strContent += "      if(textData.charAt(i-1) != ' ')\n";
+		pResponse->strContent += "        break;\n";
+		pResponse->strContent += "    }\n";
+		pResponse->strContent += "    textData = textData.substring(0,i);\n";
+		pResponse->strContent += "    postTextarea.value = textData;\n";
+		pResponse->strContent += "    for (var i = 0; i < postForm.elements.length; i++) {\n";
+		pResponse->strContent += "      if ( (postForm.elements[i].name != 'submit_talk_button') && !(postForm.elements[i].name == 'show' && postForm.elements[i].value == 'mentions') && postForm.elements[i].name != 'uid' ) {\n";
+		pResponse->strContent += "        if( post_data != '' )\n";
+		pResponse->strContent += "          post_data = post_data + '&';\n";
+		pResponse->strContent += "        post_data = post_data + postForm.elements[i].name + '=' + encodeURIComponent(postForm.elements[i].value); }\n";
+		pResponse->strContent += "    }\n";
+		pResponse->strContent += "    xmlhttp.onreadystatechange=function() {\n";
+		pResponse->strContent += "      if (xmlhttp.readyState==4 && xmlhttp.status==200) {\n";
+		pResponse->strContent += "          clearTimeout( the_timeout );\n";
+		pResponse->strContent += "          postTextarea.value = '';\n";
+		pResponse->strContent += "          if(hintElement)\n";
+		pResponse->strContent += "            hintElement.innerHTML = '" + gmapLANG_CFG["talk_hint_succeed"] + "';\n";
+		pResponse->strContent += "          postSubmit.disabled = false;\n";
+		pResponse->strContent += "          postTextarea.disabled = false;\n";
+		pResponse->strContent += "          postTextarea.focus();\n";
+		pResponse->strContent += "          load('div','divTalk',postForm.action+'?'+post_data); }\n";
+		pResponse->strContent += "    }\n";
+		pResponse->strContent += "    xmlhttp.open(\"POST\",postForm.action,true);\n";
+//		pResponse->strContent += "    xmlhttp.setRequestHeader(\"Content-Length\", post_data.length);\n";
+		pResponse->strContent += "    xmlhttp.setRequestHeader(\"Content-Type\", \"application/x-www-form-urlencoded\");\n";
+//		pResponse->strContent += "    xmlhttp.setRequestHeader(\"Connection\", \"close\");\n";
+		pResponse->strContent += "    xmlhttp.send(post_data);\n";
+		pResponse->strContent += "    if(hintElement)\n";
+		pResponse->strContent += "      hintElement.innerHTML = '" + gmapLANG_CFG["talk_hint_sending"] + "';\n";
+		pResponse->strContent += "    postSubmit.disabled = true;\n";
+		pResponse->strContent += "    postTextarea.disabled = true;\n";
+		pResponse->strContent += "    posted = false;\n";
+		pResponse->strContent += "    var funcTimeout = call_timeout(submitId,textareaId,hintId);\n";
+		pResponse->strContent += "    the_timeout= setTimeout( funcTimeout, 15000 );\n";
+		pResponse->strContent += "  }\n";
+		pResponse->strContent += "}\n\n";
+
+		// post replyto
+		pResponse->strContent += "function postreplyto(talkId,replytoId,formId,textareaId,submitId,hintId) {\n";
+		pResponse->strContent += "  var the_timeout;\n";
+		pResponse->strContent += "  var postDiv = document.getElementById( 'talk'+talkId+'_replys' );\n";
+		pResponse->strContent += "  var postForm = document.getElementById( formId );\n";
+		pResponse->strContent += "  if (validate( postForm )) {\n";
+		pResponse->strContent += "    var postTextarea = document.getElementById( textareaId );\n";
+		pResponse->strContent += "    var postSubmit = document.getElementById( submitId );\n";
+		pResponse->strContent += "    var hintElement = document.getElementById( hintId );\n";
+		pResponse->strContent += "    var post_data = '';\n";
+		pResponse->strContent += "    var textData = postTextarea.value;\n";
+		pResponse->strContent += "    var i = 0;\n";
+		pResponse->strContent += "    for(i=0;i<textData.length;i++) {\n";
+		pResponse->strContent += "      if(textData.charAt(i) != ' ')\n";
+		pResponse->strContent += "        break;\n";
+		pResponse->strContent += "    }\n";
+		pResponse->strContent += "    textData = textData.substring(i,textData.length);\n";
+		pResponse->strContent += "    for(i=textData.length;i>0;i--) {\n";
+		pResponse->strContent += "      if(textData.charAt(i-1) != ' ')\n";
+		pResponse->strContent += "        break;\n";
+		pResponse->strContent += "    }\n";
+		pResponse->strContent += "    textData = textData.substring(0,i);\n";
+		pResponse->strContent += "    postTextarea.value = textData;\n";
+		pResponse->strContent += "    for (var i = 0; i < postForm.elements.length; i++) {\n";
+		pResponse->strContent += "      if ( (postForm.elements[i].name != 'submit_talk_button') && !(postForm.elements[i].name == 'show' && postForm.elements[i].value == 'mentions') && postForm.elements[i].name != 'uid' ) {\n";
+		pResponse->strContent += "        if( post_data != '' )\n";
+		pResponse->strContent += "          post_data = post_data + '&';\n";
+		pResponse->strContent += "        post_data = post_data + postForm.elements[i].name + '=' + encodeURIComponent(postForm.elements[i].value); }\n";
+		pResponse->strContent += "    }\n";
+		pResponse->strContent += "    xmlhttp.onreadystatechange=function() {\n";
+		pResponse->strContent += "      if (xmlhttp.readyState==4 && xmlhttp.status==200) {\n";
+		pResponse->strContent += "          clearTimeout( the_timeout );\n";
+		pResponse->strContent += "          postDiv.parentNode.removeChild( postDiv );\n";
+		pResponse->strContent += "          get_reply_to(talkId,replytoId);\n";
+		pResponse->strContent += "          postTextarea.value = '';\n";
+		pResponse->strContent += "          if(hintElement)\n";
+		pResponse->strContent += "            hintElement.innerHTML = '" + gmapLANG_CFG["talk_hint_succeed"] + "';\n";
+		pResponse->strContent += "          postSubmit.disabled = false;\n";
+		pResponse->strContent += "          postTextarea.disabled = false;\n";
+		pResponse->strContent += "          postTextarea.focus(); }\n";
+		pResponse->strContent += "    }\n";
+		pResponse->strContent += "    xmlhttp.open(\"POST\",postForm.action,true);\n";
+//		pResponse->strContent += "    xmlhttp.setRequestHeader(\"Content-Length\", post_data.length);\n";
+		pResponse->strContent += "    xmlhttp.setRequestHeader(\"Content-Type\", \"application/x-www-form-urlencoded\");\n";
+//		pResponse->strContent += "    xmlhttp.setRequestHeader(\"Connection\", \"close\");\n";
+		pResponse->strContent += "    xmlhttp.send(post_data);\n";
+		pResponse->strContent += "    if(hintElement)\n";
+		pResponse->strContent += "      hintElement.innerHTML = '" + gmapLANG_CFG["talk_hint_sending"] + "';\n";
+		pResponse->strContent += "    postSubmit.disabled = true;\n";
+		pResponse->strContent += "    postTextarea.disabled = true;\n";
+		pResponse->strContent += "    posted = false;\n";
+		pResponse->strContent += "    var funcTimeout = call_timeout(submitId,textareaId,hintId);\n";
+		pResponse->strContent += "    the_timeout= setTimeout( funcTimeout, 15000 );\n";
+		pResponse->strContent += "  }\n";
+		pResponse->strContent += "}\n\n";
+
 		// call_timeout
 		pResponse->strContent += "function call_timeout(id1,id2,hintId) {\n";
 		pResponse->strContent += "  return (function() {\n";
@@ -219,20 +331,22 @@ void CTracker :: serverResponseTalkGET( struct request_t *pRequest, struct respo
 		pResponse->strContent += "  if( element1.disabled == true && element2.disabled == true ) {\n";
 		pResponse->strContent += "    alert('" + gmapLANG_CFG["talk_timeout"] + "');\n";
 //		pResponse->strContent += "    clearAll();\n";
-		pResponse->strContent += "    hintElement.innerHTML = '" + gmapLANG_CFG["talk_hint_timeout"] + "';\n";
+		pResponse->strContent += "    if(hintElement)\n";
+		pResponse->strContent += "      hintElement.innerHTML = '" + gmapLANG_CFG["talk_hint_timeout"] + "';\n";
 		pResponse->strContent += "    element1.disabled = false;\n";
 		pResponse->strContent += "    element2.disabled = false;\n";
 		pResponse->strContent += "    element2.focus(); }\n";
 		pResponse->strContent += "}\n\n";
 		
 		// reply
-		pResponse->strContent += "function reply(replyId,replytoId,formId,textareaId,inputId) {\n";
-		pResponse->strContent += "  var replySpan = document.getElementById( 'reply'+replyId );\n";
+//		pResponse->strContent += "function reply(talkId,replyId,replytoId,formId,textareaId,inputId) {\n";
+		pResponse->strContent += "function reply(talkId,replyId,textareaId) {\n";
+		pResponse->strContent += "  var replySpan = document.getElementById( talkId + 'reply'+replyId );\n";
 		pResponse->strContent += "  var replyData = replySpan.innerHTML;\n";
 		pResponse->strContent += "  var textarea = document.getElementById( textareaId );\n";
 		pResponse->strContent += "  var textData = textarea.value;\n";
-		pResponse->strContent += "  var replyInput = document.getElementById( inputId );\n";
-		pResponse->strContent += "  var replytoInput = document.getElementById( inputId+'To' );\n";
+//		pResponse->strContent += "  var replyInput = document.getElementById( inputId );\n";
+//		pResponse->strContent += "  var replytoInput = document.getElementById( inputId+'To' );\n";
 		pResponse->strContent += "  var i = 0;\n";
 		pResponse->strContent += "  for(i=0;i<textData.length;i++) {\n";
 		pResponse->strContent += "    if(textData.charAt(i) != ' ')\n";
@@ -243,8 +357,8 @@ void CTracker :: serverResponseTalkGET( struct request_t *pRequest, struct respo
 		pResponse->strContent += "    if(textData.charAt(i-1) != ' ')\n";
 		pResponse->strContent += "      break;\n";
 		pResponse->strContent += "  }\n";
-		pResponse->strContent += "  window.scrollTo(0,0);\n";
-		pResponse->strContent += "  document.postatalk.talk.focus();\n";
+//		pResponse->strContent += "  window.scrollTo(0,0);\n";
+		pResponse->strContent += "  textarea.focus();\n";
 		pResponse->strContent += "  textData = textData.substring(0,i) + ' ';\n";
 		pResponse->strContent += "  var start = textData.indexOf( replyData );\n";
 		pResponse->strContent += "  var done = false;\n";
@@ -262,9 +376,9 @@ void CTracker :: serverResponseTalkGET( struct request_t *pRequest, struct respo
 		pResponse->strContent += "      textarea.value = replyData + textData;\n";
 		pResponse->strContent += "    else\n";
 		pResponse->strContent += "      textarea.value = replyData; }\n";
-		pResponse->strContent += "  charleft(document.postatalk,'talk_left','submit_talk');\n";
-		pResponse->strContent += "  replyInput.value = replyId;\n";
-		pResponse->strContent += "  replytoInput.value = replytoId;\n";
+//		pResponse->strContent += "  charleft(document.postatalk,'talk_left','submit_talk');\n";
+//		pResponse->strContent += "  replyInput.value = replyId;\n";
+//		pResponse->strContent += "  replytoInput.value = replytoId;\n";
 //		pResponse->strContent += "  window.location.hash = \"#\";\n";
 //		pResponse->strContent += "  else\n";
 //		pResponse->strContent += "      textarea.value = textData;
@@ -392,12 +506,43 @@ void CTracker :: serverResponseTalkGET( struct request_t *pRequest, struct respo
 		pResponse->strContent += "    the_timeout= setTimeout( funcTimeout, 15000 ); }\n";
 		pResponse->strContent += "}\n\n";
 		
-		// get reply
-		pResponse->strContent += "function get_reply(talkID,getID) {\n";
-		pResponse->strContent += "  var divTalk = document.getElementById( talkID );\n";
-		pResponse->strContent += "  var divGet = document.getElementById( talkID+'_reply'+getID );\n";
+		// reply form
+		pResponse->strContent += "function reply_form(talkID,replyID,replyToID) {\n";
+		pResponse->strContent += "  var replyForm = '<div class=\"talk_reply_form\">';\n";
+		pResponse->strContent += "  replyForm = replyForm + '<form id=\"talk' + talkID + '_replyForm\" method=\"post\" action=\"" + RESPONSE_STR_TALK_HTML + "\" name=\"postareply' + talkID + '\" onSubmit=\"return validate( this )\" enctype=\"multipart/form-data\">';\n";
+		pResponse->strContent += "  replyForm = replyForm + '<input type=\"hidden\" name=\"reply\" value=\"' + replyID + '\">';\n";
+		pResponse->strContent += "  replyForm = replyForm + '<input type=\"hidden\" name=\"replyto\" value=\"' + replyToID + '\">';\n";
+		pResponse->strContent += "  replyForm = replyForm + '<span>" + gmapLANG_CFG["talk_reply_parent"] + "</span><span class=\"talk_reply_hint\" id=\"talk' + talkID + '_replyHint\"></span><br>';\n";
+		pResponse->strContent += "  replyForm = replyForm + '<textarea id=\"talk' + talkID + '_replyTextarea\" name=\"talk\" type=text rows=1 cols=68 onKeyDown=\"javascript: keypost(event,' + \"'submit_reply\" + talkID + \"');\" + '\"></textarea>';\n";
+		pResponse->strContent += "  replyForm = replyForm + '<input name=\"submit_talk_button\" id=\"submit_reply' + talkID + '\" alt=\"" + gmapLANG_CFG["talk_reply"] + "\" type=button value=\"" + gmapLANG_CFG["talk_reply"] + "\" onClick=\"javascript: post(' + \"'talk\" + talkID + \"_replyForm','talk\" + talkID + \"_replyTextarea','submit_reply\" + talkID + \"','talk\" + talkID + \"_replyHint');\" + '\">';\n";
+		pResponse->strContent += "  replyForm = replyForm + '</form>';\n";
+		pResponse->strContent += "  replyForm = replyForm + '</div>';\n";
+		pResponse->strContent += "  return replyForm;\n";
+		pResponse->strContent += "}\n\n";
+
+		// replyto form
+		pResponse->strContent += "function replyto_form(talkID,replyID,replyToID) {\n";
+		pResponse->strContent += "  var replytoForm = '<div class=\"talk_reply_form\">';\n";
+		pResponse->strContent += "  replytoForm = replytoForm + '<form id=\"talk' + talkID + '_replytoForm\" method=\"post\" action=\"" + RESPONSE_STR_TALK_HTML + "\" name=\"postareplyto' + talkID + '\" onSubmit=\"return validate( this )\" enctype=\"multipart/form-data\">';\n";
+		pResponse->strContent += "  replytoForm = replytoForm + '<input type=\"hidden\" name=\"reply\" value=\"' + replyID + '\">';\n";
+		pResponse->strContent += "  replytoForm = replytoForm + '<input type=\"hidden\" name=\"replyto\" value=\"' + replyToID + '\">';\n";
+		pResponse->strContent += "  replytoForm = replytoForm + '<span>" + gmapLANG_CFG["talk_reply"] + "</span><span class=\"talk_reply_hint\" id=\"talk' + talkID + '_replytoHint\"></span><br>';\n";
+		pResponse->strContent += "  replytoForm = replytoForm + '<textarea id=\"talk' + talkID + '_replytoTextarea\" name=\"talk\" type=text rows=1 cols=68 onKeyDown=\"javascript: keypost(event,' + \"'submit_replyto\" + talkID + \"');\" + '\"></textarea>';\n";
+		pResponse->strContent += "  replytoForm = replytoForm + '<input name=\"submit_talk_button\" id=\"submit_replyto' + talkID + '\" alt=\"" + gmapLANG_CFG["talk_reply"] + "\" type=button value=\"" + gmapLANG_CFG["talk_reply"] + "\" onClick=\"javascript: postreplyto(' + \"'\" + talkID + \"','\" + replyToID + \"','talk\" + talkID + \"_replytoForm','talk\" + talkID + \"_replytoTextarea','submit_replyto\" + talkID + \"','talk\" + talkID + \"_replytoHint');\" + '\">';\n";
+		pResponse->strContent += "  replytoForm = replytoForm + '</form>';\n";
+		pResponse->strContent += "  replytoForm = replytoForm + '</div>';\n";
+		pResponse->strContent += "  return replytoForm;\n";
+		pResponse->strContent += "}\n\n";
+
+		// get history
+		pResponse->strContent += "function get_history(talkID,getID,replyToID) {\n";
+		pResponse->strContent += "  var divTalk = document.getElementById( 'talk'+talkID );\n";
+		pResponse->strContent += "  var divGet = document.getElementById( 'talk'+talkID+'_historys' );\n";
+		pResponse->strContent += "  var divConflict = document.getElementById( 'talk'+talkID+'_replys' );\n";
 		pResponse->strContent += "  var exist = false;\n";
 		pResponse->strContent += "  var talkReply = '';\n";
+		pResponse->strContent += "  var talkBanner = '<div class=\"talk_reply_history\">' + '" + UTIL_Xsprintf( gmapLANG_CFG["talk_reply_history"].c_str( ), string( "' + talkID + '" ).c_str( ) ) + "' + '</div>';\n";
+		pResponse->strContent += "  var replyForm = reply_form( talkID,getID,replyToID );\n";
 		pResponse->strContent += "  xmlhttp.onreadystatechange=function() {\n";
 		pResponse->strContent += "    if (xmlhttp.readyState==4 && xmlhttp.status==200) {\n";
 		pResponse->strContent += "      var e = document.createElement('div');\n";
@@ -405,30 +550,71 @@ void CTracker :: serverResponseTalkGET( struct request_t *pRequest, struct respo
 		pResponse->strContent += "      var elements = e.getElementsByTagName('div');\n";
 		pResponse->strContent += "      for (var i = 0; i < elements.length; i++) {\n";
 		pResponse->strContent += "        if (elements[i].id.substring(0,4) == 'talk') {\n";
-		pResponse->strContent += "          talkReply = talkReply + '<tr class=\"talk_body_reply\"><td class=\"talk_body_reply\"';\n";
-		pResponse->strContent += "          if ( exist == false ) talkReply = talkReply + ' style=\"border-top:0px\"';\n";
-		pResponse->strContent += "          talkReply = talkReply + '>' + elements[i].parentNode.innerHTML + '</td></tr>';\n";
+		pResponse->strContent += "          if (elements[i].id.indexOf('talk'+talkID) != 0) {\n";
+		pResponse->strContent += "            talkReply = talkReply + '<tr class=\"talk_body_reply\"><td class=\"talk_body_reply\"';\n";
+		pResponse->strContent += "            if ( exist == false ) talkReply = talkReply + ' style=\"border-top:0px\"';\n";
+		pResponse->strContent += "            talkReply = talkReply + '>' + elements[i].parentNode.innerHTML + '</td></tr>';\n";
 //		pResponse->strContent += "  	      window.location.hash = \"#\";\n";
-//		pResponse->strContent += "          document.postatalk.talk.focus();\n";
-		pResponse->strContent += "          exist = true; }\n";
+//		pResponse->strContent += "            document.postatalk.talk.focus();\n";
+		pResponse->strContent += "            exist = true; }\n";
+		pResponse->strContent += "        }\n";
 		pResponse->strContent += "      }\n";
-		pResponse->strContent += "      talkReply = '<table class=\"talk_table_reply\">' + talkReply + '</table>'\n";
-		pResponse->strContent += "      if(exist)\n";
-		pResponse->strContent += "        divTalk.innerHTML = divTalk.innerHTML + '<div id=\"' + talkID + '_reply' + getID + '\" class=\"talk_reply\">' + talkReply + '</div>';\n";
-		pResponse->strContent += "      else\n";
-		pResponse->strContent += "        divTalk.innerHTML = divTalk.innerHTML + '<div id=\"' + talkID + '_reply' + getID + '\" class=\"talk_reply\">" + UTIL_Xsprintf( gmapLANG_CFG["talk_not_exist"].c_str( ), "' + getID + '" ) + "</div>';\n";
+		pResponse->strContent += "      if(exist) {\n";
+		pResponse->strContent += "        talkReply = talkBanner + '<table class=\"talk_table_reply\">' + talkReply + '</table>'\n";
+		pResponse->strContent += "        divTalk.innerHTML = divTalk.innerHTML + '<div id=\"talk' + talkID + '_historys' + '\" class=\"talk_reply\">' + replyForm + talkReply + '</div>';\n";
+		pResponse->strContent += "        reply(talkID,talkID,'talk'+talkID+'_replyTextarea');\n";
+		pResponse->strContent += "        document.getElementById( 'talk'+talkID+'_replyTextarea' ).focus( ); }\n";
 		pResponse->strContent += "    }\n";
 		pResponse->strContent += "  }\n";
+		pResponse->strContent += "  if(divConflict) {\n";
+		pResponse->strContent += "      divConflict.parentNode.removeChild(divConflict); }\n";
 		pResponse->strContent += "  if(!divGet) {\n";
-		pResponse->strContent += "    xmlhttp.open(\"GET\",'" + RESPONSE_STR_TALK_HTML + "?id=' + getID,true);\n";
+		pResponse->strContent += "    xmlhttp.open(\"GET\",'" + RESPONSE_STR_TALK_HTML + "?id=' + talkID,true);\n";
 		pResponse->strContent += "    xmlhttp.send(); }\n";
 		pResponse->strContent += "  else {\n";
-		pResponse->strContent += "    if( divGet.style.display == \"none\" )\n";
+		pResponse->strContent += "    if( divGet.style.display == \"none\" ) {\n";
 		pResponse->strContent += "      divGet.style.display = \"\";\n";
+		pResponse->strContent += "      document.getElementById( 'talk'+talkID+'_replyTextarea' ).focus( ); }\n";
 		pResponse->strContent += "    else\n";
 		pResponse->strContent += "      divGet.style.display = \"none\"; }\n";
 		pResponse->strContent += "}\n\n";
 		
+		// get reply to
+		pResponse->strContent += "function get_reply_to(talkID,replyToID) {\n";
+		pResponse->strContent += "  var divTalk = document.getElementById( 'talk'+talkID );\n";
+		pResponse->strContent += "  var divGet = document.getElementById( 'talk'+talkID+'_replys' );\n";
+		pResponse->strContent += "  var divConflict = document.getElementById( 'talk'+talkID+'_historys' );\n";
+		pResponse->strContent += "  var exist = false;\n";
+		pResponse->strContent += "  var talkReply = '';\n";
+		pResponse->strContent += "  var talkBanner = '<div class=\"talk_reply_to_talk\">' + '" + UTIL_Xsprintf( gmapLANG_CFG["talk_reply_to_talk"].c_str( ), string( "' + talkID + '" ).c_str( ) ) + "' + '</div>';\n";
+		pResponse->strContent += "  var replytoForm = replyto_form( talkID,talkID,replyToID );\n";
+		pResponse->strContent += "  xmlhttp.onreadystatechange=function() {\n";
+		pResponse->strContent += "    if (xmlhttp.readyState==4 && xmlhttp.status==200) {\n";
+		pResponse->strContent += "      var e = document.createElement('div');\n";
+		pResponse->strContent += "      e.innerHTML = xmlhttp.responseText;\n";
+		pResponse->strContent += "      var elements = e.getElementsByTagName('div');\n";
+		pResponse->strContent += "      for (var i = 0; i < elements.length; i++) {\n";
+		pResponse->strContent += "        if (elements[i].id.substring(0,9) == 'replytalk') {\n";
+		pResponse->strContent += "          talkReply = talkReply + '<tr class=\"talk_body_reply\"><td class=\"talk_body_reply\"';\n";
+		pResponse->strContent += "          if ( exist == false ) talkReply = talkReply + ' style=\"border-top:0px\"';\n";
+		pResponse->strContent += "          talkReply = talkReply + '>' + elements[i].parentNode.innerHTML + '</td></tr>';\n";
+		pResponse->strContent += "          exist = true; }\n";
+		pResponse->strContent += "      }\n";
+		pResponse->strContent += "      if( exist )\n";
+		pResponse->strContent += "        talkReply = talkBanner + '<table class=\"talk_table_reply\">' + talkReply + '</table>';\n";
+		pResponse->strContent += "      divTalk.innerHTML = divTalk.innerHTML + '<div id=\"talk' + talkID + '_replys\" class=\"talk_reply\">' + replytoForm + talkReply + '</div>';\n";
+		pResponse->strContent += "      document.getElementById( 'talk'+talkID+'_replytoTextarea' ).focus( );\n";
+		pResponse->strContent += "    }\n";
+		pResponse->strContent += "  }\n";
+		pResponse->strContent += "  if(divConflict && divConflict.style.display == \"\") {\n";
+		pResponse->strContent += "      divConflict.style.display = \"none\"; }\n";
+		pResponse->strContent += "  if(divGet) {\n";
+		pResponse->strContent += "      divGet.parentNode.removeChild(divGet); }\n";
+		pResponse->strContent += "  else {\n";
+		pResponse->strContent += "    xmlhttp.open(\"GET\",'" + RESPONSE_STR_TALK_HTML + "?id=' + talkID,true);\n";
+		pResponse->strContent += "    xmlhttp.send(); }\n";
+		pResponse->strContent += "}\n\n";
+
 		// get rt
 		pResponse->strContent += "function get_rt(talkID,getID) {\n";
 		pResponse->strContent += "  var divTalk = document.getElementById( talkID );\n";
@@ -610,98 +796,101 @@ void CTracker :: serverResponseTalkGET( struct request_t *pRequest, struct respo
 		
 		if( ( pRequest->user.ucAccess & m_ucAccessComments ) )
 		{
-			pResponse->strContent += "<div class=\"talk_table_post\">\n";
-			
-			pResponse->strContent += "<form id=\"postForm\" method=\"post\" action=\"" + RESPONSE_STR_TALK_HTML + "\" name=\"postatalk\" onSubmit=\"return validate( this )\" enctype=\"multipart/form-data\">\n";
-			pResponse->strContent += "<table class=\"talk_table_post\">\n";
-			
-//			if( !strReply.empty( ) )
-				pResponse->strContent += "<input id=\"inputReply\" type=\"hidden\" name=\"reply\" value=\"\">\n";
-				pResponse->strContent += "<input id=\"inputReplyTo\" type=\"hidden\" name=\"replyto\" value=\"\">\n";
-//			if( !strRT.empty( ) )
-				pResponse->strContent += "<input id=\"inputRT\" type=\"hidden\" name=\"rt\" value=\"\">\n";
-				pResponse->strContent += "<input id=\"inputRTTo\" type=\"hidden\" name=\"rtto\" value=\"\">\n";
-			if( !strUID.empty( ) )
-				pResponse->strContent += "<input type=\"hidden\" name=\"uid\" value=\"" + strUID + "\">\n";
-			if( !cstrShow.empty( ) )
-				pResponse->strContent += "<input type=\"hidden\" name=\"show\" value=\"" + cstrShow + "\">\n";
-			if( !cstrTag.empty( ) )
-				pResponse->strContent += "<input type=\"hidden\" name=\"tag\" value=\"" + cstrTag + "\">\n";
-//			if( !cstrPage.empty( ) )
-//				pResponse->strContent += "<input type=\"hidden\" name=\"page\" value=\"" + cstrPage + "\">";
-			if( !cstrPerPage.empty( ) )
-				pResponse->strContent += "<input type=\"hidden\" name=\"per_page\" value=\"" + cstrPerPage + "\">";
-			
-			pResponse->strContent += "<tr class=\"talk_table_post\">\n";
-			pResponse->strContent += "<td class=\"talk_table_header\">\n";
-			pResponse->strContent += "<span class=\"talk_table_header\">" + gmapLANG_CFG["talk"] + ":</span>";
-			pResponse->strContent += "</td>\n";
-			pResponse->strContent += "<td class=\"talk_table_left\">\n";
-			pResponse->strContent += "<input name=\"clear_talk_button\" id=\"clear_talk\" alt=\"[" + gmapLANG_CFG["talk_clear"] + "]\" type=button value=\"" + gmapLANG_CFG["talk_clear"] + "\" onClick=\"javascript: clearAll();\">\n";
-			pResponse->strContent += "<span id=\"talk_left\" class=\"talk_table_left\">" + UTIL_Xsprintf( gmapLANG_CFG["talk_left"].c_str( ), CAtomInt( m_uiTalkLength ).toString( ).c_str( ) ) + "</span>\n";
-			pResponse->strContent += "</td>\n</tr>\n";
-			
-			pResponse->strContent += "<tr class=\"talk_table_post\">\n";
-			pResponse->strContent += "<td class=\"talk_table_post\" colspan=2>\n";
-			pResponse->strContent += "<textarea class=\"talk\" id=\"talkarea\" name=\"talk\" rows=4 cols=64 onInput=\"javascript: charleft(document.postatalk,'talk_left','submit_talk');\" onPropertyChange=\"javascript: charleft(document.postatalk,'talk_left','submit_talk');\" onKeyDown=\"javascript: keypost(event,'submit_talk');\">";
-			
-//			if( !strReply.empty( ) || !strRT.empty( ) )
-//			{
-//				CMySQLQuery *pQueryTalk = 0;
-//				
-//				if( !strReply.empty( ) )
-//					pQueryTalk = new CMySQLQuery( "SELECT busername,btalkstore FROM talk WHERE bid=" + strReply );
-//				else
-//					pQueryTalk = new CMySQLQuery( "SELECT busername,btalkstore FROM talk WHERE bid=" + strRT );
-//				
-//				vector<string> vecQueryTalk;
-//		
-//				vecQueryTalk.reserve(2);
+//			if( strTalkID.empty( ) && strTorrentID.empty( ) )
+			{
+				pResponse->strContent += "<div class=\"talk_table_post\">\n";
+				
+				pResponse->strContent += "<form id=\"postForm\" method=\"post\" action=\"" + RESPONSE_STR_TALK_HTML + "\" name=\"postatalk\" onSubmit=\"return validate( this )\" enctype=\"multipart/form-data\">\n";
+				pResponse->strContent += "<table class=\"talk_table_post\">\n";
+				
+	//			if( !strReply.empty( ) )
+					pResponse->strContent += "<input id=\"inputReply\" type=\"hidden\" name=\"reply\" value=\"\">\n";
+					pResponse->strContent += "<input id=\"inputReplyTo\" type=\"hidden\" name=\"replyto\" value=\"\">\n";
+	//			if( !strRT.empty( ) )
+					pResponse->strContent += "<input id=\"inputRT\" type=\"hidden\" name=\"rt\" value=\"\">\n";
+					pResponse->strContent += "<input id=\"inputRTTo\" type=\"hidden\" name=\"rtto\" value=\"\">\n";
+				if( !strUID.empty( ) )
+					pResponse->strContent += "<input type=\"hidden\" name=\"uid\" value=\"" + strUID + "\">\n";
+				if( !cstrShow.empty( ) )
+					pResponse->strContent += "<input type=\"hidden\" name=\"show\" value=\"" + cstrShow + "\">\n";
+				if( !cstrTag.empty( ) )
+					pResponse->strContent += "<input type=\"hidden\" name=\"tag\" value=\"" + cstrTag + "\">\n";
+	//			if( !cstrPage.empty( ) )
+	//				pResponse->strContent += "<input type=\"hidden\" name=\"page\" value=\"" + cstrPage + "\">";
+				if( !cstrPerPage.empty( ) )
+					pResponse->strContent += "<input type=\"hidden\" name=\"per_page\" value=\"" + cstrPerPage + "\">";
+				
+				pResponse->strContent += "<tr class=\"talk_table_post\">\n";
+				pResponse->strContent += "<td class=\"talk_table_header\">\n";
+				pResponse->strContent += "<span class=\"talk_table_header\">" + gmapLANG_CFG["talk"] + ":</span>";
+				pResponse->strContent += "</td>\n";
+				pResponse->strContent += "<td class=\"talk_table_left\">\n";
+				pResponse->strContent += "<input name=\"clear_talk_button\" id=\"clear_talk\" alt=\"[" + gmapLANG_CFG["talk_clear"] + "]\" type=button value=\"" + gmapLANG_CFG["talk_clear"] + "\" onClick=\"javascript: clearAll();\">\n";
+				pResponse->strContent += "<span id=\"talk_left\" class=\"talk_table_left\">" + UTIL_Xsprintf( gmapLANG_CFG["talk_left"].c_str( ), CAtomInt( m_uiTalkLength ).toString( ).c_str( ) ) + "</span>\n";
+				pResponse->strContent += "</td>\n</tr>\n";
+				
+				pResponse->strContent += "<tr class=\"talk_table_post\">\n";
+				pResponse->strContent += "<td class=\"talk_table_post\" colspan=2>\n";
+				pResponse->strContent += "<textarea class=\"talk\" id=\"talkarea\" name=\"talk\" rows=4 cols=64 onInput=\"javascript: charleft(document.postatalk,'talk_left','submit_talk');\" onPropertyChange=\"javascript: charleft(document.postatalk,'talk_left','submit_talk');\" onKeyDown=\"javascript: keypost(event,'submit_talk');\">";
+				
+	//			if( !strReply.empty( ) || !strRT.empty( ) )
+	//			{
+	//				CMySQLQuery *pQueryTalk = 0;
+	//				
+	//				if( !strReply.empty( ) )
+	//					pQueryTalk = new CMySQLQuery( "SELECT busername,btalkstore FROM talk WHERE bid=" + strReply );
+	//				else
+	//					pQueryTalk = new CMySQLQuery( "SELECT busername,btalkstore FROM talk WHERE bid=" + strRT );
+	//				
+	//				vector<string> vecQueryTalk;
+	//		
+	//				vecQueryTalk.reserve(2);
 
-//				vecQueryTalk = pQueryTalk->nextRow( );
-//				
-//				delete pQueryTalk;
-//				
-//				if( vecQueryTalk.size( ) == 2 && !vecQueryTalk[0].empty( ) )
-//				{
-//					strReplyTo = vecQueryTalk[0];
-//					strReplyCom = vecQueryTalk[1];
-//				}
-//				
-//				if( !strReplyCom.empty( ) )
-//				{
-//					if( !strReply.empty( ) )
-//						pResponse->strContent += "@" + UTIL_RemoveHTML( strReplyTo ) + " ";
-//					else if( !strRT.empty( ) )
-//						pResponse->strContent += UTIL_Xsprintf( gmapLANG_CFG["talk_rt_content"].c_str( ), UTIL_RemoveHTML( strReplyTo ).c_str( ), UTIL_RemoveHTML3( strReplyCom ).c_str( ) );
-//				}
-//			}
+	//				vecQueryTalk = pQueryTalk->nextRow( );
+	//				
+	//				delete pQueryTalk;
+	//				
+	//				if( vecQueryTalk.size( ) == 2 && !vecQueryTalk[0].empty( ) )
+	//				{
+	//					strReplyTo = vecQueryTalk[0];
+	//					strReplyCom = vecQueryTalk[1];
+	//				}
+	//				
+	//				if( !strReplyCom.empty( ) )
+	//				{
+	//					if( !strReply.empty( ) )
+	//						pResponse->strContent += "@" + UTIL_RemoveHTML( strReplyTo ) + " ";
+	//					else if( !strRT.empty( ) )
+	//						pResponse->strContent += UTIL_Xsprintf( gmapLANG_CFG["talk_rt_content"].c_str( ), UTIL_RemoveHTML( strReplyTo ).c_str( ), UTIL_RemoveHTML3( strReplyCom ).c_str( ) );
+	//				}
+	//			}
 
-			pResponse->strContent += "</textarea>\n";
-			pResponse->strContent += "<div id=\"rt_hint\" style=\"display: none\" class=\"talk_table_rt\"></div>\n";
-			pResponse->strContent += "</td>\n</tr>\n";
-			
-			pResponse->strContent += "<tr class=\"talk_table_post\">\n";
-			pResponse->strContent += "<td class=\"talk_table_tag\">\n";
-			pResponse->strContent += "<a class=\"talk_tag\" href=\"javascript: ;\" onclick=\"javascript: insert_tag('talkarea');\">" + gmapLANG_CFG["talk_tag_add"] + "</a></td>";
-			pResponse->strContent += "<td class=\"talk_table_post\">\n";
-			pResponse->strContent += "<div class=\"talk_table_post_button\">\n";
-			pResponse->strContent += "<span id=\"talk_hint\" class=\"talk_table_hint\"></span>\n";
-			pResponse->strContent += "<input name=\"submit_talk_button\" id=\"submit_talk\" alt=\"" + gmapLANG_CFG["talk"] + "\" type=button value=\"" + gmapLANG_CFG["talk"] + "\" onClick=\"javascript: post('postForm','talkarea','submit_talk','talk_hint');\">\n";
-//			pResponse->strContent += Button_Submit( "submit_talk", string( gmapLANG_CFG["Submit"] ) );
-			pResponse->strContent += "</div>\n</td>\n</tr>\n";
+				pResponse->strContent += "</textarea>\n";
+				pResponse->strContent += "<div id=\"rt_hint\" style=\"display: none\" class=\"talk_table_rt\"></div>\n";
+				pResponse->strContent += "</td>\n</tr>\n";
+				
+				pResponse->strContent += "<tr class=\"talk_table_post\">\n";
+				pResponse->strContent += "<td class=\"talk_table_tag\">\n";
+				pResponse->strContent += "<a class=\"talk_tag\" href=\"javascript: ;\" onclick=\"javascript: insert_tag('talkarea');\">" + gmapLANG_CFG["talk_tag_add"] + "</a></td>";
+				pResponse->strContent += "<td class=\"talk_table_post\">\n";
+				pResponse->strContent += "<div class=\"talk_table_post_button\">\n";
+				pResponse->strContent += "<span id=\"talk_hint\" class=\"talk_table_hint\"></span>\n";
+				pResponse->strContent += "<input name=\"submit_talk_button\" id=\"submit_talk\" alt=\"" + gmapLANG_CFG["talk"] + "\" type=button value=\"" + gmapLANG_CFG["talk"] + "\" onClick=\"javascript: post('postForm','talkarea','submit_talk','talk_hint');\">\n";
+	//			pResponse->strContent += Button_Submit( "submit_talk", string( gmapLANG_CFG["Submit"] ) );
+				pResponse->strContent += "</div>\n</td>\n</tr>\n";
 
-			pResponse->strContent += "</table>\n";
-			pResponse->strContent += "</form>\n";
-			pResponse->strContent += "</div>\n";
-			
-//			if( !strReply.empty( ) || !strRT.empty( ) )
-//			{
-//				// Output common HTML tail
-//				HTML_Common_End( pRequest, pResponse, btv, NOT_INDEX, string( CSS_TALK ) );
-//				
-//				return;
-//			}
+				pResponse->strContent += "</table>\n";
+				pResponse->strContent += "</form>\n";
+				pResponse->strContent += "</div>\n";
+				
+	//			if( !strReply.empty( ) || !strRT.empty( ) )
+	//			{
+	//				// Output common HTML tail
+	//				HTML_Common_End( pRequest, pResponse, btv, NOT_INDEX, string( CSS_TALK ) );
+	//				
+	//				return;
+	//			}
+			}
 		}
 		else
 			pResponse->strContent += "<p class=\"denied\">" + gmapLANG_CFG["talk_post_disallowed"] + "</p>\n";
@@ -815,17 +1004,17 @@ void CTracker :: serverResponseTalkGET( struct request_t *pRequest, struct respo
 
 			if( !cstrDel.empty( ) )
 			{
-				CMySQLQuery *pQueryTalk = new CMySQLQuery( "SELECT buid FROM talk WHERE bid=" + cstrDel );
+				CMySQLQuery *pQueryTalk = new CMySQLQuery( "SELECT buid,breply,breplyto,brt,brtto FROM talk WHERE bid=" + cstrDel );
 			
 				vector<string> vecQueryTalk;
 			
-				vecQueryTalk.reserve(1);
+				vecQueryTalk.reserve(5);
 
 				vecQueryTalk = pQueryTalk->nextRow( );
 				
 				delete pQueryTalk;
 
-				if( vecQueryTalk.size( ) == 1 )
+				if( vecQueryTalk.size( ) == 5 )
 				{
 					if( vecQueryTalk[0] == pRequest->user.strUID )
 					{
@@ -871,7 +1060,12 @@ void CTracker :: serverResponseTalkGET( struct request_t *pRequest, struct respo
 						
 						CMySQLQuery mq03( "DELETE FROM talktag WHERE bid=" + cstrDel );
 						
-						CMySQLQuery mq04( "DELETE FROM talk WHERE bid=" + cstrDel );
+						if( !vecQueryTalk[2].empty( ) )
+							CMySQLQuery mq04( "UPDATE talk SET breplytimes=breplytimes-1 WHERE bid=" + vecQueryTalk[1] + " AND breplytimes>0" );
+						if( !vecQueryTalk[4].empty( ) )
+							CMySQLQuery mq05( "UPDATE talk SET brttimes=brttimes-1 WHERE bid=" + vecQueryTalk[3] + " AND brttimes>0" );
+
+						CMySQLQuery mq06( "DELETE FROM talk WHERE bid=" + cstrDel );
 						
 						// Deleted talk
 						pResponse->strContent += "<p class=\"deleted\">" + UTIL_Xsprintf( gmapLANG_CFG["talk_deleted"].c_str( ), cstrDel.c_str( ) ) + "</p>\n";
@@ -897,41 +1091,106 @@ void CTracker :: serverResponseTalkGET( struct request_t *pRequest, struct respo
 		
 		pResponse->strContent += "<div id=\"divTalkTable\" class=\"talk_table_posted\">";
 		
-		unsigned long ulAdded = 0;
-		unsigned long ulSkipped = 0;
-		
 		CMySQLQuery *pQueryTalk = 0;
 		
 		if( !strTalkID.empty( ) )
 		{
-			CMySQLQuery *pQueryOne = new CMySQLQuery( "SELECT bid,busername,buid,bposted,btalk,btalkstore,breply,breplyto,breplytoid,brt,brtto,brttoid FROM talk WHERE bid=" + strTalkID );
+			string strTalkerID = string( );
+			string strReplyID = string( );
+			string strReplyToID = string( );
+			string strHistory = string( );
+			bool bHistory = false;
+
+			CMySQLQuery *pQueryOne = new CMySQLQuery( "SELECT bid,busername,buid,bposted,btalk,btalkstore,breply,breplyto,breplytoid,breplytimes,brt,brtto,brttoid FROM talk WHERE bid=" + strTalkID );
 			
 			vector<string> vecQueryOne;
 
-			vecQueryOne.reserve(12);
+			vecQueryOne.reserve(13);
 
 			vecQueryOne = pQueryOne->nextRow( );
 			
 			delete pQueryOne;
 			
-			if( vecQueryOne.size( ) == 12 )
+			if( vecQueryOne.size( ) == 13 )
 			{
-				pResponse->strContent += "<table class=\"talk_table_posted\" summary=\"talk\">\n";
-				while( vecQueryOne.size( ) == 12 )
-				{
-					pResponse->strContent += GenerateTalk( vecQueryOne, pRequest->user.ucAccess, pRequest->user.strUID, strJoined, true, true, false );
+				strTalkerID = vecQueryOne[2];
+				strReplyID = vecQueryOne[6];
+				strReplyToID = vecQueryOne[8];
 
-					if( !vecQueryOne[6].empty( ) )
-						pQueryOne = new CMySQLQuery( "SELECT bid,busername,buid,bposted,btalk,btalkstore,breply,breplyto,breplytoid,brt,brtto,brttoid FROM talk WHERE bid=" + vecQueryOne[6] );
+				if( !bHistory )
+					bHistory = true;
+
+				pResponse->strContent += "<table class=\"talk_table_posted\" summary=\"talk\">\n";
+				pResponse->strContent += GenerateTalk( vecQueryOne, pRequest->user.ucAccess, pRequest->user.strUID, strJoined, true, true, true, true );
+				while( vecQueryOne.size( ) == 13 && !vecQueryOne[7].empty( ) )
+				{
+					pQueryOne = new CMySQLQuery( "SELECT bid,busername,buid,bposted,btalk,btalkstore,breply,breplyto,breplytoid,breplytimes,brt,brtto,brttoid FROM talk WHERE bid=" + vecQueryOne[6] );
 
 					vecQueryOne = pQueryOne->nextRow( );
 
 					delete pQueryOne;
+
+					strHistory += GenerateTalk( vecQueryOne, pRequest->user.ucAccess, pRequest->user.strUID, strJoined, true, true, true );
+					ulCount++;
 				}
 				
 				pResponse->strContent += "</table>\n";
 				
-				ulCount++;
+				if( !strHistory.empty( ) )
+				{
+					pResponse->strContent += "<div class=\"talk_reply_history\">" + UTIL_Xsprintf( gmapLANG_CFG["talk_reply_history"].c_str( ), strTalkID.c_str( ) ) + "</div>\n";
+					pResponse->strContent += "<div class=\"talk_reply_form\">\n";
+					pResponse->strContent += "<form id=\"talk" + strTalkID + "_replyForm\" method=\"post\" action=\"" + RESPONSE_STR_TALK_HTML + "\" name=\"postareply" + strTalkID + "\" onSubmit=\"return validate( this )\" enctype=\"multipart/form-data\">\n";
+					pResponse->strContent += "<input type=\"hidden\" name=\"id\" value=\"" + strReplyID + "\">\n";
+					pResponse->strContent += "<input type=\"hidden\" name=\"reply\" value=\"" + strReplyID + "\">\n";
+					pResponse->strContent += "<input type=\"hidden\" name=\"replyto\" value=\"" + strReplyToID + "\">\n";
+					pResponse->strContent += "<span>" + gmapLANG_CFG["talk_reply_parent"] + "</span><span class=\"talk_reply_hint\" id=\"talk" + strTalkID + "_replyHint\"></span><br>\n";
+					pResponse->strContent += "<textarea id=\"talk" + strTalkID + "_replyTextarea\" name=\"talk\" type=text rows=1 cols=70 onKeyDown=\"javascript: keypost(event,'submit_reply" + strTalkID + "');\"></textarea>\n";
+					pResponse->strContent += "<input name=\"submit_talk_button\" id=\"submit_reply" + strTalkID + "\" alt=\"" + gmapLANG_CFG["talk_reply"] + "\" type=button value=\"" + gmapLANG_CFG["talk_reply"] + "\" onClick=\"javascript: postreply('talk" + strTalkID + "_replyForm','talk" + strTalkID + "_replyTextarea','submit_reply" + strTalkID + "','talk" + strTalkID + "_replyHint');\">\n";
+					pResponse->strContent += "</form>\n";
+					pResponse->strContent += "</div>\n";
+
+					pResponse->strContent += "<table class=\"talk_table_posted\" summary=\"talk\">\n";
+					pResponse->strContent += strHistory;
+					pResponse->strContent += "</table>\n";
+				}
+
+				CMySQLQuery *pQueryReply = new CMySQLQuery( "SELECT bid,busername,buid,bposted,btalk,btalkstore,breply,breplyto,breplytoid,breplytimes,brt,brtto,brttoid FROM talk WHERE breply=" + strTalkID + " ORDER by bposted DESC" );
+				
+				vector<string> vecQueryReply;
+
+				vecQueryReply.reserve(13);
+
+				vecQueryReply = pQueryReply->nextRow( );
+				
+				if( vecQueryReply.size( ) == 13 )
+				{
+					pResponse->strContent += "<div class=\"talk_reply_to_talk\">" + UTIL_Xsprintf( gmapLANG_CFG["talk_reply_to_talk"].c_str( ), strTalkID.c_str( ) ) + "</div>\n";
+					pResponse->strContent += "<div class=\"talk_reply_form\">\n";
+					pResponse->strContent += "<form id=\"talk" + strTalkID + "_replytoForm\" method=\"post\" action=\"" + RESPONSE_STR_TALK_HTML + "\" name=\"postareply" + strTalkID + "\" onSubmit=\"return validate( this )\" enctype=\"multipart/form-data\">\n";
+					pResponse->strContent += "<input type=\"hidden\" name=\"id\" value=\"" + strTalkID + "\">\n";
+					pResponse->strContent += "<input type=\"hidden\" name=\"reply\" value=\"" + strTalkID + "\">\n";
+					pResponse->strContent += "<input type=\"hidden\" name=\"replyto\" value=\"" + strTalkerID + "\">\n";
+					pResponse->strContent += "<span>" + gmapLANG_CFG["talk_reply"] + "</span><span class=\"talk_reply_hint\" id=\"talk" + strTalkID + "_replytoHint\"></span><br>\n";
+					pResponse->strContent += "<textarea id=\"talk" + strTalkID + "_replytoTextarea\" name=\"talk\" type=text rows=1 cols=70 onKeyDown=\"javascript: keypost(event,'submit_replyto" + strTalkID + "');\"></textarea>\n";
+					pResponse->strContent += "<input name=\"submit_talk_button\" id=\"submit_replyto" + strTalkID + "\" alt=\"" + gmapLANG_CFG["talk_reply"] + "\" type=button value=\"" + gmapLANG_CFG["talk_reply"] + "\" onClick=\"javascript: postreply('talk" + strTalkID + "_replytoForm','talk" + strTalkID + "_replytoTextarea','submit_replyto" + strTalkID + "','talk" + strTalkID + "_replytoHint');\">\n";
+					pResponse->strContent += "</form>\n";
+					pResponse->strContent += "</div>\n";
+
+					pResponse->strContent += "<table class=\"talk_table_posted\" summary=\"talk\">\n";
+					while( vecQueryReply.size( ) == 13 )
+					{
+						pResponse->strContent += GenerateTalk( vecQueryReply, pRequest->user.ucAccess, pRequest->user.strUID, strJoined, true, true, false, true );
+
+						vecQueryReply = pQueryReply->nextRow( );
+
+						ulCount++;
+					}
+					
+					pResponse->strContent += "</table>\n";
+				}
+
+				delete pQueryReply;
 			}
 		}
 		else if( !strTorrentID.empty( ) )
@@ -1003,21 +1262,19 @@ void CTracker :: serverResponseTalkGET( struct request_t *pRequest, struct respo
 			
 				while( vecQueryTalk.size( ) == 1 )
 				{
-					CMySQLQuery *pQueryRef = new CMySQLQuery( "SELECT bid,busername,buid,bposted,btalk,btalkstore,breply,breplyto,breplytoid,brt,brtto,brttoid FROM talk WHERE bid=" + vecQueryTalk[0] );
+					CMySQLQuery *pQueryRef = new CMySQLQuery( "SELECT bid,busername,buid,bposted,btalk,btalkstore,breply,breplyto,breplytoid,breplytimes,brt,brtto,brttoid FROM talk WHERE bid=" + vecQueryTalk[0] );
 					
 					vector<string> vecQueryRef;
 	
-					vecQueryRef.reserve(12);
+					vecQueryRef.reserve(13);
 
 					vecQueryRef = pQueryRef->nextRow( );
 					
 					delete pQueryRef;
 					
-					if( vecQueryRef.size( ) == 12 )
+					if( vecQueryRef.size( ) == 13 )
 					{
 						pResponse->strContent += GenerateTalk( vecQueryRef, pRequest->user.ucAccess, pRequest->user.strUID, strJoined );
-
-						ulAdded++;
 					}
 					ulCount++;
 					
@@ -1044,21 +1301,19 @@ void CTracker :: serverResponseTalkGET( struct request_t *pRequest, struct respo
 			
 				while( vecQueryTalk.size( ) == 1 )
 				{
-					CMySQLQuery *pQueryRef = new CMySQLQuery( "SELECT bid,busername,buid,bposted,btalk,btalkstore,breply,breplyto,breplytoid,brt,brtto,brttoid FROM talk WHERE bid=" + vecQueryTalk[0] );
+					CMySQLQuery *pQueryRef = new CMySQLQuery( "SELECT bid,busername,buid,bposted,btalk,btalkstore,breply,breplyto,breplytoid,breplytimes,brt,brtto,brttoid FROM talk WHERE bid=" + vecQueryTalk[0] );
 					
 					vector<string> vecQueryRef;
 	
-					vecQueryRef.reserve(12);
+					vecQueryRef.reserve(13);
 
 					vecQueryRef = pQueryRef->nextRow( );
 					
 					delete pQueryRef;
 					
-					if( vecQueryRef.size( ) == 12 )
+					if( vecQueryRef.size( ) == 13 )
 					{
 						pResponse->strContent += GenerateTalk( vecQueryRef, pRequest->user.ucAccess, pRequest->user.strUID, strJoined );
-
-						ulAdded++;
 					}
 					ulCount++;
 					
@@ -1148,21 +1403,19 @@ void CTracker :: serverResponseTalkGET( struct request_t *pRequest, struct respo
 		
 				while( vecQueryTalk.size( ) == 1 )
 				{
-					CMySQLQuery *pQueryHome = new CMySQLQuery( "SELECT bid,busername,buid,bposted,btalk,btalkstore,breply,breplyto,breplytoid,brt,brtto,brttoid FROM talk WHERE bid=" + vecQueryTalk[0] );
+					CMySQLQuery *pQueryHome = new CMySQLQuery( "SELECT bid,busername,buid,bposted,btalk,btalkstore,breply,breplyto,breplytoid,breplytimes,brt,brtto,brttoid FROM talk WHERE bid=" + vecQueryTalk[0] );
 				
 					vector<string> vecQueryHome;
 
-					vecQueryHome.reserve(12);
+					vecQueryHome.reserve(13);
 
 					vecQueryHome = pQueryHome->nextRow( );
 				
 					delete pQueryHome;
 				
-					if( vecQueryHome.size( ) == 12 )
+					if( vecQueryHome.size( ) == 13 )
 					{
 						pResponse->strContent += GenerateTalk( vecQueryHome, pRequest->user.ucAccess, pRequest->user.strUID, strJoined );
-
-						ulAdded++;
 					}
 					ulCount++;
 					
@@ -1174,13 +1427,13 @@ void CTracker :: serverResponseTalkGET( struct request_t *pRequest, struct respo
 		else
 		{
 			if( !strUID.empty( ) )
-				pQueryTalk = new CMySQLQuery( "SELECT bid,busername,buid,bposted,btalk,btalkstore,breply,breplyto,breplytoid,brt,brtto,brttoid FROM talk WHERE buid=" + strUID + " ORDER BY bposted DESC LIMIT " + CAtomLong( ulLimit ).toString( ) );
+				pQueryTalk = new CMySQLQuery( "SELECT bid,busername,buid,bposted,btalk,btalkstore,breply,breplyto,breplytoid,breplytimes,brt,brtto,brttoid FROM talk WHERE buid=" + strUID + " ORDER BY bposted DESC LIMIT " + CAtomLong( ulLimit ).toString( ) );
 			else
-				pQueryTalk = new CMySQLQuery( "SELECT bid,busername,buid,bposted,btalk,btalkstore,breply,breplyto,breplytoid,brt,brtto,brttoid FROM talk ORDER BY bposted DESC LIMIT " + CAtomLong( ulLimit ).toString( ) );
+				pQueryTalk = new CMySQLQuery( "SELECT bid,busername,buid,bposted,btalk,btalkstore,breply,breplyto,breplytoid,breplytimes,brt,brtto,brttoid FROM talk ORDER BY bposted DESC LIMIT " + CAtomLong( ulLimit ).toString( ) );
 			
 			vector<string> vecQueryTalk;
 	
-			vecQueryTalk.reserve(12);
+			vecQueryTalk.reserve(13);
 
 			vecQueryTalk = pQueryTalk->nextRow( );
 			
@@ -1243,15 +1496,14 @@ void CTracker :: serverResponseTalkGET( struct request_t *pRequest, struct respo
 			
 //			ulCount = pQueryTalk->numRows( );
 			
-			if( vecQueryTalk.size( ) == 12 )
+			if( vecQueryTalk.size( ) == 13 )
 			{
 				pResponse->strContent += "<table class=\"talk_table_posted\" summary=\"talk\">\n";
 			
-				while( vecQueryTalk.size( ) == 12 )
+				while( vecQueryTalk.size( ) == 13 )
 				{
-					pResponse->strContent += GenerateTalk( vecQueryTalk, pRequest->user.ucAccess, pRequest->user.strUID, strJoined, bTalker );
-
-					ulAdded++;
+					if( vecQueryTalk[7].empty( ) )
+						pResponse->strContent += GenerateTalk( vecQueryTalk, pRequest->user.ucAccess, pRequest->user.strUID, strJoined, bTalker );
 
 					ulCount++;
 					
@@ -1268,8 +1520,10 @@ void CTracker :: serverResponseTalkGET( struct request_t *pRequest, struct respo
 		
 		vecParams.clear( );
 		
+		vecParams.push_back( pair<string, string>( string( "id" ), strTalkID ) );
 		vecParams.push_back( pair<string, string>( string( "uid" ), strUID ) );
 		vecParams.push_back( pair<string, string>( string( "show" ), cstrShow ) );
+		vecParams.push_back( pair<string, string>( string( "tag" ), cstrTag ) );
 		vecParams.push_back( pair<string, string>( string( "per_page" ), cstrPerPage ) );
 		
 		strJoined = UTIL_RemoveHTML( UTIL_HTMLJoin( vecParams, string( "&" ), string( "&" ), string( "=" ) ) );
@@ -1298,13 +1552,16 @@ void CTracker :: serverResponseTalkGET( struct request_t *pRequest, struct respo
 		
 		pResponse->strContent += "<script type=\"text/javascript\">\n";
 		pResponse->strContent += "<!--\n";
-		pResponse->strContent += "document.postatalk.talk.focus();\n";
-		if( !cstrTag.empty( ) )
+//		if( strTalkID.empty( ) && strTorrentID.empty( ) )
 		{
-			pResponse->strContent += "var tagData = '" + UTIL_RemoveHTML3( "#" + cstrTag + "#" ) + "';\n";
-			pResponse->strContent += "document.postatalk.talk.value = tagData.stripX( );\n";
+			pResponse->strContent += "document.postatalk.talk.focus();\n";
+			if( !cstrTag.empty( ) )
+			{
+				pResponse->strContent += "var tagData = '" + UTIL_RemoveHTML3( "#" + cstrTag + "#" ) + "';\n";
+				pResponse->strContent += "document.postatalk.talk.value = tagData.stripX( );\n";
+			}
+			pResponse->strContent += "charleft(document.postatalk,'talk_left','submit_talk');\n";
 		}
-		pResponse->strContent += "charleft(document.postatalk,'talk_left','submit_talk');\n";
 		pResponse->strContent += "//-->\n";
 		pResponse->strContent += "</script>\n\n";
 
@@ -1526,8 +1783,8 @@ void CTracker :: serverResponseTalkPOST( struct request_t *pRequest, struct resp
 
 					if( vecQueryUser.size( ) == 2 && !vecQueryUser[0].empty( ) )
 					{
-						if( vecQueryUser[0] == strReplyToID )
-							strReplyTo = vecQueryUser[1];
+//						if( vecQueryUser[0] == strReplyToID )
+//							strReplyTo = vecQueryUser[1];
 //						if( vecQueryUser[0] == strRTToID )
 //							strRTTo = vecQueryUser[1];
 						
@@ -1543,6 +1800,7 @@ void CTracker :: serverResponseTalkPOST( struct request_t *pRequest, struct resp
 				else
 					iStart = strTalk.find( "@", iStart + 1 );
 			}
+
 			
 			set<string> setTag;
 			
@@ -1584,6 +1842,27 @@ void CTracker :: serverResponseTalkPOST( struct request_t *pRequest, struct resp
 			iEnd = strTalkStore.find_last_not_of( " " );
 			strTalkStore = strTalkStore.substr( iStart, iEnd - iStart + 1 );
 
+			if( !strReplyToID.empty( ) && strReplyTo.empty( ) )
+			{
+				CMySQLQuery *pQueryUser = new CMySQLQuery( "SELECT buid,busername FROM users WHERE buid=" + strReplyToID );
+
+				vector<string> vecQueryUser;
+
+				vecQueryUser.reserve(2);
+
+				vecQueryUser = pQueryUser->nextRow( );
+
+				delete pQueryUser;
+
+				if( vecQueryUser.size( ) == 2 && !vecQueryUser[1].empty( ) )
+				{
+					strReplyTo = vecQueryUser[1];
+					if( strReplyToID != pRequest->user.strUID )
+						setRef.insert( pair< string, string >( strReplyTo, strReplyToID ) );
+					CMySQLQuery mq02( "UPDATE talk SET breplytimes=breplytimes+1 WHERE bid=" + strReply );
+				}
+			}
+
 			if( !strRTToID.empty( ) && strRTTo.empty( ) )
 			{
 				CMySQLQuery *pQueryUser = new CMySQLQuery( "SELECT buid,busername FROM users WHERE buid=" + strRTToID );
@@ -1596,8 +1875,13 @@ void CTracker :: serverResponseTalkPOST( struct request_t *pRequest, struct resp
 
 				delete pQueryUser;
 
-				if( vecQueryUser.size( ) == 2 )
+				if( vecQueryUser.size( ) == 2 && !vecQueryUser[1].empty( ) )
+				{
 					strRTTo = vecQueryUser[1];
+					if( strRTToID != pRequest->user.strUID )
+						setRef.insert( pair< string, string >( strRTTo, strRTToID ) );
+					CMySQLQuery mq01( "UPDATE talk SET brttimes=brttimes+1 WHERE bid=" + strRT );
+				}
 			}
 
 			string strQuery = "INSERT INTO talk (";
@@ -1642,10 +1926,45 @@ void CTracker :: serverResponseTalkPOST( struct request_t *pRequest, struct resp
 				if( vecQueryTalk.size( ) == 1 )
 					strPosted = vecQueryTalk[0];
 				
+				if( !strRTTo.empty( ) )
+				{
+					CMySQLQuery *pQueryRT = new CMySQLQuery( "SELECT busername,buid FROM talkref WHERE brefid=" + strRT );
+				
+					vector<string> vecQueryRT;
+		
+					vecQueryRT.reserve(2);
+
+					vecQueryRT = pQueryRT->nextRow( );
+					
+					while( vecQueryRT.size( ) == 2 )
+					{
+						setRef.insert( pair< string, string >( vecQueryRT[0], vecQueryRT[1] ) );
+							
+						vecQueryRT = pQueryRT->nextRow( );
+					}
+			
+					delete pQueryRT;
+
+					pQueryRT = new CMySQLQuery( "SELECT btag FROM talktag WHERE bid=" + strRT );
+				
+					vecQueryRT.reserve(1);
+
+					vecQueryRT = pQueryRT->nextRow( );
+					
+					while( vecQueryRT.size( ) == 1 )
+					{
+						setTag.insert( vecQueryRT[0] );
+							
+						vecQueryRT = pQueryRT->nextRow( );
+					}
+			
+					delete pQueryRT;
+				}
+
 				for ( set< pair< string, string > > :: iterator it = setRef.begin( ); it != setRef.end( ); it++ )
 				{
 					CMySQLQuery mq01( "INSERT INTO talkref (busername,buid,breferid,brefid,bposted) VALUES('" + UTIL_StringToMySQL( (*it).first ) + "'," + (*it).second + "," + pRequest->user.strUID + "," + CAtomLong( ulLast ).toString( ) + ",'" + UTIL_StringToMySQL( strPosted ) + "')" );
-				
+					
 					CMySQLQuery mq02( "UPDATE users SET btalkref=btalkref+1 WHERE buid=" + (*it).second );
 				}
 				
@@ -1923,7 +2242,7 @@ const string CTracker :: TransferMentions( const string &cstrTalk, const string 
 	return strTalk;
 }
 
-const string CTracker :: GenerateTalk( const vector<string> &vecQuery, const unsigned char cucAccess, const string &cstrUID, const string &cstrJoined, bool bTalker, bool bFunc, bool bReply )
+const string CTracker :: GenerateTalk( const vector<string> &vecQuery, const unsigned char cucAccess, const string &cstrUID, const string &cstrJoined, bool bTalker, bool bFunc, bool bHistory, bool bReplys )
 {
 	string strReturn = string( );
 //	string strTorrentReturn = string( );
@@ -1937,27 +2256,32 @@ const string CTracker :: GenerateTalk( const vector<string> &vecQuery, const uns
 	string strReplyID = string( );
 	string strReplyTo = string( );
 	string strReplyToID = string( );
+	string strReplyTimes = string( );
 	string strRTID = string( );
 	string strRTTo = string( );
 	string strRTToID = string( );
 
-	strID = vecQuery[0];
+	if( vecQuery.size( ) == 13 )
+	{
+		strID = vecQuery[0];
 
-	if( !vecQuery[1].empty( ) )
-		strName = vecQuery[1];
+		if( !vecQuery[1].empty( ) )
+			strName = vecQuery[1];
 
-	if( !vecQuery[2].empty( ) )
-		strNameID = vecQuery[2];
+		if( !vecQuery[2].empty( ) )
+			strNameID = vecQuery[2];
 
-	strTime = vecQuery[3];
-	strComText = vecQuery[4];
-	strReplyCom = vecQuery[5];
-	strReplyID = vecQuery[6];
-	strReplyTo = vecQuery[7];
-	strReplyToID = vecQuery[8];
-	strRTID = vecQuery[9];
-	strRTTo = vecQuery[10];
-	strRTToID = vecQuery[11];
+		strTime = vecQuery[3];
+		strComText = vecQuery[4];
+		strReplyCom = vecQuery[5];
+		strReplyID = vecQuery[6];
+		strReplyTo = vecQuery[7];
+		strReplyToID = vecQuery[8];
+		strReplyTimes = vecQuery[9];
+		strRTID = vecQuery[10];
+		strRTTo = vecQuery[11];
+		strRTToID = vecQuery[12];
+	}
 
 	if( strTime.empty( ) )
 		strTime = gmapLANG_CFG["unknown"];
@@ -1966,29 +2290,37 @@ const string CTracker :: GenerateTalk( const vector<string> &vecQuery, const uns
 	// body
 	//
 	strReturn += "<tr class=\"talk_body\"";
-	if( bFunc )
-	{
-		strReturn += " onMouseOver=\"javascript: display('func" + strID;
-		if( !bReply )
-			strReturn += "_reply";
-		strReturn += "');\" onMouseOut=\"javascript: hide('func" + strID;
-		if( !bReply )
-			strReturn += "_reply";
-		strReturn += "');\"";
-	}
+//	if( bFunc )
+//	{
+//		strReturn += " onMouseOver=\"javascript: display('func" + strID;
+//		if( !bReply )
+//			strReturn += "_reply";
+//		strReturn += "');\" onMouseOut=\"javascript: hide('func" + strID;
+//		if( !bReply )
+//			strReturn += "_reply";
+//		strReturn += "');\"";
+//	}
 	strReturn += ">\n";
 	strReturn += "<td class=\"talk_body\">\n";
-	strReturn += "<span style=\"display: none\" id=\"reply" + strID + "\">@" + UTIL_RemoveHTML( strName ) + " </span>\n";
-	strReturn += "<span style=\"display: none\" id=\"rt" + strID + "\">";
-	if( !strRTTo.empty( ) )
-		strReturn += UTIL_Xsprintf( gmapLANG_CFG["talk_rt_content"].c_str( ), UTIL_RemoveHTML( strName ).c_str( ), UTIL_RemoveHTML3( strReplyCom ).c_str( ) );
-	strReturn += "</span>\n";
-	strReturn += "<span style=\"display: none\" id=\"rt" + strID + "_real" + strID + "\">";
-	strReturn += UTIL_Xsprintf( gmapLANG_CFG["talk_rt_hint"].c_str( ), UTIL_RemoveHTML( strName ).c_str( ), UTIL_RemoveHTML3( strReplyCom ).c_str( ) );
-	strReturn += "</span>\n";
-	strReturn += "<div id=\"talk" + strID;
-	if( !bReply )
-		strReturn += "_reply";
+	strReturn += "<span style=\"display: none\" id=\"" + strID + "reply" + strID + "\">@" + UTIL_RemoveHTML( strName ) + " </span>\n";
+	if( !strReplyTo.empty( ) )
+		strReturn += "<span style=\"display: none\" id=\"" + strID + "reply" + strReplyID + "\">@" + UTIL_RemoveHTML( strReplyTo ) + " </span>\n";
+	if( ( bHistory && bReplys ) || ( !bHistory && !bReplys ) )
+	{
+		strReturn += "<span style=\"display: none\" id=\"rt" + strID + "\">";
+		if( !strRTTo.empty( ) )
+			strReturn += UTIL_Xsprintf( gmapLANG_CFG["talk_rt_content"].c_str( ), UTIL_RemoveHTML( strName ).c_str( ), UTIL_RemoveHTML3( strReplyCom ).c_str( ) );
+		strReturn += "</span>\n";
+		strReturn += "<span style=\"display: none\" id=\"rt" + strID + "_real" + strID + "\">";
+		strReturn += UTIL_Xsprintf( gmapLANG_CFG["talk_rt_hint"].c_str( ), UTIL_RemoveHTML( strName ).c_str( ), UTIL_RemoveHTML3( strReplyCom ).c_str( ) );
+		strReturn += "</span>\n";
+	}
+	strReturn += "<div id=\"";
+	if( !bHistory && bReplys )
+		strReturn += "reply";
+	strReturn += "talk" + strID;
+	if( bHistory && !bReplys )
+		strReturn += "_history";
 	strReturn += "\" class=\"talk\">\n";
 	if( bTalker )
 	{
@@ -2002,19 +2334,40 @@ const string CTracker :: GenerateTalk( const vector<string> &vecQuery, const uns
 
 	if( bFunc )
 	{
-		strReturn += "<div style=\"visibility: hidden\" id=\"func" + strID;
-		if( !bReply )
-			strReturn += "_reply";
+//		strReturn += "<div style=\"visibility: hidden\" id=\"func" + strID;
+		strReturn += "<div id=\"func" + strID;
+		if( bHistory && !bReplys )
+			strReturn += "_history";
 		strReturn += "\" class=\"talk_function\">";
-		if( ( cucAccess & m_ucAccessComments ) && !cstrUID.empty( ) && ( cstrUID != strNameID ) )
+		if( ( cucAccess & m_ucAccessComments ) && !cstrUID.empty( ) )
 		{
-			strReturn += "<a class=\"talk_reply\" title=\"" + gmapLANG_CFG["talk_reply"] + "\" href=\"javascript:;\" onclick=\"javascript: reply( '" + strID + "','" + strNameID + "', 'postForm', 'talkarea', 'inputReply' );\">" + gmapLANG_CFG["talk_reply"] + "</a>";
-			strReturn += "<a class=\"talk_rt\" title=\"" + gmapLANG_CFG["talk_rt"] + "\" href=\"javascript:;\" onclick=\"javascript: rt( '" + strID + "','";
-			if( !strRTTo.empty( ) )
-				strReturn += strRTID;
-			else
-				strReturn += strID;
-			strReturn += "','" + strNameID + "', 'postForm', 'talkarea', 'inputReply', 'inputRT' );\">" + gmapLANG_CFG["talk_rt"] + "</a>";
+//			if( !strReplyTo.empty( ) && strReplyToID != cstrUID )
+//				strReturn += "<a class=\"talk_reply\" title=\"" + gmapLANG_CFG["talk_reply_parent"] + "\" href=\"javascript:;\" onclick=\"javascript: reply( '" + strID + "','" + strReplyID + "','" + strReplyToID + "', 'postForm', 'talkarea', 'inputReply' );\">" + gmapLANG_CFG["talk_reply_parent"] + "</a>";
+			if( !strReplyTo.empty( ) && !bHistory && !bReplys )
+				if( bFunc )
+					strReturn += "<a class=\"talk_reply\" href=\"javascript: ;\" onClick=\"get_history('" + strID + "','" + strReplyID + "','" + strReplyToID + "');\">" + gmapLANG_CFG["talk_reply_parent"] + "</a>";
+
+			if( !strReplyTo.empty( ) && bHistory && bReplys )
+				if( bFunc )
+					strReturn += "<a class=\"talk_reply\" href=\"javascript: ;\" onClick=\"reply('" + strID + "','" + strID + "','talk" + strID + "_replyTextarea');\">" + gmapLANG_CFG["talk_reply"] + "</a>";
+
+			if( strReplyTo.empty( ) && !bHistory && !bReplys )
+			{
+				strReturn += "<a class=\"talk_reply\" href=\"javascript: ;\" onClick=\"get_reply_to('" + strID + "','" + strNameID + "');\">" + UTIL_Xsprintf( gmapLANG_CFG["talk_reply_times"].c_str( ), strReplyTimes.c_str( ) ) + "</a>";
+			}
+			else if( !strReplyTo.empty( ) && !bHistory && bReplys )
+				strReturn += "<a class=\"talk_reply\" href=\"javascript: ;\" onClick=\"reply('" + strID + "','" + strID + "','talk" + strReplyID + "_replytoTextarea');\">" + gmapLANG_CFG["talk_reply"] + "</a>";
+//			strReturn += "<a class=\"talk_reply\" title=\"" + gmapLANG_CFG["talk_reply"] + "\" href=\"javascript:;\" onclick=\"javascript: reply( '" + strID + "','" + strID + "','" + strNameID + "', 'postForm', 'talkarea', 'inputReply' );\">" + gmapLANG_CFG["talk_reply"] + "</a>";
+			if( !cstrUID.empty( ) && ( cstrUID != strNameID ) && ( ( bHistory && bReplys ) || ( !bHistory && !bReplys ) ) )
+			{
+				strReturn += "<a class=\"talk_rt\" title=\"" + gmapLANG_CFG["talk_rt"] + "\" href=\"javascript:;\" onclick=\"javascript: rt( '" + strID + "','";
+				if( !strRTTo.empty( ) )
+					strReturn += strRTID + "','" + strRTToID;
+				else
+					strReturn += strID + "','" + strNameID;
+
+				strReturn += "', 'postForm', 'talkarea', 'inputReply', 'inputRT' );\">" + gmapLANG_CFG["talk_rt"] + "</a>";
+			}
 		}
 		if( !cstrUID.empty( ) && cstrUID == strNameID )
 		{
@@ -2031,20 +2384,26 @@ const string CTracker :: GenerateTalk( const vector<string> &vecQuery, const uns
 
 	strReturn += "<div class=\"class_footer\">\n";
 	strReturn += "<a class=\"talk_time\" href=\"" + RESPONSE_STR_TALK_HTML + "?id=" + strID + "\">" + strTime + "</a>";
-	if( !strReplyTo.empty( ) && bReply )
+	if( !strReplyTo.empty( ) && !bHistory && !bReplys )
 	{
 		if( bFunc )
-			strReturn += UTIL_Xsprintf( gmapLANG_CFG["talk_reply_to"].c_str( ), string( "<a class=\"talk_reply_link\" href=\"javascript: ;\" onClick=\"get_reply('talk" + strID + "','" + strReplyID + "');\">" ).c_str( ), UTIL_RemoveHTML( strReplyTo ).c_str( ), "</a>" );
-//			strReturn += " " + UTIL_Xsprintf( gmapLANG_CFG["talk_reply_to"].c_str( ), string( "<a class=\"talk_reply_link\" href=\"javascript: ;\" onClick=\"get_reply('" + strID + "','" + strReplyID + "');\">" ).c_str( ), UTIL_RemoveHTML( strReplyTo ).c_str( ), "</a>" );
-//			strReturn += " " + UTIL_Xsprintf( gmapLANG_CFG["talk_reply_to"].c_str( ), string( "<a class=\"talk_reply_link\" href=\"" + RESPONSE_STR_TALK_HTML + "?id=" + strReplyID + "\">" ).c_str( ), UTIL_RemoveHTML( strReplyTo ).c_str( ), "</a>" );
+			strReturn += "<span class=\"talk_reply\">" + UTIL_Xsprintf( gmapLANG_CFG["talk_reply_to"].c_str( ), UTIL_RemoveHTML( strReplyTo ).c_str( ) ) + "</span>";
+//			strReturn += "<a class=\"talk_reply_link\" href=\"javascript: ;\" onClick=\"get_reply('" + strID + "','" + strReplyID + "','" + strReplyToID + "');\">" + UTIL_Xsprintf( gmapLANG_CFG["talk_reply_to"].c_str( ), UTIL_RemoveHTML( strReplyTo ).c_str( ) ) + "</a>";
+////			strReturn += " " + UTIL_Xsprintf( gmapLANG_CFG["talk_reply_to"].c_str( ), string( "<a class=\"talk_reply_link\" href=\"javascript: ;\" onClick=\"get_reply('" + strID + "','" + strReplyID + "');\">" ).c_str( ), UTIL_RemoveHTML( strReplyTo ).c_str( ), "</a>" );
+////			strReturn += " " + UTIL_Xsprintf( gmapLANG_CFG["talk_reply_to"].c_str( ), string( "<a class=\"talk_reply_link\" href=\"" + RESPONSE_STR_TALK_HTML + "?id=" + strReplyID + "\">" ).c_str( ), UTIL_RemoveHTML( strReplyTo ).c_str( ), "</a>" );
 		else
-			strReturn += UTIL_Xsprintf( gmapLANG_CFG["talk_reply_to"].c_str( ), string( "<a class=\"talk_reply_link\" href=\"" + RESPONSE_STR_TALK_HTML + "?id=" + strReplyID + "\">" ).c_str( ), UTIL_RemoveHTML( strReplyTo ).c_str( ), "</a>" );
+			strReturn += "<a class=\"talk_reply_link\" href=\"" + RESPONSE_STR_TALK_HTML + "?id=" + strReplyID + "\">" + UTIL_Xsprintf( gmapLANG_CFG["talk_reply_to"].c_str( ), UTIL_RemoveHTML( strReplyTo ).c_str( ) ) + "</a>";
 	}
 
 	if( !strRTTo.empty( ) && !bFunc )
 	{
-		strReturn += UTIL_Xsprintf( gmapLANG_CFG["talk_rt_to"].c_str( ), string( "<a class=\"talk_rt_link\" href=\"" + RESPONSE_STR_TALK_HTML + "?id=" + strRTID + "\">" ).c_str( ), UTIL_RemoveHTML( strRTTo ).c_str( ), "</a>" );
+		strReturn += "<a class=\"talk_rt_link\" href=\"" + RESPONSE_STR_TALK_HTML + "?id=" + strRTID + "\">" + UTIL_Xsprintf( gmapLANG_CFG["talk_rt_to"].c_str( ), UTIL_RemoveHTML( strRTTo ).c_str( ) ) + "</a>";
 	}
+
+//	if( bReply )
+//	{
+//		strReturn += "<a class=\"talk_reply_times\" href=\"javascript: ;\" onClick=\"get_reply_to('" + strID + "','" + strNameID + "');\">" + UTIL_Xsprintf( gmapLANG_CFG["talk_reply_times"].c_str( ), strReplyTimes.c_str( ) ) + "</a>";
+//	}
 
 	strReturn += "</div>\n";
 
@@ -2056,21 +2415,21 @@ const string CTracker :: GenerateTalk( const vector<string> &vecQuery, const uns
 //			strReturn += " " + UTIL_Xsprintf( gmapLANG_CFG["talk_rt_to"].c_str( ), string( "<a class=\"talk_rt_link\" href=\"" + RESPONSE_STR_TALK_HTML + "?id=" + strRTID + "\">" ).c_str( ), UTIL_RemoveHTML( strRTTo ).c_str( ), "</a>" );
 		{
 			strReturn += "\n<div id=\"" + strID + "_rt" + strRTID;
-			if( !bReply )
-				strReturn += "_reply";
+			if( bHistory && !bReplys )
+				strReturn += "_history";
 			strReturn += "\" class=\"talk_rt\">";
 
-			CMySQLQuery *pQueryOne = new CMySQLQuery( "SELECT bid,busername,buid,bposted,btalk,btalkstore,breply,breplyto,breplytoid,brt,brtto,brttoid FROM talk WHERE bid=" + strRTID );
+			CMySQLQuery *pQueryOne = new CMySQLQuery( "SELECT bid,busername,buid,bposted,btalk,btalkstore,breply,breplyto,breplytoid,breplytimes,brt,brtto,brttoid,brttimes FROM talk WHERE bid=" + strRTID );
 			
 			vector<string> vecQueryOne;
 
-			vecQueryOne.reserve(12);
+			vecQueryOne.reserve(14);
 
 			vecQueryOne = pQueryOne->nextRow( );
 			
 			delete pQueryOne;
 			
-			if( vecQueryOne.size( ) == 12 )
+			if( vecQueryOne.size( ) == 14 )
 			{
 				string strUserLinkRT = getUserLinkTalk( vecQueryOne[2], vecQueryOne[1] );
 
@@ -2088,11 +2447,17 @@ const string CTracker :: GenerateTalk( const vector<string> &vecQuery, const uns
 				strReturn += "<br><a class=\"talk_time\" href=\"" + RESPONSE_STR_TALK_HTML + "?id=" + vecQueryOne[0] + "\">" + vecQueryOne[3] + "</a>";
 
 				if( !vecQueryOne[7].empty( ) )
-					strReturn += UTIL_Xsprintf( gmapLANG_CFG["talk_reply_to"].c_str( ), string( "<a class=\"talk_reply_link\" href=\"" + RESPONSE_STR_TALK_HTML + "?id=" + vecQueryOne[6] + "\">" ).c_str( ), UTIL_RemoveHTML( vecQueryOne[7] ).c_str( ), "</a>" );
+					strReturn += "<a class=\"talk_reply_link\" href=\"" + RESPONSE_STR_TALK_HTML + "?id=" + vecQueryOne[6] + "\">" + UTIL_Xsprintf( gmapLANG_CFG["talk_reply_to"].c_str( ), UTIL_RemoveHTML( vecQueryOne[7] ).c_str( ) ) + "</a>";
 				
-				if( !vecQueryOne[10].empty( ) )
-					strReturn += UTIL_Xsprintf( gmapLANG_CFG["talk_rt_to"].c_str( ), string( "<a class=\"talk_rt_link\" href=\"" + RESPONSE_STR_TALK_HTML + "?id=" + vecQueryOne[9] + "\">" ).c_str( ), UTIL_RemoveHTML( vecQueryOne[10] ).c_str( ), "</a>" );
+				if( !vecQueryOne[11].empty( ) )
+					strReturn += "<a class=\"talk_rt_link\" href=\"" + RESPONSE_STR_TALK_HTML + "?id=" + vecQueryOne[10] + "\">" + UTIL_Xsprintf( gmapLANG_CFG["talk_rt_to"].c_str( ), UTIL_RemoveHTML( vecQueryOne[11] ).c_str( ) ) + "</a>";
+
+				strReturn += "<span class=\"talk_rt_times\">" + UTIL_Xsprintf( gmapLANG_CFG["talk_rt_times"].c_str( ), vecQueryOne[13].c_str( ) ) + "</span>";
+				if( vecQueryOne[9] != "0" )
+					strReturn += "<span class=\"talk_reply_times\">" + UTIL_Xsprintf( gmapLANG_CFG["talk_reply_times"].c_str( ), vecQueryOne[9].c_str( ) ) + "</span>";
 			}
+			else
+				strReturn += UTIL_Xsprintf( gmapLANG_CFG["talk_not_exist"].c_str( ), strRTID.c_str( ) );
 
 			strReturn += "</div>\n";
 		}

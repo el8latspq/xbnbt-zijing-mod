@@ -1009,7 +1009,7 @@ bool CClient :: Update( )
 							// Original code
 							// calculate md5 hash of A1
 
-							strA1 = strLogin + C_STR_COLON + gstrRealm + C_STR_COLON + strPass;
+							strA1 = strLogin + C_STR_COLON + gstrPasswordKey + C_STR_COLON + strPass;
 
 							memset( szMD5, 0, sizeof(szMD5) / sizeof(unsigned char) );
 

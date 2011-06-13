@@ -829,7 +829,6 @@
 		span.talk_header{margin-right:0.5em}
 		div.talk_function{float:right}
 		
-		div.talk_table_posted{text-align:center}
 		p.talk_table_posted{text-align:center}
 		p.talk_posted{text-align:center}
 		p.fill_all{text-align:center}
@@ -873,6 +872,8 @@
 		span.talk_table_header{color:purple}
 		span.talk_table_left{font-weight: bold}
 		span.talk_table_hint{font-style: italic}
+		span.talk_reply_hint{font-style: italic}
+		span.talk_reply_hint{margin-left: 1em}
 		
 /*		span.talk{font-weight: bold}*/
 		a.talk_time{font-size:8pt}
@@ -915,6 +916,15 @@
 		a.talk_reply_link:hover{border-bottom:1px solid}
 		a.talk_reply_link:hover{color:purple}
 		
+		a.talk_reply_times{font-size:8pt}
+		a.talk_reply_times{font-weight: normal}
+		a.talk_reply_times{text-decoration:none}
+		a.talk_reply_times{color:#808028}
+		a.talk_reply_times{border-bottom:1px dotted}
+		a.talk_reply_times{margin-left:0.5em}
+		a.talk_reply_times:hover{border-bottom:1px solid}
+		a.talk_reply_times:hover{color:purple}
+
 		a.talk_rt_link{font-size:8pt}
 		a.talk_rt_link{font-weight: normal}
 		a.talk_rt_link{text-decoration:none}
@@ -953,6 +963,9 @@
 		a.talk_more:hover{color:white}
 		a.talk_more:hover{background-color:purple}
 		
+		div.talk{text-align:left}
+
+		div.talk_reply{text-align:center}
 		div.talk_reply{background-color:#dee3e7}
 		div.talk_reply{border:1px dotted purple}
 		div.talk_reply{margin:5px 5px 5px 5px}
@@ -967,7 +980,19 @@
 		div.talk_torrent{border:1px solid #fffcaa}
 		div.talk_torrent{margin:5px 5px 5px 5px}
 		div.talk_torrent{padding:5px 5px 5px 5px}
+
+		div.talk_reply_form{text-align:left}
 		
+		div.talk_reply_history{background-color:#faffe0}
+		div.talk_reply_history{border:1px solid #fffcaa}
+/*		div.talk_reply_history{margin:5px 5px 5px 5px}*/
+		div.talk_reply_history{padding:5px 5px 5px 5px}
+
+		div.talk_reply_to_talk{background-color:#faffe0}
+		div.talk_reply_to_talk{border:1px solid #fffcaa}
+/*		div.talk_reply_to_talk{margin:5px 5px 5px 5px}*/
+		div.talk_reply_to_talk{padding:5px 5px 5px 5px}
+
 		div.talk_user{background-color:#faffe0}
 		div.talk_user{border:1px solid #fffcaa}
 /*		div.talk_user{margin:5px 5px 5px 5px}*/
@@ -982,6 +1007,16 @@
 		span.talk_tag{color:purple}
 		
 		span.talk_torrent{font-size:8pt}
+
+		span.talk_reply{font-size:8pt}
+		span.talk_reply{color:#808028}
+		span.talk_reply{margin-left:0.5em}
+		span.talk_reply_times{font-size:8pt}
+		span.talk_reply_times{color:#808028}
+		span.talk_reply_times{margin-left:0.5em}
+		span.talk_rt_times{font-size:8pt}
+		span.talk_rt_times{color:#808028}
+		span.talk_rt_times{margin-left:0.5em}
 
 /* ----- messages.html ----- */
 		table.messages_table_posted{width:800px}

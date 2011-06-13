@@ -705,8 +705,8 @@ void CTracker :: serverResponseCommentsGET( struct request_t *pRequest, struct r
 							strTime = gmapLANG_CFG["unknown"];
 				
 						pResponse->strContent += "<tr class=\"com_header\">";
-						pResponse->strContent += "<span style=\"display: none\" id=\"replyto" + strID + "\">" + UTIL_RemoveHTML( strName ) + "</span>\n";
 						pResponse->strContent += "<td class=\"com_header\">";
+						pResponse->strContent += "<span style=\"display: none\" id=\"replyto" + strID + "\">" + UTIL_RemoveHTML( strName ) + "</span>\n";
 						pResponse->strContent += UTIL_Xsprintf( gmapLANG_CFG["comments_posted_by"].c_str( ), strID.c_str( ), strUserLink.c_str( ), strIP.c_str( ), strTime.c_str( ) );
 		//				if( !strName.empty( ) )
 		//				{
@@ -757,6 +757,7 @@ void CTracker :: serverResponseCommentsGET( struct request_t *pRequest, struct r
 						//
 				
 						pResponse->strContent += "<tr class=\"com_body\">";
+						pResponse->strContent += "<td class=\"com_body\" colspan=2>";
 						pResponse->strContent += "<span style=\"display: none\" id=\"reply" + strID + "\">";
 						iStart = strComText.find( gmapLANG_CFG["comments_edited_by"].substr( 0, 6 ) );
 						if( iStart != string :: npos )
@@ -764,7 +765,7 @@ void CTracker :: serverResponseCommentsGET( struct request_t *pRequest, struct r
 						else
 							pResponse->strContent += UTIL_RemoveHTML3( strComText );
 						pResponse->strContent += "</span>\n";
-						pResponse->strContent += "<td class=\"com_body\" colspan=2>" + UTIL_RemoveHTML2( strComText ) + "</td></tr>\n";
+						pResponse->strContent += "<div class=\"comment\">" + UTIL_RemoveHTML2( strComText ) + "</div></td></tr>\n";
 
 						ulCount++;
 				

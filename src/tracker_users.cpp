@@ -1598,7 +1598,7 @@ void CTracker :: serverResponseUsersPOST( struct request_t *pRequest, struct res
 				// Are you sure it's ok to edit the user?
 				if( cstrOK == "1" )
 				{
-					const string cstrA0( cstrUser + ":" + gstrRealm + ":" + cstrPass0 );
+					const string cstrA0( cstrUser + ":" + gstrPasswordKey + ":" + cstrPass0 );
 
 					unsigned char szMD5[16];
 					memset( szMD5, 0, sizeof( szMD5 ) / sizeof( unsigned char ) );
@@ -1619,7 +1619,7 @@ void CTracker :: serverResponseUsersPOST( struct request_t *pRequest, struct res
 							{
 								// Set the users password
 
-								const string cstrA1( cstrUser + ":" + gstrRealm + ":" + cstrPass );
+								const string cstrA1( cstrUser + ":" + gstrPasswordKey + ":" + cstrPass );
 
 								unsigned char szMD5[16];
 								memset( szMD5, 0, sizeof( szMD5 ) / sizeof( unsigned char ) );
@@ -1907,7 +1907,7 @@ void CTracker :: serverResponseUsersPOST( struct request_t *pRequest, struct res
 						{
 							// Set the users password
 
-							const string cstrA1( cstrUser + ":" + gstrRealm + ":" + cstrPass );
+							const string cstrA1( cstrUser + ":" + gstrPasswordKey + ":" + cstrPass );
 
 							unsigned char szMD5[16];
 							memset( szMD5, 0, sizeof( szMD5 ) / sizeof( unsigned char ) );

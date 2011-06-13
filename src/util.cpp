@@ -1318,7 +1318,7 @@ void UTIL_StripName( const string &cstrCompName, string &strReturnName1, string 
 			iZero += iAdd;
 			if( uiCount - uiStart - 1 > 0 )
 			{
-				if( isalnum( strCompName[ uiStart + 1 ] ) && isalnum( strCompName[ uiCount - 1 ] ) && ( uiCount - uiStart - 1 >= 5 ) && !bNoReturnName1 )
+				if( isascii( strCompName[ uiStart + 1 ] ) && isascii( strCompName[ uiCount - 1 ] ) && ( uiCount - uiStart - 1 >= 5 ) && !bNoReturnName1 )
 					if( !( ( strCompName[ uiStart + 1 ] >= '0' && strCompName[ uiStart + 1 ] <= '9' ) && ( strCompName[ uiCount - 1 ] >= '0' && strCompName[ uiCount - 1 ] <= '9' ) ) )
 					{
 						if( strReturnName1.empty( ) )
@@ -1354,7 +1354,7 @@ void UTIL_StripName( const string &cstrCompName, string &strReturnName1, string 
 	uiCount--;
 	if( iZero != 1 && uiCount - uiStart - 1 > 0 )
 	{
-		if( isalnum( strCompName[ uiStart + 1 ] ) && isalnum( strCompName[ uiCount - 1 ] ) && ( uiCount - uiStart - 1 >= 5 ) && !bNoReturnName1 )
+		if( isascii( strCompName[ uiStart + 1 ] ) && isascii( strCompName[ uiCount - 1 ] ) && ( uiCount - uiStart - 1 >= 5 ) && !bNoReturnName1 )
 			if( !( ( strCompName[ uiStart + 1 ] >= '0' && strCompName[ uiStart + 1 ] <= '9' ) && ( strCompName[ uiCount - 1 ] >= '0' && strCompName[ uiCount - 1 ] <= '9' ) ) )
 			{
 				if( strReturnName1.empty( ) )
@@ -1489,18 +1489,23 @@ const vector<string> UTIL_SplitToVector( const string &cstrJoined, const string 
 	
 	if( !cstrJoined.empty( ) )
 	{
-		string :: size_type iStart = 0;
-		string :: size_type iEnd = 0;
-//		iEnd = cstrJoined.find( cstrSplit );
-		while( iStart != string :: npos && iEnd != string :: npos )
+		if( !cstrSplit.empty( ) )
 		{
-			iEnd = cstrJoined.find( cstrSplit, iStart );
-			if( iEnd > iStart )
-				vecSplit.push_back( cstrJoined.substr( iStart, iEnd - iStart ) );
+			string :: size_type iStart = 0;
+			string :: size_type iEnd = 0;
+	//		iEnd = cstrJoined.find( cstrSplit );
+			while( iStart != string :: npos && iEnd != string :: npos )
+			{
+				iEnd = cstrJoined.find( cstrSplit, iStart );
+				if( iEnd > iStart )
+					vecSplit.push_back( cstrJoined.substr( iStart, iEnd - iStart ) );
 
-			if( iEnd != string :: npos )
-				iStart = iEnd + iSplitSize;
+				if( iEnd != string :: npos )
+					iStart = iEnd + iSplitSize;
+			}
 		}
+		else
+			vecSplit.push_back( cstrJoined );
 	}
 	
 	return vecSplit;

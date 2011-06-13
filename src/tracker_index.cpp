@@ -60,6 +60,7 @@ void CTracker :: serverResponseIndex( struct request_t *pRequest, struct respons
 			const string cstrPerPage( pRequest->mapParams["per_page"] );
 			const string cstrNoTag( pRequest->mapParams["notag"] );
 			const string cstrSearchMode( pRequest->mapParams["smode"] );
+			const string cstrMatch( pRequest->mapParams["match"] );
 			
 			if( cstrSearchMode == "uploader" )
 			{
@@ -104,6 +105,7 @@ void CTracker :: serverResponseIndex( struct request_t *pRequest, struct respons
 			vecParams.reserve(64);
 			
 			vecParams.push_back( pair<string, string>( string( "search" ), cstrSearch ) );
+			vecParams.push_back( pair<string, string>( string( "match" ), cstrMatch ) );
 			vecParams.push_back( pair<string, string>( string( "tag" ), cstrFilter ) );
 			vecParams.push_back( pair<string, string>( string( "medium" ), cstrMedium ) );
 			vecParams.push_back( pair<string, string>( string( "quality" ), cstrQuality ) );
@@ -122,6 +124,7 @@ void CTracker :: serverResponseIndex( struct request_t *pRequest, struct respons
 			const string cstrSearch( pRequest->mapParams["search"] );
 			const string cstrSearchResp( UTIL_StringToEscaped( cstrSearch ) );
 			const string cstrSearchMode( pRequest->mapParams["smode"] );
+			const string cstrMatch( pRequest->mapParams["match"] );
 			
 			string strPageParameters = INDEX_HTML;
 	
@@ -132,6 +135,7 @@ void CTracker :: serverResponseIndex( struct request_t *pRequest, struct respons
 					strPageParameters += "search=" + cstrSearchResp;
 				else
 					strPageParameters += "uploader=" + cstrSearchResp;
+				strPageParameters += "&match=" + cstrMatch;
 			}
 			
 			return JS_ReturnToPage( pRequest, pResponse, strPageParameters );
@@ -861,6 +865,7 @@ void CTracker :: serverResponseIndex( struct request_t *pRequest, struct respons
 		const string strUploader( pRequest->mapParams["uploader"] );
 //		const string cstrLowerUploader( UTIL_ToLower( strUploader ) );
 
+		string strMatch( pRequest->mapParams["match"] );
 		// filters
 
 		string strFilter( pRequest->mapParams["tag"] );
@@ -1156,6 +1161,18 @@ void CTracker :: serverResponseIndex( struct request_t *pRequest, struct respons
 				pResponse->strContent += ">" + gmapLANG_CFG["uploader"];
 				pResponse->strContent += "\n</select>\n";
 
+				pResponse->strContent += "<select id=\"match\" name=\"match\">";
+				pResponse->strContent += "\n<option value=\"and\">" + gmapLANG_CFG["match_and"];
+				pResponse->strContent += "\n<option value=\"or\"";
+				if( !strMatch.empty( ) && strMatch == "or" )
+					pResponse->strContent += " selected";
+				pResponse->strContent += ">" + gmapLANG_CFG["match_or"];
+				pResponse->strContent += "\n<option value=\"eor\"";
+				if( !strMatch.empty( ) && strMatch == "eor" )
+					pResponse->strContent += " selected";
+				pResponse->strContent += ">" + gmapLANG_CFG["match_eor"];
+				pResponse->strContent += "\n</select>\n";
+
 				pResponse->strContent += Button_Submit( "top_submit_search", gmapLANG_CFG["search"] );
 				pResponse->strContent += Button_Submit( "top_clear_filter_and_search", gmapLANG_CFG["clear_filter_search"] );
 
@@ -1180,6 +1197,7 @@ void CTracker :: serverResponseIndex( struct request_t *pRequest, struct respons
 		vecParams.push_back( pair<string, string>( string( "per_page" ), cstrPerPage ) );
 		vecParams.push_back( pair<string, string>( string( "sort" ), strSort ) );
 		vecParams.push_back( pair<string, string>( string( "search" ), strSearch ) );
+		vecParams.push_back( pair<string, string>( string( "match" ), strMatch ) );
 		vecParams.push_back( pair<string, string>( string( "tag" ), strFilter ) );
 		vecParams.push_back( pair<string, string>( string( "medium" ), strMedium ) );
 		vecParams.push_back( pair<string, string>( string( "quality" ), strQuality ) );
@@ -1550,12 +1568,23 @@ void CTracker :: serverResponseIndex( struct request_t *pRequest, struct respons
 		
 		if( !vecUploader.empty() )
 		{
+			if( !strResult.empty( ) )
+				strResult += "<span class=\"search_results_alt\"> - </span>\n";
+
 			strResult += "<span class=\"search_results_alt\">" + gmapLANG_CFG["result_search"] + gmapLANG_CFG["uploader"] + ": </span>";
 			strResult += "<span class=\"filtered_by_search\">";
 		 	strResult += UTIL_RemoveHTML( strUploader );
 			strResult += "</span>\n";
 		}
 			
+		if( !strMatch.empty() )
+		{
+			strResult += "<span class=\"search_results_alt\">" + gmapLANG_CFG["result_match"] + ": </span>";
+			strResult += "<span class=\"filtered_by_search\">";
+		 	strResult += gmapLANG_CFG["match_"+strMatch];
+			strResult += "</span>\n";
+		}
+
 		if( !vecFilter.empty() )
 		{
 			if( !m_vecTags.empty( ) )
@@ -1699,11 +1728,18 @@ void CTracker :: serverResponseIndex( struct request_t *pRequest, struct respons
 		string strEngName = string( );
 		string strChiName = string( );
 
+		unsigned char ucMatchMethod = MATCH_METHOD_NONCASE_AND;
+
+		if( strMatch == "or" )
+			ucMatchMethod = MATCH_METHOD_NONCASE_OR;
+		else if( strMatch == "eor" )
+			ucMatchMethod = MATCH_METHOD_NONCASE_EQ;
+
 		for( unsigned long ulKey = 0; ulKey < ulKeySize; ulKey++ )
 		{
-			if( !UTIL_MatchVector( pTorrents[ulKey].strName, vecSearch, MATCH_METHOD_NONCASE_AND ) )
+			if( !vecSearch.empty( ) && !UTIL_MatchVector( pTorrents[ulKey].strName, vecSearch, ucMatchMethod ) )
 				continue;
-			if( !UTIL_MatchVector( pTorrents[ulKey].strUploader, vecUploader, MATCH_METHOD_NONCASE_AND ) )
+			if( !vecUploader.empty( ) && !UTIL_MatchVector( pTorrents[ulKey].strUploader, vecUploader, ucMatchMethod ) )
 				continue;
 			
 			if( !vecFilter.empty( ) )  
@@ -1914,6 +1950,7 @@ void CTracker :: serverResponseIndex( struct request_t *pRequest, struct respons
 			
 					vecParams.push_back( pair<string, string>( string( "per_page" ), cstrPerPage ) );
 					vecParams.push_back( pair<string, string>( string( "search" ), strSearch ) );
+					vecParams.push_back( pair<string, string>( string( "match" ), strMatch ) );
 					vecParams.push_back( pair<string, string>( string( "tag" ), strFilter ) );
 					vecParams.push_back( pair<string, string>( string( "medium" ), strMedium ) );
 					vecParams.push_back( pair<string, string>( string( "quality" ), strQuality ) );
@@ -2384,6 +2421,7 @@ void CTracker :: serverResponseIndex( struct request_t *pRequest, struct respons
 								vecParams.push_back( pair<string, string>( string( "per_page" ), cstrPerPage ) );
 								vecParams.push_back( pair<string, string>( string( "sort" ), strSort ) );
 								vecParams.push_back( pair<string, string>( string( "search" ), strSearch ) );
+								vecParams.push_back( pair<string, string>( string( "match" ), strMatch ) );
 								vecParams.push_back( pair<string, string>( string( "uploader" ), strUploader ) );
 								vecParams.push_back( pair<string, string>( string( "medium" ), strMedium ) );
 								vecParams.push_back( pair<string, string>( string( "quality" ), strQuality ) );
@@ -2424,6 +2462,7 @@ void CTracker :: serverResponseIndex( struct request_t *pRequest, struct respons
 					vecParams.push_back( pair<string, string>( string( "per_page" ), cstrPerPage ) );
 					vecParams.push_back( pair<string, string>( string( "sort" ), strSort ) );
 					vecParams.push_back( pair<string, string>( string( "search" ), strSearch ) );
+					vecParams.push_back( pair<string, string>( string( "match" ), strMatch ) );
 					vecParams.push_back( pair<string, string>( string( "tag" ), strFilter ) );
 					vecParams.push_back( pair<string, string>( string( "medium" ), strMedium ) );
 					vecParams.push_back( pair<string, string>( string( "quality" ), strQuality ) );
@@ -2914,6 +2953,7 @@ void CTracker :: serverResponseIndex( struct request_t *pRequest, struct respons
 		vecParams.push_back( pair<string, string>( string( "per_page" ), cstrPerPage ) );
 		vecParams.push_back( pair<string, string>( string( "sort" ), strSort ) );
 		vecParams.push_back( pair<string, string>( string( "search" ), strSearch ) );
+		vecParams.push_back( pair<string, string>( string( "match" ), strMatch ) );
 		vecParams.push_back( pair<string, string>( string( "tag" ), strFilter ) );
 		vecParams.push_back( pair<string, string>( string( "medium" ), strMedium ) );
 		vecParams.push_back( pair<string, string>( string( "quality" ), strQuality ) );

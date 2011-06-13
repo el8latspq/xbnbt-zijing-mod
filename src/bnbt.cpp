@@ -213,6 +213,7 @@ unsigned int guiMaxRecvSize = 0;
 string gstrStyle = string( );
 string gstrCharSet = string( );
 string gstrRealm = string( );
+string gstrPasswordKey = string( );
 
 // The Trinity Edition 7.5r3 - Addition Begins
 // declares variable for Custom NT Service Name
@@ -588,6 +589,7 @@ int bnbtmain( )
 	gstrStyle = CFG_GetString( "bnbt_style_sheet", string( ) );
 	gstrCharSet = CFG_GetString( "bnbt_charset", "utf-8" );
 	gstrRealm = CFG_GetString( "bnbt_realm", "BNBT" );
+	gstrPasswordKey = CFG_GetString( "bnbt_password_key", "ZiJingBT" );
 
 	// The Trinity Edition - Addition Begins
 	// Sets the value for the Custom NT Service Name variable

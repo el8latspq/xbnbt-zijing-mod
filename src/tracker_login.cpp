@@ -70,7 +70,11 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 		pResponse->strContent += "<tr class=\"login\">\n";
 		pResponse->strContent += "<th class=\"login\">\n" + gmapLANG_CFG["password"] + "</th>\n";
 		pResponse->strContent += "<td class=\"login\">\n";
-		pResponse->strContent += "<input id=\"id_password\" name=\"password\" alt=\"[" + gmapLANG_CFG["password"] + "]\" type=password size=20>\n";
+		pResponse->strContent += "<input id=\"id_password\" name=\"password\" alt=\"[" + gmapLANG_CFG["password"] + "]\" type=password size=24>\n";
+		pResponse->strContent += "</td>\n</tr>\n";
+		pResponse->strContent += "<tr class=\"login\">\n";
+		pResponse->strContent += "<td class=\"login\" colspan=\"2\">\n";
+		pResponse->strContent += "<input id=\"id_expires\" name=\"expires\" type=checkbox> <label for=\"id_expires\">" + gmapLANG_CFG["expires"] + "</label>\n";
 		pResponse->strContent += "</td>\n</tr>\n";
 		pResponse->strContent += "<tr class=\"login\">\n";
 		pResponse->strContent += "<td class=\"login\" colspan=\"2\">\n";
@@ -117,23 +121,33 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 	char pTime[256];
 	memset( pTime, 0, sizeof( pTime ) / sizeof( char ) );
 
+	// Tell the browser not to cache
+	pResponse->mapHeaders.insert( pair<string, string>( "Pragma", "No-Cache" ) );
+
 	const string cstrLogout( pRequest->mapParams["logout"] );
 
 	// If the user signs out then expire the cookie, otherwise refresh the cookie
 	if( cstrLogout == "1" )
+	{
 		strftime( pTime, sizeof( char ) * sizeof( pTime ), "%a, %d-%b-%Y %H:%M:%S GMT", &tmPast );
-	else
-		strftime( pTime, sizeof( char ) * sizeof( pTime ), "%a, %d-%b-%Y %H:%M:%S GMT", &tmFuture );
 
-	// Tell the browser not to cache
-	pResponse->mapHeaders.insert( pair<string, string>( "Pragma", "No-Cache" ) );
+		// Set the users cookie login
+		pResponse->mapHeaders.insert( pair<string, string>( "Set-Cookie", "login=\"" + UTIL_StringToEscaped( pRequest->user.strLogin ) + "\"; expires=" + pTime + "; path=/" ) );
+		// Set the users cookie uid
+		pResponse->mapHeaders.insert( pair<string, string>( "Set-Cookie", "uid=\"" + pRequest->user.strUID + "\"; expires=" + pTime + "; path=/" ) );
+		// Set the users cookie password
+		pResponse->mapHeaders.insert( pair<string, string>( "Set-Cookie", "md5=\"" + UTIL_StringToEscaped( pRequest->user.strMD5 ) + "\"; expires=" + pTime + "; path=/" ) );
+		pResponse->mapHeaders.insert( pair<string, string>( "Set-Cookie", "per_page=\"" + CAtomInt( m_uiPerPage ).toString( )  + "\"; expires=" + pTime + "; path=/" ) );
+	}
+//	else
+//		strftime( pTime, sizeof( char ) * sizeof( pTime ), "%a, %d-%b-%Y %H:%M:%S GMT", &tmFuture );
+
 	// Set the users cookie login
-// 	pResponse->mapHeaders.insert( pair<string, string>( "Set-Cookie", "login=\"" + pRequest->user.strLogin + "\"; expires=" + pTime + "; path=/" ) );
-	pResponse->mapHeaders.insert( pair<string, string>( "Set-Cookie", "login=\"" + UTIL_StringToEscaped( pRequest->user.strLogin ) + "\"; expires=" + pTime + "; path=/" ) );
+//	pResponse->mapHeaders.insert( pair<string, string>( "Set-Cookie", "login=\"" + UTIL_StringToEscaped( pRequest->user.strLogin ) + "\"; expires=" + pTime + "; path=/" ) );
 	// Set the users cookie uid
-	pResponse->mapHeaders.insert( pair<string, string>( "Set-Cookie", "uid=\"" + pRequest->user.strUID + "\"; expires=" + pTime + "; path=/" ) );
+//	pResponse->mapHeaders.insert( pair<string, string>( "Set-Cookie", "uid=\"" + pRequest->user.strUID + "\"; expires=" + pTime + "; path=/" ) );
 	// Set the users cookie password
-	pResponse->mapHeaders.insert( pair<string, string>( "Set-Cookie", "md5=\"" + UTIL_StringToEscaped( pRequest->user.strMD5 ) + "\"; expires=" + pTime + "; path=/" ) );
+//	pResponse->mapHeaders.insert( pair<string, string>( "Set-Cookie", "md5=\"" + UTIL_StringToEscaped( pRequest->user.strMD5 ) + "\"; expires=" + pTime + "; path=/" ) );
 
 	// User per page cookies
 //	unsigned int uiUserPerPage = 0;
@@ -903,20 +917,20 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 		}
 		pResponse->strContent += "</tr></table>\n";
 		
-		CMySQLQuery *pQueryTalk = new CMySQLQuery( "SELECT bid,busername,buid,bposted,btalk,btalkstore,breply,breplyto,breplytoid,brt,brtto,brttoid FROM talk WHERE buid=" + user.strUID + " ORDER BY bposted DESC LIMIT 1" );
+		CMySQLQuery *pQueryTalk = new CMySQLQuery( "SELECT bid,busername,buid,bposted,btalk,btalkstore,breply,breplyto,breplytoid,breplytimes,brt,brtto,brttoid FROM talk WHERE buid=" + user.strUID + " ORDER BY bposted DESC LIMIT 1" );
 		
 		vector<string> vecQueryTalk;
 
-		vecQueryTalk.reserve(12);
+		vecQueryTalk.reserve(13);
 
 		vecQueryTalk = pQueryTalk->nextRow( );
 		
-		if( vecQueryTalk.size( ) == 12 )
+		if( vecQueryTalk.size( ) == 13 )
 		{
 			pResponse->strContent += "<div class=\"user_main_talk\">";
 			pResponse->strContent += "<table class=\"user_main_talk\" summary=\"talk\">\n";
 		
-			while( vecQueryTalk.size( ) == 12 )
+			while( vecQueryTalk.size( ) == 13 )
 			{
 				pResponse->strContent += GenerateTalk( vecQueryTalk, user.ucAccess, user.strUID, string( ), true, false );
 
@@ -3338,6 +3352,8 @@ void CTracker :: serverResponseLoginPOST( struct request_t *pRequest, struct res
 	string cstrMessagesSaveSent = string( );
 	string cstrSubmitLogin = string( );
 	string cstrSubmitPrefs = string( );
+	bool bExpires = true;
+
 	if( pPost )
 	{
 		// Initialise segment dictionary
@@ -3377,6 +3393,8 @@ void CTracker :: serverResponseLoginPOST( struct request_t *pRequest, struct res
 							cstrUsername = pData->toString( );
 						else if( strName == "password" )
 							cstrPassword = pData->toString( );
+						else if( strName == "expires" && pData->toString( ) == "on" )
+							bExpires = false;
 						else if( strName == "return" )
 							cstrReturnPage = pData->toString( );
 						else if( strName.substr( 0, 3 ) == "tag" && pData->toString( ) == "on" )
@@ -3467,7 +3485,7 @@ void CTracker :: serverResponseLoginPOST( struct request_t *pRequest, struct res
 				if( ucAccess & ACCESS_VIEW )
 				{
 					cstrLogin = vecQuery[0];
-					const string cstrA1( cstrLogin + ":" + gstrRealm + ":" + cstrPassword );
+					const string cstrA1( cstrLogin + ":" + gstrPasswordKey + ":" + cstrPassword );
 
 					unsigned char szMD5[16];
 					memset( szMD5, 0, sizeof( szMD5 ) / sizeof( unsigned char ) );
@@ -3506,12 +3524,25 @@ void CTracker :: serverResponseLoginPOST( struct request_t *pRequest, struct res
 				
 				// Tell the browser not to cache
 				pResponse->mapHeaders.insert( pair<string, string>( "Pragma", "No-Cache" ) );
-				// Set the users cookie login
-				pResponse->mapHeaders.insert( pair<string, string>( "Set-Cookie", "login=\"" + UTIL_StringToEscaped( cstrUsername ) + "\"; expires=" + pTime + "; path=/" ) );
-				// Set the users cookie uid
-				pResponse->mapHeaders.insert( pair<string, string>( "Set-Cookie", "uid=\"" + cstrID + "\"; expires=" + pTime + "; path=/" ) );
-				// Set the users cookie password
-				pResponse->mapHeaders.insert( pair<string, string>( "Set-Cookie", "md5=\"" + UTIL_StringToEscaped( strMD5 ) + "\"; expires=" + pTime + "; path=/" ) );
+
+				if( bExpires )
+				{
+					// Set the users cookie login
+					pResponse->mapHeaders.insert( pair<string, string>( "Set-Cookie", "login=\"" + UTIL_StringToEscaped( cstrUsername ) + "\"; path=/" ) );
+					// Set the users cookie uid
+					pResponse->mapHeaders.insert( pair<string, string>( "Set-Cookie", "uid=\"" + cstrID + "\"; path=/" ) );
+					// Set the users cookie password
+					pResponse->mapHeaders.insert( pair<string, string>( "Set-Cookie", "md5=\"" + UTIL_StringToEscaped( strMD5 ) + "\"; path=/" ) );
+				}
+				else
+				{
+					// Set the users cookie login
+					pResponse->mapHeaders.insert( pair<string, string>( "Set-Cookie", "login=\"" + UTIL_StringToEscaped( cstrUsername ) + "\"; expires=" + pTime + "; path=/" ) );
+					// Set the users cookie uid
+					pResponse->mapHeaders.insert( pair<string, string>( "Set-Cookie", "uid=\"" + cstrID + "\"; expires=" + pTime + "; path=/" ) );
+					// Set the users cookie password
+					pResponse->mapHeaders.insert( pair<string, string>( "Set-Cookie", "md5=\"" + UTIL_StringToEscaped( strMD5 ) + "\"; expires=" + pTime + "; path=/" ) );
+				}
 				
 				CMySQLQuery *pQueryPrefs = new CMySQLQuery( "SELECT bperpage FROM users_prefs WHERE buid=" + cstrID );
 		
@@ -3526,7 +3557,17 @@ void CTracker :: serverResponseLoginPOST( struct request_t *pRequest, struct res
 					unsigned int uiTorrentsPerPage = (unsigned int)atoi( mapPrefs["bperpage"].c_str( ) );
 					if( uiTorrentsPerPage < 1 || uiTorrentsPerPage > m_uiPerPageMax )
 						uiTorrentsPerPage = m_uiPerPage;
-					pResponse->mapHeaders.insert( pair<string, string>( "Set-Cookie", "per_page=\"" + CAtomInt( uiTorrentsPerPage ).toString( )  + "\"; expires=" + pTime + "; path=/" ) );
+					if( bExpires )
+						pResponse->mapHeaders.insert( pair<string, string>( "Set-Cookie", "per_page=\"" + CAtomInt( uiTorrentsPerPage ).toString( )  + "\"; path=/" ) );
+					else
+						pResponse->mapHeaders.insert( pair<string, string>( "Set-Cookie", "per_page=\"" + CAtomInt( uiTorrentsPerPage ).toString( )  + "\"; expires=" + pTime + "; path=/" ) );
+				}
+				else
+				{
+					if( bExpires )
+						pResponse->mapHeaders.insert( pair<string, string>( "Set-Cookie", "per_page=\"" + CAtomInt( m_uiPerPage ).toString( )  + "\"; path=/" ) );
+					else
+						pResponse->mapHeaders.insert( pair<string, string>( "Set-Cookie", "per_page=\"" + CAtomInt( m_uiPerPage ).toString( )  + "\"; expires=" + pTime + "; path=/" ) );
 				}
 				
 				HTML_Common_End( pRequest, pResponse, btv, NOT_INDEX, string( CSS_LOGIN ) );
@@ -3624,6 +3665,7 @@ void CTracker :: serverResponseLoginPOST( struct request_t *pRequest, struct res
 			
 			if( uiTorrentsPerPage < 1 || uiTorrentsPerPage > m_uiPerPageMax )
 				uiTorrentsPerPage = m_uiPerPage;
+
 			pResponse->mapHeaders.insert( pair<string, string>( "Set-Cookie", "per_page=\"" + CAtomInt( uiTorrentsPerPage ).toString( )  + "\"; expires=" + pTime + "; path=/" ) );
 			return JS_ReturnToPage( pRequest, pResponse, LOGIN_HTML + "?show=preferences&saved=1" );
 		}

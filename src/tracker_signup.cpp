@@ -1173,7 +1173,7 @@ void CTracker :: serverResponseRecoverPOST( struct request_t *pRequest, struct r
 			else
 			{
 				// calculate md5 hash of A1
-				const string cstrA2( strRealLogin + ":" + gstrRealm + ":" + cstrPass );
+				const string cstrA2( strRealLogin + ":" + gstrPasswordKey + ":" + cstrPass );
 
 				MD5Init( &md5 );
 				MD5Update( &md5, (const unsigned char *)cstrA2.c_str( ), (unsigned int)cstrA2.size( ) );
