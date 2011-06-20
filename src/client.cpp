@@ -862,6 +862,8 @@ bool CClient :: Update( )
 					UTIL_LogPrint( "%s %s\n", rqst.strIP.c_str( ), strTemp2.c_str( ) );
 
 					bGrabParams = false;
+
+					continue;
 				}
 
 				strKey = UTIL_EscapedToString( strTemp.substr( 0, iSplit ) );

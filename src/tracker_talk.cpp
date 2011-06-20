@@ -2355,7 +2355,7 @@ const string CTracker :: GenerateTalk( const vector<string> &vecQuery, const uns
 			{
 				strReturn += "<a class=\"talk_reply\" href=\"javascript: ;\" onClick=\"get_reply_to('" + strID + "','" + strNameID + "');\">" + UTIL_Xsprintf( gmapLANG_CFG["talk_reply_times"].c_str( ), strReplyTimes.c_str( ) ) + "</a>";
 			}
-			else if( !strReplyTo.empty( ) && !bHistory && bReplys )
+			else if( !strReplyTo.empty( ) && ( cstrUID != strNameID ) && !bHistory && bReplys )
 				strReturn += "<a class=\"talk_reply\" href=\"javascript: ;\" onClick=\"reply('" + strID + "','" + strID + "','talk" + strReplyID + "_replytoTextarea');\">" + gmapLANG_CFG["talk_reply"] + "</a>";
 //			strReturn += "<a class=\"talk_reply\" title=\"" + gmapLANG_CFG["talk_reply"] + "\" href=\"javascript:;\" onclick=\"javascript: reply( '" + strID + "','" + strID + "','" + strNameID + "', 'postForm', 'talkarea', 'inputReply' );\">" + gmapLANG_CFG["talk_reply"] + "</a>";
 			if( !cstrUID.empty( ) && ( cstrUID != strNameID ) && ( ( bHistory && bReplys ) || ( !bHistory && !bReplys ) ) )

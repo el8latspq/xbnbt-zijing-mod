@@ -1719,6 +1719,7 @@ void CTracker :: serverResponseIndex( struct request_t *pRequest, struct respons
 			
 		// for correct page numbers after searching
 		bool bFound = false;
+		unsigned char ucTopLast = 5;
 
 		unsigned long ulAdded = 0;
 		unsigned long ulSkipped = 0;
@@ -2383,6 +2384,12 @@ void CTracker :: serverResponseIndex( struct request_t *pRequest, struct respons
 
 					if( pTorrents[ulKey].ucTop > 0 && !bNoTop )
 					{
+						if( pTorrents[ulKey].ucTop < ucTopLast )
+						{
+							ucTopLast = pTorrents[ulKey].ucTop;
+							pResponse->strContent += "<tr class=\"top_split\"><td class=\"top_split\" colspan=15></td></tr>\n";
+						}
+
 						if( pTorrents[ulKey].ucTop > 2 )
 							pResponse->strContent += "<tr class=\"top_global\">\n";
 						else if( pTorrents[ulKey].ucTop > 1 )
