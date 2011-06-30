@@ -610,8 +610,9 @@ void CTracker :: serverResponseStatsGET( struct request_t *pRequest, struct resp
 		pResponse->strContent += "}\n\n";
 		
 		pResponse->strContent += "String.prototype.getBytes = function() {\n";
-		pResponse->strContent += "  var cArr = this.match(/[^\\x00-\\xff]/ig);\n";
-		pResponse->strContent += "  return this.length + (cArr == null ? 0 : cArr.length);\n";
+		pResponse->strContent += "  return this.length;\n";
+//		pResponse->strContent += "  var cArr = this.match(/[^\\x00-\\xff]/ig);\n";
+//		pResponse->strContent += "  return this.length + (cArr == null ? 0 : cArr.length);\n";
 		pResponse->strContent += "}\n\n";
 		
 		pResponse->strContent += "String.prototype.stripX = function() {\n";
@@ -2233,26 +2234,26 @@ void CTracker :: serverResponseStatsGET( struct request_t *pRequest, struct resp
 
 					// strip ip
 
-					iStart = strIP.rfind( "." );
-
-					if( iStart != string :: npos )
-					{
-						// don't strip ip for mods
-
-						if( !( pRequest->user.ucAccess & m_ucAccessShowIP ) && pRequest->user.strUID != strNameID )
-							strIP = strIP.substr( 0, iStart + 1 ) + "xxx";
-					}
-					else
-					{
-						iStart = strIP.rfind( ":" );
-						if( iStart != string :: npos )
-						{
-							// don't strip ip for mods
-
-							if( !( pRequest->user.ucAccess & m_ucAccessShowIP ) && pRequest->user.strUID != strNameID )
-								strIP = strIP.substr( 0, iStart + 1 ) + "xxxx";
-						}
-					}
+//					iStart = strIP.rfind( "." );
+//
+//					if( iStart != string :: npos )
+//					{
+//						// don't strip ip for mods
+//
+//						if( !( pRequest->user.ucAccess & m_ucAccessShowIP ) && pRequest->user.strUID != strNameID )
+//							strIP = strIP.substr( 0, iStart + 1 ) + "xxx";
+//					}
+//					else
+//					{
+//						iStart = strIP.rfind( ":" );
+//						if( iStart != string :: npos )
+//						{
+//							// don't strip ip for mods
+//
+//							if( !( pRequest->user.ucAccess & m_ucAccessShowIP ) && pRequest->user.strUID != strNameID )
+//								strIP = strIP.substr( 0, iStart + 1 ) + "xxxx";
+//						}
+//					}
 
 					//
 					// header
@@ -2273,7 +2274,8 @@ void CTracker :: serverResponseStatsGET( struct request_t *pRequest, struct resp
 					pResponse->strContent += "<tr class=\"com_header\">";
 					pResponse->strContent += "<td class=\"com_header\">";
 					pResponse->strContent += "<span style=\"display: none\" id=\"replyto" + strID + "\">" + UTIL_RemoveHTML( strName ) + "</span>\n";
-					pResponse->strContent += UTIL_Xsprintf( gmapLANG_CFG["comments_posted_by"].c_str( ), strID.c_str( ), strUserLink.c_str( ), strIP.c_str( ), strTime.c_str( ) );
+//					pResponse->strContent += UTIL_Xsprintf( gmapLANG_CFG["comments_posted_by"].c_str( ), strID.c_str( ), strUserLink.c_str( ), strIP.c_str( ), strTime.c_str( ) );
+					pResponse->strContent += UTIL_Xsprintf( gmapLANG_CFG["comments_posted_by"].c_str( ), strID.c_str( ), strUserLink.c_str( ), strTime.c_str( ) );
 				
 	//				if( !strName.empty( ) )
 	//				{
@@ -3808,7 +3810,7 @@ void CTracker :: serverResponseStatsPOST( struct request_t *pRequest, struct res
 				
 				if( !cstrIMDbID.empty( ) )
 				{
-					CMySQLQuery *pQuery = new CMySQLQuery( "SELECT bimdb,bimdbid,bimdbupdated from allowed WHERE bimdbid=\'" + UTIL_StringToMySQL( cstrIMDbID ) + "\' GROUP BY bimdbid UNION SELECT bimdb,bimdbid,bimdbupdated from offer WHERE bimdbid=\'" + UTIL_StringToMySQL( cstrIMDbID ) + "\' GROUP BY bimdbid" );
+					CMySQLQuery *pQuery = new CMySQLQuery( "SELECT bimdb,bimdbid,bimdbupdated from allowed WHERE bimdbid=\'" + UTIL_StringToMySQL( cstrIMDbID ) + "\' AND bimdbupdated>NOW()-interval 3 day GROUP BY bimdbid UNION SELECT bimdb,bimdbid,bimdbupdated from offer WHERE bimdbid=\'" + UTIL_StringToMySQL( cstrIMDbID ) + "\' AND bimdbupdated>NOW()-interval 3 day GROUP BY bimdbid" );
 	
 					vector<string> vecQuery;
 

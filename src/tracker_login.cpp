@@ -874,10 +874,13 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 
 		if( pRequest->user.ucAccess & m_ucAccessComments )
 		{
-			pResponse->strContent += " <span>[<a class=\"black\" title=\"" + gmapLANG_CFG["talk_to"] + "\" href=\"" + RESPONSE_STR_TALK_HTML + "?talk=" + UTIL_StringToEscaped( "@" + user.strLogin + " " ) + "\">" + gmapLANG_CFG["talk_to"] + "</a>]</span>";
+			if( pRequest->user.strUID != user.strUID )
+				pResponse->strContent += " <span>[<a class=\"black\" title=\"" + gmapLANG_CFG["talk_to"] + "\" href=\"" + RESPONSE_STR_TALK_HTML + "?talk=" + UTIL_StringToEscaped( "@" + user.strLogin + " " ) + "\">" + gmapLANG_CFG["talk_to"] + "</a>]</span>";
+			else
+				pResponse->strContent += " <span>[<a class=\"black\" title=\"" + gmapLANG_CFG["talk_my_talk"] + "\" href=\"" + RESPONSE_STR_TALK_HTML + "?uid=" + user.strUID + "\">" + gmapLANG_CFG["talk_my_talk"] + "</a>]</span>";
 		}
 		
-		if( pRequest->user.ucAccess & m_ucAccessMessages )
+		if( pRequest->user.ucAccess & m_ucAccessMessages && pRequest->user.strUID != user.strUID )
 		{
 			pResponse->strContent += " <span>[<a class=\"black\" title=\"" + gmapLANG_CFG["messages_send_message"] + "\" href=\"" + RESPONSE_STR_MESSAGES_HTML + "?sendto=" + user.strUID + "\">" + gmapLANG_CFG["messages_send_message"] + "</a>]</span>";
 		}
@@ -1694,7 +1697,7 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 				if( strTime.empty( ) )
 					strTime = gmapLANG_CFG["unknown"];
 				
-				pResponse->strContent += "<tr class=\"com_header\"><td class=\"com_header\">" + UTIL_Xsprintf( gmapLANG_CFG["comments_posted_by"].c_str( ), strID.c_str( ), strUserLink.c_str( ), strIP.c_str( ), strTime.c_str( ) );
+				pResponse->strContent += "<tr class=\"com_header\"><td class=\"com_header\">" + UTIL_Xsprintf( gmapLANG_CFG["comments_posted_by"].c_str( ), strID.c_str( ), strUserLink.c_str( ), strTime.c_str( ) );
 //				pResponse->strContent += "<tr class=\"com_header\"><td class=\"com_header\">" + UTIL_Xsprintf( gmapLANG_CFG["user_detail_comments_posted_by"].c_str( ), strID.c_str( ), strIP.c_str( ), strTime.c_str( ) );
 				
 				if( !vecQueryComment[6].empty( ) && vecQueryComment[6] != "0" )

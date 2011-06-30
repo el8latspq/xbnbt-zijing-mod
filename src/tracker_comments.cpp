@@ -157,8 +157,9 @@ void CTracker :: serverResponseCommentsGET( struct request_t *pRequest, struct r
 		pResponse->strContent += "}\n\n";
 		
 		pResponse->strContent += "String.prototype.getBytes = function() {\n";
-		pResponse->strContent += "  var cArr = this.match(/[^\\x00-\\xff]/ig);\n";
-		pResponse->strContent += "  return this.length + (cArr == null ? 0 : cArr.length);\n";
+		pResponse->strContent += "  return this.length;\n";
+//		pResponse->strContent += "  var cArr = this.match(/[^\\x00-\\xff]/ig);\n";
+//		pResponse->strContent += "  return this.length + (cArr == null ? 0 : cArr.length);\n";
 		pResponse->strContent += "}\n\n";
 		
 		pResponse->strContent += "String.prototype.stripX = function() {\n";
@@ -310,7 +311,19 @@ void CTracker :: serverResponseCommentsGET( struct request_t *pRequest, struct r
 //		pResponse->strContent += "window.location.hash = \"commentarea\";\n";
 //		pResponse->strContent += "anchor.focus();\n";
 //		pResponse->strContent += "}\n";
+//
+		pResponse->strContent += "function delete_comment_confirm(del,link) {\n";
+		pResponse->strContent += "  link = link.replace(/&amp;/g,\"&\");\n";
+		pResponse->strContent += "  if( confirm(\"" + gmapLANG_CFG["comments_delete_q"] + "\") ) {\n";
+		pResponse->strContent += "    window.location = \'" + RESPONSE_STR_COMMENTS_HTML + "\' + link + \'&del=\' + del; }\n";
+		pResponse->strContent += "}\n\n";
 		pResponse->strContent += "//-->\n";
+
+		pResponse->strContent += "function delete_all_comments_confirm(link) {\n";
+		pResponse->strContent += "  link = link.replace(/&amp;/g,\"&\");\n";
+		pResponse->strContent += "  if( confirm(\"" + gmapLANG_CFG["comments_delete_all_q"] + "\") ) {\n";
+		pResponse->strContent += "    window.location = \'" + RESPONSE_STR_COMMENTS_HTML + "\' + link + \'&delall=1\'; }\n";
+		pResponse->strContent += "}\n\n";
 		pResponse->strContent += "</script>\n\n";
 
 		if( vecQuery.size( ) == 8 || vecQuery.size( ) == 9 )
@@ -437,7 +450,8 @@ void CTracker :: serverResponseCommentsGET( struct request_t *pRequest, struct r
 							if( strTime.empty( ) )
 								strTime = gmapLANG_CFG["unknown"];
 							
-							strHeader = UTIL_Xsprintf( gmapLANG_CFG["comments_posted_by"].c_str( ), cstrEdit.c_str( ), strUserLink.c_str( ), strIP.c_str( ), strTime.c_str( ) );
+//							strHeader = UTIL_Xsprintf( gmapLANG_CFG["comments_posted_by"].c_str( ), cstrEdit.c_str( ), strUserLink.c_str( ), strIP.c_str( ), strTime.c_str( ) );
+							strHeader = UTIL_Xsprintf( gmapLANG_CFG["comments_posted_by"].c_str( ), cstrEdit.c_str( ), strUserLink.c_str( ), strTime.c_str( ) );
 //							if( !strName.empty( ) )
 //							{
 //								CMySQLQuery *pQueryUser = new CMySQLQuery( "SELECT buid,baccess,bgroup,btitle FROM users WHERE buid=" + strNameID );
@@ -635,7 +649,7 @@ void CTracker :: serverResponseCommentsGET( struct request_t *pRequest, struct r
 				{
 					if( pRequest->user.ucAccess & m_ucAccessDelComments )
 					{
-						pResponse->strContent += "<p>[<a class=\"red\" title=\"" + gmapLANG_CFG["delete_all"] + "\" href=\"" + RESPONSE_STR_COMMENTS_HTML + strJoined + "&amp;delall=1";
+						pResponse->strContent += "<p>[<a class=\"red\" title=\"" + gmapLANG_CFG["delete_all"] + "\" href=\"javascript: delete_all_comments_confirm('" + UTIL_StringToEscaped( strJoined ) + "');";
 						pResponse->strContent += "\">" + gmapLANG_CFG["delete_all"] + "</a>]</p>\n";
 					}
 
@@ -666,27 +680,27 @@ void CTracker :: serverResponseCommentsGET( struct request_t *pRequest, struct r
 
 						// strip ip
 
-						iStart = strIP.rfind( "." );
-
-						if( iStart != string :: npos )
-						{
-							// don't strip ip for mods
-
-							if( !( pRequest->user.ucAccess & m_ucAccessShowIP ) && pRequest->user.strUID != strNameID )
-								strIP = strIP.substr( 0, iStart + 1 ) + "xxx";
-						}
-						else
-						{
-							iStart = strIP.rfind( ":" );
-							if( iStart != string :: npos )
-							{
-								// don't strip ip for mods
-
-								if( !( pRequest->user.ucAccess & m_ucAccessShowIP ) && pRequest->user.strUID != strNameID )
-									strIP = strIP.substr( 0, iStart + 1 ) + "xxxx";
-							}
-
-						}
+//						iStart = strIP.rfind( "." );
+//
+//						if( iStart != string :: npos )
+//						{
+//							// don't strip ip for mods
+//
+//							if( !( pRequest->user.ucAccess & m_ucAccessShowIP ) && pRequest->user.strUID != strNameID )
+//								strIP = strIP.substr( 0, iStart + 1 ) + "xxx";
+//						}
+//						else
+//						{
+//							iStart = strIP.rfind( ":" );
+//							if( iStart != string :: npos )
+//							{
+//								// don't strip ip for mods
+//
+//								if( !( pRequest->user.ucAccess & m_ucAccessShowIP ) && pRequest->user.strUID != strNameID )
+//									strIP = strIP.substr( 0, iStart + 1 ) + "xxxx";
+//							}
+//
+//						}
 
 						//
 						// header
@@ -707,7 +721,8 @@ void CTracker :: serverResponseCommentsGET( struct request_t *pRequest, struct r
 						pResponse->strContent += "<tr class=\"com_header\">";
 						pResponse->strContent += "<td class=\"com_header\">";
 						pResponse->strContent += "<span style=\"display: none\" id=\"replyto" + strID + "\">" + UTIL_RemoveHTML( strName ) + "</span>\n";
-						pResponse->strContent += UTIL_Xsprintf( gmapLANG_CFG["comments_posted_by"].c_str( ), strID.c_str( ), strUserLink.c_str( ), strIP.c_str( ), strTime.c_str( ) );
+//						pResponse->strContent += UTIL_Xsprintf( gmapLANG_CFG["comments_posted_by"].c_str( ), strID.c_str( ), strUserLink.c_str( ), strIP.c_str( ), strTime.c_str( ) );
+						pResponse->strContent += UTIL_Xsprintf( gmapLANG_CFG["comments_posted_by"].c_str( ), strID.c_str( ), strUserLink.c_str( ), strTime.c_str( ) );
 		//				if( !strName.empty( ) )
 		//				{
 		//					if( !strNameID.empty( ) )
@@ -743,7 +758,7 @@ void CTracker :: serverResponseCommentsGET( struct request_t *pRequest, struct r
 						}
 						if( pRequest->user.ucAccess & m_ucAccessDelComments )
 						{
-							pResponse->strContent += " [<a class=\"red\" title=\"" + gmapLANG_CFG["delete"] + "\" href=\"" + RESPONSE_STR_COMMENTS_HTML + strJoined + "&amp;del=" + strID;
+							pResponse->strContent += " [<a class=\"red\" title=\"" + gmapLANG_CFG["delete"] + "\" href=\"javascript: delete_comment_confirm('" + strID + "','" + UTIL_StringToEscaped( strJoined ) + "');";
 							pResponse->strContent += "\">" + gmapLANG_CFG["delete"] + "</a>]";
 						}
 

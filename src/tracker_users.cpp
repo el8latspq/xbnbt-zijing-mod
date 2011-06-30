@@ -1380,6 +1380,16 @@ void CTracker :: serverResponseUsersGET( struct request_t *pRequest, struct resp
 			}
 		}
 	}
+	else
+	{
+		// Not authorised
+
+		// Output common HTML head
+		HTML_Common_Begin( pRequest, pResponse, gmapLANG_CFG["users_page"], string( CSS_USERS ), string( ), NOT_INDEX, CODE_401 );
+
+		// Output common HTML tail
+		HTML_Common_End( pRequest, pResponse, btv, NOT_INDEX, string( CSS_USERS ) );
+	}
 }
 
 void CTracker :: serverResponseUsersPOST( struct request_t *pRequest, struct response_t *pResponse, CAtomList *pPost )
@@ -2197,9 +2207,179 @@ void CTracker :: serverResponseUsersPOST( struct request_t *pRequest, struct res
 		// Not authorised
 
 		// Output common HTML head
-		HTML_Common_Begin(  pRequest, pResponse, gmapLANG_CFG["index_page"], string( CSS_USERS ), string( ), NOT_INDEX, CODE_401 );
+		HTML_Common_Begin( pRequest, pResponse, gmapLANG_CFG["users_page"], string( CSS_USERS ), string( ), NOT_INDEX, CODE_401 );
 
 		// Output common HTML tail
 		HTML_Common_End( pRequest, pResponse, btv, NOT_INDEX, string( CSS_USERS ) );
 	}
 }
+
+void CTracker :: serverResponseRank( struct request_t *pRequest, struct response_t *pResponse )
+{
+	// Set the start time
+	const struct bnbttv btv( UTIL_CurrentTime( ) );
+
+	// Verify that the IP is permitted to access the tracker
+	if( m_ucIPBanMode != 0 )
+		if( IsIPBanned( pRequest, pResponse, btv, gmapLANG_CFG["rank_page"], string( CSS_RANK ), NOT_INDEX ) )
+			return;
+
+	if( !pRequest->user.strUID.empty( ) && ( pRequest->user.ucAccess & m_ucAccessView ) )
+	{
+		// Output common HTML head
+		HTML_Common_Begin(  pRequest, pResponse, gmapLANG_CFG["rank_page"], string( CSS_RANK ), string( ), NOT_INDEX, CODE_200 );
+
+		//
+		// user table
+		//
+
+		unsigned long culKeySize = 0;
+		
+		struct user_t *pUsersT = 0;
+		
+		if( m_pCache )
+		{
+//			m_pCache->ResetUsers( );
+			pUsersT = m_pCache->getCacheUsers( );
+			culKeySize = m_pCache->getSizeUsers( );
+		}
+		
+		// Populate the users structure for display
+
+		// Sort the users
+		const string cstrSort( pRequest->mapParams["sort"] );
+		unsigned char ucSort = SORTU_DUPPED;
+		
+		if( !cstrSort.empty( ) )
+		{
+			if( cstrSort == "up" )
+				ucSort = SORTU_DUPPED;
+			else if( cstrSort == "down" )
+				ucSort = SORTU_DDOWNED;
+			else if( cstrSort == "share" )
+				ucSort = SORTU_DSHARERATIO;
+			else if( cstrSort == "bonus" )
+				ucSort = SORTU_DBONUS;
+		}
+
+		m_pCache->sortUsers( ucSort );
+
+		pResponse->strContent += "<p class=\"subfilter\">";
+		pResponse->strContent += "<a";
+		if( cstrSort.empty( ) || cstrSort == "up" )
+			pResponse->strContent += " class=\"blue\"";
+		pResponse->strContent += " href=\"" + RESPONSE_STR_RANK_HTML + "?sort=up\">" + gmapLANG_CFG["rank_sort_up"] + "</a>";
+		pResponse->strContent += "<span class=\"pipe\"> | </span>";
+		pResponse->strContent += "<a";
+		if( cstrSort == "down" )
+			pResponse->strContent += " class=\"blue\"";
+		pResponse->strContent += " href=\"" + RESPONSE_STR_RANK_HTML + "?sort=down\">" + gmapLANG_CFG["rank_sort_down"] + "</a>";
+		pResponse->strContent += "<span class=\"pipe\"> | </span>";
+		pResponse->strContent += "<a";
+		if( cstrSort == "share" )
+			pResponse->strContent += " class=\"blue\"";
+		pResponse->strContent += " href=\"" + RESPONSE_STR_RANK_HTML + "?sort=share\">" + gmapLANG_CFG["rank_sort_share"] + "</a>";
+		pResponse->strContent += "<span class=\"pipe\"> | </span>";
+		pResponse->strContent += "<a";
+		if( cstrSort == "bonus" )
+			pResponse->strContent += " class=\"blue\"";
+		pResponse->strContent += " href=\"" + RESPONSE_STR_RANK_HTML + "?sort=bonus\">" + gmapLANG_CFG["rank_sort_bonus"] + "</a>";
+		pResponse->strContent += "</p>";
+
+		bool bFound = false;
+		bool bSelf = false;
+
+		const unsigned long culCount = 2 * m_uiPerPage;
+		unsigned long ulFound = 0;
+		
+		char szFloat[16];
+		memset( szFloat, 0, sizeof( szFloat ) / sizeof( char ) );
+
+		// for correct page numbers after searching
+
+		for( unsigned long ulKey = 0; ulKey < culKeySize && !( ulFound >= culCount && bSelf ); ulKey++ )
+		{
+			// create the table and display the headers first and once
+			if( !bFound )
+			{
+				pResponse->strContent += "<div class=\"users_table\">\n";
+				pResponse->strContent += "<table summary=\"users\">\n";
+				pResponse->strContent += "<tr><th class=\"number\">" + gmapLANG_CFG["rank"];
+				pResponse->strContent += "</th><th class=\"uploader\">" + gmapLANG_CFG["user_name"];
+				pResponse->strContent += "</th>\n<th class=\"number\">" + gmapLANG_CFG["share_ratio"];
+				pResponse->strContent += "</th>\n<th class=\"bytes\">" + gmapLANG_CFG["user_uploaded"];
+				pResponse->strContent += "</th>\n<th class=\"bytes\">" + gmapLANG_CFG["user_downloaded"];
+				pResponse->strContent += "</th>\n<th class=\"number\">" + gmapLANG_CFG["user_bonus"];
+				pResponse->strContent += "</th>\n";
+				pResponse->strContent += "</tr>\n";
+
+				// signal table created and headers ouput once
+				bFound = true;
+			}
+
+			if( ucSort == SORTU_DSHARERATIO && pUsersT[ulKey].ulDownloaded < (int64)10*1024*1024*1024 )
+				continue;
+
+			ulFound++;
+
+			if( ulFound <= culCount || pUsersT[ulKey].strUID == pRequest->user.strUID )
+			{
+				if( pUsersT[ulKey].strUID == pRequest->user.strUID )
+					bSelf = true;
+
+				// output table rows
+
+				if( pUsersT[ulKey].strUID == pRequest->user.strUID )
+					pResponse->strContent += "<tr class=\"own\">\n";
+				else if( ulFound % 2 )
+					pResponse->strContent += "<tr class=\"even\">\n";
+				else
+					pResponse->strContent += "<tr class=\"odd\">\n";
+
+				pResponse->strContent += "<td class=\"number\">";
+				pResponse->strContent += CAtomLong( ulFound ).toString( );
+				pResponse->strContent += "</td><td class=\"uploader\">";
+				pResponse->strContent += getUserLink( pUsersT[ulKey].strUID, pUsersT[ulKey].strLogin );
+				pResponse->strContent += "</td>\n<td class=\"number\">";
+				if( ( -1.001 < pUsersT[ulKey].flShareRatio ) && ( pUsersT[ulKey].flShareRatio < -0.999 ) )
+					pResponse->strContent += gmapLANG_CFG["perfect"];
+				else
+				{
+					snprintf( szFloat, sizeof( szFloat ) / sizeof( char ), "%0.3f", pUsersT[ulKey].flShareRatio );
+					pResponse->strContent += szFloat;
+				}
+				pResponse->strContent += "</td>\n<td class=\"bytes\">";
+				pResponse->strContent += UTIL_BytesToString( pUsersT[ulKey].ulUploaded );
+				pResponse->strContent += "</td>\n<td class=\"bytes\">";
+				pResponse->strContent += UTIL_BytesToString( pUsersT[ulKey].ulDownloaded );
+				pResponse->strContent += "</td>\n<td class=\"number\">";
+				pResponse->strContent += CAtomLong( pUsersT[ulKey].ulBonus / 100 ).toString( ) + "." + CAtomInt( ( pUsersT[ulKey].ulBonus % 100 ) / 10 ).toString( ) + CAtomInt( pUsersT[ulKey].ulBonus % 10 ).toString( );
+				pResponse->strContent += "</td>\n";
+				pResponse->strContent += "</tr>\n";
+
+			}
+		}
+
+		// some finishing touches
+
+		if( bFound )
+		{
+			pResponse->strContent += "</table>\n";
+			pResponse->strContent += "</div>\n\n";
+		}
+		
+		// Output common HTML tail
+		HTML_Common_End( pRequest, pResponse, btv, NOT_INDEX, string( CSS_RANK ) );
+	}
+	else
+	{
+		// Not authorised
+
+		// Output common HTML head
+		HTML_Common_Begin( pRequest, pResponse, gmapLANG_CFG["rank_page"], string( CSS_RANK ), string( ), NOT_INDEX, CODE_401 );
+
+		// Output common HTML tail
+		HTML_Common_End( pRequest, pResponse, btv, NOT_INDEX, string( CSS_RANK ) );
+	}
+}
+

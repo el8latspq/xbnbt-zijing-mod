@@ -1427,9 +1427,9 @@ void CTracker :: serverResponseTalkGET( struct request_t *pRequest, struct respo
 		else
 		{
 			if( !strUID.empty( ) )
-				pQueryTalk = new CMySQLQuery( "SELECT bid,busername,buid,bposted,btalk,btalkstore,breply,breplyto,breplytoid,breplytimes,brt,brtto,brttoid FROM talk WHERE buid=" + strUID + " ORDER BY bposted DESC LIMIT " + CAtomLong( ulLimit ).toString( ) );
+				pQueryTalk = new CMySQLQuery( "SELECT bid,busername,buid,bposted,btalk,btalkstore,breply,breplyto,breplytoid,breplytimes,brt,brtto,brttoid FROM talk WHERE buid=" + strUID + " AND breply=0 ORDER BY bposted DESC LIMIT " + CAtomLong( ulLimit ).toString( ) );
 			else
-				pQueryTalk = new CMySQLQuery( "SELECT bid,busername,buid,bposted,btalk,btalkstore,breply,breplyto,breplytoid,breplytimes,brt,brtto,brttoid FROM talk ORDER BY bposted DESC LIMIT " + CAtomLong( ulLimit ).toString( ) );
+				pQueryTalk = new CMySQLQuery( "SELECT bid,busername,buid,bposted,btalk,btalkstore,breply,breplyto,breplytoid,breplytimes,brt,brtto,brttoid FROM talk WHERE breply=0 ORDER BY bposted DESC LIMIT " + CAtomLong( ulLimit ).toString( ) );
 			
 			vector<string> vecQueryTalk;
 	
@@ -1455,19 +1455,19 @@ void CTracker :: serverResponseTalkGET( struct request_t *pRequest, struct respo
 				if( vecQueryUser.size( ) == 1 )
 				{
 					pResponse->strContent += "<div class=\"talk_user\">\n<p>" + getUserLink( strUID, string( ) );
-				
-					if( pRequest->user.ucAccess & m_ucAccessComments )
-					{
-						pResponse->strContent += " <span>[<a class=\"black\" title=\"" + gmapLANG_CFG["talk_to"] + "\" href=\"" + RESPONSE_STR_TALK_HTML + "?talk=" + UTIL_StringToEscaped( "@" + vecQueryUser[0] + " " ) + "\">" + gmapLANG_CFG["talk_to"] + "</a>]</span>";
-					}
-				
-					if( pRequest->user.ucAccess & m_ucAccessMessages )
-					{
-						pResponse->strContent += " <span>[<a class=\"black\" title=\"" + gmapLANG_CFG["messages_send_message"] + "\" href=\"" + RESPONSE_STR_MESSAGES_HTML + "?sendto=" + strUID + "\">" + gmapLANG_CFG["messages_send_message"] + "</a>]</span>";
-					}
 			
 					if( pRequest->user.strUID != strUID )
 					{
+						if( pRequest->user.ucAccess & m_ucAccessComments )
+						{
+							pResponse->strContent += " <span>[<a class=\"black\" title=\"" + gmapLANG_CFG["talk_to"] + "\" href=\"" + RESPONSE_STR_TALK_HTML + "?talk=" + UTIL_StringToEscaped( "@" + vecQueryUser[0] + " " ) + "\">" + gmapLANG_CFG["talk_to"] + "</a>]</span>";
+						}
+					
+						if( pRequest->user.ucAccess & m_ucAccessMessages )
+						{
+							pResponse->strContent += " <span>[<a class=\"black\" title=\"" + gmapLANG_CFG["messages_send_message"] + "\" href=\"" + RESPONSE_STR_MESSAGES_HTML + "?sendto=" + strUID + "\">" + gmapLANG_CFG["messages_send_message"] + "</a>]</span>";
+						}
+
 						pResponse->strContent += " <span>[<a class=\"friend\" id=\"friend" + strUID + "\" class=\"red\" href=\"javascript: ;\" onclick=\"javascript: friend('" + strUID + "','" + gmapLANG_CFG["friend_add"] + "','" + gmapLANG_CFG["friend_remove"] + "');\">";
 			
 						CMySQLQuery *pQueryFriend = new CMySQLQuery( "SELECT buid,bfriendid FROM friends WHERE buid=" + pRequest->user.strUID + " AND bfriendid=" + strUID );
@@ -1502,7 +1502,7 @@ void CTracker :: serverResponseTalkGET( struct request_t *pRequest, struct respo
 			
 				while( vecQueryTalk.size( ) == 13 )
 				{
-					if( vecQueryTalk[7].empty( ) )
+//					if( vecQueryTalk[7].empty( ) )
 						pResponse->strContent += GenerateTalk( vecQueryTalk, pRequest->user.ucAccess, pRequest->user.strUID, strJoined, bTalker );
 
 					ulCount++;
@@ -2185,7 +2185,7 @@ const string CTracker :: TransferMentions( const string &cstrTalk, const string 
 	iStart = UTIL_ToLower( strTalk ).find( "http://" );
 	while( iStart != string :: npos )
 	{
-		iEnd = UTIL_ToLower( strTalk ).find_first_not_of( "abcdefghijklmnopqrstuvwxyz1234567890./_", iStart + 7 );
+		iEnd = UTIL_ToLower( strTalk ).find_first_not_of( "abcdefghijklmnopqrstuvwxyz1234567890./@:?=&;+#%-_$!*'(),", iStart + 7 );
 		
 		string strLink = strTalk.substr( iStart, iEnd - iStart );
 		

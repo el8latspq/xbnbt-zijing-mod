@@ -25,6 +25,7 @@
 #define CSS_RULES "rules"
 #define CSS_FAQ "faq"
 #define CSS_STAFF "staff"
+#define CSS_RANK "rank"
 #define CSS_MESSAGES "messages"
 #define CSS_TALK "talk"
 #define CSS_STATS "stats"
@@ -90,6 +91,7 @@
 #define RESPONSE_ANNOUNCEMENTS	40
 #define RESPONSE_VOTES		41
 #define RESPONSE_USERBAR	42
+#define RESPONSE_RANK		43
 
 
 // Common strings
@@ -117,6 +119,7 @@
 #define RULES_HTML string( "rules.html" )
 #define FAQ_HTML string( "faq.html" )
 #define STAFF_HTML string( "staff.html" )
+#define RANK_HTML string( "rank.html" )
 #define MESSAGES_HTML string( "messages.html" )
 #define TALK_HTML string( "talk.html" )
 #define COMMENTS_HTML string( "comments.html" )
@@ -158,6 +161,7 @@
 #define RESPONSE_STR_RULES_HTML RESPONSE_STR_SEPERATOR + RULES_HTML
 #define RESPONSE_STR_FAQ_HTML RESPONSE_STR_SEPERATOR + FAQ_HTML
 #define RESPONSE_STR_STAFF_HTML RESPONSE_STR_SEPERATOR + STAFF_HTML
+#define RESPONSE_STR_RANK_HTML RESPONSE_STR_SEPERATOR + RANK_HTML
 #define RESPONSE_STR_MESSAGES_HTML RESPONSE_STR_SEPERATOR + MESSAGES_HTML
 #define RESPONSE_STR_TALK_HTML RESPONSE_STR_SEPERATOR + TALK_HTML
 #define RESPONSE_STR_COMMENTS_HTML RESPONSE_STR_SEPERATOR + COMMENTS_HTML
@@ -648,6 +652,7 @@ public:
 	void serverResponseFAQGET( struct request_t *pRequest, struct response_t *pResponse );
 	void serverResponseFAQPOST( struct request_t *pRequest, struct response_t *pResponse, CAtomList *pPost );
 	void serverResponseStaff( struct request_t *pRequest, struct response_t *pResponse );
+	void serverResponseRank( struct request_t *pRequest, struct response_t *pResponse );
 	void serverResponseMessagesGET( struct request_t *pRequest, struct response_t *pResponse );
 	void serverResponseMessagesPOST( struct request_t *pRequest, struct response_t *pResponse, CAtomList *pPost );
 	void serverResponseLog( struct request_t *pRequest, struct response_t *pResponse );

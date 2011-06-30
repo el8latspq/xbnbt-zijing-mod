@@ -3005,12 +3005,11 @@ const string CTracker :: addUser( const string &strLogin, const string &strPass,
 	
 	delete pQueryUser;
 	
-	InitPasskey( strLogin );
-	
 	string strUID = string( );
 	
 	if( ulLast > 0 )
 	{
+		InitPasskey( strLogin );
 		strUID = CAtomLong( ulLast ).toString( );
 		CMySQLQuery mq01( "INSERT INTO users_prefs (buid) VALUES(" + strUID + ")" );
 		sendMessage( "", "0", strUID, "127.0.0.1", gmapLANG_CFG["admin_add_user_title"], gmapLANG_CFG["admin_add_user"] );
@@ -4338,6 +4337,7 @@ void CTracker :: serverResponseGET( struct request_t *pRequest, struct response_
 	else if( pRequest->strURL == RESPONSE_STR_RULES_HTML ) ucResponse = RESPONSE_RULES;
 	else if( pRequest->strURL == RESPONSE_STR_FAQ_HTML ) ucResponse = RESPONSE_FAQ;
 	else if( pRequest->strURL == RESPONSE_STR_STAFF_HTML ) ucResponse = RESPONSE_STAFF;
+	else if( pRequest->strURL == RESPONSE_STR_RANK_HTML ) ucResponse = RESPONSE_RANK;
 	else if( pRequest->strURL == RESPONSE_STR_MESSAGES_HTML ) ucResponse = RESPONSE_MESSAGES;
 	else if( pRequest->strURL == RESPONSE_STR_TALK_HTML ) ucResponse = RESPONSE_TALK;
 	else if( pRequest->strURL == RESPONSE_STR_COMMENTS_HTML ) ucResponse = RESPONSE_COMMENTS;
@@ -4535,6 +4535,10 @@ void CTracker :: serverResponseGET( struct request_t *pRequest, struct response_
 	case RESPONSE_STAFF:
 		serverResponseStaff( pRequest, pResponse );
 // 		gtXStats.page.iFAQ++;
+
+		break;
+	case RESPONSE_RANK:
+		serverResponseRank( pRequest, pResponse );
 
 		break;
 	case RESPONSE_MESSAGES:
@@ -6426,6 +6430,10 @@ void CTracker :: HTML_Nav_Bar( struct request_t *pRequest, struct response_t *pR
 		if( !pRequest->user.strUID.empty( ) && ( pRequest->user.ucAccess & m_ucAccessView ) )
 			pResponse->strContent += "<td class=\"navbar_staff\"><a class=\"navbar_staff\" title=\"" + gmapLANG_CFG["navbar_staff"] + "\" href=\"" + RESPONSE_STR_STAFF_HTML + "\">" + gmapLANG_CFG["navbar_staff"] + "</a></td>\n";
 		
+		// staff
+		if( !pRequest->user.strUID.empty( ) && ( pRequest->user.ucAccess & m_ucAccessView ) )
+			pResponse->strContent += "<td class=\"navbar_rank\"><a class=\"navbar_rank\" title=\"" + gmapLANG_CFG["navbar_rank"] + "\" href=\"" + RESPONSE_STR_RANK_HTML + "\">" + gmapLANG_CFG["navbar_rank"] + "</a></td>\n";
+
 		// log
 		if( !pRequest->user.strUID.empty( ) && ( pRequest->user.ucAccess & m_ucAccessViewLog ) )
 			pResponse->strContent += "<td class=\"navbar_log\"><a title=\"" + gmapLANG_CFG["navbar_log"] + "\" class=\"navbar_log\" href=\"" + RESPONSE_STR_LOG_HTML + "\">" + gmapLANG_CFG["navbar_log"] + "</a></td>\n";

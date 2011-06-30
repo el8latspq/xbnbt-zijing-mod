@@ -96,8 +96,9 @@ void CTracker :: serverResponseMessagesGET( struct request_t *pRequest, struct r
 		pResponse->strContent += "}\n\n";
 		
 		pResponse->strContent += "String.prototype.getBytes = function() {\n";
-		pResponse->strContent += "  var cArr = this.match(/[^\\x00-\\xff]/ig);\n";
-		pResponse->strContent += "  return this.length + (cArr == null ? 0 : cArr.length);\n";
+		pResponse->strContent += "  return this.length;\n";
+//		pResponse->strContent += "  var cArr = this.match(/[^\\x00-\\xff]/ig);\n";
+//		pResponse->strContent += "  return this.length + (cArr == null ? 0 : cArr.length);\n";
 		pResponse->strContent += "}\n\n";
 
 		// checklength

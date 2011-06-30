@@ -2382,20 +2382,26 @@ void CTracker :: serverResponseIndex( struct request_t *pRequest, struct respons
 				{
 					// output table rows
 
-					if( pTorrents[ulKey].ucTop > 0 && !bNoTop )
+					if( !bNoTop )
 					{
-						if( pTorrents[ulKey].ucTop < ucTopLast )
+						if( ucTopLast > 1 && pTorrents[ulKey].ucTop < ucTopLast )
 						{
+							if( ucTopLast - pTorrents[ulKey].ucTop < 4 )
+								pResponse->strContent += "<tr class=\"top_split\"><td class=\"top_split\" colspan=15></td></tr>\n";
 							ucTopLast = pTorrents[ulKey].ucTop;
-							pResponse->strContent += "<tr class=\"top_split\"><td class=\"top_split\" colspan=15></td></tr>\n";
 						}
 
-						if( pTorrents[ulKey].ucTop > 2 )
-							pResponse->strContent += "<tr class=\"top_global\">\n";
-						else if( pTorrents[ulKey].ucTop > 1 )
-							pResponse->strContent += "<tr class=\"top\">\n";
+						if( pTorrents[ulKey].ucTop == 0 )
+							pResponse->strContent += "<tr class=\"normal\">\n";
 						else
-							pResponse->strContent += "<tr class=\"top_float\">\n";
+						{
+							if( pTorrents[ulKey].ucTop > 2 )
+								pResponse->strContent += "<tr class=\"top_global\">\n";
+							else if( pTorrents[ulKey].ucTop > 1 )
+								pResponse->strContent += "<tr class=\"top\">\n";
+							else
+								pResponse->strContent += "<tr class=\"top_float\">\n";
+						}
 					}
 					else
 //						if( pTorrents[ulKey].bHL )
