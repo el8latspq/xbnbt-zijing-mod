@@ -1326,6 +1326,7 @@
 
 					
 	/* ----- specific ----- */
+		a.failed{color:blue; font-size:x-large;}
 		p.failed{color:red; font-size:x-large; text-align:center}
 		p.success{color:green; font-size:x-large; text-align:center}
 		p.return{text-align:center}

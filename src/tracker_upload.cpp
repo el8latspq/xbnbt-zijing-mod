@@ -408,6 +408,7 @@ void CTracker :: serverResponseUploadGET( struct request_t *pRequest, struct res
 		pResponse->strContent += "<div class=\"torrent_upload\">\n";
 		if( !( pRequest->user.ucAccess & m_ucAccessUploadTorrents ) )
 			pResponse->strContent += "<p class=\"failed\">" + gmapLANG_CFG["offer_upload_offer"] + "</p>";
+		pResponse->strContent += "<p class=\"failed\">" + UTIL_Xsprintf( gmapLANG_CFG["upload_rule"].c_str(), string( "<a class=\"failed\" target=\"_blank\" href=\"" + RESPONSE_STR_RULES_HTML + "#rules2\">" ).c_str( ), string( "</a>" ).c_str( ) ) + "</p>";
 		pResponse->strContent += "<table class=\"torrent_upload\">\n";
 		pResponse->strContent += "<form name=\"torrentupload\" method=\"post\" action=\"" + string( RESPONSE_STR_UPLOAD_HTML ) + "\" onSubmit=\"return validate( this )\" enctype=\"multipart/form-data\">\n";
 		if( ( pRequest->user.ucAccess & m_ucAccessUploadTorrents ) && ( pRequest->user.ucAccess & m_ucAccessUploadPosts ) )
@@ -1155,7 +1156,7 @@ void CTracker :: serverResponseUploadPOST( struct request_t *pRequest, struct re
 
 						if( !strIMDbID.empty( ) )
 						{
-							CMySQLQuery *pQuery = new CMySQLQuery( "SELECT bimdb,bimdbid,bimdbupdated from allowed WHERE bimdbid=\'" + UTIL_StringToMySQL( strIMDbID ) + "\' GROUP BY bimdbid UNION SELECT bimdb,bimdbid,bimdbupdated from offer WHERE bimdbid=\'" + UTIL_StringToMySQL( strIMDbID ) + "\' GROUP BY bimdbid" );
+							CMySQLQuery *pQuery = new CMySQLQuery( "SELECT bimdb,bimdbid,bimdbupdated from allowed WHERE bimdbid=\'" + UTIL_StringToMySQL( strIMDbID ) + "\' AND bimdbupdated>NOW()-interval 3 day GROUP BY bimdbid UNION SELECT bimdb,bimdbid,bimdbupdated from offer WHERE bimdbid=\'" + UTIL_StringToMySQL( strIMDbID ) + "\' AND bimdbupdated>NOW()-interval 3 day GROUP BY bimdbid" );
 		
 							vector<string> vecQuery;
 

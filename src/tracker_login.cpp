@@ -920,7 +920,7 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 		}
 		pResponse->strContent += "</tr></table>\n";
 		
-		CMySQLQuery *pQueryTalk = new CMySQLQuery( "SELECT bid,busername,buid,bposted,btalk,btalkstore,breply,breplyto,breplytoid,breplytimes,brt,brtto,brttoid FROM talk WHERE buid=" + user.strUID + " ORDER BY bposted DESC LIMIT 1" );
+		CMySQLQuery *pQueryTalk = new CMySQLQuery( "SELECT bid,busername,buid,bposted,btalk,btalkstore,breply,breplyto,breplytoid,breplytimes,brt,brtto,brttoid FROM talk WHERE buid=" + user.strUID + " AND breply=0 ORDER BY bposted DESC LIMIT 1" );
 		
 		vector<string> vecQueryTalk;
 

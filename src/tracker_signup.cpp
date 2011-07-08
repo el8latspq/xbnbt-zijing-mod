@@ -816,6 +816,8 @@ void CTracker :: serverResponseSignupSchoolPOST( struct request_t *pRequest, str
 		cstrLilyID = cstrMail;
 		cstrMail = cstrLilyID + gmapLANG_CFG["signup_mail0"];
 	}
+
+	string cstrLowerMail = UTIL_ToLower( cstrMail );
 	
 	if( pRequest->user.ucAccess & m_ucAccessSignup )
 	{
@@ -848,6 +850,16 @@ void CTracker :: serverResponseSignupSchoolPOST( struct request_t *pRequest, str
 			{
 				// Unable to signup. Your e-mail address is invalid.
 				pResponse->strContent += "<p class=\"signup_failed\">" + UTIL_Xsprintf( gmapLANG_CFG["signup_email_error"].c_str( ), string( "<a title=\"" + gmapLANG_CFG["navbar_sign_up_school"] + "\" href=\"" + RESPONSE_STR_SIGNUP_SCHOOL_HTML + "\">" ).c_str( ), "</a>" ) + "</p>\n\n";
+
+				// Output common HTML tail
+				HTML_Common_End( pRequest, pResponse, btv, NOT_INDEX, string( CSS_SIGNUP ) );
+
+				return;
+			}
+			if( cstrType == "1" && cstrLowerMail.find_first_of( "bdm" ) != 0 )
+			{
+				// Unable to signup. Your e-mail address is invalid.
+				pResponse->strContent += "<p class=\"signup_failed\">" + UTIL_Xsprintf( gmapLANG_CFG["signup_email_error_smail"].c_str( ), string( "<a title=\"" + gmapLANG_CFG["navbar_sign_up_school"] + "\" href=\"" + RESPONSE_STR_SIGNUP_SCHOOL_HTML + "\">" ).c_str( ), "</a>" ) + "</p>\n\n";
 
 				// Output common HTML tail
 				HTML_Common_End( pRequest, pResponse, btv, NOT_INDEX, string( CSS_SIGNUP ) );
