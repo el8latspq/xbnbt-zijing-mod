@@ -1122,7 +1122,7 @@ void CTracker :: serverResponseOfferGET( struct request_t *pRequest, struct resp
 					// <th> name
 
 // 					if( pRequest->user.ucAccess & ACCESS_DL )
-						pResponse->strContent += "<th class=\"name\" id=\"nameheader\" colspan=2>";
+						pResponse->strContent += "<th class=\"name\" id=\"nameheader\">";
 // 					else
 // 						pResponse->strContent += "<th class=\"name\" id=\"nameheader\">";
 
@@ -1317,7 +1317,7 @@ void CTracker :: serverResponseOfferGET( struct request_t *pRequest, struct resp
 //					}
 
 					if( ( pRequest->user.ucAccess & m_ucAccessAllowOffers ) || ( pRequest->user.ucAccess & m_ucAccessEditOffers ) || ( pRequest->user.ucAccess & m_ucAccessDelOffers ) )
-						pResponse->strContent += "<th id=\"adminheader\">" + gmapLANG_CFG["admin"] + "</th>\n";   
+						pResponse->strContent += "<th class=\"admin\" id=\"adminheader\">" + gmapLANG_CFG["admin"] + "</th>\n";   
 
 					pResponse->strContent += "</tr>\n";
 
@@ -1437,7 +1437,7 @@ void CTracker :: serverResponseOfferGET( struct request_t *pRequest, struct resp
 
 					pResponse->strContent += "</td>\n";
 					
-					pResponse->strContent += "<td class=\"download\"></td>";
+//					pResponse->strContent += "<td class=\"download\"></td>";
 					
 					// <td> exist
 					

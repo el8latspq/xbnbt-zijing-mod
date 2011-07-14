@@ -174,10 +174,22 @@ void CTracker :: serverResponseSubUploadGET( struct request_t *pRequest, struct 
 		
 		if( !cstrID.empty( ) && !cstrSub.empty( ) && !cstrFilename.empty( ) )
 		{
-			CMySQLQuery *pQuery = new CMySQLQuery( "SELECT bid from allowed WHERE bid=" + cstrID );
-			if( pQuery->nextRow( ).size( ) == 1 )
-				CMySQLQuery mq01( "INSERT INTO subs (btid,buid,busername,bsub,bfilename,bname,buploadtime) VALUES(" + cstrID + "," + pRequest->user.strUID + ",\'" + UTIL_StringToMySQL( pRequest->user.strLogin ) + "\',\'" + UTIL_StringToMySQL( cstrSub ) + "\',\'" + UTIL_StringToMySQL( cstrFilename ) + "\',\'" + UTIL_StringToMySQL( cstrName ) + "\',NOW())" );
+			CMySQLQuery *pQuery = new CMySQLQuery( "SELECT bid,bimdbid from allowed WHERE bid=" + cstrID );
+
+			vector<string> vecQuery;
+		
+			vecQuery.reserve(2);
+			
+			vecQuery = pQuery->nextRow( );
+
 			delete pQuery;
+
+			if( vecQuery.size( ) == 2 )
+			{
+				CMySQLQuery mq01( "INSERT INTO subs (btid,buid,busername,bsub,bfilename,bname,bimdbid,buploadtime) VALUES(" + cstrID + "," + pRequest->user.strUID + ",\'" + UTIL_StringToMySQL( pRequest->user.strLogin ) + "\',\'" + UTIL_StringToMySQL( cstrSub ) + "\',\'" + UTIL_StringToMySQL( cstrFilename ) + "\',\'" + UTIL_StringToMySQL( cstrName ) + "\',\'" + UTIL_StringToMySQL( vecQuery[1] ) + "\',NOW())" );
+				CMySQLQuery mq02( "UPDATE allowed SET bsubs=bsubs+1 WHERE bid=" + cstrID );
+				m_pCache->setSubs( cstrID, SET_SUBS_ADD );
+			}
 			
 			pResponse->strContent += "<script type=\"text/javascript\">parent.refresh(\'subs\')</script>\n\n";
 		}

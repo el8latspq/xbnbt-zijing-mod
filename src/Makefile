@@ -87,9 +87,9 @@ endif
 CFLAGS += $(OFLAGS) $(DFLAGS) $(WFLAGS) $(WPPFLAGS) $(IFLAGS) -I.
 
 # OBJS = atom.o base64.o bencode.o client.o config.o link.o md5.o server.o sha1.o sort.o tracker_log.o tracker_file.o tracker_rules.o tracker_faq.o  util.o
-OBJS = atom.o base64.o bencode.o client.o config.o md5.o server.o sha1.o sort.o tracker_log.o tracker_rules.o tracker_faq.o  util.o
+OBJS = atom.o base64.o bencode.o client.o config.o md5.o server.o sha1.o sort.o tracker_faq.o tracker_log.o tracker_rss.o tracker_rules.o util.o
 OBJS_BNBT = bnbt.o bnbt_mysql.o tracker.o tracker_announce.o tracker_scrape.o
-OBJS_BNBTMYSQL = bnbt.mysql.o bnbt_mysql.mysql.o tracker.mysql.o tracker_admin.mysql.o tracker_comments.mysql.o tracker_talk.mysql.o tracker_index.mysql.o tracker_info.mysql.o tracker_login.mysql.o tracker_messages.mysql.o tracker_offer.mysql.o tracker_stats.mysql.o tracker_upload.mysql.o tracker_announce.mysql.o tracker_scrape.mysql.o tracker_signup.mysql.o tracker_staff.mysql.o tracker_torrent.mysql.o tracker_file.mysql.o tracker_users.mysql.o
+OBJS_BNBTMYSQL = bnbt.mysql.o bnbt_mysql.mysql.o tracker.mysql.o tracker_admin.mysql.o tracker_announce.mysql.o tracker_comments.mysql.o tracker_file.mysql.o tracker_index.mysql.o tracker_info.mysql.o tracker_login.mysql.o tracker_messages.mysql.o tracker_offer.mysql.o tracker_query.mysql.o tracker_scrape.mysql.o tracker_signup.mysql.o tracker_staff.mysql.o tracker_stats.mysql.o tracker_talk.mysql.o tracker_torrent.mysql.o tracker_upload.mysql.o tracker_users.mysql.o
 
 OBJS_GD = atom.gd.o base64.gd.o bencode.gd.o client.gd.o config.gd.o link.gd.o md5.gd.o server.gd.o sha1.gd.o sort.gd.o tracker_admin.gd.o tracker_comments.gd.o tracker_file.gd.o tracker_index.gd.o tracker_info.gd.o tracker_login.gd.o tracker_signup.gd.o tracker_stats.gd.o tracker_torrent.gd.o tracker_upload.gd.o tracker_users.gd.o util.gd.o
 OBJS_XBNBTGD = bnbt.gd.o bnbt_mysql.gd.o tracker.gd.o tracker_announce.gd.o tracker_scrape.gd.o
@@ -216,21 +216,22 @@ tracker.o: bnbt.h atom.h bencode.h bnbt_mysql.h config.h html.h md5.h server.h s
 tracker_admin.o: bnbt.h atom.h bencode.h bnbt_mysql.h config.h html.h link.h tracker.h server.h util.h
 tracker_announce.o: bnbt.h atom.h config.h bencode.h link.h tracker.h util.h bnbt_mysql.h
 tracker_comments.o: bnbt.h atom.h config.h html.h tracker.h util.h
-tracker_talk.o: bnbt.h atom.h config.h html.h tracker.h util.h
-tracker_messages.o: bnbt.h atom.h bnbt_mysql.h config.h html.h tracker.h util.h
+tracker_faq.o: bnbt.h atom.h config.h html.h tracker.h util.h
 tracker_file.o: bnbt.h atom.h config.h tracker.h util.h
 tracker_index.o: bnbt.h atom.h bnbt_mysql.h config.h html.h sort.h tracker.h util.h server.h
 tracker_info.o: bnbt.h atom.h bnbt_mysql.h config.h tracker.h util.h
-tracker_rules.o: bnbt.h atom.h config.h html.h tracker.h util.h
-tracker_faq.o: bnbt.h atom.h config.h html.h tracker.h util.h
-tracker_staff.o: bnbt.h atom.h bnbt_mysql.h config.h html.h tracker.h util.h
 tracker_log.o: bnbt.h atom.h config.h html.h tracker.h util.h
 tracker_login.o: bnbt.h atom.h config.h html.h tracker.h util.h
+tracker_messages.o: bnbt.h atom.h bnbt_mysql.h config.h html.h tracker.h util.h
+tracker_offer.o: bnbt.h atom.h config.h bnbt_mysql.h html.h sort.h tracker.h util.h server.h
+tracker_rss.o: bnbt.h atom.h bencode.h bnbt_mysql.h config.h html.h md5.h server.h sort.h tracker.h util.h
+tracker_rules.o: bnbt.h atom.h config.h html.h tracker.h util.h
 tracker_scrape.o: bnbt.h atom.h bencode.h bnbt_mysql.h config.h tracker.h util.h
 tracker_signup.o: bnbt.h atom.h bnbt_mysql.h config.h html.h md5.h tracker.h util.h 
+tracker_staff.o: bnbt.h atom.h bnbt_mysql.h config.h html.h tracker.h util.h
 tracker_stats.o: bnbt.h atom.h bencode.h bnbt_mysql.h config.h html.h sort.h tracker.h util.h
+tracker_talk.o: bnbt.h atom.h config.h html.h tracker.h util.h
 tracker_torrent.o: bnbt.h atom.h bencode.h config.h tracker.h util.h
-tracker_offer.o: bnbt.h atom.h config.h bnbt_mysql.h html.h sort.h tracker.h util.h server.h
 tracker_upload.o: bnbt.h atom.h bencode.h bnbt_mysql.h client.h config.h html.h tracker.h util.h
 tracker_users.o: bnbt.h atom.h config.h html.h md5.h sort.h tracker.h util.h
 util.o: bnbt.h atom.h bencode.h sha1.h tracker.h util.h config.h
@@ -238,14 +239,21 @@ util.o: bnbt.h atom.h bencode.h sha1.h tracker.h util.h config.h
 bnbt.mysql.o: bnbt.h bnbt_mysql.h config.h server.h util.h
 bnbt_mysql.mysql.o: bnbt.h bnbt_mysql.h util.h
 tracker.mysql.o: bnbt.h bnbt_mysql.h atom.h bencode.h config.h html.h md5.h server.h sort.h tracker.h util.h
+tracker_admin.mysql.o: bnbt.h atom.h bencode.h bnbt_mysql.h config.h html.h link.h tracker.h server.h util.h
 tracker_announce.mysql.o: bnbt.h bnbt_mysql.h atom.h bencode.h config.h link.h tracker.h util.h
 tracker_comments.mysql.o: bnbt.h bnbt_mysql.h atom.h config.h html.h tracker.h util.h
-tracker_talk.mysql.o: bnbt.h bnbt_mysql.h atom.h config.h html.h tracker.h util.h
+tracker_file.mysql.o: bnbt.h atom.h config.h tracker.h util.h
 tracker_index.mysql.o: bnbt.h atom.h bnbt_mysql.h config.h html.h sort.h tracker.h util.h server.h
+tracker_info.mysql.o: bnbt.h atom.h bnbt_mysql.h config.h tracker.h util.h
 tracker_login.mysql.o: bnbt.h atom.h bnbt_mysql.h config.h html.h tracker.h util.h
+tracker_messages.mysql.o: bnbt.h atom.h bnbt_mysql.h config.h html.h tracker.h util.h
+tracker_offer.mysql.o: bnbt.h atom.h config.h bnbt_mysql.h html.h sort.h tracker.h util.h server.h
+tracker_query.mysql.o: bnbt.h atom.h bencode.h bnbt_mysql.h config.h html.h md5.h server.h sort.h tracker.h util.h
 tracker_scrape.mysql.o: bnbt.h bnbt_mysql.h atom.h bencode.h config.h tracker.h util.h
 tracker_stats.mysql.o: bnbt.h atom.h bencode.h bnbt_mysql.h config.h html.h sort.h tracker.h util.h
 tracker_signup.mysql.o: bnbt.h atom.h bnbt_mysql.h config.h html.h md5.h tracker.h util.h 
+tracker_staff.mysql.o: bnbt.h atom.h bnbt_mysql.h config.h html.h tracker.h util.h
+tracker_talk.mysql.o: bnbt.h bnbt_mysql.h atom.h config.h html.h tracker.h util.h
 tracker_torrent.mysql.o: bnbt.h atom.h bencode.h bnbt_mysql.h config.h tracker.h util.h
 tracker_upload.mysql.o: bnbt.h atom.h bencode.h bnbt_mysql.h client.h config.h html.h tracker.h util.h
 tracker_users.mysql.o: bnbt.h atom.h bnbt_mysql.h config.h html.h md5.h sort.h tracker.h util.h

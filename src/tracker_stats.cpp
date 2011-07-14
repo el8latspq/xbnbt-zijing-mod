@@ -375,6 +375,8 @@ void CTracker :: serverResponseStatsGET( struct request_t *pRequest, struct resp
 					if( ( vecQuerySub[1] == pRequest->user.strUID && ( pRequest->user.ucAccess & m_ucAccessDelOwn ) ) || ( pRequest->user.ucAccess & m_ucAccessEditTorrents ) )
 					{
 						CMySQLQuery mq01( "DELETE FROM subs WHERE bid=" + cstrSub );
+						CMySQLQuery mq02( "UPDATE allowed SET bsubs=bsubs-1 WHERE bid=" + cstrID + " AND bsubs>0" );
+						m_pCache->setSubs( cstrID, SET_SUBS_MINUS );
 					
 						// Deleted the sub
 						pResponse->strContent += "<p class=\"deleted\">" + UTIL_Xsprintf( gmapLANG_CFG["stats_sub_deleted"].c_str( ), cstrSub.c_str( ), string( "<a title=\"" + gmapLANG_CFG["navbar_stats"] + "\" href=\"" + RESPONSE_STR_STATS_HTML + "?id=" + cstrID + "\">" ).c_str( ), "</a>" ) + "</p>\n";
@@ -644,6 +646,25 @@ void CTracker :: serverResponseStatsGET( struct request_t *pRequest, struct resp
 		pResponse->strContent += "{// code for IE6, IE5\n";
 		pResponse->strContent += "  xmlhttp=new ActiveXObject(\"Microsoft.XMLHTTP\"); }\n";
 		
+		pResponse->strContent += "function xmlparser(text) {\n";
+		pResponse->strContent += "  try //Internet Explorer\n";
+		pResponse->strContent += "  {\n";
+		pResponse->strContent += "    xmlDoc=new ActiveXObject(\"Microsoft.XMLDOM\");\n";
+		pResponse->strContent += "    xmlDoc.async=\"false\";\n";
+		pResponse->strContent += "    xmlDoc.loadXML(text);\n";
+		pResponse->strContent += "  }\n";
+		pResponse->strContent += "  catch(e)\n";
+		pResponse->strContent += "  {\n";
+		pResponse->strContent += "    try //Firefox, Mozilla, Opera, etc.\n";
+		pResponse->strContent += "    {\n";
+		pResponse->strContent += "      parser=new DOMParser();\n";
+		pResponse->strContent += "      xmlDoc=parser.parseFromString(text,\"text/xml\");\n";
+		pResponse->strContent += "    }\n";
+		pResponse->strContent += "    catch(e) {alert(e.message)}\n";
+		pResponse->strContent += "  }\n";
+		pResponse->strContent += "  return xmlDoc;\n";
+		pResponse->strContent += "}\n";
+
 		// load
 		pResponse->strContent += "function load(tag,id,url) {\n";
 		pResponse->strContent += "  var loadElement = document.getElementById( id );\n";
@@ -818,8 +839,10 @@ void CTracker :: serverResponseStatsGET( struct request_t *pRequest, struct resp
 		pResponse->strContent += "function bookmark(id,bookmark_link,nobookmark_link) {\n";
 		pResponse->strContent += "  var bookmarkLink = document.getElementById( 'bookmark'+id );\n";
 		pResponse->strContent += "  xmlhttp.onreadystatechange=function() {\n";
-		pResponse->strContent += "    if (xmlhttp.readyState==4) {\n";
-		pResponse->strContent += "      if (xmlhttp.status==200) {\n";
+		pResponse->strContent += "    if (xmlhttp.readyState==4 && xmlhttp.status==200) {\n";
+		pResponse->strContent += "      var xmldoc = xmlparser(xmlhttp.responseText);\n";
+		pResponse->strContent += "      var queryCode = xmldoc.getElementsByTagName('code')[0].childNodes[0].nodeValue;\n";
+		pResponse->strContent += "      if( queryCode=='1' || queryCode=='2' || queryCode=='3' ) {\n";
 		pResponse->strContent += "        if (bookmarkLink.innerHTML == bookmark_link)\n";
 		pResponse->strContent += "          bookmarkLink.innerHTML = nobookmark_link;\n";
 		pResponse->strContent += "        else\n";
@@ -828,10 +851,10 @@ void CTracker :: serverResponseStatsGET( struct request_t *pRequest, struct resp
 		pResponse->strContent += "    }\n";
 		pResponse->strContent += "  }\n";
 		pResponse->strContent += "  if (bookmarkLink.innerHTML == bookmark_link) {\n";
-		pResponse->strContent += "    xmlhttp.open(\"GET\",\"" + RESPONSE_STR_LOGIN_HTML + "?bookmark=\" + id,true);\n";
+		pResponse->strContent += "    xmlhttp.open(\"GET\",\"" + RESPONSE_STR_QUERY_HTML + "?type=bookmark&action=add&id=\" + id,true);\n";
 		pResponse->strContent += "    xmlhttp.send(); }\n";
 		pResponse->strContent += "  else {\n";
-		pResponse->strContent += "    xmlhttp.open(\"GET\",\"" + RESPONSE_STR_LOGIN_HTML + "?nobookmark=\" + id,true);\n";
+		pResponse->strContent += "    xmlhttp.open(\"GET\",\"" + RESPONSE_STR_QUERY_HTML + "?type=bookmark&action=remove&id=\" + id,true);\n";
 		pResponse->strContent += "    xmlhttp.send(); }\n";
 		pResponse->strContent += "}\n";
 		
@@ -839,18 +862,20 @@ void CTracker :: serverResponseStatsGET( struct request_t *pRequest, struct resp
 		pResponse->strContent += "function request(id,req,success_link) {\n";
 		pResponse->strContent += "  var requestLink = document.getElementById( 'request'+id );\n";
 		pResponse->strContent += "  xmlhttp.onreadystatechange=function() {\n";
-		pResponse->strContent += "    if (xmlhttp.readyState==4) {\n";
-		pResponse->strContent += "      if (xmlhttp.status==200) {\n";
+		pResponse->strContent += "    if (xmlhttp.readyState==4 && xmlhttp.status==200) {\n";
+		pResponse->strContent += "      var xmldoc = xmlparser(xmlhttp.responseText);\n";
+		pResponse->strContent += "      var queryCode = xmldoc.getElementsByTagName('code')[0].childNodes[0].nodeValue;\n";
+		pResponse->strContent += "      if( queryCode=='1' || queryCode=='2' ) {\n";
 		pResponse->strContent += "        requestLink.innerHTML = success_link; }\n";
 		pResponse->strContent += "    }\n";
 		pResponse->strContent += "  }\n";
 		pResponse->strContent += "  if (requestLink.innerHTML != success_link) {\n";
 		pResponse->strContent += "    if (req == 'true') {\n";
-		pResponse->strContent += "      xmlhttp.open(\"GET\",\"" + RESPONSE_STR_STATS_HTML + "?req=\" + id,true);\n";
+		pResponse->strContent += "      xmlhttp.open(\"GET\",\"" + RESPONSE_STR_QUERY_HTML + "?type=request&action=add&id=\" + id,true);\n";
 		pResponse->strContent += "      xmlhttp.send(); }\n";
 		pResponse->strContent += "    else {\n";
-		pResponse->strContent += "      xmlhttp.open(\"GET\",\"" + RESPONSE_STR_STATS_HTML + "?noreq=\" + id,true);\n";
-		pResponse->strContent += "      xmlhttp.send();  }\n";
+		pResponse->strContent += "      xmlhttp.open(\"GET\",\"" + RESPONSE_STR_QUERY_HTML + "?type=request&action=remove&id=\" + id,true);\n";
+		pResponse->strContent += "      xmlhttp.send(); }\n";
 		pResponse->strContent += "  }\n";
 		pResponse->strContent += "}\n";
 		
@@ -1245,7 +1270,10 @@ void CTracker :: serverResponseStatsGET( struct request_t *pRequest, struct resp
 					{
 						CMySQLQuery mq01( "INSERT INTO thanks (bid,bthankerid,bthanker,bthanktime) VALUES(" + cstrID + "," + pRequest->user.strUID + ",\'" + UTIL_StringToMySQL( pRequest->user.strLogin ) + "\',NOW())" );
 //						m_pCache->setUserData( vecQuery[0], 0, 0, uiThanksBonus * 100 );
-						CMySQLQuery mq02( "UPDATE users SET bbonus=bbonus+" + CAtomInt( uiThanksBonus * 100 ).toString( ) + " WHERE buid=" + vecQuery[0] );
+						CMySQLQuery mq02( "UPDATE allowed SET bthanks=bthanks+1 WHERE bid=" + cstrID );
+						CMySQLQuery mq03( "UPDATE users SET bbonus=bbonus+" + CAtomInt( uiThanksBonus * 100 ).toString( ) + " WHERE buid=" + vecQuery[0] );
+						m_pCache->setThanks( cstrID, SET_THANKS_ADD );
+
 						pResponse->strContent += "<p class=\"file_info\">" + gmapLANG_CFG["thanks_successful"] + "</p>";
 					}
 					else if( vecQueryThanks.size( ) == 2 )
@@ -1425,7 +1453,8 @@ void CTracker :: serverResponseStatsGET( struct request_t *pRequest, struct resp
 					{
 						if( !strFunction.empty( ) )
 							strFunction += "<span class=\"pipe\"> | </span>";
-						strFunction += "<a class=\"share\" target=\"_blank\" href=\"" + RESPONSE_STR_TALK_HTML + "?talk=" + UTIL_StringToEscaped( gmapLANG_CFG["share"] + "#" + gmapLANG_CFG["torrent"] + cstrID + "#" ) + "\">" + gmapLANG_CFG["share_to_talk"] + "</a>";
+						strFunction += "<a class=\"share\" target=\"_blank\" href=\"" + RESPONSE_STR_TALK_HTML + "?talk=" + UTIL_StringToEscaped( gmapLANG_CFG["share"] + "#" + gmapLANG_CFG["torrent"] + cstrID + "#" ) + "&amp;tag=" + UTIL_StringToEscaped( gmapLANG_CFG["torrent"] + cstrID ) + "\">" + gmapLANG_CFG["share_to_talk"] + "</a>";
+
 					}
 				}
 				else if( ( pRequest->user.ucAccess & m_ucAccessAllowOffers ) || ( ( pRequest->user.ucAccess & m_ucAccessUploadOffers ) && !pRequest->user.strUID.empty( ) && ( pRequest->user.strUID == strOldUploaderID ) ) )
@@ -1878,6 +1907,8 @@ void CTracker :: serverResponseStatsGET( struct request_t *pRequest, struct resp
 			
 			if( !bOffer && !bPost && !pRequest->user.strUID.empty( ) )
 			{
+				bool bSubs = false;
+
 				pResponse->strContent += "<div id=\"subs\">";
 				CMySQLQuery *pQuerySub = new CMySQLQuery( "SELECT bid,buid,busername,bsub,bfilename,bname FROM subs WHERE btid=" + cstrID + " ORDER BY buploadtime" );
 				
@@ -1889,6 +1920,8 @@ void CTracker :: serverResponseStatsGET( struct request_t *pRequest, struct resp
 				
 				if( vecQuerySub.size( ) == 6 )
 				{
+					bSubs = true;
+
 					pResponse->strContent += "<tr class=\"file_info\">";
 					pResponse->strContent += "<th class=\"file_info\">" + gmapLANG_CFG["subs"] + ":</th>\n";
 					pResponse->strContent += "<td class=\"file_info_subs\">";
@@ -1898,8 +1931,8 @@ void CTracker :: serverResponseStatsGET( struct request_t *pRequest, struct resp
 					{
 						pResponse->strContent += "<tr class=\"subs\">\n<td class=\"subs\">\n";
 						if( !vecQuerySub[5].empty( ) )
-							pResponse->strContent += "<span id=\"sub" + vecQuerySub[0] + "\">" + UTIL_RemoveHTML( vecQuerySub[5] ) + "</span>: ";
-						pResponse->strContent += "<a href=\"" + vecQuerySub[3] + "\">" + UTIL_RemoveHTML( vecQuerySub[4] ) + "</a> " + getUserLink( vecQuerySub[1], vecQuerySub[2] );
+							pResponse->strContent += "<span id=\"sub" + vecQuerySub[0] + "\" class=\"sub_name\">" + UTIL_RemoveHTML( vecQuerySub[5] ) + "</span>: ";
+						pResponse->strContent += "<a class=\"sub_link\" href=\"" + vecQuerySub[3] + "\">" + UTIL_RemoveHTML( vecQuerySub[4] ) + "</a> " + getUserLink( vecQuerySub[1], vecQuerySub[2] );
 						if( ( vecQuerySub[1] == pRequest->user.strUID && ( pRequest->user.ucAccess & m_ucAccessEditOwn ) ) || ( pRequest->user.ucAccess & m_ucAccessEditTorrents ) )
 							pResponse->strContent += " [<a href=\"javascript: edit_sub_confirm(\'" + cstrID + "\',\'" + vecQuerySub[0] + "\',\'" + gmapLANG_CFG["stats_sub_edit"] + "\',\'" + gmapLANG_CFG["stats_sub_edit_error"] + "\');\">" +  gmapLANG_CFG["edit"] + "</a>]";
 						if( ( vecQuerySub[1] == pRequest->user.strUID && ( pRequest->user.ucAccess & m_ucAccessDelOwn ) ) || ( pRequest->user.ucAccess & m_ucAccessEditTorrents ) )
@@ -1908,11 +1941,58 @@ void CTracker :: serverResponseStatsGET( struct request_t *pRequest, struct resp
 						vecQuerySub = pQuerySub->nextRow( );
 					}
 
-					pResponse->strContent += "</table>\n</td>\n</tr>\n";
+					pResponse->strContent += "</table>\n";
 				}
 				
 				delete pQuerySub;
 				
+				if( !strOldIMDbID.empty( ) )
+				{
+					pQuerySub = new CMySQLQuery( "SELECT bid,buid,busername,bsub,bfilename,bname FROM subs WHERE bimdbid=\'" + UTIL_StringToMySQL( strOldIMDbID ) + "\' AND btid!=" + cstrID + " ORDER BY buploadtime" );
+					
+					vector<string> vecQuerySub;
+			
+					vecQuerySub.reserve(6);
+
+					vecQuerySub = pQuerySub->nextRow( );
+					
+					if( vecQuerySub.size( ) == 6 )
+					{
+						if( !bSubs )
+						{
+							bSubs = true;
+
+							pResponse->strContent += "<tr class=\"file_info\">";
+							pResponse->strContent += "<th class=\"file_info\">" + gmapLANG_CFG["subs"] + ":</th>\n";
+							pResponse->strContent += "<td class=\"file_info_subs\">";
+						}
+
+						pResponse->strContent += "<span class=\"subs_imdb\">" + gmapLANG_CFG["stats_sub_imdb"] + "</span>";
+						pResponse->strContent += "<table class=\"subs\">\n";
+						
+						while( vecQuerySub.size( ) == 6 )
+						{
+							pResponse->strContent += "<tr class=\"subs\">\n<td class=\"subs\">\n";
+							if( !vecQuerySub[5].empty( ) )
+								pResponse->strContent += "<span id=\"sub" + vecQuerySub[0] + "\" class=\"sub_name\">" + UTIL_RemoveHTML( vecQuerySub[5] ) + "</span>: ";
+							pResponse->strContent += "<a class=\"sub_link\" href=\"" + vecQuerySub[3] + "\">" + UTIL_RemoveHTML( vecQuerySub[4] ) + "</a> " + getUserLink( vecQuerySub[1], vecQuerySub[2] );
+							if( ( vecQuerySub[1] == pRequest->user.strUID && ( pRequest->user.ucAccess & m_ucAccessEditOwn ) ) || ( pRequest->user.ucAccess & m_ucAccessEditTorrents ) )
+								pResponse->strContent += " [<a href=\"javascript: edit_sub_confirm(\'" + cstrID + "\',\'" + vecQuerySub[0] + "\',\'" + gmapLANG_CFG["stats_sub_edit"] + "\',\'" + gmapLANG_CFG["stats_sub_edit_error"] + "\');\">" +  gmapLANG_CFG["edit"] + "</a>]";
+							if( ( vecQuerySub[1] == pRequest->user.strUID && ( pRequest->user.ucAccess & m_ucAccessDelOwn ) ) || ( pRequest->user.ucAccess & m_ucAccessEditTorrents ) )
+								pResponse->strContent += " [<a href=\"javascript: delete_sub_confirm(\'" + cstrID + "\',\'" + vecQuerySub[0] + "\');\">" +  gmapLANG_CFG["delete"] + "</a>]";
+							pResponse->strContent += "</td></tr>";
+							vecQuerySub = pQuerySub->nextRow( );
+						}
+
+						pResponse->strContent += "</table>\n";
+					}
+					
+					delete pQuerySub;
+				}
+
+				if( !bSubs )
+					pResponse->strContent += "</td>\n</tr>\n";
+
 				pResponse->strContent += "</div>";
 				
 				if( pRequest->user.ucAccess & m_ucAccessUploadOffers )
@@ -1947,7 +2027,6 @@ void CTracker :: serverResponseStatsGET( struct request_t *pRequest, struct resp
 				vecQuery = pQuery->nextRow( );
 	
 				delete pQuery;
-				
 
 				pResponse->strContent += "<tr class=\"file_info\">";
 				pResponse->strContent += "<th class=\"file_info\">" + gmapLANG_CFG["thanker"] + ":</th>\n";
@@ -3834,6 +3913,8 @@ void CTracker :: serverResponseStatsPOST( struct request_t *pRequest, struct res
 				}
 				else
 					CMySQLQuery mq01( "UPDATE " + strDatabase + " SET bimdb=\'" + UTIL_StringToMySQL( strIMDb ) + "\',bimdbid=\'" + UTIL_StringToMySQL( cstrIMDbID ) + "\',bimdbupdated=NOW() WHERE bid=" + cstrID );
+				if( !bOffer )
+					CMySQLQuery mq02( "UPDATE subs SET bimdbid=\'" + UTIL_StringToMySQL( cstrIMDbID ) + "\' WHERE btid=" + cstrID );
 				
 				if( !bOffer && ( pRequest->user.ucAccess & m_ucAccessEditTorrents ) )
 				{

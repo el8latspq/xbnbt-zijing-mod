@@ -752,12 +752,33 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 		pResponse->strContent += "{// code for IE6, IE5\n";
 		pResponse->strContent += "  xmlhttp=new ActiveXObject(\"Microsoft.XMLHTTP\"); }\n";
 		
+		pResponse->strContent += "function xmlparser(text) {\n";
+		pResponse->strContent += "  try //Internet Explorer\n";
+		pResponse->strContent += "  {\n";
+		pResponse->strContent += "    xmlDoc=new ActiveXObject(\"Microsoft.XMLDOM\");\n";
+		pResponse->strContent += "    xmlDoc.async=\"false\";\n";
+		pResponse->strContent += "    xmlDoc.loadXML(text);\n";
+		pResponse->strContent += "  }\n";
+		pResponse->strContent += "  catch(e)\n";
+		pResponse->strContent += "  {\n";
+		pResponse->strContent += "    try //Firefox, Mozilla, Opera, etc.\n";
+		pResponse->strContent += "    {\n";
+		pResponse->strContent += "      parser=new DOMParser();\n";
+		pResponse->strContent += "      xmlDoc=parser.parseFromString(text,\"text/xml\");\n";
+		pResponse->strContent += "    }\n";
+		pResponse->strContent += "    catch(e) {alert(e.message)}\n";
+		pResponse->strContent += "  }\n";
+		pResponse->strContent += "  return xmlDoc;\n";
+		pResponse->strContent += "}\n";
+
 		// bookmark
 		pResponse->strContent += "function bookmark(id,bookmark_link,nobookmark_link) {\n";
 		pResponse->strContent += "  var bookmarkLink = document.getElementById( 'bookmark'+id );\n";
 		pResponse->strContent += "  xmlhttp.onreadystatechange=function() {\n";
-		pResponse->strContent += "    if (xmlhttp.readyState==4) {\n";
-		pResponse->strContent += "      if (xmlhttp.status==200) {\n";
+		pResponse->strContent += "    if (xmlhttp.readyState==4 && xmlhttp.status==200) {\n";
+		pResponse->strContent += "      var xmldoc = xmlparser(xmlhttp.responseText);\n";
+		pResponse->strContent += "      var queryCode = xmldoc.getElementsByTagName('code')[0].childNodes[0].nodeValue;\n";
+		pResponse->strContent += "      if( queryCode=='1' || queryCode=='2' || queryCode=='3' ) {\n";
 		pResponse->strContent += "        if (bookmarkLink.innerHTML == bookmark_link)\n";
 		pResponse->strContent += "          bookmarkLink.innerHTML = nobookmark_link;\n";
 		pResponse->strContent += "        else\n";
@@ -766,10 +787,10 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 		pResponse->strContent += "    }\n";
 		pResponse->strContent += "  }\n";
 		pResponse->strContent += "  if (bookmarkLink.innerHTML == bookmark_link) {\n";
-		pResponse->strContent += "    xmlhttp.open(\"GET\",\"" + RESPONSE_STR_LOGIN_HTML + "?bookmark=\" + id,true);\n";
+		pResponse->strContent += "    xmlhttp.open(\"GET\",\"" + RESPONSE_STR_QUERY_HTML + "?type=bookmark&action=add&id=\" + id,true);\n";
 		pResponse->strContent += "    xmlhttp.send(); }\n";
 		pResponse->strContent += "  else {\n";
-		pResponse->strContent += "    xmlhttp.open(\"GET\",\"" + RESPONSE_STR_LOGIN_HTML + "?nobookmark=\" + id,true);\n";
+		pResponse->strContent += "    xmlhttp.open(\"GET\",\"" + RESPONSE_STR_QUERY_HTML + "?type=bookmark&action=remove&id=\" + id,true);\n";
 		pResponse->strContent += "    xmlhttp.send(); }\n";
 		pResponse->strContent += "}\n";
 		
@@ -777,8 +798,10 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 		pResponse->strContent += "function share(id,share_link,noshare_link) {\n";
 		pResponse->strContent += "  var shareLink = document.getElementById( 'share'+id );\n";
 		pResponse->strContent += "  xmlhttp.onreadystatechange=function() {\n";
-		pResponse->strContent += "    if (xmlhttp.readyState==4) {\n";
-		pResponse->strContent += "      if (xmlhttp.status==200) {\n";
+		pResponse->strContent += "    if (xmlhttp.readyState==4 && xmlhttp.status==200) {\n";
+		pResponse->strContent += "      var xmldoc = xmlparser(xmlhttp.responseText);\n";
+		pResponse->strContent += "      var queryCode = xmldoc.getElementsByTagName('code')[0].childNodes[0].nodeValue;\n";
+		pResponse->strContent += "      if( queryCode=='1' || queryCode=='4' ) {\n";
 		pResponse->strContent += "        if (shareLink.innerHTML == share_link) {\n";
 		pResponse->strContent += "          shareLink.innerHTML = noshare_link;\n";
 		pResponse->strContent += "          shareLink.className = \"noshare\"; }\n";
@@ -789,10 +812,10 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 		pResponse->strContent += "    }\n";
 		pResponse->strContent += "  }\n";
 		pResponse->strContent += "  if (shareLink.innerHTML == share_link) {\n";
-		pResponse->strContent += "    xmlhttp.open(\"GET\",\"" + RESPONSE_STR_LOGIN_HTML + "?bookmark=\" + id + \"&share=1\",true);\n";
+		pResponse->strContent += "    xmlhttp.open(\"GET\",\"" + RESPONSE_STR_QUERY_HTML + "?type=bookmark&action=share&set=1&id=\" + id,true);\n";
 		pResponse->strContent += "    xmlhttp.send(); }\n";
 		pResponse->strContent += "  else {\n";
-		pResponse->strContent += "    xmlhttp.open(\"GET\",\"" + RESPONSE_STR_LOGIN_HTML + "?bookmark=\" + id + \"&share=0\",true);\n";
+		pResponse->strContent += "    xmlhttp.open(\"GET\",\"" + RESPONSE_STR_QUERY_HTML + "?type=bookmark&action=share&set=0&id=\" + id,true);\n";
 		pResponse->strContent += "    xmlhttp.send(); }\n";
 		pResponse->strContent += "}\n";
 		
@@ -2009,7 +2032,7 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 
 							// Admin
 							if( pRequest->user.strUID == user.strUID )
-								pResponse->strContent += "<th id=\"adminheader\">" + gmapLANG_CFG["admin"] + "</th>\n";
+								pResponse->strContent += "<th class=\"admin\" id=\"adminheader\">" + gmapLANG_CFG["admin"] + "</th>\n";
 
 							pResponse->strContent += "</tr>\n";
 
@@ -2292,8 +2315,8 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 					// Admin
 					if( pRequest->user.strUID == user.strUID )
 					{
-						pResponse->strContent += "<th id=\"share\">" + gmapLANG_CFG["share"] + "</th>\n";
-						pResponse->strContent += "<th id=\"adminheader\">" + gmapLANG_CFG["admin"] + "</th>\n";
+						pResponse->strContent += "<th class=\"share\" id=\"share\">" + gmapLANG_CFG["share"] + "</th>\n";
+						pResponse->strContent += "<th class=\"admin\" id=\"adminheader\">" + gmapLANG_CFG["admin"] + "</th>\n";
 					}
 	
 					while( vecQuery.size( ) == 2 )
@@ -3579,35 +3602,63 @@ void CTracker :: serverResponseLoginPOST( struct request_t *pRequest, struct res
 			}
 			else
 			{
+				const string cstrReturnPage( pRequest->mapParams["return"] );
+				
+				// Output common HTML head
 				HTML_Common_Begin(  pRequest, pResponse, gmapLANG_CFG["login_page"], string( CSS_LOGIN ), string( ), NOT_INDEX, CODE_200 );
+				
 				pResponse->strContent += "<div class=\"login\">\n";
 				pResponse->strContent += "<table class=\"login\">\n";
-				pResponse->strContent += "<tr class=\"login\">\n";
-				pResponse->strContent += "<td class=\"login\">\n";
 				pResponse->strContent += "<form method=\"post\" name=\"login\" action=\"" + RESPONSE_STR_LOGIN_HTML + "\" enctype=\"multipart/form-data\">\n";
+				if( !cstrReturnPage.empty( ) )
+					pResponse->strContent += "<input id=\"id_return\" name=\"return\" type=hidden value=\"" + cstrReturnPage + "\">\n";
+
+				pResponse->strContent += "<tr class=\"login\">\n";
+				pResponse->strContent += "<th class=\"login\" colspan=\"2\">\n" + gmapLANG_CFG["login"] + "</th>\n</tr>\n";
+				pResponse->strContent += "<tr class=\"login\">\n";
+				pResponse->strContent += "<td class=\"login\" colspan=\"2\">\n";
 				if( !cstrLogin.empty( ) )
-					pResponse->strContent += "<p class=\"warning\"><span class=\"red\">" + gmapLANG_CFG["login_failed_password"] + "</span></p>";
+					pResponse->strContent += "<span class=\"red\">" + gmapLANG_CFG["login_failed_password"] + "</span>";
 				else
 				{
 					if( ucAccess & ACCESS_VIEW )
-						pResponse->strContent += "<p class=\"warning\"><span class=\"red\">" + gmapLANG_CFG["login_failed_username"] + "</span></p>";
+						pResponse->strContent += "<span class=\"red\">" + gmapLANG_CFG["login_failed_username"] + "</span>";
 					else
-						pResponse->strContent += "<p class=\"warning\"><span class=\"red\">" + gmapLANG_CFG["login_failed_banned"] + "</span></p>";
+						pResponse->strContent += "<span class=\"red\">" + gmapLANG_CFG["login_failed_banned"] + "</span>";
 				}
-				pResponse->strContent += "<p class=\"create_users\">" + gmapLANG_CFG["login"] + "</p>\n";
-				pResponse->strContent += "<div class=\"input_username\"><input id=\"id_username\" name=\"username\" alt=\"[" + gmapLANG_CFG["user_name"] + "]\" type=text size=24> <label for=\"id_username\">" + gmapLANG_CFG["user_name"] + "</label><br><br></div>\n";
-				pResponse->strContent += "<div class=\"input_password\"><input id=\"id_password\" name=\"password\" alt=\"[" + gmapLANG_CFG["password"] + "]\" type=password size=20> <label for=\"id_password\">" + gmapLANG_CFG["password"] + "</label><br><br></div>\n";
+				pResponse->strContent += "</td>\n</tr>\n";
+				pResponse->strContent += "<tr class=\"login\">\n";
+				pResponse->strContent += "<th class=\"login\">\n" + gmapLANG_CFG["user_name"] + "</th>\n";
+				pResponse->strContent += "<td class=\"login\">\n";
+				pResponse->strContent += "<input id=\"id_username\" name=\"username\" alt=\"[" + gmapLANG_CFG["user_name"] + "]\" type=text size=24>\n";
+				pResponse->strContent += "</td>\n</tr>\n";
+				pResponse->strContent += "<tr class=\"login\">\n";
+				pResponse->strContent += "<th class=\"login\">\n" + gmapLANG_CFG["password"] + "</th>\n";
+				pResponse->strContent += "<td class=\"login\">\n";
+				pResponse->strContent += "<input id=\"id_password\" name=\"password\" alt=\"[" + gmapLANG_CFG["password"] + "]\" type=password size=24>\n";
+				pResponse->strContent += "</td>\n</tr>\n";
+				pResponse->strContent += "<tr class=\"login\">\n";
+				pResponse->strContent += "<td class=\"login\" colspan=\"2\">\n";
+				pResponse->strContent += "<input id=\"id_expires\" name=\"expires\" type=checkbox> <label for=\"id_expires\">" + gmapLANG_CFG["expires"] + "</label>\n";
+				pResponse->strContent += "</td>\n</tr>\n";
+				pResponse->strContent += "<tr class=\"login\">\n";
+				pResponse->strContent += "<td class=\"login\" colspan=\"2\">\n";
 
 				// Adds Cancel button beside Create User
-				pResponse->strContent += "<div class=\"create_users_buttons\">\n";
+				pResponse->strContent += "<div class=\"login_button\">\n";
 
 				pResponse->strContent += Button_Submit( "submit_login", string( gmapLANG_CFG["login"] ) );
 				pResponse->strContent += Button_Back( "cancel_login", string( gmapLANG_CFG["cancel"] ) );
 
-				pResponse->strContent += "\n</div>\n";
+				pResponse->strContent += "\n</div>\n</td>\n</tr>\n";
+				
+				pResponse->strContent += "<tr class=\"login\">\n";
+				pResponse->strContent += "<td class=\"login\" colspan=\"2\">\n";
+				pResponse->strContent += UTIL_Xsprintf( gmapLANG_CFG["recover_forget"].c_str( ), string( "<a href=\"" + RESPONSE_STR_RECOVER_HTML + "\">" ).c_str( ), string( "</a>" ).c_str( ) );
+				pResponse->strContent += "</td>\n</tr>\n";
 
 				// finish
-				pResponse->strContent += "</form>\n</td>\n</tr>\n</table>\n</div>\n";
+				pResponse->strContent += "</form>\n</table>\n</div>\n";
 					
 				// Output common HTML tail
 				HTML_Common_End( pRequest, pResponse, btv, NOT_INDEX, string( CSS_LOGIN ) );

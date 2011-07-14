@@ -92,6 +92,7 @@
 #define RESPONSE_VOTES		41
 #define RESPONSE_USERBAR	42
 #define RESPONSE_RANK		43
+#define RESPONSE_QUERY		44
 
 
 // Common strings
@@ -132,6 +133,7 @@
 #define ROBOTS_TXT string( "robots.txt" )
 #define FAVICON_ICO string( "favicon.ico" )
 #define BENCODE_INFO string( "info.bencode" )
+#define QUERY_HTML string( "query.html" )
 #define RSS_HTML string( "rss.html" )
 #define RSS_XSL string( "rss.xsl" )
 
@@ -174,6 +176,7 @@
 #define RESPONSE_STR_ROBOTS_TXT RESPONSE_STR_SEPERATOR + ROBOTS_TXT
 #define RESPONSE_STR_FAVICON_ICO RESPONSE_STR_SEPERATOR + FAVICON_ICO
 #define RESPONSE_STR_BENCODE_INFO RESPONSE_STR_SEPERATOR + BENCODE_INFO
+#define RESPONSE_STR_QUERY_HTML RESPONSE_STR_SEPERATOR + QUERY_HTML
 #define RESPONSE_STR_RSS_HTML RESPONSE_STR_SEPERATOR + RSS_HTML
 #define RESPONSE_STR_RSS_XSL RESPONSE_STR_SEPERATOR + RSS_XSL
 
@@ -274,6 +277,12 @@
 #define SET_COMMENT_ADD 2
 #define SET_COMMENT_MINUS 1
 #define SET_COMMENT_CLEAR 0
+
+#define SET_THANKS_ADD 2
+#define SET_THANKS_MINUS 1
+
+#define SET_SUBS_ADD 2
+#define SET_SUBS_MINUS 1
 
 #define MATCH_METHOD_NONCASE_AND 0
 #define MATCH_METHOD_NONCASE_OR 1
@@ -497,10 +506,13 @@ struct torrent_t
 	int64 iSize;
 	unsigned int uiFiles;
 	int uiComments;
+	int uiThanks;
+	int uiSubs;
 // 	int64 iAverageLeft;
 // 	unsigned char ucAverageLeftPercent;
 // 	int64 iMinLeft;
 // 	int64 iMaxiLeft;
+	bool bPost;
 	bool bAllow;
 	bool bNoComment;
 	unsigned char ucTop;
@@ -668,6 +680,7 @@ public:
 	void serverResponseVotesGET( struct request_t *pRequest, struct response_t *pResponse );
 	void serverResponseVotesPOST( struct request_t *pRequest, struct response_t *pResponse, CAtomList *pPost );
 	void serverResponseXML( struct request_t *pRequest, struct response_t *pResponse );
+	void serverResponseQuery( struct request_t *pRequest, struct response_t *pResponse );
 	void serverResponseRSS( struct request_t *pRequest, struct response_t *pResponse );
 	void serverResponseRSSXSL( struct request_t *pRequest, struct response_t *pResponse );
 	void serverResponseCSS( struct request_t *pRequest, struct response_t *pResponse );
@@ -1031,6 +1044,8 @@ public:
 	void setActive( const string &cstrID, const unsigned char cucOpt );
 	void setCompleted( const string &cstrID, const unsigned char cucOpt );
 	void setComment( const string &cstrID, const unsigned char cucOpt, bool bOffer );
+	void setThanks( const string &cstrID, const unsigned char cucOpt );
+	void setSubs( const string &cstrID, const unsigned char cucOpt );
 	void setStatus( const string &cstrID, const unsigned char cucOpt );
 	void setSeeded( const string &cstrID, const unsigned char cucOpt );
 	void setFree( );
