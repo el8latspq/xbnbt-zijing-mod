@@ -134,6 +134,25 @@ void CTracker :: serverResponseTalkGET( struct request_t *pRequest, struct respo
 		pResponse->strContent += "{// code for IE6, IE5\n";
 		pResponse->strContent += "  xmlhttp=new ActiveXObject(\"Microsoft.XMLHTTP\"); }\n\n";
 		
+		pResponse->strContent += "function xmlparser(text) {\n";
+		pResponse->strContent += "  try //Internet Explorer\n";
+		pResponse->strContent += "  {\n";
+		pResponse->strContent += "    xmlDoc=new ActiveXObject(\"Microsoft.XMLDOM\");\n";
+		pResponse->strContent += "    xmlDoc.async=\"false\";\n";
+		pResponse->strContent += "    xmlDoc.loadXML(text);\n";
+		pResponse->strContent += "  }\n";
+		pResponse->strContent += "  catch(e)\n";
+		pResponse->strContent += "  {\n";
+		pResponse->strContent += "    try //Firefox, Mozilla, Opera, etc.\n";
+		pResponse->strContent += "    {\n";
+		pResponse->strContent += "      parser=new DOMParser();\n";
+		pResponse->strContent += "      xmlDoc=parser.parseFromString(text,\"text/xml\");\n";
+		pResponse->strContent += "    }\n";
+		pResponse->strContent += "    catch(e) {alert(e.message)}\n";
+		pResponse->strContent += "  }\n";
+		pResponse->strContent += "  return xmlDoc;\n";
+		pResponse->strContent += "}\n";
+
 		pResponse->strContent += "var posted;\n\n";
 
 		// insert_tag
@@ -732,8 +751,10 @@ void CTracker :: serverResponseTalkGET( struct request_t *pRequest, struct respo
 		pResponse->strContent += "function friend(id,friend_link,nofriend_link) {\n";
 		pResponse->strContent += "  var friendLink = document.getElementById( 'friend'+id );\n";
 		pResponse->strContent += "  xmlhttp.onreadystatechange=function() {\n";
-		pResponse->strContent += "    if (xmlhttp.readyState==4) {\n";
-		pResponse->strContent += "      if (xmlhttp.status==200) {\n";
+		pResponse->strContent += "    if (xmlhttp.readyState==4 && xmlhttp.status==200) {\n";
+		pResponse->strContent += "      var xmldoc = xmlparser(xmlhttp.responseText);\n";
+		pResponse->strContent += "      var queryCode = xmldoc.getElementsByTagName('code')[0].childNodes[0].nodeValue;\n";
+		pResponse->strContent += "      if( queryCode=='1' || queryCode=='2' || queryCode=='3' ) {\n";
 		pResponse->strContent += "        if (friendLink.innerHTML == friend_link)\n";
 		pResponse->strContent += "          friendLink.innerHTML = nofriend_link;\n";
 		pResponse->strContent += "        else\n";
@@ -742,10 +763,10 @@ void CTracker :: serverResponseTalkGET( struct request_t *pRequest, struct respo
 		pResponse->strContent += "    }\n";
 		pResponse->strContent += "  }\n";
 		pResponse->strContent += "  if (friendLink.innerHTML == friend_link) {\n";
-		pResponse->strContent += "    xmlhttp.open(\"GET\",\"" + RESPONSE_STR_LOGIN_HTML + "?friend=\" + id,true);\n";
+		pResponse->strContent += "    xmlhttp.open(\"GET\",\"" + RESPONSE_STR_QUERY_HTML + "?type=friend&action=add&uid=\" + id,true);\n";
 		pResponse->strContent += "    xmlhttp.send(); }\n";
 		pResponse->strContent += "  else {\n";
-		pResponse->strContent += "    xmlhttp.open(\"GET\",\"" + RESPONSE_STR_LOGIN_HTML + "?nofriend=\" + id,true);\n";
+		pResponse->strContent += "    xmlhttp.open(\"GET\",\"" + RESPONSE_STR_QUERY_HTML + "?type=friend&action=remove&uid=\" + id,true);\n";
 		pResponse->strContent += "    xmlhttp.send(); }\n";
 		pResponse->strContent += "}\n";
 		
@@ -1460,15 +1481,15 @@ void CTracker :: serverResponseTalkGET( struct request_t *pRequest, struct respo
 					{
 						if( pRequest->user.ucAccess & m_ucAccessComments )
 						{
-							pResponse->strContent += " <span>[<a class=\"black\" title=\"" + gmapLANG_CFG["talk_to"] + "\" href=\"" + RESPONSE_STR_TALK_HTML + "?talk=" + UTIL_StringToEscaped( "@" + vecQueryUser[0] + " " ) + "\">" + gmapLANG_CFG["talk_to"] + "</a>]</span>";
+							pResponse->strContent += "<span class=\"user_talk\">[<a class=\"black\" title=\"" + gmapLANG_CFG["talk_to"] + "\" href=\"" + RESPONSE_STR_TALK_HTML + "?talk=" + UTIL_StringToEscaped( "@" + vecQueryUser[0] + " " ) + "\">" + gmapLANG_CFG["talk_to"] + "</a>]</span>";
 						}
 					
 						if( pRequest->user.ucAccess & m_ucAccessMessages )
 						{
-							pResponse->strContent += " <span>[<a class=\"black\" title=\"" + gmapLANG_CFG["messages_send_message"] + "\" href=\"" + RESPONSE_STR_MESSAGES_HTML + "?sendto=" + strUID + "\">" + gmapLANG_CFG["messages_send_message"] + "</a>]</span>";
+							pResponse->strContent += "<span class=\"user_message\">[<a class=\"black\" title=\"" + gmapLANG_CFG["messages_send_message"] + "\" href=\"" + RESPONSE_STR_MESSAGES_HTML + "?sendto=" + strUID + "\">" + gmapLANG_CFG["messages_send_message"] + "</a>]</span>";
 						}
 
-						pResponse->strContent += " <span>[<a class=\"friend\" id=\"friend" + strUID + "\" class=\"red\" href=\"javascript: ;\" onclick=\"javascript: friend('" + strUID + "','" + gmapLANG_CFG["friend_add"] + "','" + gmapLANG_CFG["friend_remove"] + "');\">";
+						pResponse->strContent += "<span class=\"user_friend\">[<a class=\"friend\" id=\"friend" + strUID + "\" class=\"red\" href=\"javascript: ;\" onclick=\"javascript: friend('" + strUID + "','" + gmapLANG_CFG["friend_add"] + "','" + gmapLANG_CFG["friend_remove"] + "');\">";
 			
 						CMySQLQuery *pQueryFriend = new CMySQLQuery( "SELECT buid,bfriendid FROM friends WHERE buid=" + pRequest->user.strUID + " AND bfriendid=" + strUID );
 

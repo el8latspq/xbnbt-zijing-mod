@@ -66,8 +66,9 @@ void CTracker :: serverResponseQuery( struct request_t *pRequest, struct respons
 	pResponse->strContent += "<description>" + gmapLANG_CFG["query_description"] + "</description>\n";
 
 	const string cstrType( pRequest->mapParams["type"] );
-	const string cstrID( pRequest->mapParams["id"] );
 	const string cstrAction( pRequest->mapParams["action"] );
+	const string cstrID( pRequest->mapParams["id"] );
+	const string cstrUID( pRequest->mapParams["uid"] );
 
 	if( !cstrType.empty( ) )
 		pResponse->strContent += "<title>" + gmapLANG_CFG["query_"+cstrType] + "</title>\n";
@@ -379,6 +380,141 @@ void CTracker :: serverResponseQuery( struct request_t *pRequest, struct respons
 				else
 				{
 					pResponse->strContent += "<status>" + gmapLANG_CFG["query_request_failed"] + "</status>\n";
+					pResponse->strContent += "<code>0</code>\n";
+				}
+			}
+		}
+		else
+		{
+			pResponse->strContent += "<status>" + gmapLANG_CFG["query_failed"] + "</status>\n";
+			pResponse->strContent += "<code>-1</code>\n";
+		}
+	}
+	else if( cstrType == "friend" )
+	{
+		if( !pRequest->user.strUID.empty( ) && ( pRequest->user.ucAccess & m_ucAccessMessages ) && !cstrUID.empty( ) && !cstrAction.empty( ) )
+		{
+			pResponse->strContent += "<action>" + gmapLANG_CFG["query_"+cstrType+"_"+cstrAction] + "</action>\n";
+
+			if( cstrAction == "add" )
+			{
+				CMySQLQuery *pQuery = new CMySQLQuery( "SELECT buid,busername FROM users WHERE buid=" + cstrUID );
+		
+				vector<string> vecQuery;
+		
+				vecQuery.reserve(2);
+
+				vecQuery = pQuery->nextRow( );
+			
+				delete pQuery;
+			
+				if( vecQuery.size( ) == 2 && !vecQuery[1].empty( ) )
+				{
+					CMySQLQuery *pQueryFriend = new CMySQLQuery( "SELECT buid,bfriendid FROM friends WHERE buid=" + pRequest->user.strUID + " AND bfriendid=" + cstrUID );
+		
+					vector<string> vecQueryFriend;
+		
+					vecQueryFriend.reserve(2);
+
+					vecQueryFriend = pQueryFriend->nextRow( );
+				
+					delete pQueryFriend;
+
+					if( vecQueryFriend.size( ) == 0 )
+					{
+						CMySQLQuery mq01( "INSERT INTO friends (buid,bfriendid,bfriendname) VALUES(" + pRequest->user.strUID + "," + cstrUID + ",\'" + UTIL_StringToMySQL( vecQuery[1] ) + "\')" );
+						pResponse->strContent += "<status>" + gmapLANG_CFG["query_friend_successful"] + "</status>\n";
+						pResponse->strContent += "<code>1</code>\n";
+					
+						CMySQLQuery *pQueryTalk = new CMySQLQuery( "SELECT bid,bposted FROM talk WHERE buid=" + cstrUID );
+					
+						vector<string> vecQueryTalk;
+
+						vecQueryTalk.reserve(2);
+
+						vecQueryTalk = pQueryTalk->nextRow( );
+					
+						while( vecQueryTalk.size( ) == 2 )
+						{
+							if( !vecQueryTalk[0].empty( ) )
+								CMySQLQuery mq02( "INSERT IGNORE INTO talkhome (buid,bfriendid,btalkid,bposted) VALUES(" + pRequest->user.strUID + "," + cstrUID + "," + vecQueryTalk[0] + ",'" + UTIL_StringToMySQL( vecQueryTalk[1] ) + "')" );
+							
+							vecQueryTalk = pQueryTalk->nextRow( );
+						}
+					
+						delete pQueryTalk;
+						
+						CMySQLQuery *pQueryAllowed = new CMySQLQuery( "SELECT bid,badded FROM allowed WHERE buploaderid=" + cstrUID + " AND badded>NOW()-INTERVAL 1 DAY" );
+					
+						vector<string> vecQueryAllowed;
+
+						vecQueryAllowed.reserve(2);
+
+						vecQueryAllowed = pQueryAllowed->nextRow( );
+					
+						while( vecQueryAllowed.size( ) == 2 )
+						{
+							if( !vecQueryAllowed[0].empty( ) )
+								CMySQLQuery mq01( "INSERT IGNORE INTO talktorrent (buid,bfriendid,btid,bposted) VALUES(" + pRequest->user.strUID + "," + cstrUID + "," + vecQueryAllowed[0] + ",'" + UTIL_StringToMySQL( vecQueryAllowed[1] ) + "')" );
+							
+							vecQueryAllowed = pQueryAllowed->nextRow( );
+						}
+					
+						delete pQueryAllowed;
+				
+					}
+					else if( vecQueryFriend.size( ) == 2 )
+					{
+						pResponse->strContent += "<status>" + gmapLANG_CFG["query_friend_exist"] + "</status>\n";
+						pResponse->strContent += "<code>2</code>\n";
+					}
+				}
+				else
+				{
+					pResponse->strContent += "<status>" + gmapLANG_CFG["query_friend_failed"] + "</status>\n";
+					pResponse->strContent += "<code>0</code>\n";
+				}
+			}
+			else if( cstrAction == "remove" )
+			{
+				CMySQLQuery *pQuery = new CMySQLQuery( "SELECT buid FROM users WHERE buid=" + cstrUID );
+		
+				vector<string> vecQuery;
+		
+				vecQuery.reserve(1);
+
+				vecQuery = pQuery->nextRow( );
+			
+				delete pQuery;
+			
+				if( vecQuery.size( ) == 1 && !vecQuery[0].empty( ) )
+				{
+					CMySQLQuery *pQueryFriend = new CMySQLQuery( "SELECT buid,bfriendid FROM friends WHERE buid=" + pRequest->user.strUID + " AND bfriendid=" + cstrUID );
+		
+					vector<string> vecQueryFriend;
+		
+					vecQueryFriend.reserve(2);
+
+					vecQueryFriend = pQueryFriend->nextRow( );
+				
+					delete pQueryFriend;
+				
+					if( vecQueryFriend.size( ) == 2 )
+					{
+						CMySQLQuery mq01( "DELETE FROM friends WHERE buid=" + pRequest->user.strUID + " AND bfriendid=" + cstrUID );
+						CMySQLQuery mq02( "DELETE FROM talkhome WHERE buid=" + pRequest->user.strUID + " AND bfriendid=" + cstrUID );
+						pResponse->strContent += "<status>" + gmapLANG_CFG["query_friend_successful"] + "</status>\n";
+						pResponse->strContent += "<code>1</code>\n";
+					}
+					else if( vecQueryFriend.size( ) == 0 )
+					{
+						pResponse->strContent += "<status>" + gmapLANG_CFG["query_friend_nonexist"] + "</status>\n";
+						pResponse->strContent += "<code>3</code>\n";
+					}
+				}
+				else
+				{
+					pResponse->strContent += "<status>" + gmapLANG_CFG["query_friend_failed"] + "</status>\n";
 					pResponse->strContent += "<code>0</code>\n";
 				}
 			}

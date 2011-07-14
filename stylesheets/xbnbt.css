@@ -623,6 +623,9 @@
 		div.user_main_talk{margin:5px 0px 5px 0px}
 		tr.preferences{}
 		td.preferences{text-align:left}
+		span.user_talk{margin-left:0.5em}
+		span.user_message{margin-left:0.5em}
+		span.user_friend{margin-left:0.5em}
 
 /* ----- log.html ----- */
 	/* ----- specific ----- */
