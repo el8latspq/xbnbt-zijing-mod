@@ -1319,7 +1319,7 @@ void UTIL_StripName( const string &cstrCompName, string &strReturnName1, string 
 			if( uiCount - uiStart - 1 > 0 )
 			{
 				if( isascii( strCompName[ uiStart + 1 ] ) && isascii( strCompName[ uiCount - 1 ] ) && ( uiCount - uiStart - 1 >= 5 ) && !bNoReturnName1 )
-					if( !( ( strCompName[ uiStart + 1 ] >= '0' && strCompName[ uiStart + 1 ] <= '9' ) && ( strCompName[ uiCount - 1 ] >= '0' && strCompName[ uiCount - 1 ] <= '9' ) ) )
+					if( !( isdigit( strCompName[ uiStart + 1 ] ) && isdigit( strCompName[ uiCount - 1 ] ) ) )
 					{
 						if( strReturnName1.empty( ) )
 							strReturnName1 += strCompName.substr( uiStart + 1, uiCount - uiStart - 1 );
@@ -1355,7 +1355,7 @@ void UTIL_StripName( const string &cstrCompName, string &strReturnName1, string 
 	if( iZero != 1 && uiCount - uiStart - 1 > 0 )
 	{
 		if( isascii( strCompName[ uiStart + 1 ] ) && isascii( strCompName[ uiCount - 1 ] ) && ( uiCount - uiStart - 1 >= 5 ) && !bNoReturnName1 )
-			if( !( ( strCompName[ uiStart + 1 ] >= '0' && strCompName[ uiStart + 1 ] <= '9' ) && ( strCompName[ uiCount - 1 ] >= '0' && strCompName[ uiCount - 1 ] <= '9' ) ) )
+			if( !( isdigit( strCompName[ uiStart + 1 ] ) && isdigit( strCompName[ uiCount - 1 ] ) ) )
 			{
 				if( strReturnName1.empty( ) )
 					strReturnName1 += strCompName.substr( uiStart + 1, uiCount - uiStart - 1 );

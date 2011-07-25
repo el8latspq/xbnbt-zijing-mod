@@ -465,7 +465,7 @@ void CTracker :: serverResponseInfoGET( struct request_t *pRequest, struct respo
 //		if( pRequest->user.ucAccess & m_ucAccessAdmin )
 //		{
 			pResponse->strContent += "<tr>\n";
-			pResponse->strContent += "<td class=\"admin\" colspan=2>[<a class=\"black\" href=\"" + RESPONSE_STR_ANNOUNCEMENTS_HTML + "\">" + gmapLANG_CFG["post_all"] + "</a>]</td>";
+			pResponse->strContent += "<td class=\"admin\" colspan=3>[<a class=\"black\" href=\"" + RESPONSE_STR_ANNOUNCEMENTS_HTML + "\">" + gmapLANG_CFG["post_all"] + "</a>]</td>";
 			pResponse->strContent += "</tr>\n";
 //		}
 			
@@ -494,6 +494,7 @@ void CTracker :: serverResponseInfoGET( struct request_t *pRequest, struct respo
 					if( ( UTIL_StringTo64( vecQueryAnn[2].c_str( ) ) > last_time_info && last_time_info > 0 ) || uiCount == 0 )
 						pResponse->strContent += " <span class=\"new\">(" + gmapLANG_CFG["new"] + ")</span>";
 					pResponse->strContent += "</td>\n";
+					pResponse->strContent += "<td class=\"postadmin\">[<a href=\"" + RESPONSE_STR_TALK_HTML + "?tag=" + UTIL_StringToEscaped( gmapLANG_CFG["post"] + vecQueryAnn[0] ) + "\" target=\"_blank\">" + gmapLANG_CFG["post_talk"] + "</a>]</td>";
 					pResponse->strContent += "</tr>\n";
 					pResponse->strContent += "<tr class=\"postcontent\" id=\"postcontent" + vecQueryAnn[0] + "\"";
 					if( ( UTIL_StringTo64( vecQueryAnn[2].c_str( ) ) > last_time_info && last_time_info > 0 ) || uiCount == 0 )
@@ -501,7 +502,7 @@ void CTracker :: serverResponseInfoGET( struct request_t *pRequest, struct respo
 					else
 						pResponse->strContent += " style=\"display: none\">";
 				
-					pResponse->strContent += "<td class=\"postcontent\" colspan=2>";
+					pResponse->strContent += "<td class=\"postcontent\" colspan=3>";
 
 					pResponse->strContent += UTIL_RemoveHTML2( vecQueryAnn[4] ) + "</td>\n</tr>";
 
@@ -738,10 +739,12 @@ void CTracker :: serverResponseAnnouncementsGET( struct request_t *pRequest, str
 				if( ( UTIL_StringTo64( vecQueryAnn[2].c_str( ) ) > last_time_info && last_time_info > 0 ) || bFirst )
 					pResponse->strContent += " <span class=\"new\">(" + gmapLANG_CFG["new"] + ")</span>";
 				pResponse->strContent += "</td>";
+				pResponse->strContent += "<td class=\"postadmin\">[<a href=\"" + RESPONSE_STR_TALK_HTML + "?tag=" + UTIL_StringToEscaped( gmapLANG_CFG["post"] + vecQueryAnn[0] ) + "\" target=\"_blank\">" + gmapLANG_CFG["post_talk"] + "</a>]";
 				if( pRequest->user.ucAccess & m_ucAccessAdmin )
 				{
-					pResponse->strContent += "<td class=\"postadmin\">[<a href=\"" + RESPONSE_STR_ANNOUNCEMENTS_HTML + "?post=" + vecQueryAnn[0] + "&amp;action=edit\">" + gmapLANG_CFG["edit"] + "</a>]</td>";
+					pResponse->strContent += "[<a href=\"" + RESPONSE_STR_ANNOUNCEMENTS_HTML + "?post=" + vecQueryAnn[0] + "&amp;action=edit\">" + gmapLANG_CFG["edit"] + "</a>]";
 				}
+				pResponse->strContent += "</td>\n";
 				pResponse->strContent += "</tr>\n";
 				pResponse->strContent += "<tr class=\"postcontent\" id=\"postcontent" + vecQueryAnn[0] + "\"";
 				if( vecQueryAnn[0] == cstrPostNum || ( UTIL_StringTo64( vecQueryAnn[2].c_str( ) ) > last_time_info && last_time_info > 0 ) || ( bFirst && cstrPostNum.empty( ) ) )
@@ -750,10 +753,10 @@ void CTracker :: serverResponseAnnouncementsGET( struct request_t *pRequest, str
 					pResponse->strContent += " style=\"display: none\">";
 				
 				pResponse->strContent += "<td class=\"postcontent\"";
-				if(  pRequest->user.ucAccess & m_ucAccessAdmin )
+//				if(  pRequest->user.ucAccess & m_ucAccessAdmin )
 					pResponse->strContent += " colspan=3>";
-				else
-					pResponse->strContent += " colspan=2>";
+//				else
+//					pResponse->strContent += " colspan=2>";
 				pResponse->strContent += UTIL_RemoveHTML2( vecQueryAnn[4] ) + "</td>\n</tr>";
 
 //				if( bFirst )

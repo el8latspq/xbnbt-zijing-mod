@@ -216,134 +216,134 @@ void CTracker :: serverResponseStatsGET( struct request_t *pRequest, struct resp
 		return;
 	}
 	
-	if( pRequest->user.ucAccess & m_ucAccessReq )
-	{
-		if( pRequest->mapParams.find( "req" ) != pRequest->mapParams.end( ) )
-		{
-			string strReqID( pRequest->mapParams["req"] );
-			
-			if( strReqID.find( " " ) != string :: npos )
-				strReqID.erase( );
-			
-			CMySQLQuery *pQuery = new CMySQLQuery( "SELECT bid,btitle,buploaderid,breq FROM allowed WHERE bid=" + strReqID );
-		
-			vector<string> vecQuery;
-		
-			vecQuery.reserve(4);
-
-			vecQuery = pQuery->nextRow( );
-			
-			delete pQuery;
-			
-			if( vecQuery.size( ) == 4 && !vecQuery[0].empty( ) )
-			{
-				if( vecQuery[3] == "0" )
-				{
-					m_pCache->setStatus( strReqID, SET_STATUS_REQ );
-					
-					CMySQLQuery mq01( "UPDATE allowed SET breq=1 WHERE bid=" + strReqID );
-
-					string cstrName = vecQuery[1];
-					string cstrUploaderID = vecQuery[2];
-
-					CMySQLQuery *pQueryUsers = new CMySQLQuery( "SELECT buid FROM users WHERE buid=" + cstrUploaderID );
-
-					vector<string> vecQueryUsers;
-				
-					vecQueryUsers.reserve(1);
-
-					vecQueryUsers = pQueryUsers->nextRow( );
-					
-					delete pQueryUsers;
-
-					if( vecQueryUsers.size( ) == 1 && !vecQueryUsers[0].empty( ) )
-					{
-						if( !pRequest->user.strUID.empty( ) )
-						{
-							string strTitle = gmapLANG_CFG["section_reqseeders"];
-							string strMessage = UTIL_Xsprintf( gmapLANG_CFG["req_seeders_message"].c_str( ), pRequest->user.strLogin.c_str( ), strReqID.c_str( ), cstrName.c_str( ) );
-							
-							sendMessage( pRequest->user.strLogin, pRequest->user.strUID, cstrUploaderID, pRequest->strIP, strTitle, strMessage );
-						}
-					}
-				}
-
-				// Output common HTML head
-				HTML_Common_Begin(  pRequest, pResponse, gmapLANG_CFG["index_page"], string( CSS_INDEX ), string( ), NOT_INDEX, CODE_200 );
-
-				// Deleted the torrent
-				pResponse->strContent += "<p class=\"deleted\">" + UTIL_Xsprintf( gmapLANG_CFG["index_req_torrent"].c_str( ), strReqID.c_str( ), string( "<a title=\"" + gmapLANG_CFG["navbar_index"] + "\" href=\"" + RESPONSE_STR_INDEX_HTML + "?section=req\">" ).c_str( ), "</a>" ) + "</p>\n";
-
-				// Output common HTML tail
-				HTML_Common_End( pRequest, pResponse, btv, NOT_INDEX, string( CSS_INDEX ) );
-				
-				return;
-			}
-			else
-			{
-				// Output common HTML head
-				HTML_Common_Begin(  pRequest, pResponse, gmapLANG_CFG["index_page"], string( CSS_INDEX ), string( ), NOT_INDEX, CODE_200 );
-
-				pResponse->strContent += "<p class=\"delete\">" + UTIL_Xsprintf( gmapLANG_CFG["index_invalid_hash"].c_str( ), strReqID.c_str( ), string( "<a title=\"" + gmapLANG_CFG["navbar_index"] + "\" href=\"" + RESPONSE_STR_INDEX_HTML + "\">" ).c_str( ), "</a>" ) + "</p>\n";
-
-				// Output common HTML tail
-				HTML_Common_End( pRequest, pResponse, btv, NOT_INDEX, string( CSS_INDEX ) );
-
-				return;
-			}
-		}
-	}
-	
-	if( pRequest->user.ucAccess & m_ucAccessReq )
-	{
-		if( pRequest->mapParams.find( "noreq" ) != pRequest->mapParams.end( ) )
-		{
-			string strNoReqID( pRequest->mapParams["noreq"] );
-			
-			if( strNoReqID.find( " " ) != string :: npos )
-				strNoReqID.erase( );
-			
-			CMySQLQuery *pQuery = new CMySQLQuery( "SELECT bid FROM allowed WHERE bid=" + strNoReqID );
-		
-			vector<string> vecQuery;
-		
-			vecQuery.reserve(1);
-
-			vecQuery = pQuery->nextRow( );
-			
-			delete pQuery;
-			
-			if( vecQuery.size( ) == 1 && !vecQuery[0].empty( ) )
-			{
-				m_pCache->setStatus( strNoReqID, SET_STATUS_NOREQ );
-				
-				CMySQLQuery mq01( "UPDATE allowed SET breq=0 WHERE bid=" + strNoReqID );
-
-				// Output common HTML head
-				HTML_Common_Begin(  pRequest, pResponse, gmapLANG_CFG["index_page"], string( CSS_INDEX ), string( ), NOT_INDEX, CODE_200 );
-
-				// Deleted the torrent
-				pResponse->strContent += "<p class=\"deleted\">" + UTIL_Xsprintf( gmapLANG_CFG["index_req_cancel_torrent"].c_str( ), strNoReqID.c_str( ), string( "<a title=\"" + gmapLANG_CFG["navbar_index"] + "\" href=\"" + RESPONSE_STR_INDEX_HTML + "?section=req\">" ).c_str( ), "</a>" ) + "</p>\n";
-
-				// Output common HTML tail
-				HTML_Common_End( pRequest, pResponse, btv, NOT_INDEX, string( CSS_INDEX ) );
-				
-				return;
-			}
-			else
-			{
-				// Output common HTML head
-				HTML_Common_Begin(  pRequest, pResponse, gmapLANG_CFG["index_page"], string( CSS_INDEX ), string( ), NOT_INDEX, CODE_200 );
-
-				pResponse->strContent += "<p class=\"delete\">" + UTIL_Xsprintf( gmapLANG_CFG["index_invalid_hash"].c_str( ), strNoReqID.c_str( ), string( "<a title=\"" + gmapLANG_CFG["navbar_index"] + "\" href=\"" + RESPONSE_STR_INDEX_HTML + "\">" ).c_str( ), "</a>" ) + "</p>\n";
-
-				// Output common HTML tail
-				HTML_Common_End( pRequest, pResponse, btv, NOT_INDEX, string( CSS_INDEX ) );
-
-				return;
-			}
-		}
-	}
+//	if( pRequest->user.ucAccess & m_ucAccessReq )
+//	{
+//		if( pRequest->mapParams.find( "req" ) != pRequest->mapParams.end( ) )
+//		{
+//			string strReqID( pRequest->mapParams["req"] );
+//			
+//			if( strReqID.find( " " ) != string :: npos )
+//				strReqID.erase( );
+//			
+//			CMySQLQuery *pQuery = new CMySQLQuery( "SELECT bid,btitle,buploaderid,breq FROM allowed WHERE bid=" + strReqID );
+//		
+//			vector<string> vecQuery;
+//		
+//			vecQuery.reserve(4);
+//
+//			vecQuery = pQuery->nextRow( );
+//			
+//			delete pQuery;
+//			
+//			if( vecQuery.size( ) == 4 && !vecQuery[0].empty( ) )
+//			{
+//				if( vecQuery[3] == "0" )
+//				{
+//					m_pCache->setStatus( strReqID, SET_STATUS_REQ );
+//					
+//					CMySQLQuery mq01( "UPDATE allowed SET breq=1 WHERE bid=" + strReqID );
+//
+//					string cstrName = vecQuery[1];
+//					string cstrUploaderID = vecQuery[2];
+//
+//					CMySQLQuery *pQueryUsers = new CMySQLQuery( "SELECT buid FROM users WHERE buid=" + cstrUploaderID );
+//
+//					vector<string> vecQueryUsers;
+//				
+//					vecQueryUsers.reserve(1);
+//
+//					vecQueryUsers = pQueryUsers->nextRow( );
+//					
+//					delete pQueryUsers;
+//
+//					if( vecQueryUsers.size( ) == 1 && !vecQueryUsers[0].empty( ) )
+//					{
+//						if( !pRequest->user.strUID.empty( ) )
+//						{
+//							string strTitle = gmapLANG_CFG["section_reqseeders"];
+//							string strMessage = UTIL_Xsprintf( gmapLANG_CFG["req_seeders_message"].c_str( ), pRequest->user.strLogin.c_str( ), strReqID.c_str( ), cstrName.c_str( ) );
+//							
+//							sendMessage( pRequest->user.strLogin, pRequest->user.strUID, cstrUploaderID, pRequest->strIP, strTitle, strMessage );
+//						}
+//					}
+//				}
+//
+//				// Output common HTML head
+//				HTML_Common_Begin(  pRequest, pResponse, gmapLANG_CFG["index_page"], string( CSS_INDEX ), string( ), NOT_INDEX, CODE_200 );
+//
+//				// Deleted the torrent
+//				pResponse->strContent += "<p class=\"deleted\">" + UTIL_Xsprintf( gmapLANG_CFG["index_req_torrent"].c_str( ), strReqID.c_str( ), string( "<a title=\"" + gmapLANG_CFG["navbar_index"] + "\" href=\"" + RESPONSE_STR_INDEX_HTML + "?section=req\">" ).c_str( ), "</a>" ) + "</p>\n";
+//
+//				// Output common HTML tail
+//				HTML_Common_End( pRequest, pResponse, btv, NOT_INDEX, string( CSS_INDEX ) );
+//				
+//				return;
+//			}
+//			else
+//			{
+//				// Output common HTML head
+//				HTML_Common_Begin(  pRequest, pResponse, gmapLANG_CFG["index_page"], string( CSS_INDEX ), string( ), NOT_INDEX, CODE_200 );
+//
+//				pResponse->strContent += "<p class=\"delete\">" + UTIL_Xsprintf( gmapLANG_CFG["index_invalid_hash"].c_str( ), strReqID.c_str( ), string( "<a title=\"" + gmapLANG_CFG["navbar_index"] + "\" href=\"" + RESPONSE_STR_INDEX_HTML + "\">" ).c_str( ), "</a>" ) + "</p>\n";
+//
+//				// Output common HTML tail
+//				HTML_Common_End( pRequest, pResponse, btv, NOT_INDEX, string( CSS_INDEX ) );
+//
+//				return;
+//			}
+//		}
+//	}
+//	
+//	if( pRequest->user.ucAccess & m_ucAccessReq )
+//	{
+//		if( pRequest->mapParams.find( "noreq" ) != pRequest->mapParams.end( ) )
+//		{
+//			string strNoReqID( pRequest->mapParams["noreq"] );
+//			
+//			if( strNoReqID.find( " " ) != string :: npos )
+//				strNoReqID.erase( );
+//			
+//			CMySQLQuery *pQuery = new CMySQLQuery( "SELECT bid FROM allowed WHERE bid=" + strNoReqID );
+//		
+//			vector<string> vecQuery;
+//		
+//			vecQuery.reserve(1);
+//
+//			vecQuery = pQuery->nextRow( );
+//			
+//			delete pQuery;
+//			
+//			if( vecQuery.size( ) == 1 && !vecQuery[0].empty( ) )
+//			{
+//				m_pCache->setStatus( strNoReqID, SET_STATUS_NOREQ );
+//				
+//				CMySQLQuery mq01( "UPDATE allowed SET breq=0 WHERE bid=" + strNoReqID );
+//
+//				// Output common HTML head
+//				HTML_Common_Begin(  pRequest, pResponse, gmapLANG_CFG["index_page"], string( CSS_INDEX ), string( ), NOT_INDEX, CODE_200 );
+//
+//				// Deleted the torrent
+//				pResponse->strContent += "<p class=\"deleted\">" + UTIL_Xsprintf( gmapLANG_CFG["index_req_cancel_torrent"].c_str( ), strNoReqID.c_str( ), string( "<a title=\"" + gmapLANG_CFG["navbar_index"] + "\" href=\"" + RESPONSE_STR_INDEX_HTML + "?section=req\">" ).c_str( ), "</a>" ) + "</p>\n";
+//
+//				// Output common HTML tail
+//				HTML_Common_End( pRequest, pResponse, btv, NOT_INDEX, string( CSS_INDEX ) );
+//				
+//				return;
+//			}
+//			else
+//			{
+//				// Output common HTML head
+//				HTML_Common_Begin(  pRequest, pResponse, gmapLANG_CFG["index_page"], string( CSS_INDEX ), string( ), NOT_INDEX, CODE_200 );
+//
+//				pResponse->strContent += "<p class=\"delete\">" + UTIL_Xsprintf( gmapLANG_CFG["index_invalid_hash"].c_str( ), strNoReqID.c_str( ), string( "<a title=\"" + gmapLANG_CFG["navbar_index"] + "\" href=\"" + RESPONSE_STR_INDEX_HTML + "\">" ).c_str( ), "</a>" ) + "</p>\n";
+//
+//				// Output common HTML tail
+//				HTML_Common_End( pRequest, pResponse, btv, NOT_INDEX, string( CSS_INDEX ) );
+//
+//				return;
+//			}
+//		}
+//	}
 	
 	const string cstrSub( pRequest->mapParams["sub"] );
 	
@@ -696,9 +696,13 @@ void CTracker :: serverResponseStatsGET( struct request_t *pRequest, struct resp
 		pResponse->strContent += "    var post_data = '';\n";
 		pResponse->strContent += "    for (var i = 0; i < postForm.elements.length; i++) {\n";
 		pResponse->strContent += "      if (postForm.elements[i].name != 'submit_comment_button') {\n";
-		pResponse->strContent += "        if( post_data != '' )\n";
-		pResponse->strContent += "          post_data = post_data + '&';\n";
-		pResponse->strContent += "        post_data = post_data + postForm.elements[i].name + '=' + encodeURIComponent(postForm.elements[i].value); }\n";
+		pResponse->strContent += "        if ( postForm.elements[i].name == 'message' && postForm.elements[i].checked == false )\n";
+		pResponse->strContent += "          continue;\n";
+		pResponse->strContent += "        else {\n";
+		pResponse->strContent += "          if( post_data != '' )\n";
+		pResponse->strContent += "            post_data = post_data + '&';\n";
+		pResponse->strContent += "          post_data = post_data + postForm.elements[i].name + '=' + encodeURIComponent(postForm.elements[i].value); }\n";
+		pResponse->strContent += "      }\n";
 		pResponse->strContent += "    }\n";
 		pResponse->strContent += "    xmlhttp.onreadystatechange=function() {\n";
 		pResponse->strContent += "      if (xmlhttp.readyState==4 && xmlhttp.status==200) {\n";
@@ -1355,12 +1359,12 @@ void CTracker :: serverResponseStatsGET( struct request_t *pRequest, struct resp
 					if( iFreeDown != 100 )
 					{
 						if( iFreeDown == 0 )
-							pResponse->strContent += "<span class=\"blue\">" + gmapLANG_CFG["free_down_free"] + "</span>";
+							pResponse->strContent += "<span class=\"stats_free_down_free\">" + gmapLANG_CFG["free_down_free"] + "</span>";
 						else
-							pResponse->strContent += "<span class=\"blue\">" + UTIL_Xsprintf( gmapLANG_CFG["free_down"].c_str( ), CAtomInt( iFreeDown ).toString( ).c_str( ) )+ "</span>";
+							pResponse->strContent += "<span class=\"stats_free_down\">" + UTIL_Xsprintf( gmapLANG_CFG["free_down"].c_str( ), CAtomInt( iFreeDown ).toString( ).c_str( ) )+ "</span>";
 					}
 					if( iFreeUp != 100 )
-						pResponse->strContent += "<span class=\"green\">" + UTIL_Xsprintf( gmapLANG_CFG["free_up"].c_str( ), CAtomInt( iFreeUp ).toString( ).c_str( ) )+ "</span>";
+						pResponse->strContent += "<span class=\"stats_free_up\">" + UTIL_Xsprintf( gmapLANG_CFG["free_up"].c_str( ), CAtomInt( iFreeUp ).toString( ).c_str( ) )+ "</span>";
 					if( day_left >= 0 && ( iDefaultDown > iFreeDown || iDefaultUp < iFreeUp ) )
 					{
 						pResponse->strContent += "<span class=\"free_recover\" title=\"" + gmapLANG_CFG["free_recover"];
@@ -1459,14 +1463,14 @@ void CTracker :: serverResponseStatsGET( struct request_t *pRequest, struct resp
 				}
 				else if( ( pRequest->user.ucAccess & m_ucAccessAllowOffers ) || ( ( pRequest->user.ucAccess & m_ucAccessUploadOffers ) && !pRequest->user.strUID.empty( ) && ( pRequest->user.strUID == strOldUploaderID ) ) )
 				{
-					strFunction += "<a title=\"" + strFileName + ".torrent" + "\" class=\"download_link\" href=\"";
+					strFunction += "<a title=\"" + strFileName + "\" class=\"download_link\" href=\"";
 					strFunction += RESPONSE_STR_OFFERS + cstrID + ".torrent";
 					strFunction += "\">" + gmapLANG_CFG["stats_download_torrent"] + "</a>";
 				}
 				
 				if( bOffer && ( pRequest->user.ucAccess & m_ucAccessAllowOffers ) )
 				{
-					strAdmin += "<a title=\"" + gmapLANG_CFG["allow"] + ": " + UTIL_RemoveHTML( strOldName ) + "\" class=\"black\" href=\"" + RESPONSE_STR_OFFER_HTML + "?allow=" + cstrID;
+					strAdmin += "<a title=\"" + gmapLANG_CFG["allow"] + "\" class=\"black\" href=\"" + RESPONSE_STR_OFFER_HTML + "?allow=" + cstrID;
 					if( !cstrReturnPage.empty( ) )
 						strAdmin += "&amp;return=" + cstrReturnPageResp;
 					strAdmin += "\">" + gmapLANG_CFG["stats_allow_offer"] + "</a>";
@@ -1475,7 +1479,7 @@ void CTracker :: serverResponseStatsGET( struct request_t *pRequest, struct resp
 				{
 					if( !strAdmin.empty( ) )
 						strAdmin += "<span class=\"pipe\"> | </span>";
-					strAdmin += "<a title=\"" + gmapLANG_CFG["edit"] + ": " + UTIL_RemoveHTML( strOldName ) + "\" class=\"black\" href=\"" + RESPONSE_STR_STATS_HTML + strJoined + "&amp;action=edit";
+					strAdmin += "<a title=\"" + gmapLANG_CFG["edit"] + "\" class=\"black\" href=\"" + RESPONSE_STR_STATS_HTML + strJoined + "&amp;action=edit";
 					if( bOffer )
 						strAdmin += "&amp;show=contents\">" + gmapLANG_CFG["stats_edit_offer"] + "</a>";
 					else
@@ -1485,7 +1489,7 @@ void CTracker :: serverResponseStatsGET( struct request_t *pRequest, struct resp
 				{
 					if( !strAdmin.empty( ) )
 						strAdmin += "<span class=\"pipe\"> | </span>";
-					strAdmin += "<a title=\"" + gmapLANG_CFG["delete"] + ": " + UTIL_RemoveHTML( strOldName ) + "\" class=\"red\" href=\"";
+					strAdmin += "<a title=\"" + gmapLANG_CFG["delete"] + "\" class=\"red\" href=\"";
 					if( ( pRequest->user.ucAccess & m_ucAccessDelTorrents ) || ( pRequest->user.ucAccess & m_ucAccessDelOffers ) )
 					{
 						if( bOffer && ( pRequest->user.ucAccess & m_ucAccessDelOffers ) )
@@ -1825,7 +1829,7 @@ void CTracker :: serverResponseStatsGET( struct request_t *pRequest, struct resp
 							pResponse->strContent += gmapLANG_CFG["name"] + ": " + UTIL_RemoveHTML( strName )+ "\" href=\"" + RESPONSE_STR_STATS_HTML + "?id=" + vecQueryIMDb[0] + "\">";
 							pResponse->strContent += UTIL_RemoveHTML( strEngName );
 							if( !strChiName.empty( ) )
-								pResponse->strContent += "<br>" + UTIL_RemoveHTML( strChiName );
+								pResponse->strContent += "<br><span class=\"stats\">" + UTIL_RemoveHTML( strChiName ) + "</span>";
 							pResponse->strContent += "</a>";
 							
 							if( iFreeDown != 100 || iFreeUp != 100 )
@@ -1909,7 +1913,6 @@ void CTracker :: serverResponseStatsGET( struct request_t *pRequest, struct resp
 			{
 				bool bSubs = false;
 
-				pResponse->strContent += "<div id=\"subs\">";
 				CMySQLQuery *pQuerySub = new CMySQLQuery( "SELECT bid,buid,busername,bsub,bfilename,bname FROM subs WHERE btid=" + cstrID + " ORDER BY buploadtime" );
 				
 				vector<string> vecQuerySub;
@@ -1922,6 +1925,7 @@ void CTracker :: serverResponseStatsGET( struct request_t *pRequest, struct resp
 				{
 					bSubs = true;
 
+					pResponse->strContent += "<div id=\"subs\">";
 					pResponse->strContent += "<tr class=\"file_info\">";
 					pResponse->strContent += "<th class=\"file_info\">" + gmapLANG_CFG["subs"] + ":</th>\n";
 					pResponse->strContent += "<td class=\"file_info_subs\">";
@@ -1932,11 +1936,11 @@ void CTracker :: serverResponseStatsGET( struct request_t *pRequest, struct resp
 						pResponse->strContent += "<tr class=\"subs\">\n<td class=\"subs\">\n";
 						if( !vecQuerySub[5].empty( ) )
 							pResponse->strContent += "<span id=\"sub" + vecQuerySub[0] + "\" class=\"sub_name\">" + UTIL_RemoveHTML( vecQuerySub[5] ) + "</span>: ";
-						pResponse->strContent += "<a class=\"sub_link\" href=\"" + vecQuerySub[3] + "\">" + UTIL_RemoveHTML( vecQuerySub[4] ) + "</a> " + getUserLink( vecQuerySub[1], vecQuerySub[2] );
+						pResponse->strContent += "<a class=\"sub_link\" href=\"" + vecQuerySub[3] + "\">" + UTIL_RemoveHTML( vecQuerySub[4] ) + "</a> (" + getUserLink( vecQuerySub[1], vecQuerySub[2] ) + ")";
 						if( ( vecQuerySub[1] == pRequest->user.strUID && ( pRequest->user.ucAccess & m_ucAccessEditOwn ) ) || ( pRequest->user.ucAccess & m_ucAccessEditTorrents ) )
-							pResponse->strContent += " [<a href=\"javascript: edit_sub_confirm(\'" + cstrID + "\',\'" + vecQuerySub[0] + "\',\'" + gmapLANG_CFG["stats_sub_edit"] + "\',\'" + gmapLANG_CFG["stats_sub_edit_error"] + "\');\">" +  gmapLANG_CFG["edit"] + "</a>]";
+							pResponse->strContent += " [<a href=\"javascript: ;\" onClick=\"javascript: edit_sub_confirm(\'" + cstrID + "\',\'" + vecQuerySub[0] + "\',\'" + gmapLANG_CFG["stats_sub_edit"] + "\',\'" + gmapLANG_CFG["stats_sub_edit_error"] + "\');\">" +  gmapLANG_CFG["edit"] + "</a>]";
 						if( ( vecQuerySub[1] == pRequest->user.strUID && ( pRequest->user.ucAccess & m_ucAccessDelOwn ) ) || ( pRequest->user.ucAccess & m_ucAccessEditTorrents ) )
-							pResponse->strContent += " [<a href=\"javascript: delete_sub_confirm(\'" + cstrID + "\',\'" + vecQuerySub[0] + "\');\">" +  gmapLANG_CFG["delete"] + "</a>]";
+							pResponse->strContent += " [<a href=\"javascript: ;\" onClick=\"javascript: delete_sub_confirm(\'" + cstrID + "\',\'" + vecQuerySub[0] + "\');\">" +  gmapLANG_CFG["delete"] + "</a>]";
 						pResponse->strContent += "</td></tr>";
 						vecQuerySub = pQuerySub->nextRow( );
 					}
@@ -1948,15 +1952,15 @@ void CTracker :: serverResponseStatsGET( struct request_t *pRequest, struct resp
 				
 				if( !strOldIMDbID.empty( ) )
 				{
-					pQuerySub = new CMySQLQuery( "SELECT bid,buid,busername,bsub,bfilename,bname FROM subs WHERE bimdbid=\'" + UTIL_StringToMySQL( strOldIMDbID ) + "\' AND btid!=" + cstrID + " ORDER BY buploadtime" );
+					pQuerySub = new CMySQLQuery( "SELECT bid,btid,buid,busername,bsub,bfilename,bname FROM subs WHERE bimdbid=\'" + UTIL_StringToMySQL( strOldIMDbID ) + "\' AND btid!=" + cstrID + " ORDER BY buploadtime" );
 					
 					vector<string> vecQuerySub;
 			
-					vecQuerySub.reserve(6);
+					vecQuerySub.reserve(7);
 
 					vecQuerySub = pQuerySub->nextRow( );
 					
-					if( vecQuerySub.size( ) == 6 )
+					if( vecQuerySub.size( ) == 7 )
 					{
 						if( !bSubs )
 						{
@@ -1970,16 +1974,17 @@ void CTracker :: serverResponseStatsGET( struct request_t *pRequest, struct resp
 						pResponse->strContent += "<span class=\"subs_imdb\">" + gmapLANG_CFG["stats_sub_imdb"] + "</span>";
 						pResponse->strContent += "<table class=\"subs\">\n";
 						
-						while( vecQuerySub.size( ) == 6 )
+						while( vecQuerySub.size( ) == 7 )
 						{
 							pResponse->strContent += "<tr class=\"subs\">\n<td class=\"subs\">\n";
-							if( !vecQuerySub[5].empty( ) )
-								pResponse->strContent += "<span id=\"sub" + vecQuerySub[0] + "\" class=\"sub_name\">" + UTIL_RemoveHTML( vecQuerySub[5] ) + "</span>: ";
-							pResponse->strContent += "<a class=\"sub_link\" href=\"" + vecQuerySub[3] + "\">" + UTIL_RemoveHTML( vecQuerySub[4] ) + "</a> " + getUserLink( vecQuerySub[1], vecQuerySub[2] );
-							if( ( vecQuerySub[1] == pRequest->user.strUID && ( pRequest->user.ucAccess & m_ucAccessEditOwn ) ) || ( pRequest->user.ucAccess & m_ucAccessEditTorrents ) )
-								pResponse->strContent += " [<a href=\"javascript: edit_sub_confirm(\'" + cstrID + "\',\'" + vecQuerySub[0] + "\',\'" + gmapLANG_CFG["stats_sub_edit"] + "\',\'" + gmapLANG_CFG["stats_sub_edit_error"] + "\');\">" +  gmapLANG_CFG["edit"] + "</a>]";
-							if( ( vecQuerySub[1] == pRequest->user.strUID && ( pRequest->user.ucAccess & m_ucAccessDelOwn ) ) || ( pRequest->user.ucAccess & m_ucAccessEditTorrents ) )
-								pResponse->strContent += " [<a href=\"javascript: delete_sub_confirm(\'" + cstrID + "\',\'" + vecQuerySub[0] + "\');\">" +  gmapLANG_CFG["delete"] + "</a>]";
+							if( !vecQuerySub[6].empty( ) )
+								pResponse->strContent += "<span id=\"sub" + vecQuerySub[0] + "\" class=\"sub_name\">" + UTIL_RemoveHTML( vecQuerySub[6] ) + "</span>: ";
+							pResponse->strContent += "<a class=\"sub_link\" href=\"" + vecQuerySub[4] + "\">" + UTIL_RemoveHTML( vecQuerySub[5] ) + "</a> (" + getUserLink( vecQuerySub[2], vecQuerySub[3] ) + ")";
+							pResponse->strContent += " [<a href=\"" + RESPONSE_STR_STATS_HTML + "?id=" + vecQuerySub[1] + "\">" + gmapLANG_CFG["stats_sub_imdb_from"] + "</a>]";
+//							if( ( vecQuerySub[1] == pRequest->user.strUID && ( pRequest->user.ucAccess & m_ucAccessEditOwn ) ) || ( pRequest->user.ucAccess & m_ucAccessEditTorrents ) )
+//								pResponse->strContent += " [<a href=\"javascript: ;\" onClick=\"javascript: edit_sub_confirm(\'" + cstrID + "\',\'" + vecQuerySub[0] + "\',\'" + gmapLANG_CFG["stats_sub_edit"] + "\',\'" + gmapLANG_CFG["stats_sub_edit_error"] + "\');\">" +  gmapLANG_CFG["edit"] + "</a>]";
+//							if( ( vecQuerySub[1] == pRequest->user.strUID && ( pRequest->user.ucAccess & m_ucAccessDelOwn ) ) || ( pRequest->user.ucAccess & m_ucAccessEditTorrents ) )
+//								pResponse->strContent += " [<a href=\"javascript: ;\" onClick=\"javascript: delete_sub_confirm(\'" + cstrID + "\',\'" + vecQuerySub[0] + "\');\">" +  gmapLANG_CFG["delete"] + "</a>]";
 							pResponse->strContent += "</td></tr>";
 							vecQuerySub = pQuerySub->nextRow( );
 						}
@@ -1990,10 +1995,11 @@ void CTracker :: serverResponseStatsGET( struct request_t *pRequest, struct resp
 					delete pQuerySub;
 				}
 
-				if( !bSubs )
+				if( bSubs )
+				{
 					pResponse->strContent += "</td>\n</tr>\n";
-
-				pResponse->strContent += "</div>";
+					pResponse->strContent += "</div>";
+				}
 				
 				if( pRequest->user.ucAccess & m_ucAccessUploadOffers )
 				{
@@ -2028,7 +2034,7 @@ void CTracker :: serverResponseStatsGET( struct request_t *pRequest, struct resp
 	
 				delete pQuery;
 
-				pResponse->strContent += "<tr class=\"file_info\">";
+				pResponse->strContent += "<tr class=\"file_info\" id=\"thanks\">";
 				pResponse->strContent += "<th class=\"file_info\">" + gmapLANG_CFG["thanker"] + ":</th>\n";
 				pResponse->strContent += "<td class=\"file_info\">";
 				

@@ -281,6 +281,9 @@
 #define SET_THANKS_ADD 2
 #define SET_THANKS_MINUS 1
 
+#define SET_SHARES_ADD 2
+#define SET_SHARES_MINUS 1
+
 #define SET_SUBS_ADD 2
 #define SET_SUBS_MINUS 1
 
@@ -507,6 +510,7 @@ struct torrent_t
 	unsigned int uiFiles;
 	int uiComments;
 	int uiThanks;
+	int uiShares;
 	int uiSubs;
 // 	int64 iAverageLeft;
 // 	unsigned char ucAverageLeftPercent;
@@ -614,7 +618,7 @@ public:
 	const string getUserLinkFull( const string &strUID, const string &strUsername );
 	const string getUserLinkTalk( const string &strUID, const string &strUsername );
 	const string TransferMentions( const string &cstrTalk, const string &cstrTalkID );
-	const string GenerateTalk( const vector<string> &vecQuery, const unsigned char cucAccess, const string &cstrUID, const string &cstrJoined, bool bTalker = true, bool bFunc = true, bool bHistory = false, bool bReplys = false );
+	const string GenerateTalk( const vector<string> &vecQuery, const unsigned char cucAccess, const string &cstrUID, const string &cstrTextareaID, const string &cstrJoined, bool bTalker = true, bool bFunc = true, bool bHistory = false, bool bReplys = false );
 	void InitPasskey( const string &strLogin );
 	void deleteUser( const string &strUID );
 	void CountUniquePeers( );
@@ -1045,6 +1049,7 @@ public:
 	void setCompleted( const string &cstrID, const unsigned char cucOpt );
 	void setComment( const string &cstrID, const unsigned char cucOpt, bool bOffer );
 	void setThanks( const string &cstrID, const unsigned char cucOpt );
+	void setShares( const string &cstrID, const unsigned char cucOpt );
 	void setSubs( const string &cstrID, const unsigned char cucOpt );
 	void setStatus( const string &cstrID, const unsigned char cucOpt );
 	void setSeeded( const string &cstrID, const unsigned char cucOpt );

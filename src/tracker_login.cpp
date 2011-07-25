@@ -189,273 +189,273 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 //		pResponse->mapHeaders.insert( pair<string, string>( "Set-Cookie", "per_page=\"" + CAtomInt( uiUserPerPage ).toString( ) + "\"; expires=" + pTime + "; path=/" ) );
 //	}
 	
-	if( !pRequest->user.strUID.empty( ) && ( pRequest->user.ucAccess & m_ucAccessBookmark ) )
-	{
-		if( pRequest->mapParams.find( "bookmark" ) != pRequest->mapParams.end( ) )
-		{
-			string strBookmarkID( pRequest->mapParams["bookmark"] );
-			const string strShare( pRequest->mapParams["share"] );
-			
-			if( strBookmarkID.find( " " ) != string :: npos )
-				strBookmarkID.erase( );
-			
-			if( !strBookmarkID.empty( ) )
-			{
-				CMySQLQuery *pQuery = new CMySQLQuery( "SELECT bid FROM allowed WHERE bid=" + strBookmarkID );
-		
-				vector<string> vecQuery;
-		
-				vecQuery.reserve(1);
-
-				vecQuery = pQuery->nextRow( );
-			
-				delete pQuery;
-			
-				if( vecQuery.size( ) == 1 && !vecQuery[0].empty( ) )
-				{
-					CMySQLQuery *pQueryBookmark = new CMySQLQuery( "SELECT buid,bid FROM bookmarks WHERE buid=" + pRequest->user.strUID + " AND bid=" + strBookmarkID );
-		
-					vector<string> vecQueryBookmark;
-		
-					vecQueryBookmark.reserve(2);
-
-					vecQueryBookmark = pQueryBookmark->nextRow( );
-				
-					delete pQueryBookmark;
-				
-					if( vecQueryBookmark.size( ) == 2 )
-					{
-						if( strShare == "0" || strShare == "1" )
-							CMySQLQuery mq01( "UPDATE bookmarks SET bshare=" + strShare + " WHERE buid=" + pRequest->user.strUID + " AND bid=" + strBookmarkID );
-					}
-					else
-					{
-						if( strShare == "0" || strShare == "1" )
-							CMySQLQuery mq01( "INSERT INTO bookmarks (buid,bid,bshare) VALUES(" + pRequest->user.strUID + "," + strBookmarkID + "," + strShare + ")" );
-						else
-							CMySQLQuery mq01( "INSERT INTO bookmarks (buid,bid) VALUES(" + pRequest->user.strUID + "," + strBookmarkID + ")" );
-					}
-
-					// Output common HTML head
-					HTML_Common_Begin(  pRequest, pResponse, gmapLANG_CFG["login_page"], string( CSS_LOGIN ), string( ), NOT_INDEX, CODE_200 );
-
-					// Deleted the torrent
-					pResponse->strContent += "<p class=\"deleted\">" + UTIL_Xsprintf( gmapLANG_CFG["index_bookmark_torrent"].c_str( ), strBookmarkID.c_str( ), string( "<a title=\"" + gmapLANG_CFG["navbar_login"] + "\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?show=bookmarks\">" ).c_str( ), "</a>" ) + "</p>\n";
-
-					// Output common HTML tail
-					HTML_Common_End( pRequest, pResponse, btv, NOT_INDEX, string( CSS_LOGIN ) );
-				
-					return;
-				}
-				else
-				{
-					// Output common HTML head
-					HTML_Common_Begin(  pRequest, pResponse, gmapLANG_CFG["login_page"], string( CSS_LOGIN ), string( ), NOT_INDEX, CODE_200 );
-
-					pResponse->strContent += "<p class=\"delete\">" + UTIL_Xsprintf( gmapLANG_CFG["index_invalid_hash"].c_str( ), strBookmarkID.c_str( ), string( "<a title=\"" + gmapLANG_CFG["navbar_index"] + "\" href=\"" + RESPONSE_STR_INDEX_HTML + "\">" ).c_str( ), "</a>" ) + "</p>\n";
-
-					// Output common HTML tail
-					HTML_Common_End( pRequest, pResponse, btv, NOT_INDEX, string( CSS_LOGIN ) );
-
-					return;
-				}
-			}
-		}
-	}
-	
-	if( !pRequest->user.strUID.empty( ) && ( pRequest->user.ucAccess & m_ucAccessBookmark ) )
-	{
-		if( pRequest->mapParams.find( "nobookmark" ) != pRequest->mapParams.end( ) )
-		{
-			string strNoBookmarkID( pRequest->mapParams["nobookmark"] );
-			
-			if( strNoBookmarkID.find( " " ) != string :: npos )
-				strNoBookmarkID.erase( );
-			
-			if( !strNoBookmarkID.empty( ) )
-			{
-				CMySQLQuery *pQuery = new CMySQLQuery( "SELECT bid FROM allowed WHERE bid=" + strNoBookmarkID );
-		
-				vector<string> vecQuery;
-		
-				vecQuery.reserve(1);
-
-				vecQuery = pQuery->nextRow( );
-			
-				delete pQuery;
-			
-				if( vecQuery.size( ) == 1 && !vecQuery[0].empty( ) )
-				{
-					CMySQLQuery mq01( "DELETE FROM bookmarks WHERE buid=" + pRequest->user.strUID + " AND bid=" + strNoBookmarkID );
-
-					// Output common HTML head
-					HTML_Common_Begin(  pRequest, pResponse, gmapLANG_CFG["login_page"], string( CSS_LOGIN ), string( ), NOT_INDEX, CODE_200 );
-
-					// Deleted the torrent
-					pResponse->strContent += "<p class=\"deleted\">" + UTIL_Xsprintf( gmapLANG_CFG["index_bookmark_torrent"].c_str( ), strNoBookmarkID.c_str( ), string( "<a title=\"" + gmapLANG_CFG["navbar_login"] + "\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?show=bookmarks\">" ).c_str( ), "</a>" ) + "</p>\n";
-
-					// Output common HTML tail
-					HTML_Common_End( pRequest, pResponse, btv, NOT_INDEX, string( CSS_LOGIN ) );
-				
-					return;
-				}
-				else
-				{
-					// Output common HTML head
-					HTML_Common_Begin(  pRequest, pResponse, gmapLANG_CFG["login_page"], string( CSS_LOGIN ), string( ), NOT_INDEX, CODE_200 );
-
-					pResponse->strContent += "<p class=\"delete\">" + UTIL_Xsprintf( gmapLANG_CFG["index_invalid_hash"].c_str( ), strNoBookmarkID.c_str( ), string( "<a title=\"" + gmapLANG_CFG["navbar_index"] + "\" href=\"" + RESPONSE_STR_INDEX_HTML + "\">" ).c_str( ), "</a>" ) + "</p>\n";
-
-					// Output common HTML tail
-					HTML_Common_End( pRequest, pResponse, btv, NOT_INDEX, string( CSS_LOGIN ) );
-
-					return;
-				}
-			}
-		}
-	}
-	
-	if( !pRequest->user.strUID.empty( ) && ( pRequest->user.ucAccess & m_ucAccessMessages ) )
-	{
-		if( pRequest->mapParams.find( "friend" ) != pRequest->mapParams.end( ) )
-		{
-			string strFriendID( pRequest->mapParams["friend"] );
-			
-			if( strFriendID.find( " " ) != string :: npos )
-				strFriendID.erase( );
-			
-			if( !strFriendID.empty( ) && strFriendID != pRequest->user.strUID )
-			{
-				CMySQLQuery *pQuery = new CMySQLQuery( "SELECT buid,busername FROM users WHERE buid=" + strFriendID );
-		
-				vector<string> vecQuery;
-		
-				vecQuery.reserve(2);
-
-				vecQuery = pQuery->nextRow( );
-			
-				delete pQuery;
-			
-				if( vecQuery.size( ) == 2 && !vecQuery[0].empty( ) )
-				{
-					CMySQLQuery mq01( "INSERT INTO friends (buid,bfriendid,bfriendname) VALUES(" + pRequest->user.strUID + "," + strFriendID + ",\'" + UTIL_StringToMySQL( vecQuery[1] ) + "\')" );
-				
-					CMySQLQuery *pQueryTalk = new CMySQLQuery( "SELECT bid,bposted FROM talk WHERE buid=" + strFriendID );
-				
-					vector<string> vecQueryTalk;
-
-					vecQueryTalk.reserve(2);
-
-					vecQueryTalk = pQueryTalk->nextRow( );
-				
-					while( vecQueryTalk.size( ) == 2 )
-					{
-						if( !vecQueryTalk[0].empty( ) )
-							CMySQLQuery mq02( "INSERT IGNORE INTO talkhome (buid,bfriendid,btalkid,bposted) VALUES(" + pRequest->user.strUID + "," + strFriendID + "," + vecQueryTalk[0] + ",'" + UTIL_StringToMySQL( vecQueryTalk[1] ) + "')" );
-						
-						vecQueryTalk = pQueryTalk->nextRow( );
-					}
-				
-					delete pQueryTalk;
-					
-					CMySQLQuery *pQueryAllowed = new CMySQLQuery( "SELECT bid,badded FROM allowed WHERE buploaderid=" + strFriendID + " AND badded>NOW()-INTERVAL 1 DAY" );
-				
-					vector<string> vecQueryAllowed;
-
-					vecQueryAllowed.reserve(2);
-
-					vecQueryAllowed = pQueryAllowed->nextRow( );
-				
-					while( vecQueryAllowed.size( ) == 2 )
-					{
-						if( !vecQueryAllowed[0].empty( ) )
-							CMySQLQuery mq01( "INSERT IGNORE INTO talktorrent (buid,bfriendid,btid,bposted) VALUES(" + pRequest->user.strUID + "," + strFriendID + "," + vecQueryAllowed[0] + ",'" + UTIL_StringToMySQL( vecQueryAllowed[1] ) + "')" );
-						
-						vecQueryAllowed = pQueryAllowed->nextRow( );
-					}
-				
-					delete pQueryAllowed;
-
-					// Output common HTML head
-					HTML_Common_Begin(  pRequest, pResponse, gmapLANG_CFG["login_page"], string( CSS_LOGIN ), string( ), NOT_INDEX, CODE_200 );
-
-					// Add friend
-					pResponse->strContent += "<p class=\"deleted\">" + UTIL_Xsprintf( gmapLANG_CFG["friend_done"].c_str( ), strFriendID.c_str( ), string( "<a title=\"" + gmapLANG_CFG["navbar_login"] + "\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?show=friends\">" ).c_str( ), "</a>" ) + "</p>\n";
-
-					// Output common HTML tail
-					HTML_Common_End( pRequest, pResponse, btv, NOT_INDEX, string( CSS_LOGIN ) );
-				
-					return;
-				}
-				else
-				{
-					// Output common HTML head
-					HTML_Common_Begin(  pRequest, pResponse, gmapLANG_CFG["login_page"], string( CSS_LOGIN ), string( ), NOT_INDEX, CODE_200 );
-
-					pResponse->strContent += "<p class=\"delete\">" + UTIL_Xsprintf( gmapLANG_CFG["user_not_exist"].c_str( ), strFriendID.c_str( ) ) + "</p>\n";
-
-					// Output common HTML tail
-					HTML_Common_End( pRequest, pResponse, btv, NOT_INDEX, string( CSS_LOGIN ) );
-
-					return;
-				}
-			}
-		}
-	}
-	
-	if( !pRequest->user.strUID.empty( ) && pRequest->user.ucAccess & m_ucAccessMessages )
-	{
-		if( pRequest->mapParams.find( "nofriend" ) != pRequest->mapParams.end( ) )
-		{
-			string strNoFriendID( pRequest->mapParams["nofriend"] );
-			
-			if( strNoFriendID.find( " " ) != string :: npos )
-				strNoFriendID.erase( );
-			
-			if( !strNoFriendID.empty( ) )
-			{
-				CMySQLQuery *pQuery = new CMySQLQuery( "SELECT buid FROM users WHERE buid=" + strNoFriendID );
-		
-				vector<string> vecQuery;
-		
-				vecQuery.reserve(1);
-
-				vecQuery = pQuery->nextRow( );
-			
-				delete pQuery;
-			
-				if( vecQuery.size( ) == 1 && !vecQuery[0].empty( ) )
-				{
-					CMySQLQuery mq01( "DELETE FROM friends WHERE buid=" + pRequest->user.strUID + " AND bfriendid=" + strNoFriendID );
-				
-					CMySQLQuery mq02( "DELETE FROM talkhome WHERE buid=" + pRequest->user.strUID + " AND bfriendid=" + strNoFriendID );
-
-					// Output common HTML head
-					HTML_Common_Begin(  pRequest, pResponse, gmapLANG_CFG["login_page"], string( CSS_LOGIN ), string( ), NOT_INDEX, CODE_200 );
-
-					// Remove friend
-					pResponse->strContent += "<p class=\"deleted\">" + UTIL_Xsprintf( gmapLANG_CFG["friend_done"].c_str( ), strNoFriendID.c_str( ), string( "<a title=\"" + gmapLANG_CFG["navbar_login"] + "\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?show=friends\">" ).c_str( ), "</a>" ) + "</p>\n";
-
-					// Output common HTML tail
-					HTML_Common_End( pRequest, pResponse, btv, NOT_INDEX, string( CSS_LOGIN ) );
-				
-					return;
-				}
-				else
-				{
-					// Output common HTML head
-					HTML_Common_Begin(  pRequest, pResponse, gmapLANG_CFG["login_page"], string( CSS_LOGIN ), string( ), NOT_INDEX, CODE_200 );
-
-					pResponse->strContent += "<p class=\"delete\">" + UTIL_Xsprintf( gmapLANG_CFG["user_not_exist"].c_str( ), strNoFriendID.c_str( ) ) + "</p>\n";
-
-					// Output common HTML tail
-					HTML_Common_End( pRequest, pResponse, btv, NOT_INDEX, string( CSS_LOGIN ) );
-
-					return;
-				}
-			}
-		}
-	}
+//	if( !pRequest->user.strUID.empty( ) && ( pRequest->user.ucAccess & m_ucAccessBookmark ) )
+//	{
+//		if( pRequest->mapParams.find( "bookmark" ) != pRequest->mapParams.end( ) )
+//		{
+//			string strBookmarkID( pRequest->mapParams["bookmark"] );
+//			const string strShare( pRequest->mapParams["share"] );
+//			
+//			if( strBookmarkID.find( " " ) != string :: npos )
+//				strBookmarkID.erase( );
+//			
+//			if( !strBookmarkID.empty( ) )
+//			{
+//				CMySQLQuery *pQuery = new CMySQLQuery( "SELECT bid FROM allowed WHERE bid=" + strBookmarkID );
+//		
+//				vector<string> vecQuery;
+//		
+//				vecQuery.reserve(1);
+//
+//				vecQuery = pQuery->nextRow( );
+//			
+//				delete pQuery;
+//			
+//				if( vecQuery.size( ) == 1 && !vecQuery[0].empty( ) )
+//				{
+//					CMySQLQuery *pQueryBookmark = new CMySQLQuery( "SELECT buid,bid FROM bookmarks WHERE buid=" + pRequest->user.strUID + " AND bid=" + strBookmarkID );
+//		
+//					vector<string> vecQueryBookmark;
+//		
+//					vecQueryBookmark.reserve(2);
+//
+//					vecQueryBookmark = pQueryBookmark->nextRow( );
+//				
+//					delete pQueryBookmark;
+//				
+//					if( vecQueryBookmark.size( ) == 2 )
+//					{
+//						if( strShare == "0" || strShare == "1" )
+//							CMySQLQuery mq01( "UPDATE bookmarks SET bshare=" + strShare + " WHERE buid=" + pRequest->user.strUID + " AND bid=" + strBookmarkID );
+//					}
+//					else
+//					{
+//						if( strShare == "0" || strShare == "1" )
+//							CMySQLQuery mq01( "INSERT INTO bookmarks (buid,bid,bshare) VALUES(" + pRequest->user.strUID + "," + strBookmarkID + "," + strShare + ")" );
+//						else
+//							CMySQLQuery mq01( "INSERT INTO bookmarks (buid,bid) VALUES(" + pRequest->user.strUID + "," + strBookmarkID + ")" );
+//					}
+//
+//					// Output common HTML head
+//					HTML_Common_Begin(  pRequest, pResponse, gmapLANG_CFG["login_page"], string( CSS_LOGIN ), string( ), NOT_INDEX, CODE_200 );
+//
+//					// Deleted the torrent
+//					pResponse->strContent += "<p class=\"deleted\">" + UTIL_Xsprintf( gmapLANG_CFG["index_bookmark_torrent"].c_str( ), strBookmarkID.c_str( ), string( "<a title=\"" + gmapLANG_CFG["navbar_login"] + "\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?show=bookmarks\">" ).c_str( ), "</a>" ) + "</p>\n";
+//
+//					// Output common HTML tail
+//					HTML_Common_End( pRequest, pResponse, btv, NOT_INDEX, string( CSS_LOGIN ) );
+//				
+//					return;
+//				}
+//				else
+//				{
+//					// Output common HTML head
+//					HTML_Common_Begin(  pRequest, pResponse, gmapLANG_CFG["login_page"], string( CSS_LOGIN ), string( ), NOT_INDEX, CODE_200 );
+//
+//					pResponse->strContent += "<p class=\"delete\">" + UTIL_Xsprintf( gmapLANG_CFG["index_invalid_hash"].c_str( ), strBookmarkID.c_str( ), string( "<a title=\"" + gmapLANG_CFG["navbar_index"] + "\" href=\"" + RESPONSE_STR_INDEX_HTML + "\">" ).c_str( ), "</a>" ) + "</p>\n";
+//
+//					// Output common HTML tail
+//					HTML_Common_End( pRequest, pResponse, btv, NOT_INDEX, string( CSS_LOGIN ) );
+//
+//					return;
+//				}
+//			}
+//		}
+//	}
+//	
+//	if( !pRequest->user.strUID.empty( ) && ( pRequest->user.ucAccess & m_ucAccessBookmark ) )
+//	{
+//		if( pRequest->mapParams.find( "nobookmark" ) != pRequest->mapParams.end( ) )
+//		{
+//			string strNoBookmarkID( pRequest->mapParams["nobookmark"] );
+//			
+//			if( strNoBookmarkID.find( " " ) != string :: npos )
+//				strNoBookmarkID.erase( );
+//			
+//			if( !strNoBookmarkID.empty( ) )
+//			{
+//				CMySQLQuery *pQuery = new CMySQLQuery( "SELECT bid FROM allowed WHERE bid=" + strNoBookmarkID );
+//		
+//				vector<string> vecQuery;
+//		
+//				vecQuery.reserve(1);
+//
+//				vecQuery = pQuery->nextRow( );
+//			
+//				delete pQuery;
+//			
+//				if( vecQuery.size( ) == 1 && !vecQuery[0].empty( ) )
+//				{
+//					CMySQLQuery mq01( "DELETE FROM bookmarks WHERE buid=" + pRequest->user.strUID + " AND bid=" + strNoBookmarkID );
+//
+//					// Output common HTML head
+//					HTML_Common_Begin(  pRequest, pResponse, gmapLANG_CFG["login_page"], string( CSS_LOGIN ), string( ), NOT_INDEX, CODE_200 );
+//
+//					// Deleted the torrent
+//					pResponse->strContent += "<p class=\"deleted\">" + UTIL_Xsprintf( gmapLANG_CFG["index_bookmark_torrent"].c_str( ), strNoBookmarkID.c_str( ), string( "<a title=\"" + gmapLANG_CFG["navbar_login"] + "\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?show=bookmarks\">" ).c_str( ), "</a>" ) + "</p>\n";
+//
+//					// Output common HTML tail
+//					HTML_Common_End( pRequest, pResponse, btv, NOT_INDEX, string( CSS_LOGIN ) );
+//				
+//					return;
+//				}
+//				else
+//				{
+//					// Output common HTML head
+//					HTML_Common_Begin(  pRequest, pResponse, gmapLANG_CFG["login_page"], string( CSS_LOGIN ), string( ), NOT_INDEX, CODE_200 );
+//
+//					pResponse->strContent += "<p class=\"delete\">" + UTIL_Xsprintf( gmapLANG_CFG["index_invalid_hash"].c_str( ), strNoBookmarkID.c_str( ), string( "<a title=\"" + gmapLANG_CFG["navbar_index"] + "\" href=\"" + RESPONSE_STR_INDEX_HTML + "\">" ).c_str( ), "</a>" ) + "</p>\n";
+//
+//					// Output common HTML tail
+//					HTML_Common_End( pRequest, pResponse, btv, NOT_INDEX, string( CSS_LOGIN ) );
+//
+//					return;
+//				}
+//			}
+//		}
+//	}
+//	
+//	if( !pRequest->user.strUID.empty( ) && ( pRequest->user.ucAccess & m_ucAccessMessages ) )
+//	{
+//		if( pRequest->mapParams.find( "friend" ) != pRequest->mapParams.end( ) )
+//		{
+//			string strFriendID( pRequest->mapParams["friend"] );
+//			
+//			if( strFriendID.find( " " ) != string :: npos )
+//				strFriendID.erase( );
+//			
+//			if( !strFriendID.empty( ) && strFriendID != pRequest->user.strUID )
+//			{
+//				CMySQLQuery *pQuery = new CMySQLQuery( "SELECT buid,busername FROM users WHERE buid=" + strFriendID );
+//		
+//				vector<string> vecQuery;
+//		
+//				vecQuery.reserve(2);
+//
+//				vecQuery = pQuery->nextRow( );
+//			
+//				delete pQuery;
+//			
+//				if( vecQuery.size( ) == 2 && !vecQuery[0].empty( ) )
+//				{
+//					CMySQLQuery mq01( "INSERT INTO friends (buid,bfriendid,bfriendname) VALUES(" + pRequest->user.strUID + "," + strFriendID + ",\'" + UTIL_StringToMySQL( vecQuery[1] ) + "\')" );
+//				
+//					CMySQLQuery *pQueryTalk = new CMySQLQuery( "SELECT bid,bposted FROM talk WHERE buid=" + strFriendID );
+//				
+//					vector<string> vecQueryTalk;
+//
+//					vecQueryTalk.reserve(2);
+//
+//					vecQueryTalk = pQueryTalk->nextRow( );
+//				
+//					while( vecQueryTalk.size( ) == 2 )
+//					{
+//						if( !vecQueryTalk[0].empty( ) )
+//							CMySQLQuery mq02( "INSERT IGNORE INTO talkhome (buid,bfriendid,btalkid,bposted) VALUES(" + pRequest->user.strUID + "," + strFriendID + "," + vecQueryTalk[0] + ",'" + UTIL_StringToMySQL( vecQueryTalk[1] ) + "')" );
+//						
+//						vecQueryTalk = pQueryTalk->nextRow( );
+//					}
+//				
+//					delete pQueryTalk;
+//					
+//					CMySQLQuery *pQueryAllowed = new CMySQLQuery( "SELECT bid,badded FROM allowed WHERE buploaderid=" + strFriendID + " AND badded>NOW()-INTERVAL 1 DAY" );
+//				
+//					vector<string> vecQueryAllowed;
+//
+//					vecQueryAllowed.reserve(2);
+//
+//					vecQueryAllowed = pQueryAllowed->nextRow( );
+//				
+//					while( vecQueryAllowed.size( ) == 2 )
+//					{
+//						if( !vecQueryAllowed[0].empty( ) )
+//							CMySQLQuery mq01( "INSERT IGNORE INTO talktorrent (buid,bfriendid,btid,bposted) VALUES(" + pRequest->user.strUID + "," + strFriendID + "," + vecQueryAllowed[0] + ",'" + UTIL_StringToMySQL( vecQueryAllowed[1] ) + "')" );
+//						
+//						vecQueryAllowed = pQueryAllowed->nextRow( );
+//					}
+//				
+//					delete pQueryAllowed;
+//
+//					// Output common HTML head
+//					HTML_Common_Begin(  pRequest, pResponse, gmapLANG_CFG["login_page"], string( CSS_LOGIN ), string( ), NOT_INDEX, CODE_200 );
+//
+//					// Add friend
+//					pResponse->strContent += "<p class=\"deleted\">" + UTIL_Xsprintf( gmapLANG_CFG["friend_done"].c_str( ), strFriendID.c_str( ), string( "<a title=\"" + gmapLANG_CFG["navbar_login"] + "\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?show=friends\">" ).c_str( ), "</a>" ) + "</p>\n";
+//
+//					// Output common HTML tail
+//					HTML_Common_End( pRequest, pResponse, btv, NOT_INDEX, string( CSS_LOGIN ) );
+//				
+//					return;
+//				}
+//				else
+//				{
+//					// Output common HTML head
+//					HTML_Common_Begin(  pRequest, pResponse, gmapLANG_CFG["login_page"], string( CSS_LOGIN ), string( ), NOT_INDEX, CODE_200 );
+//
+//					pResponse->strContent += "<p class=\"delete\">" + UTIL_Xsprintf( gmapLANG_CFG["user_not_exist"].c_str( ), strFriendID.c_str( ) ) + "</p>\n";
+//
+//					// Output common HTML tail
+//					HTML_Common_End( pRequest, pResponse, btv, NOT_INDEX, string( CSS_LOGIN ) );
+//
+//					return;
+//				}
+//			}
+//		}
+//	}
+//	
+//	if( !pRequest->user.strUID.empty( ) && pRequest->user.ucAccess & m_ucAccessMessages )
+//	{
+//		if( pRequest->mapParams.find( "nofriend" ) != pRequest->mapParams.end( ) )
+//		{
+//			string strNoFriendID( pRequest->mapParams["nofriend"] );
+//			
+//			if( strNoFriendID.find( " " ) != string :: npos )
+//				strNoFriendID.erase( );
+//			
+//			if( !strNoFriendID.empty( ) )
+//			{
+//				CMySQLQuery *pQuery = new CMySQLQuery( "SELECT buid FROM users WHERE buid=" + strNoFriendID );
+//		
+//				vector<string> vecQuery;
+//		
+//				vecQuery.reserve(1);
+//
+//				vecQuery = pQuery->nextRow( );
+//			
+//				delete pQuery;
+//			
+//				if( vecQuery.size( ) == 1 && !vecQuery[0].empty( ) )
+//				{
+//					CMySQLQuery mq01( "DELETE FROM friends WHERE buid=" + pRequest->user.strUID + " AND bfriendid=" + strNoFriendID );
+//				
+//					CMySQLQuery mq02( "DELETE FROM talkhome WHERE buid=" + pRequest->user.strUID + " AND bfriendid=" + strNoFriendID );
+//
+//					// Output common HTML head
+//					HTML_Common_Begin(  pRequest, pResponse, gmapLANG_CFG["login_page"], string( CSS_LOGIN ), string( ), NOT_INDEX, CODE_200 );
+//
+//					// Remove friend
+//					pResponse->strContent += "<p class=\"deleted\">" + UTIL_Xsprintf( gmapLANG_CFG["friend_done"].c_str( ), strNoFriendID.c_str( ), string( "<a title=\"" + gmapLANG_CFG["navbar_login"] + "\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?show=friends\">" ).c_str( ), "</a>" ) + "</p>\n";
+//
+//					// Output common HTML tail
+//					HTML_Common_End( pRequest, pResponse, btv, NOT_INDEX, string( CSS_LOGIN ) );
+//				
+//					return;
+//				}
+//				else
+//				{
+//					// Output common HTML head
+//					HTML_Common_Begin(  pRequest, pResponse, gmapLANG_CFG["login_page"], string( CSS_LOGIN ), string( ), NOT_INDEX, CODE_200 );
+//
+//					pResponse->strContent += "<p class=\"delete\">" + UTIL_Xsprintf( gmapLANG_CFG["user_not_exist"].c_str( ), strNoFriendID.c_str( ) ) + "</p>\n";
+//
+//					// Output common HTML tail
+//					HTML_Common_End( pRequest, pResponse, btv, NOT_INDEX, string( CSS_LOGIN ) );
+//
+//					return;
+//				}
+//			}
+//		}
+//	}
 
 	// Was a search submited?
 	if( pRequest->mapParams["top_submit_search_button"] == gmapLANG_CFG["search"] || pRequest->mapParams["bottom_submit_search_button"] == gmapLANG_CFG["search"] )
@@ -774,15 +774,18 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 		// bookmark
 		pResponse->strContent += "function bookmark(id,bookmark_link,nobookmark_link) {\n";
 		pResponse->strContent += "  var bookmarkLink = document.getElementById( 'bookmark'+id );\n";
+		pResponse->strContent += "  var shareLink = document.getElementById( 'share'+id );\n";
 		pResponse->strContent += "  xmlhttp.onreadystatechange=function() {\n";
 		pResponse->strContent += "    if (xmlhttp.readyState==4 && xmlhttp.status==200) {\n";
 		pResponse->strContent += "      var xmldoc = xmlparser(xmlhttp.responseText);\n";
 		pResponse->strContent += "      var queryCode = xmldoc.getElementsByTagName('code')[0].childNodes[0].nodeValue;\n";
 		pResponse->strContent += "      if( queryCode=='1' || queryCode=='2' || queryCode=='3' ) {\n";
-		pResponse->strContent += "        if (bookmarkLink.innerHTML == bookmark_link)\n";
+		pResponse->strContent += "        if (bookmarkLink.innerHTML == bookmark_link) {\n";
 		pResponse->strContent += "          bookmarkLink.innerHTML = nobookmark_link;\n";
-		pResponse->strContent += "        else\n";
+		pResponse->strContent += "          shareLink.style.display = \"\"; }\n";
+		pResponse->strContent += "        else {\n";
 		pResponse->strContent += "          bookmarkLink.innerHTML = bookmark_link;\n";
+		pResponse->strContent += "          shareLink.style.display = \"none\"; }\n";
 		pResponse->strContent += "      }\n";
 		pResponse->strContent += "    }\n";
 		pResponse->strContent += "  }\n";
@@ -897,19 +900,6 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 		if( user.tWarned > 0 )
 			pResponse->strContent += "<img title=\"" + gmapLANG_CFG["user_warned"] + "\" src=\"files/warned.gif\">";
 
-		if( pRequest->user.ucAccess & m_ucAccessComments )
-		{
-			if( pRequest->user.strUID != user.strUID )
-				pResponse->strContent += "<span class=\"user_talk\">[<a class=\"black\" title=\"" + gmapLANG_CFG["talk_to"] + "\" href=\"" + RESPONSE_STR_TALK_HTML + "?talk=" + UTIL_StringToEscaped( "@" + user.strLogin + " " ) + "\">" + gmapLANG_CFG["talk_to"] + "</a>]</span>";
-			else
-				pResponse->strContent += "<span class=\"user_talk\">[<a class=\"black\" title=\"" + gmapLANG_CFG["talk_my_talk"] + "\" href=\"" + RESPONSE_STR_TALK_HTML + "?uid=" + user.strUID + "\">" + gmapLANG_CFG["talk_my_talk"] + "</a>]</span>";
-		}
-		
-		if( pRequest->user.ucAccess & m_ucAccessMessages && pRequest->user.strUID != user.strUID )
-		{
-			pResponse->strContent += "<span class=\"user_message\">[<a class=\"black\" title=\"" + gmapLANG_CFG["messages_send_message"] + "\" href=\"" + RESPONSE_STR_MESSAGES_HTML + "?sendto=" + user.strUID + "\">" + gmapLANG_CFG["messages_send_message"] + "</a>]</span>";
-		}
-			
 		if( pRequest->user.strUID != user.strUID )
 		{
 			pResponse->strContent += "<span class=\"user_friend\">[<a class=\"friend\" id=\"friend" + user.strUID + "\" class=\"red\" href=\"javascript: ;\" onclick=\"javascript: friend('" + user.strUID + "','" + gmapLANG_CFG["friend_add"] + "','" + gmapLANG_CFG["friend_remove"] + "');\">";
@@ -931,7 +921,20 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 				
 			pResponse->strContent += "</a>]</span>";
 		}
-					
+
+		pResponse->strContent += "<br><span>[<a class=\"black\" title=\"" + gmapLANG_CFG["talk_my_talk"] + "\" href=\"" + RESPONSE_STR_TALK_HTML + "?uid=" + user.strUID + "\">" + gmapLANG_CFG["talk_my_talk"] + "</a>]</span>";
+
+		if( pRequest->user.ucAccess & m_ucAccessComments )
+		{
+			if( pRequest->user.strUID != user.strUID )
+				pResponse->strContent += "<span class=\"user_talk\">[<a class=\"black\" title=\"" + gmapLANG_CFG["talk_to"] + "\" href=\"" + RESPONSE_STR_TALK_HTML + "?talk=" + UTIL_StringToEscaped( "@" + user.strLogin + " " ) + "\">" + gmapLANG_CFG["talk_to"] + "</a>]</span>";
+		}
+		
+		if( pRequest->user.ucAccess & m_ucAccessMessages && pRequest->user.strUID != user.strUID )
+		{
+			pResponse->strContent += "<span class=\"user_message\">[<a class=\"black\" title=\"" + gmapLANG_CFG["messages_send_message"] + "\" href=\"" + RESPONSE_STR_MESSAGES_HTML + "?sendto=" + user.strUID + "\">" + gmapLANG_CFG["messages_send_message"] + "</a>]</span>";
+		}
+			
 		pResponse->strContent += "</h3>";
 		
 		pResponse->strContent += "<table class=\"user_detail\">\n<tr class=\"user_detail\">\n";
@@ -945,22 +948,22 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 		}
 		pResponse->strContent += "</tr></table>\n";
 		
-		CMySQLQuery *pQueryTalk = new CMySQLQuery( "SELECT bid,busername,buid,bposted,btalk,btalkstore,breply,breplyto,breplytoid,breplytimes,brt,brtto,brttoid FROM talk WHERE buid=" + user.strUID + " AND breply=0 ORDER BY bposted DESC LIMIT 1" );
+		CMySQLQuery *pQueryTalk = new CMySQLQuery( "SELECT bid,busername,buid,bposted,btalk,btalkstore,breply,breply_real,breplyto,breplytoid,breplytimes,brt,brtto,brttoid FROM talk WHERE buid=" + user.strUID + " AND breply=0 ORDER BY bposted DESC LIMIT 1" );
 		
 		vector<string> vecQueryTalk;
 
-		vecQueryTalk.reserve(13);
+		vecQueryTalk.reserve(14);
 
 		vecQueryTalk = pQueryTalk->nextRow( );
 		
-		if( vecQueryTalk.size( ) == 13 )
+		if( vecQueryTalk.size( ) == 14 )
 		{
 			pResponse->strContent += "<div class=\"user_main_talk\">";
 			pResponse->strContent += "<table class=\"user_main_talk\" summary=\"talk\">\n";
 		
-			while( vecQueryTalk.size( ) == 13 )
+			while( vecQueryTalk.size( ) == 14 )
 			{
-				pResponse->strContent += GenerateTalk( vecQueryTalk, user.ucAccess, user.strUID, string( ), true, false );
+				pResponse->strContent += GenerateTalk( vecQueryTalk, user.ucAccess, string( ), user.strUID, string( ), true, false );
 
 				vecQueryTalk = pQueryTalk->nextRow( );
 			}
@@ -1109,7 +1112,7 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 		{
 			if( pRequest->user.strUID == user.strUID && ( pRequest->user.ucAccess & m_ucAccessView ) )
 			{
-				CMySQLQuery *pQueryPrefs = new CMySQLQuery( "SELECT bdefaulttag,baddedpassed,bperpage,bsavesent,bmsgcomment FROM users_prefs WHERE buid=" + user.strUID );
+				CMySQLQuery *pQueryPrefs = new CMySQLQuery( "SELECT bdefaulttag,baddedpassed,bperpage,bsavesent,bmsgcomment,bmsgcommentbm FROM users_prefs WHERE buid=" + user.strUID );
 				
 				map<string, string> mapPrefs;
 
@@ -1161,7 +1164,7 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 							for( vector<string> :: iterator ulKey = vecFilter.begin( ); ulKey != vecFilter.end( ); ulKey++ )
 								if( *ulKey == strNameIndex )
 									pResponse->strContent += " checked";
-							pResponse->strContent += ">\n";
+							pResponse->strContent += ">";
 
 							pResponse->strContent += UTIL_RemoveHTML( strTag );
 
@@ -1197,11 +1200,11 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 				pResponse->strContent += "<br>" + gmapLANG_CFG["prefs_torrents_added"];
 				pResponse->strContent += "<input id=\"id_added_uploaded\" name=\"torrents_added\" alt=\"[" + gmapLANG_CFG["prefs_torrents_added_uploaded"] + "]\" type=radio value=\"uploaded\"";
 				if( !mapPrefs["baddedpassed"].empty( ) && mapPrefs["baddedpassed"] == "0" )
-					pResponse->strContent += " checked";
+					pResponse->strContent += " checked=\"checked\"";
 				pResponse->strContent += "><label for=\"id_added_uploaded\">" + gmapLANG_CFG["prefs_torrents_added_uploaded"] + "</label>";
 				pResponse->strContent += "<input id=\"id_added_passed\" name=\"torrents_added\" alt=\"[" + gmapLANG_CFG["prefs_torrents_added_passed"] + "]\" type=radio value=\"passed\"";
 				if( !mapPrefs["baddedpassed"].empty( ) && mapPrefs["baddedpassed"] == "1" )
-					pResponse->strContent += " checked";
+					pResponse->strContent += " checked=\"checked\"";
 				pResponse->strContent += "><label for=\"id_added_passed\">" + gmapLANG_CFG["prefs_torrents_added_passed"] + "</label>";
 				pResponse->strContent += "</td>\n</tr>\n";
 				
@@ -1215,6 +1218,10 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 				if( !mapPrefs["bmsgcomment"].empty( ) && mapPrefs["bmsgcomment"] == "1" )
 					pResponse->strContent += " checked=\"checked\"";
 				pResponse->strContent += ">" + gmapLANG_CFG["prefs_messages_new_comment"];
+				pResponse->strContent += "<br><input name=\"messages_new_comment_bookmarked\" alt=\"[" + gmapLANG_CFG["prefs_messages_new_comment_bookmarked"] + "]\" type=checkbox";
+				if( !mapPrefs["bmsgcommentbm"].empty( ) && mapPrefs["bmsgcommentbm"] == "1" )
+					pResponse->strContent += " checked=\"checked\"";
+				pResponse->strContent += ">" + gmapLANG_CFG["prefs_messages_new_comment_bookmarked"];
 				pResponse->strContent += "</td>\n</tr>\n";
 				pResponse->strContent += "<tr class=\"preferences\">\n<th class=\"preferences\">" + gmapLANG_CFG["prefs_save"] + "</th>";
 				pResponse->strContent += "<td class=\"preferences\">";
@@ -1555,7 +1562,7 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 			if( pRequest->user.strUID == user.strUID && ( pRequest->user.ucAccess & m_ucAccessView ) )
 			{
 				pResponse->strContent += "<table class=\"user_detail_table\" id=\"user_friendeds\">\n";
-				pResponse->strContent += "<tr><th colspan=3>" + gmapLANG_CFG["user_detail_friendeds"] + "</th></tr>\n";
+				pResponse->strContent += "<tr><th colspan=4>" + gmapLANG_CFG["user_detail_friendeds"] + "</th></tr>\n";
 				
 				CMySQLQuery *pQuery = new CMySQLQuery( "SELECT buid FROM friends WHERE bfriendid=" + user.strUID );
 				
@@ -1581,29 +1588,33 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 
 					pResponse->strContent += "</th>\n";
 					
+					pResponse->strContent += "<th class=\"admin\">" + gmapLANG_CFG["friend_admin"];
+
+					pResponse->strContent += "</th>\n";
+
 					pResponse->strContent += "</tr>\n";
 
 					while( vecQuery.size( ) == 1 )
 					{
-						CMySQLQuery *pQueryFriend = new CMySQLQuery( "SELECT busername,blast FROM users WHERE buid=" + vecQuery[0] );
+						CMySQLQuery *pQueryFriended = new CMySQLQuery( "SELECT busername,blast FROM users WHERE buid=" + vecQuery[0] );
 				
-						vector<string> vecQueryFriend;
+						vector<string> vecQueryFriended;
 			
-						vecQueryFriend.reserve(1);
+						vecQueryFriended.reserve(1);
 
-						vecQueryFriend = pQueryFriend->nextRow( );
+						vecQueryFriended = pQueryFriended->nextRow( );
 						
-						delete pQueryFriend;
+						delete pQueryFriended;
 						
-						if( vecQueryFriend.size( ) == 2 )
+						if( vecQueryFriended.size( ) == 2 )
 						{
 							pResponse->strContent += "<tr>\n";
 						
-							pResponse->strContent += "<td class=\"uploader\">" + getUserLink( vecQuery[0], vecQueryFriend[0] ); + "</td>\n";
+							pResponse->strContent += "<td class=\"uploader\">" + getUserLink( vecQuery[0], vecQueryFriended[0] ); + "</td>\n";
 							pResponse->strContent += "<td class=\"date\">";
 						
-							if( !vecQueryFriend[1].empty( ) )
-								pResponse->strContent += vecQueryFriend[1];
+							if( !vecQueryFriended[1].empty( ) )
+								pResponse->strContent += vecQueryFriended[1];
 							else
 								pResponse->strContent += gmapLANG_CFG["na"];
 						
@@ -1612,7 +1623,7 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 							pResponse->strContent += "<td class=\"admin\">";
 							if( pRequest->user.ucAccess & m_ucAccessMessages )
 							{
-								pResponse->strContent += "[<a class=\"black\" title=\"" + gmapLANG_CFG["talk_to"] + "\" href=\"" + RESPONSE_STR_TALK_HTML + "?talk=" + UTIL_StringToEscaped( "@" + vecQueryFriend[0] + " " ) + "\">" + gmapLANG_CFG["talk_to"] + "</a>]";
+								pResponse->strContent += "[<a class=\"black\" title=\"" + gmapLANG_CFG["talk_to"] + "\" href=\"" + RESPONSE_STR_TALK_HTML + "?talk=" + UTIL_StringToEscaped( "@" + vecQueryFriended[0] + " " ) + "\">" + gmapLANG_CFG["talk_to"] + "</a>]";
 							}
 		
 							if( pRequest->user.ucAccess & m_ucAccessComments )
@@ -1621,6 +1632,28 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 							}
 							pResponse->strContent += "</td>\n";
 						
+							pResponse->strContent += "<td class=\"admin\">";
+
+							CMySQLQuery *pQueryFriend = new CMySQLQuery( "SELECT bfriendid FROM friends WHERE buid=" + user.strUID + " AND bfriendid=" + vecQuery[0] );
+					
+							vector<string> vecQueryFriend;
+				
+							vecQueryFriend.reserve(1);
+
+							vecQueryFriend = pQueryFriend->nextRow( );
+							
+							delete pQueryFriend;
+
+							if( vecQueryFriend.size( ) == 0 )
+							{
+								pResponse->strContent += "[<a id=\"friend" + vecQuery[0] + "\" class=\"friend\" href=\"javascript: ;\" onclick=\"javascript: friend('" + vecQuery[0] + "','" + gmapLANG_CFG["friend_add"] + "','" + gmapLANG_CFG["friend_remove"] + "');\">";
+								pResponse->strContent += gmapLANG_CFG["friend_add"] + "</a>]";
+							}
+							else if( vecQueryFriend.size( ) == 1 )
+								pResponse->strContent += gmapLANG_CFG["friended_friended"];
+
+							pResponse->strContent += "</td>\n";
+
 							pResponse->strContent += "</tr>\n";
 						}
 						
@@ -2125,7 +2158,7 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 							pResponse->strContent += "\">";
 							pResponse->strContent += UTIL_RemoveHTML( strEngName );
 							if( !strChiName.empty( ) )
-								pResponse->strContent += "<br>" + UTIL_RemoveHTML( strChiName );
+								pResponse->strContent += "<br><span class=\"stats\">" + UTIL_RemoveHTML( strChiName ) + "</span>";
 							pResponse->strContent += "</a>";
 							if( pTorrents[ulKey].iFreeDown != 100 || pTorrents[ulKey].iFreeUp != 100 )
 							{
@@ -2137,7 +2170,7 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 										pResponse->strContent += "<span class=\"free_down\" title=\"" + UTIL_Xsprintf( gmapLANG_CFG["free_down"].c_str( ), CAtomInt( pTorrents[ulKey].iFreeDown ).toString( ).c_str( ) ) + "\">" + UTIL_Xsprintf( gmapLANG_CFG["free_down_short"].c_str( ), CAtomInt( pTorrents[ulKey].iFreeDown ).toString( ).c_str( ) )+ "</span>";
 								}
 								if( pTorrents[ulKey].iFreeUp != 100 )
-									pResponse->strContent += "<span class=\"free_up\" title=\"" + UTIL_Xsprintf( gmapLANG_CFG["free_up"].c_str( ), CAtomInt( pTorrents[ulKey].iFreeUp ).toString( ).c_str( ) ) + "\"> " + UTIL_Xsprintf( gmapLANG_CFG["free_up_short"].c_str( ), CAtomInt( pTorrents[ulKey].iFreeUp ).toString( ).c_str( ) )+ "</span>";
+									pResponse->strContent += "<span class=\"free_up\" title=\"" + UTIL_Xsprintf( gmapLANG_CFG["free_up"].c_str( ), CAtomInt( pTorrents[ulKey].iFreeUp ).toString( ).c_str( ) ) + "\">" + UTIL_Xsprintf( gmapLANG_CFG["free_up_short"].c_str( ), CAtomInt( pTorrents[ulKey].iFreeUp ).toString( ).c_str( ) )+ "</span>";
 								if( day_left >= 0 && ( pTorrents[ulKey].iDefaultDown > pTorrents[ulKey].iFreeDown || pTorrents[ulKey].iDefaultUp < pTorrents[ulKey].iFreeUp ) )
 								{
 									pResponse->strContent += "<span class=\"free_recover\" title=\"" + gmapLANG_CFG["free_recover"];
@@ -2396,7 +2429,7 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 								pResponse->strContent += gmapLANG_CFG["name"] + ": " + UTIL_RemoveHTML( pTorrents[ulKey].strName )+ "\" href=\"" + RESPONSE_STR_STATS_HTML + "?id=" + pTorrents[ulKey].strID + "\">";
 								pResponse->strContent += UTIL_RemoveHTML( strEngName );
 								if( !strChiName.empty( ) )
-									pResponse->strContent += "<br>" + UTIL_RemoveHTML( strChiName );
+									pResponse->strContent += "<br><span class=\"stats\">" + UTIL_RemoveHTML( strChiName ) + "</span>";
 								pResponse->strContent += "</a>";
 								if( pTorrents[ulKey].iFreeDown != 100 || pTorrents[ulKey].iFreeUp != 100 )
 								{
@@ -2408,7 +2441,7 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 											pResponse->strContent += "<span class=\"free_down\" title=\"" + UTIL_Xsprintf( gmapLANG_CFG["free_down"].c_str( ), CAtomInt( pTorrents[ulKey].iFreeDown ).toString( ).c_str( ) ) + "\">" + UTIL_Xsprintf( gmapLANG_CFG["free_down_short"].c_str( ), CAtomInt( pTorrents[ulKey].iFreeDown ).toString( ).c_str( ) )+ "</span>";
 									}
 									if( pTorrents[ulKey].iFreeUp != 100 )
-										pResponse->strContent += "<span class=\"free_up\" title=\"" + UTIL_Xsprintf( gmapLANG_CFG["free_up"].c_str( ), CAtomInt( pTorrents[ulKey].iFreeUp ).toString( ).c_str( ) ) + "\"> " + UTIL_Xsprintf( gmapLANG_CFG["free_up_short"].c_str( ), CAtomInt( pTorrents[ulKey].iFreeUp ).toString( ).c_str( ) )+ "</span>";
+										pResponse->strContent += "<span class=\"free_up\" title=\"" + UTIL_Xsprintf( gmapLANG_CFG["free_up"].c_str( ), CAtomInt( pTorrents[ulKey].iFreeUp ).toString( ).c_str( ) ) + "\">" + UTIL_Xsprintf( gmapLANG_CFG["free_up_short"].c_str( ), CAtomInt( pTorrents[ulKey].iFreeUp ).toString( ).c_str( ) )+ "</span>";
 									if( day_left >= 0 && ( pTorrents[ulKey].iDefaultDown > pTorrents[ulKey].iFreeDown || pTorrents[ulKey].iDefaultUp < pTorrents[ulKey].iFreeUp ) )
 									{
 										pResponse->strContent += "<span class=\"free_recover\" title=\"" + gmapLANG_CFG["free_recover"];
@@ -2656,7 +2689,7 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 									pResponse->strContent += gmapLANG_CFG["name"] + ": " + UTIL_RemoveHTML( pTorrents[ulKey].strName )+ "\" href=\"" + RESPONSE_STR_STATS_HTML + "?id=" + pTorrents[ulKey].strID + "\">";
 									pResponse->strContent += UTIL_RemoveHTML( strEngName );
 									if( !strChiName.empty( ) )
-										pResponse->strContent += "<br>" + UTIL_RemoveHTML( strChiName );
+										pResponse->strContent += "<br><span class=\"stats\">" + UTIL_RemoveHTML( strChiName ) + "</span>";
 									pResponse->strContent += "</a>";
 									if( pTorrents[ulKey].iFreeDown != 100 || pTorrents[ulKey].iFreeUp != 100 )
 									{
@@ -2668,7 +2701,7 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 												pResponse->strContent += "<span class=\"free_down\" title=\"" + UTIL_Xsprintf( gmapLANG_CFG["free_down"].c_str( ), CAtomInt( pTorrents[ulKey].iFreeDown ).toString( ).c_str( ) ) + "\">" + UTIL_Xsprintf( gmapLANG_CFG["free_down_short"].c_str( ), CAtomInt( pTorrents[ulKey].iFreeDown ).toString( ).c_str( ) )+ "</span>";
 										}
 										if( pTorrents[ulKey].iFreeUp != 100 )
-											pResponse->strContent += "<span class=\"free_up\" title=\"" + UTIL_Xsprintf( gmapLANG_CFG["free_up"].c_str( ), CAtomInt( pTorrents[ulKey].iFreeUp ).toString( ).c_str( ) ) + "\"> " + UTIL_Xsprintf( gmapLANG_CFG["free_up_short"].c_str( ), CAtomInt( pTorrents[ulKey].iFreeUp ).toString( ).c_str( ) )+ "</span>";
+											pResponse->strContent += "<span class=\"free_up\" title=\"" + UTIL_Xsprintf( gmapLANG_CFG["free_up"].c_str( ), CAtomInt( pTorrents[ulKey].iFreeUp ).toString( ).c_str( ) ) + "\">" + UTIL_Xsprintf( gmapLANG_CFG["free_up_short"].c_str( ), CAtomInt( pTorrents[ulKey].iFreeUp ).toString( ).c_str( ) )+ "</span>";
 										if( day_left >= 0 && ( pTorrents[ulKey].iDefaultDown > pTorrents[ulKey].iFreeDown || pTorrents[ulKey].iDefaultUp < pTorrents[ulKey].iFreeUp ) )
 										{
 											pResponse->strContent += "<span class=\"free_recover\" title=\"" + gmapLANG_CFG["free_recover"];
@@ -2920,8 +2953,7 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 									pResponse->strContent += gmapLANG_CFG["name"] + ": " + UTIL_RemoveHTML( pTorrents[ulKey].strName )+ "\" href=\"" + RESPONSE_STR_STATS_HTML + "?id=" + pTorrents[ulKey].strID + "\">";
 									pResponse->strContent += UTIL_RemoveHTML( strEngName );
 									if( !strChiName.empty( ) )
-
-										pResponse->strContent += "<br>" + UTIL_RemoveHTML( strChiName );
+										pResponse->strContent += "<br><span class=\"stats\">" + UTIL_RemoveHTML( strChiName ) + "</span>";
 									pResponse->strContent += "</a>";
 									if( pTorrents[ulKey].iFreeDown != 100 || pTorrents[ulKey].iFreeUp != 100 )
 									{
@@ -2933,7 +2965,7 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 												pResponse->strContent += "<span class=\"free_down\" title=\"" + UTIL_Xsprintf( gmapLANG_CFG["free_down"].c_str( ), CAtomInt( pTorrents[ulKey].iFreeDown ).toString( ).c_str( ) ) + "\">" + UTIL_Xsprintf( gmapLANG_CFG["free_down_short"].c_str( ), CAtomInt( pTorrents[ulKey].iFreeDown ).toString( ).c_str( ) )+ "</span>";
 										}
 										if( pTorrents[ulKey].iFreeUp != 100 )
-											pResponse->strContent += "<span class=\"free_up\" title=\"" + UTIL_Xsprintf( gmapLANG_CFG["free_up"].c_str( ), CAtomInt( pTorrents[ulKey].iFreeUp ).toString( ).c_str( ) ) + "\"> " + UTIL_Xsprintf( gmapLANG_CFG["free_up_short"].c_str( ), CAtomInt( pTorrents[ulKey].iFreeUp ).toString( ).c_str( ) )+ "</span>";
+											pResponse->strContent += "<span class=\"free_up\" title=\"" + UTIL_Xsprintf( gmapLANG_CFG["free_up"].c_str( ), CAtomInt( pTorrents[ulKey].iFreeUp ).toString( ).c_str( ) ) + "\">" + UTIL_Xsprintf( gmapLANG_CFG["free_up_short"].c_str( ), CAtomInt( pTorrents[ulKey].iFreeUp ).toString( ).c_str( ) )+ "</span>";
 										if( day_left >= 0 && ( pTorrents[ulKey].iDefaultDown > pTorrents[ulKey].iFreeDown || pTorrents[ulKey].iDefaultUp < pTorrents[ulKey].iFreeUp ) )
 										{
 											pResponse->strContent += "<span class=\"free_recover\" title=\"" + gmapLANG_CFG["free_recover"];
@@ -3209,7 +3241,7 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 
 									pResponse->strContent += UTIL_RemoveHTML( strEngName );
 									if( !strChiName.empty( ) )
-										pResponse->strContent += "<br>" + UTIL_RemoveHTML( strChiName );
+										pResponse->strContent += "<br><span class=\"stats\">" + UTIL_RemoveHTML( strChiName ) + "</span>";
 									pResponse->strContent += "</a>";
 									if( pTorrents[ulKey].iFreeDown != 100 || pTorrents[ulKey].iFreeUp != 100 )
 									{
@@ -3222,7 +3254,7 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 										}
 										if( pTorrents[ulKey].iFreeUp != 100 )
 
-											pResponse->strContent += "<span class=\"free_up\" title=\"" + UTIL_Xsprintf( gmapLANG_CFG["free_up"].c_str( ), CAtomInt( pTorrents[ulKey].iFreeUp ).toString( ).c_str( ) ) + "\"> " + UTIL_Xsprintf( gmapLANG_CFG["free_up_short"].c_str( ), CAtomInt( pTorrents[ulKey].iFreeUp ).toString( ).c_str( ) )+ "</span>";
+											pResponse->strContent += "<span class=\"free_up\" title=\"" + UTIL_Xsprintf( gmapLANG_CFG["free_up"].c_str( ), CAtomInt( pTorrents[ulKey].iFreeUp ).toString( ).c_str( ) ) + "\">" + UTIL_Xsprintf( gmapLANG_CFG["free_up_short"].c_str( ), CAtomInt( pTorrents[ulKey].iFreeUp ).toString( ).c_str( ) )+ "</span>";
 										if( day_left >= 0 && ( pTorrents[ulKey].iDefaultDown > pTorrents[ulKey].iFreeDown || pTorrents[ulKey].iDefaultUp < pTorrents[ulKey].iFreeUp ) )
 										{
 											pResponse->strContent += "<span class=\"free_recover\" title=\"" + gmapLANG_CFG["free_recover"];
@@ -3377,6 +3409,7 @@ void CTracker :: serverResponseLoginPOST( struct request_t *pRequest, struct res
 	string cstrTorrentsPerPage = string( );
 	string cstrTorrentsAdded = string( );
 	string cstrMessagesNewComment = string( );
+	string cstrMessagesNewCommentBookmarked = string( );
 	string cstrMessagesSaveSent = string( );
 	string cstrSubmitLogin = string( );
 	string cstrSubmitPrefs = string( );
@@ -3437,6 +3470,8 @@ void CTracker :: serverResponseLoginPOST( struct request_t *pRequest, struct res
 							cstrTorrentsAdded = pData->toString( );
 						else if( strName == "messages_new_comment" )
 							cstrMessagesNewComment = pData->toString( );
+						else if( strName == "messages_new_comment_bookmarked" )
+							cstrMessagesNewCommentBookmarked = pData->toString( );
 						else if( strName == "messages_save_sent" )
 							cstrMessagesSaveSent = pData->toString( );
 						else if( strName == "submit_login_button" )
@@ -3493,6 +3528,7 @@ void CTracker :: serverResponseLoginPOST( struct request_t *pRequest, struct res
 			string cstrID = string( );
 			
 			string strMD5 = string( );
+			string strMD5Recover = string( );
 			
 			unsigned char ucAccess = ACCESS_VIEW;
 			
@@ -3514,6 +3550,7 @@ void CTracker :: serverResponseLoginPOST( struct request_t *pRequest, struct res
 				{
 					cstrLogin = vecQuery[0];
 					const string cstrA1( cstrLogin + ":" + gstrPasswordKey + ":" + cstrPassword );
+					const string cstrA2( cstrLogin + ":" + cstrPassword );
 
 					unsigned char szMD5[16];
 					memset( szMD5, 0, sizeof( szMD5 ) / sizeof( unsigned char ) );
@@ -3527,11 +3564,18 @@ void CTracker :: serverResponseLoginPOST( struct request_t *pRequest, struct res
 					strMD5 = string( (char *)szMD5, sizeof(szMD5) / sizeof(unsigned char) );
 			
 					cstrID = checkUserMD5( cstrLogin, strMD5 );
+
+					MD5Init( &md5 );
+					MD5Update( &md5, (const unsigned char *)cstrA2.c_str( ), (unsigned int)cstrA2.size( ) );
+					MD5Final( szMD5, &md5 );
+					strMD5Recover = string( (char *)szMD5, sizeof(szMD5) / sizeof(unsigned char) );
 				}
 			}
 			
 			if( !cstrLogin.empty( ) && !( cstrID.empty( ) ) )
 			{
+				CMySQLQuery mq01( "UPDATE users SET bmd5_recover=\'" + UTIL_StringToMySQL( strMD5Recover ) + "\' WHERE buid=" + cstrID );
+
 				// Set the current time
 				time_t tNow = time( 0 );
 
@@ -3678,6 +3722,7 @@ void CTracker :: serverResponseLoginPOST( struct request_t *pRequest, struct res
 			
 			unsigned char ucMessagesSaveSent = 0;
 			unsigned char ucMessagesNewComment = 0;
+			unsigned char ucMessagesNewCommentBookmarked = 0;
 			
 			if( !cstrTorrentsAdded.empty( ) && cstrTorrentsAdded == "passed" )
 				ucTorrentsAdded = 1;
@@ -3695,6 +3740,8 @@ void CTracker :: serverResponseLoginPOST( struct request_t *pRequest, struct res
 				ucMessagesSaveSent = 1;
 			if( !cstrMessagesNewComment.empty( ) && cstrMessagesNewComment == "on" )
 				ucMessagesNewComment = 1;
+			if( !cstrMessagesNewCommentBookmarked.empty( ) && cstrMessagesNewCommentBookmarked == "on" )
+				ucMessagesNewCommentBookmarked = 1;
 
 			string strQuery( "UPDATE users_prefs SET " );
 			strQuery += "bdefaulttag='" + UTIL_StringToMySQL( cstrFilter ) + "'";
@@ -3702,6 +3749,7 @@ void CTracker :: serverResponseLoginPOST( struct request_t *pRequest, struct res
 			strQuery += ",bperpage=" + CAtomInt( uiTorrentsPerPage ).toString( );
 			strQuery += ",bsavesent=" + CAtomInt( ucMessagesSaveSent ).toString( );
 			strQuery += ",bmsgcomment=" + CAtomInt( ucMessagesNewComment ).toString( );
+			strQuery += ",bmsgcommentbm=" + CAtomInt( ucMessagesNewCommentBookmarked ).toString( );
 			strQuery += " WHERE buid=" + pRequest->user.strUID;
 			
 			CMySQLQuery mq01( strQuery );

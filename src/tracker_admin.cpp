@@ -1040,28 +1040,34 @@ void CTracker :: serverResponseAdmin( struct request_t *pRequest, struct respons
 				ucAccess = ucAccess >> 1;
 			}
 			pResponse->strContent += "</select>\n</td>\n</tr>\n";
-			ucAccess = m_ucAccessAdmin;
-			pResponse->strContent += "<tr class=\"admin_access\"><th class=\"admin_access\">" + gmapLANG_CFG["set_access_edit_users"] + "</th><td><select name=\"edit_users\">\n";
-			while( ucAccess > 0 )
+			if( pRequest->user.ucAccess & m_ucAccessEditAdmins )
 			{
-				pResponse->strContent += "<option value=\"" + CAtomInt( ucAccess ).toString( ) + "\"";
-				if( ucAccess == m_ucAccessEditUsers )
-					pResponse->strContent += " selected";
-				pResponse->strContent += ">" + UTIL_AccessToText( ucAccess ) + "</option>\n";
-				ucAccess = ucAccess >> 1;
+				ucAccess = ACCESS_LEADER;
+				pResponse->strContent += "<tr class=\"admin_access\"><th class=\"admin_access\">" + gmapLANG_CFG["set_access_edit_users"] + "</th><td><select name=\"edit_users\">\n";
+				while( ucAccess > 0 )
+				{
+					pResponse->strContent += "<option value=\"" + CAtomInt( ucAccess ).toString( ) + "\"";
+					if( ucAccess == m_ucAccessEditUsers )
+						pResponse->strContent += " selected";
+					pResponse->strContent += ">" + UTIL_AccessToText( ucAccess ) + "</option>\n";
+					ucAccess = ucAccess >> 1;
+				}
+				pResponse->strContent += "</select>\n</td>\n</tr>\n";
 			}
-			pResponse->strContent += "</select>\n</td>\n</tr>\n";
-			ucAccess = m_ucAccessAdmin;
-			pResponse->strContent += "<tr class=\"admin_access\"><th class=\"admin_access\">" + gmapLANG_CFG["set_access_del_users"] + "</th><td><select name=\"del_users\">\n";
-			while( ucAccess > 0 )
+			if( pRequest->user.ucAccess & m_ucAccessEditAdmins )
 			{
-				pResponse->strContent += "<option value=\"" + CAtomInt( ucAccess ).toString( ) + "\"";
-				if( ucAccess == m_ucAccessDelUsers )
-					pResponse->strContent += " selected";
-				pResponse->strContent += ">" + UTIL_AccessToText( ucAccess ) + "</option>\n";
-				ucAccess = ucAccess >> 1;
+				ucAccess = ACCESS_LEADER;
+				pResponse->strContent += "<tr class=\"admin_access\"><th class=\"admin_access\">" + gmapLANG_CFG["set_access_del_users"] + "</th><td><select name=\"del_users\">\n";
+				while( ucAccess > 0 )
+				{
+					pResponse->strContent += "<option value=\"" + CAtomInt( ucAccess ).toString( ) + "\"";
+					if( ucAccess == m_ucAccessDelUsers )
+						pResponse->strContent += " selected";
+					pResponse->strContent += ">" + UTIL_AccessToText( ucAccess ) + "</option>\n";
+					ucAccess = ucAccess >> 1;
+				}
+				pResponse->strContent += "</select>\n</td>\n</tr>\n";
 			}
-			pResponse->strContent += "</select>\n</td>\n</tr>\n";
 			ucAccess = m_ucAccessAdmin;
 			pResponse->strContent += "<tr class=\"admin_access\"><th class=\"admin_access\">" + gmapLANG_CFG["set_access_invites"] + "</th><td><select name=\"invites\">\n";
 			while( ucAccess > 0 )
@@ -1152,7 +1158,7 @@ void CTracker :: serverResponseAdmin( struct request_t *pRequest, struct respons
 			pResponse->strContent += "</select>\n</td>\n</tr>\n";
 			if( pRequest->user.ucAccess & m_ucAccessEditAdmins )
 			{
-				ucAccess = m_ucAccessAdmin;
+				ucAccess = ACCESS_LEADER;
 				pResponse->strContent += "<tr class=\"admin_access\"><th class=\"admin_access\">" + gmapLANG_CFG["set_access_admin"] + "</th><td><select name=\"admin\">\n";
 				while( ucAccess > 0 )
 				{

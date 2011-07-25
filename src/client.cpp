@@ -976,7 +976,7 @@ bool CClient :: Update( )
 		}
 
 		// grab authentication
-		strLogin = rqst.mapCookies["login"];
+//		strLogin = rqst.mapCookies["login"];
 		strUID = rqst.mapCookies["uid"];
 		strMD5 = rqst.mapCookies["md5"];
 

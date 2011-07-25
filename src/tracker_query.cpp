@@ -425,6 +425,11 @@ void CTracker :: serverResponseQuery( struct request_t *pRequest, struct respons
 						CMySQLQuery mq01( "INSERT INTO friends (buid,bfriendid,bfriendname) VALUES(" + pRequest->user.strUID + "," + cstrUID + ",\'" + UTIL_StringToMySQL( vecQuery[1] ) + "\')" );
 						pResponse->strContent += "<status>" + gmapLANG_CFG["query_friend_successful"] + "</status>\n";
 						pResponse->strContent += "<code>1</code>\n";
+
+						string strQuery = string( );
+						string strQueryValue = string( );
+						
+						strQuery = string( "INSERT IGNORE INTO talkhome (buid,bfriendid,btalkid,bposted) VALUES" );
 					
 						CMySQLQuery *pQueryTalk = new CMySQLQuery( "SELECT bid,bposted FROM talk WHERE buid=" + cstrUID );
 					
@@ -437,13 +442,47 @@ void CTracker :: serverResponseQuery( struct request_t *pRequest, struct respons
 						while( vecQueryTalk.size( ) == 2 )
 						{
 							if( !vecQueryTalk[0].empty( ) )
-								CMySQLQuery mq02( "INSERT IGNORE INTO talkhome (buid,bfriendid,btalkid,bposted) VALUES(" + pRequest->user.strUID + "," + cstrUID + "," + vecQueryTalk[0] + ",'" + UTIL_StringToMySQL( vecQueryTalk[1] ) + "')" );
-							
+							{
+								if( !strQueryValue.empty( ) )
+									strQueryValue += ",";
+								strQueryValue += "(" + pRequest->user.strUID + "," + cstrUID + "," + vecQueryTalk[0] + ",'" + UTIL_StringToMySQL( vecQueryTalk[1] ) + "')";
+							}	
+
 							vecQueryTalk = pQueryTalk->nextRow( );
 						}
 					
 						delete pQueryTalk;
+
+						if( !strQueryValue.empty( ) )
+							CMySQLQuery mq02( strQuery + strQueryValue );
 						
+						strQuery = string( "INSERT IGNORE INTO talktofriend (buid,btofriendid,btalkid,bposted) VALUES" );
+						strQueryValue.erase( );
+
+						pQueryTalk = new CMySQLQuery( "SELECT bid,bposted FROM talk WHERE buid=" + pRequest->user.strUID );
+					
+						vecQueryTalk = pQueryTalk->nextRow( );
+					
+						while( vecQueryTalk.size( ) == 2 )
+						{
+							if( !vecQueryTalk[0].empty( ) )
+							{
+								if( !strQueryValue.empty( ) )
+									strQueryValue += ",";
+								strQueryValue += "(" + cstrUID + "," + pRequest->user.strUID + "," + vecQueryTalk[0] + ",'" + UTIL_StringToMySQL( vecQueryTalk[1] ) + "')";
+							}
+
+							vecQueryTalk = pQueryTalk->nextRow( );
+						}
+					
+						delete pQueryTalk;
+
+						if( !strQueryValue.empty( ) )
+							CMySQLQuery mq03( strQuery + strQueryValue );
+
+						strQuery = string( "INSERT IGNORE INTO talktorrent (buid,bfriendid,btid,bposted) VALUES" );
+						strQueryValue.erase( );
+
 						CMySQLQuery *pQueryAllowed = new CMySQLQuery( "SELECT bid,badded FROM allowed WHERE buploaderid=" + cstrUID + " AND badded>NOW()-INTERVAL 1 DAY" );
 					
 						vector<string> vecQueryAllowed;
@@ -455,13 +494,19 @@ void CTracker :: serverResponseQuery( struct request_t *pRequest, struct respons
 						while( vecQueryAllowed.size( ) == 2 )
 						{
 							if( !vecQueryAllowed[0].empty( ) )
-								CMySQLQuery mq01( "INSERT IGNORE INTO talktorrent (buid,bfriendid,btid,bposted) VALUES(" + pRequest->user.strUID + "," + cstrUID + "," + vecQueryAllowed[0] + ",'" + UTIL_StringToMySQL( vecQueryAllowed[1] ) + "')" );
-							
+							{
+								if( !strQueryValue.empty( ) )
+									strQueryValue += ",";
+								strQueryValue += "(" + pRequest->user.strUID + "," + cstrUID + "," + vecQueryAllowed[0] + ",'" + UTIL_StringToMySQL( vecQueryAllowed[1] ) + "')";
+							}
+
 							vecQueryAllowed = pQueryAllowed->nextRow( );
 						}
 					
 						delete pQueryAllowed;
-				
+
+						if( !strQueryValue.empty( ) )
+							CMySQLQuery mq04( strQuery + strQueryValue );
 					}
 					else if( vecQueryFriend.size( ) == 2 )
 					{
@@ -503,6 +548,7 @@ void CTracker :: serverResponseQuery( struct request_t *pRequest, struct respons
 					{
 						CMySQLQuery mq01( "DELETE FROM friends WHERE buid=" + pRequest->user.strUID + " AND bfriendid=" + cstrUID );
 						CMySQLQuery mq02( "DELETE FROM talkhome WHERE buid=" + pRequest->user.strUID + " AND bfriendid=" + cstrUID );
+						CMySQLQuery mq03( "DELETE FROM talktofriend WHERE buid=" + cstrUID + " AND btofriendid=" + pRequest->user.strUID );
 						pResponse->strContent += "<status>" + gmapLANG_CFG["query_friend_successful"] + "</status>\n";
 						pResponse->strContent += "<code>1</code>\n";
 					}

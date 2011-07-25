@@ -426,7 +426,7 @@ void CTracker :: serverResponseUploadGET( struct request_t *pRequest, struct res
 		if( ( pRequest->user.ucAccess & m_ucAccessUploadTorrents ) && ( pRequest->user.ucAccess & m_ucAccessUploadPosts ) )
 		{
 			pResponse->strContent += "<tr class=\"torrent_upload\">\n<th class=\"torrent_upload\">" + gmapLANG_CFG["category"] + "</th>\n";
-			pResponse->strContent += "<td class=\"torrent_upload\"><input id=\"id_post\" name=\"post\" alt=\"[" + gmapLANG_CFG["top"] + "]\" type=checkbox onclick=\"javascript: checkPost()\">" + gmapLANG_CFG["post"] + "</td>\n</tr>\n";
+			pResponse->strContent += "<td class=\"torrent_upload\"><input id=\"id_post\" name=\"post\" alt=\"[" + gmapLANG_CFG["top"] + "]\" type=checkbox onclick=\"javascript: checkPost()\">" + gmapLANG_CFG["upload_post"] + "</td>\n</tr>\n";
 		}
 		pResponse->strContent += "<tr class=\"torrent_upload\" id=\"id_torrent\">\n<th class=\"torrent_upload\">" + gmapLANG_CFG["upload_file"] + "</th>\n"; 
 		pResponse->strContent += "<td class=\"torrent_upload\"><input name=\"torrent\" id=\"uploadfile\" alt=\"[" + gmapLANG_CFG["torrent"] + "]\" type=file size=50\"></td>\n</tr>\n";    
@@ -958,7 +958,7 @@ void CTracker :: serverResponseUploadPOST( struct request_t *pRequest, struct re
 			if( !pRequest->user.strUID.empty( ) )
 			{
 				CAtom *pInfo = ( (CAtomDicti *)pTorrent )->getItem( "info" );
-				const string strSource = gmapLANG_CFG["source"];
+				const string strSource = CFG_GetString( "bnbt_tracker_source", string( ) );
 				if( !strSource.empty( ) )
 				{	
 					( (CAtomDicti *)pInfo )->setItem( "source" , new CAtomString( strSource ) );

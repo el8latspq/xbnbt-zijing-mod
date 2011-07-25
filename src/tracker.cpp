@@ -1240,6 +1240,80 @@ CTracker :: CTracker( )
 //	}
 //	delete pQueryTalk;
 
+//	CMySQLQuery *pQueryTag = new CMySQLQuery( "SELECT btag,count(*) FROM talktag GROUP BY btag" );
+//			
+//	vector<string> vecQueryTag;
+//
+//	vecQueryTag.reserve(2);
+//
+//	vecQueryTag = pQueryTag->nextRow( );
+//	
+//	while( vecQueryTag.size( ) == 2 )
+//	{
+//		string :: size_type iLength = gmapLANG_CFG["torrent"].size( );
+//		string :: size_type iTagLength = vecQueryTag[0].size( );
+//
+//		if( !vecQueryTag[0].empty( ) && vecQueryTag[0].find( gmapLANG_CFG["torrent"] ) == 0 )
+//		{
+//			string strID = vecQueryTag[0].substr( iLength, iTagLength - iLength );
+//			if( !strID.empty( ) && strID.find_first_not_of( "1234567890" ) == string :: npos )
+//			{
+//				CMySQLQuery *pQuery = new CMySQLQuery( "SELECT bid FROM allowed WHERE bid=" + strID );
+//
+//				vector<string> vecQuery;
+//
+//				vecQuery.reserve(1);
+//
+//				vecQuery = pQuery->nextRow( );
+//	
+//				delete pQuery;
+//
+//				if( vecQuery.size( ) == 1 )
+//				{
+//					CMySQLQuery mq01( "UPDATE allowed SET bshares=" + vecQueryTag[1] + " WHERE bid=" + strID );
+//				}
+//			}
+//		}
+//		vecQueryTag = pQueryTag->nextRow( );
+//	}
+//	delete pQueryTag;
+
+//	CMySQLQuery *pQueryTalk = new CMySQLQuery( "SELECT bid,buid,bposted FROM talk" );
+//			
+//	vector<string> vecQueryTalk;
+//
+//	vecQueryTalk.reserve(3);
+//
+//	vecQueryTalk = pQueryTalk->nextRow( );
+//	
+//	while( vecQueryTalk.size( ) == 3 )
+//	{
+//		if( !vecQueryTalk[1].empty( ) )
+//		{
+//			CMySQLQuery *pQueryFriend = new CMySQLQuery( "SELECT bfriendid FROM friends WHERE buid=" + vecQueryTalk[1] );
+//		
+//			vector<string> vecQueryFriend;
+//
+//			vecQueryFriend.reserve(1);
+//
+//			vecQueryFriend = pQueryFriend->nextRow( );
+//			
+//			while( vecQueryFriend.size( ) == 1 )
+//			{
+//				if( !vecQueryFriend[0].empty( ) )
+//				{
+//					CMySQLQuery mq01( "INSERT INTO talktofriend (buid,btofriendid,btalkid,bposted) VALUES(" + vecQueryFriend[0] + "," + vecQueryTalk[1] + "," + vecQueryTalk[0] + ",'" + UTIL_StringToMySQL( vecQueryTalk[2] ) + "')" );
+//				}
+//					
+//				vecQueryFriend = pQueryFriend->nextRow( );
+//			}
+//	
+//			delete pQueryFriend;
+//		}
+//		vecQueryTalk = pQueryTalk->nextRow( );
+//	}
+//	delete pQueryTalk;
+
 	if( gbDebug )
 		if( gucDebugLevel & DEBUG_TRACKER )
 			UTIL_LogPrint( "CTracker: Constructor completed\n" );
@@ -2384,7 +2458,7 @@ const string CTracker :: checkUserMD5( const string &strLogin, const string &cst
 		if( gucDebugLevel & DEBUG_TRACKER )
 			UTIL_LogPrint( "checkUserMD5: started\n" );
 			
-	string strMD5 = cstrMD5;
+//	string strMD5 = cstrMD5;
 	
 	CMySQLQuery *pQuery = new CMySQLQuery( "SELECT buid,bmd5 FROM users WHERE busername=\'" + UTIL_StringToMySQL( strLogin ) + "\'" );
 	
@@ -2402,7 +2476,7 @@ const string CTracker :: checkUserMD5( const string &strLogin, const string &cst
 	
 	if( vecQuery.size( ) == 2 && !vecQuery[0].empty( ) )
 	{
-		if( strMD5 == vecQuery[1] )
+		if( cstrMD5 == vecQuery[1] )
 			return vecQuery[0];
 	}
 		
@@ -2420,7 +2494,7 @@ user_t CTracker :: checkUser( const string &strUID, const string &cstrMD5 )
 
 	user.ucAccess = m_ucGuestAccess;
 
-	string strMD5 = cstrMD5;
+//	string strMD5 = cstrMD5;
 	
 	if( !strUID.empty( ) )
 	{	
@@ -2448,7 +2522,7 @@ user_t CTracker :: checkUser( const string &strUID, const string &cstrMD5 )
 		{
 			// check hash
 
-			if( strMD5 == vecQuery[2] )
+			if( cstrMD5 == vecQuery[2] )
 			{
 //				if( vecQuery[16] == "0" )
 //				{
@@ -2465,7 +2539,7 @@ user_t CTracker :: checkUser( const string &strUID, const string &cstrMD5 )
 //				user.strLowerLogin = UTIL_ToLower( vecQuery[1] );
 //				user.strCreated = vecQuery[3];
 //				user.strPasskey = vecQuery[3];
-				user.strMD5 = strMD5;
+				user.strMD5 = cstrMD5;
 //				user.strMail = vecQuery[4];
 //				user.strLowerMail = UTIL_ToLower( vecQuery[4] );
 				user.ucAccess = (unsigned char)atoi( vecQuery[3].c_str( ) );
@@ -3075,7 +3149,9 @@ void CTracker :: CountUniquePeers( )
 		
 	CMySQLQuery mq01( "TRUNCATE TABLE ips" );
 	
-	CMySQLQuery mq02( "INSERT INTO ips SELECT bip,COUNT(*) FROM dstate GROUP BY bip" );
+	CMySQLQuery mq02( "INSERT INTO ips SELECT bip,COUNT(*) FROM dstate WHERE bip!='' GROUP BY bip" );
+
+	CMySQLQuery mq03( "INSERT INTO ips SELECT bip6,COUNT(*) FROM dstate WHERE bip='' GROUP BY bip6" );
 
 	CMySQLQuery *pQueryIP = new CMySQLQuery( "SELECT COUNT(*) FROM ips" );
 	
@@ -5936,6 +6012,8 @@ void CTracker :: HTML_Common_Begin( struct request_t *pRequest, struct response_
 			if( vecQueryUser[10] != "0" )
 				pResponse->strContent += "<span class=\"hot\">(" + vecQueryUser[10] + ")</span>";
 			pResponse->strContent += "<span class=\"pipe\"> | </span>";
+			pResponse->strContent += "<a href=\"" + RESPONSE_STR_TALK_HTML + "?show=tofriend\">" + gmapLANG_CFG["talk_show_tofriend"] + "</a>";
+			pResponse->strContent += "<span class=\"pipe\"> | </span>";
 			pResponse->strContent += "<a href=\"" + RESPONSE_STR_TALK_HTML + "?show=torrents\">" + gmapLANG_CFG["talk_show_torrents"] + "</a>";
 			if( vecQueryUser[11] != "0" )
 				pResponse->strContent += "<span class=\"hot\">(" + vecQueryUser[11] + ")</span>";
@@ -6805,15 +6883,15 @@ void CCache :: resetCache( bool bOffer )
 		
 		ulSize = 0;
 	
-		CMySQLQuery *pQuery = new CMySQLQuery( "SELECT bid,bfilename,bname,badded,bsize,bfiles,btag,btitle,bip,buploader,buploaderid,bimdb,bimdbid,bdefault_down,bdefault_up,bfree_down,bfree_up,UNIX_TIMESTAMP(bfree_to),btop,bclassic,breq,bnodownload,bseeders,bseeders6,bleechers,bleechers6,bcompleted,bcomments,bthanks,bsubs,bpost FROM allowed ORDER BY bid DESC" );
+		CMySQLQuery *pQuery = new CMySQLQuery( "SELECT bid,bfilename,bname,badded,bsize,bfiles,btag,btitle,bip,buploader,buploaderid,bimdb,bimdbid,bdefault_down,bdefault_up,bfree_down,bfree_up,UNIX_TIMESTAMP(bfree_to),btop,bclassic,breq,bnodownload,bseeders,bseeders6,bleechers,bleechers6,bcompleted,bcomments,bthanks,bshares,bsubs,bpost FROM allowed ORDER BY bid DESC" );
 				
 		vector<string> vecQuery;
 
-		vecQuery.reserve(31);
+		vecQuery.reserve(32);
 
 		vecQuery = pQuery->nextRow( );
 		
-		if( vecQuery.size( ) == 31 )
+		if( vecQuery.size( ) == 32 )
 		{
 			struct tm time_tm;
 			int64 year, month, day, hour, minute, second;
@@ -6837,7 +6915,7 @@ void CCache :: resetCache( bool bOffer )
 
 		unsigned long ulCount = 0;
 
-		while( vecQuery.size( ) == 31 )
+		while( vecQuery.size( ) == 32 )
 		{
 			pTorrents[ulCount].strTag = "101";
 			pTorrents[ulCount].strName = gmapLANG_CFG["unknown"];
@@ -6949,9 +7027,10 @@ void CCache :: resetCache( bool bOffer )
 			pTorrents[ulCount].ulCompleted = atoi( vecQuery[26].c_str( ) );
 			pTorrents[ulCount].uiComments = atoi( vecQuery[27].c_str( ) );
 			pTorrents[ulCount].uiThanks = atoi( vecQuery[28].c_str( ) );
-			pTorrents[ulCount].uiSubs = atoi( vecQuery[29].c_str( ) );
+			pTorrents[ulCount].uiShares = atoi( vecQuery[29].c_str( ) );
+			pTorrents[ulCount].uiSubs = atoi( vecQuery[30].c_str( ) );
 
-			if( !vecQuery[30].empty( ) && vecQuery[30] == "1" )
+			if( !vecQuery[31].empty( ) && vecQuery[31] == "1" )
 				pTorrents[ulCount].bPost = true;
 
 			ulCount++;
@@ -7595,17 +7674,17 @@ void CCache :: setRow( const string &cstrID, bool bOffer )
 		{
 			if( pTorrents[ulKey].strID == cstrID )
 			{
-				CMySQLQuery *pQuery = new CMySQLQuery( "SELECT bid,bfilename,bname,badded,bsize,bfiles,btag,btitle,bip,buploader,buploaderid,bimdb,bimdbid,bdefault_down,bdefault_up,bfree_down,bfree_up,UNIX_TIMESTAMP(bfree_to),btop,bclassic,breq,bnodownload,bseeders,bseeders6,bleechers,bleechers6,bcompleted,bcomments,bthanks,bsubs,bpost FROM allowed WHERE bid=" + cstrID );
+				CMySQLQuery *pQuery = new CMySQLQuery( "SELECT bid,bfilename,bname,badded,bsize,bfiles,btag,btitle,bip,buploader,buploaderid,bimdb,bimdbid,bdefault_down,bdefault_up,bfree_down,bfree_up,UNIX_TIMESTAMP(bfree_to),btop,bclassic,breq,bnodownload,bseeders,bseeders6,bleechers,bleechers6,bcompleted,bcomments,bthanks,bshares,bsubs,bpost FROM allowed WHERE bid=" + cstrID );
 				
 				vector<string> vecQuery;
 
-				vecQuery.reserve(31);
+				vecQuery.reserve(32);
 
 				vecQuery = pQuery->nextRow( );
 				
 				delete pQuery;
 
-				if( vecQuery.size( ) == 31 )
+				if( vecQuery.size( ) == 32 )
 				{
 					pTorrents[ulKey].strTag = "101";
 					pTorrents[ulKey].strName = gmapLANG_CFG["unknown"];
@@ -7717,9 +7796,10 @@ void CCache :: setRow( const string &cstrID, bool bOffer )
 					pTorrents[ulKey].ulCompleted = atoi( vecQuery[26].c_str( ) );
 					pTorrents[ulKey].uiComments = atoi( vecQuery[27].c_str( ) );
 					pTorrents[ulKey].uiThanks = atoi( vecQuery[28].c_str( ) );
-					pTorrents[ulKey].uiSubs = atoi( vecQuery[29].c_str( ) );
+					pTorrents[ulKey].uiShares = atoi( vecQuery[29].c_str( ) );
+					pTorrents[ulKey].uiSubs = atoi( vecQuery[30].c_str( ) );
 
-					if( !vecQuery[30].empty( ) && vecQuery[30] == "1" )
+					if( !vecQuery[31].empty( ) && vecQuery[31] == "1" )
 						pTorrents[ulKey].bPost = true;
 				}
 				break;
@@ -8011,6 +8091,28 @@ void CCache :: setThanks( const string &cstrID, const unsigned char cucOpt )
 			case SET_THANKS_MINUS:
 				if( pTorrents[ulKey].uiThanks > 0 )
 					pTorrents[ulKey].uiThanks--;
+			}
+			break;
+		}
+	}
+}
+
+void CCache :: setShares( const string &cstrID, const unsigned char cucOpt )
+{
+	resetCache( );
+	
+	for( unsigned long ulKey = 0; ulKey < ulSize; ulKey++ )
+	{
+		if( pTorrents[ulKey].strID == cstrID )
+		{
+			switch( cucOpt )
+			{
+			case SET_SHARES_ADD:
+				pTorrents[ulKey].uiShares++;
+				break;
+			case SET_SHARES_MINUS:
+				if( pTorrents[ulKey].uiShares > 0 )
+					pTorrents[ulKey].uiShares--;
 			}
 			break;
 		}

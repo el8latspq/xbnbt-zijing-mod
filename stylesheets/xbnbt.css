@@ -5,7 +5,7 @@
 /*		body{background-color:#1E90FF}*/
 /*		body{background-color:#ffbc80}*/
 		body{background-color:#ccccff}
-		body{font-family:"tahoma", "arial", "helvetica", "sans-serif";}
+		body{font-family:Tahoma,Arial,Helvetica,sans-serif}
 		body{font-size:12pt}
 		body{color:black}
 		body{font-weight:normal}
@@ -20,7 +20,7 @@
 		h4{font-size:9pt; color:Black; font-weight:normal}
 		h4{letter-spacing:0.025cm; text-align:center}
 	/* ----- standard text elements ----- */
-		p{font-family:"tahoma", "arial", "helvetica", "sans-serif";}
+		p{font-family:Tahoma,Arial,Helvetica,sans-serif}
 		p{font-size:9pt; color:black}
 		span{font-size:9pt}
 	/* ----- standard hypertext elements ----- */
@@ -28,10 +28,10 @@
 		a:hover{text-decoration:underline; color:red}
 	/*	a:hover{color:#404040}		*/
 	/* ----- standard input elements ----- */
-		input{font-family:"tahoma", "arial", "helvetica", "sans-serif";}
+		input{font-family:Tahoma,Arial,Helvetica,sans-serif}
 		input{font-size:9pt}
 		input{overflow:hidden}
-		textarea{font-family:"tahoma", "arial", "helvetica", "sans-serif";}
+		textarea{font-family:Tahoma,Arial,Helvetica,sans-serif}
 		textarea{font-size:9pt}
 		iframe{width:100%; height:42px}
 		iframe{border-width:0px}
@@ -50,9 +50,10 @@
 		tr{}
 	/* ----- standard table headers ----- */
 /*		th{background-color:#ffa24a}*/
-		th{background-color:#8080ff}
+		/*th{background-color:#8080ff}*/
+		th{background-color:#A2A2ff}
 		th{white-space:normal}
-		th{font-family:"tahoma", "arial", "helvetica", "sans-serif";}
+		th{font-family:Tahoma,Arial,Helvetica,sans-serif}
 		th{font-size:9pt; color:black}
 		th{padding:5px 5px 5px 5px}
 		th{border:1px solid #ccccff}
@@ -62,7 +63,8 @@
 		td{padding:5px 10px 5px 10px}
 		td{white-space:nowrap}
 		td{border:1px solid #ccccff}
-		code{font-family:"tahoma", "arial", "helvetica", "sans-serif";}
+		/*td{border:1px solid #b5b5ff}*/
+		code{font-family:Tahoma,Arial,Helvetica,sans-serif}
 		code{font-size:9pt}
 	/* ----- specific text elements ----- */
 		p.delete{text-align:center}
@@ -124,6 +126,9 @@
 		a.share_warned:hover{text-decoration:none}
 		a.number{text-decoration:none}
 		a.number:hover{text-decoration:underline}
+		a.file{text-decoration:none}
+		a.file{font-size:8pt}
+		/*a.file:hover{text-decoration:underline}*/
 	/* ----- specific div elements ----- */
 	/* ----- specific table elements ----- */
 		table.quote{margin:5px 0px 5px 0px}
@@ -138,19 +143,12 @@
 		tr.top_bar{background-color:#efefef}
 		tr.top_bar{border:1px solid #ccccff}
 	/* --- specific table headers --- */
-		th.tag{background-color:#8080ff}
 		th.tag{border-width:1px 0px 1px 0px}
-		th.name{background-color:#8080ff}
 		th.name{border-width:1px 0px 1px 0px}
-		th.download{background-color:#8080ff}
-		th.number{background-color:#8080ff}
 		th.number{border-width:1px 0px 1px 0px}
-		th.date{background-color:#8080ff}
 		th.date{border-width:1px 0px 1px 0px}
-		th.bytes{background-color:#8080ff}
 		th.bytes{border-width:1px 0px 1px 0px}
-		th.percent{background-color:#8080ff; white-space:nowrap}
-		th.uploader{background-color:#8080ff}
+		th.percent{white-space:nowrap}
 		th.uploader{border-width:1px 0px 1px 0px}
 		th.admin{border-width:1px 0px 1px 0px}
 		th.exist{border-width:1px 0px 1px 0px}
@@ -244,8 +242,9 @@
 		span.blue{color:blue}
 		span.green{color:green}
 		span.red{color:red}
+		span.normal{font-style:normal}
 		span.italic{font-style:italic}
-		span.user_title{color:red; font-weight:bold}
+		span.file{font-size:8pt}
 	/* ----- specific fieldset elements ----- */	
 		fieldset.quote{margin:5px 0px 5px 0px}
 		fieldset.quote{background-color:#efefef}
@@ -329,8 +328,10 @@
 		table.index_ratio_warned{margin-top:5px; margin-bottom:5px}
 		table.index_name{width:100%}
 		table.index_name{background-color:transparent}
-		tr.top_global{background-color:#A2A2FF}
-		tr.top{background-color:#b5b5ff}
+		/*tr.top_global{background-color:#A2A2FF}*/
+		/*tr.top{background-color:#b5b5ff}*/
+		tr.top_global{background-color:#dee3e7}
+		tr.top{background-color:#dee3e7}
 		tr.top_float{background-color:#dee3e7}
 		tr.normal{background-color:#efefef}
 		tr.hl{background-color:#efefef}
@@ -364,40 +365,29 @@
 		td.index_admin{text-align:center}
 		td.index_admin{padding:5px 5px 5px 5px}
 		td.index_admin{border-width:1px 0px 1px 0px}
-		/*td.index_name{line-height:1.5em}*/
+		td.index_name{text-align:left; line-height:1.5em}
 		td.index_name{padding:5px 5px 3px 5px}
 		td.index_name{border-width:1px 0px 0px 0px}
-		/*td.index_name{white-space:normal}*/ /* change to normal to wrap long lines */
-		/*td.index_name{text-align:left}*/
+		td.index_name{white-space:normal} /* change to normal to wrap long lines */
 		td.download_left{text-align:left; line-height:1.5em}
-		td.download_left{padding:0px 0px 0px 0px}
+		td.download_left{padding:0px 5px 0px 0px}
 		td.download_left{border:0px}
 		td.download_left{white-space:normal}
 		td.index_uploader{text-align:center}
 		td.index_uploader{padding:3px 5px 3px 5px}
 		td.index_uploader{border-width:1px 0px 1px 0px}
-		td.second_left{border-right:0px}
-		td.second_left{text-align:right}
-		td.second_left{padding:3px 5px 5px 5px}
+		td.second_left{text-align:left}
+		td.second_left{padding:0px 5px 5px 5px}
 		td.second_left{border-width:0px 0px 1px 0px}
-		td.second_left_tool{border-left:0px}
-		td.second_left_tool{border-right:0px}
-		td.second_left_tool{text-align:right}
-		td.second_left_tool{padding:3px 5px 5px 5px}
-		td.second_left_tool{border-width:0px 0px 1px 0px}
-		td.download{text-align:right}
-		td.download{line-height:1.5em}
-		td.download{padding:0px 0px 0px 0px}
-		td.download{border:0px}
+		td.download{text-align:right; line-height:1.5em}
+		td.download{padding:5px 5px 3px 0px}
+		td.download{border-width:1px 0px 0px 0px}
 		td.second_middle{border-width:0px 0px 1px 0px}
-		td.second_middle{text-align:left}
+		td.second_middle{text-align:right}
 		td.second_middle{padding:0px 5px 5px 5px}
 		td.second_right{border-width:0px 0px 1px 0px}
 		td.second_right{text-align:right}
-		td.second_right{padding:0px 5px 5px 0px}
-		td.second_blank{border-width:0px 1px 1px 0px}
-		td.second_blank{text-align:left}
-		td.second_blank{padding:3px 5px 5px 0px}
+		td.second_right{padding:0px 5px 5px 5px}
 		td.index_comment{text-align:center}
 		td.index_comment{border-width:1px 0px 1px 0px}
 		td.index_comment{padding:5px 5px 5px 5px}
@@ -428,9 +418,9 @@
 		a.index_filter{text-decoration:none}
 		a.filter_by{text-decoration:none}
 		a.imdb{font-size:8pt; font-weight:normal; text-decoration:none}
-		a.imdb{font-family:"georgia", "tahoma", "arial", "helvetica", "sans-serif";}
-		a.bookmark_icon{margin-left:0.5em}
-		a.download_icon{margin-left:0.5em}
+		a.imdb{font-family:Georgia,Tahoma,Arial,Helvetica,sans-serif}
+		/*a.bookmark_icon{margin-left:0.5em}*/
+		a.download_icon{margin-right:0.5em}
 		a.number6_green{color:green; text-decoration:none}
 		a.number6_green{vertical-align:middle}
 		a.number6_green:hover{text-decoration:underline}
@@ -445,9 +435,12 @@
 		/*a.index_thanks{padding-left:3px; padding-right:3px}*/
 		a.index_thanks:hover{background-color:purple}
 		a.index_thanks:hover{color:white}
+		a.index_thanks_count{text-decoration:none; font-weight:normal; color:grey}
+		a.index_thanks_count:hover{color:black}
 		a.index_comments{text-decoration:none; font-weight:normal; color:grey}
 		a.index_comments:hover{color:black}
 		a.index_subs{text-decoration:none; font-weight:normal; color:grey}
+		a.index_subs{margin-right:0.5em}
 		a.index_subs:hover{color:black}
 		a.index_req{text-decoration:none; font-weight:normal; color:red}
 		/*a.index_req{margin-left:1em}*/
@@ -495,7 +488,7 @@
 		span.index_hot{margin-left:0.5em}
 		span.new{color:red; font-weight:bold}
 		span.new{margin-right:0.5em}
-		span.req{color:red; font-weight:bold}
+		span.req{color:red}
 		span.req{margin-right:0.5em}
 		span.classic_level_1{color:#9400d3; font-weight:bold}
 		span.classic_level_2{color:#820084; font-weight:bold}
@@ -504,6 +497,9 @@
 		span.classic{margin-left:0.5em}
 		span.top{color:red; font-weight:bold}
 		span.top{margin-right:0.5em}
+		span.stats{font-weight:normal}
+		span.stats{text-decoration:none}
+		span.stats:hover{text-decoration:none}
 		span.number6{font-size:8pt; color:black}
 		span.number6{vertical-align:middle}
 		span.number6_red{font-size:8pt; color:red}
@@ -512,16 +508,16 @@
 		span.number6_green{vertical-align:middle}
 		span.number6_blue{font-size:8pt; color:blue}
 		span.number6_blue{vertical-align:middle}
-		span.free_down_free{background-color:blue}
+		span.free_down_free{background-color:#0034ce}
 		span.free_down_free{padding-left:3px; padding-right:3px}
 		span.free_down_free{margin-left:0.5em}
 		span.free_down_free{color:white}
 		span.free_down_free{font-size:8pt}
-		span.free_down{background-color:darkorange}
+		span.free_down{background-color:#ee4a09}
 		span.free_down{padding-left:3px; padding-right:3px}
 		span.free_down{margin-left:0.5em}
 		span.free_down{color:white; font-size:8pt}
-		span.free_up{background-color:green}
+		span.free_up{background-color:#1c790a}
 		span.free_up{padding-left:3px; padding-right:3px}
 		span.free_up{margin-left:0.5em}
 		span.free_up{color:white; font-size:8pt}
@@ -530,7 +526,7 @@
 		span.index_thanks{margin-left:1em}
 		span.index_thanks_count{color:grey}
 		span.index_comments{color:grey}
-		span.index_comments{margin-left:1em}
+		/*span.index_comments{margin-left:1em}*/
 /* ----- users.html ----- */
 	/* ----- navbar ----- */
 					
@@ -551,10 +547,10 @@
 /*		div.edit_input_users{text-align:left}*/
 		table.create_users{border:0px solid #ccccff}
 		table.edit_users{border:0px solid #ccccff}
-		th.username{padding:5px 5px 5px 5px}
-		th.access{padding:5px 5px 5px 5px}
-		th.group{padding:5px 5px 5px 5px}
-		th.mail{padding:5px 5px 5px 5px}
+		th.access{border-width:1px 0px 1px 0px}
+		th.group{border-width:1px 0px 1px 0px}
+		th.inviter{border-width:1px 0px 1px 0px}
+		th.mail{border-width:1px 0px 1px 0px}
 		th.create_users{vertical-align:top; white-space:nowrap}
 		th.create_users{padding:5px 10px 5px 10px}
 		th.edit_users{vertical-align:top; white-space:nowrap}
@@ -564,10 +560,13 @@
 		td.create_users{text-align:left; white-space:normal}
 		td.edit_users{text-align:left; white-space:normal}
 		td.username{padding:5px 5px 5px 5px}
-		td.access{padding:5px 5px 5px 5px}
-		td.group{padding:5px 5px 5px 5px}
-		td.mail{padding:5px 5px 5px 5px}
 		td.username{text-align:left}
+		td.access{border-width:1px 0px 1px 0px}
+		td.access{padding:5px 5px 5px 5px}
+		td.group{border-width:1px 0px 1px 0px}
+		td.group{padding:5px 5px 5px 5px}
+		td.mail{border-width:1px 0px 1px 0px}
+		td.mail{padding:5px 5px 5px 5px}
 		p.return_users{text-align:center}
 		p.gen_users{text-align:center}
 		p.html_valid_users{text-align:center}
@@ -838,6 +837,7 @@
 		a.talk_more:hover{color:white}
 		a.talk_more:hover{background-color:purple}
 		div.talk{text-align:left}
+		div.talk{line-height: 1.5em}
 		div.talk_reply{text-align:center}
 		div.talk_reply{background-color:#dee3e7}
 		div.talk_reply{border:1px dotted purple}
@@ -1087,12 +1087,9 @@
 		td.connected{text-align:right}
 		td.connected{padding:5px 5px 5px 5px}
 		td.connected{border-width:1px 0px 1px 0px}
-		th.ip{background-color:#8080ff}
 		th.ip{border-width:1px 0px 1px 0px}
-		th.client{background-color:#8080ff}
 		th.client{border-width:1px 0px 1px 0px}
 		th.updated{border-width:1px 0px 1px 0px}
-		th.connected{background-color:#8080ff}
 		th.connected{border-width:1px 0px 1px 0px}
 		hr.stats_hr{}
 		td.upload_sub{padding:0px 0px 0px 0px}
@@ -1110,6 +1107,9 @@
 		td.torrent_name_version{text-align:left; white-space:normal}
 		td.torrent_name_version{padding:5px 5px 5px 5px}
 		td.torrent_name_version{border-width:1px 0px 1px 0px}
+		span.stats_free_down_free{color:#0034ce}
+		span.stats_free_down{color:#ee4a09}
+		span.stats_free_up{color:#1c790a}
 		
 /* ----- upload.html ----- */
 	/* ----- navbar ----- */

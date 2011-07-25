@@ -222,9 +222,13 @@ void CTracker :: serverResponseCommentsGET( struct request_t *pRequest, struct r
 		pResponse->strContent += "    var post_data = '';\n";
 		pResponse->strContent += "    for (var i = 0; i < postForm.elements.length; i++) {\n";
 		pResponse->strContent += "      if (postForm.elements[i].name != 'submit_comment_button') {\n";
-		pResponse->strContent += "        if( post_data != '' )\n";
-		pResponse->strContent += "          post_data = post_data + '&';\n";
-		pResponse->strContent += "        post_data = post_data + postForm.elements[i].name + '=' + encodeURIComponent(postForm.elements[i].value); }\n";
+		pResponse->strContent += "        if ( postForm.elements[i].name == 'message' && postForm.elements[i].checked == false )\n";
+		pResponse->strContent += "          continue;\n";
+		pResponse->strContent += "        else {\n";
+		pResponse->strContent += "          if( post_data != '' )\n";
+		pResponse->strContent += "            post_data = post_data + '&';\n";
+		pResponse->strContent += "          post_data = post_data + postForm.elements[i].name + '=' + encodeURIComponent(postForm.elements[i].value); }\n";
+		pResponse->strContent += "      }\n";
 		pResponse->strContent += "    }\n";
 		pResponse->strContent += "    xmlhttp.onreadystatechange=function() {\n";
 		pResponse->strContent += "      if (xmlhttp.readyState==4 && xmlhttp.status==200) {\n";
@@ -866,7 +870,7 @@ void CTracker :: serverResponseCommentsGET( struct request_t *pRequest, struct r
 				{
 					pResponse->strContent += "<input id=\"id_message\" name=\"message\" alt=\"[" + gmapLANG_CFG["comments_send_message"] + "]\" type=checkbox";
 					if( bOffer )
-						pResponse->strContent += " checked";
+						pResponse->strContent += " checked=\"checked\"";
 					pResponse->strContent += "> <label for=\"id_message\">" + gmapLANG_CFG["comments_send_message"] + "</label> \n";
 				}
 				pResponse->strContent += "</div>\n</td>\n</tr>\n";
@@ -950,7 +954,7 @@ void CTracker :: serverResponseCommentsPOST( struct request_t *pRequest, struct 
 							
 							if( strName == "comment" )
 								strComment = pData->toString( );
-							else if( strName == "message" && pData->toString( ) == "on" && pRequest->user.ucAccess & m_ucAccessCommentsToMessage )
+							else if( strName == "message" && pData->toString( ) == "on" && ( pRequest->user.ucAccess & m_ucAccessCommentsToMessage ) )
 								bSendMessage = true;
 							else if( strName == "edit" )
 								cstrEdit = pData->toString( );
@@ -1177,6 +1181,9 @@ void CTracker :: serverResponseCommentsPOST( struct request_t *pRequest, struct 
 
 				if( !vecQuery[3].empty( ) && vecQuery[3] != pRequest->user.strUID )
 				{
+					bool bMsgUploader = false;
+					set<string> setMessage;
+
 					CMySQLQuery *pQueryPrefs = new CMySQLQuery( "SELECT bmsgcomment FROM users_prefs WHERE buid=" + vecQuery[3] );
 				
 					map<string, string> mapPrefs;
@@ -1187,7 +1194,34 @@ void CTracker :: serverResponseCommentsPOST( struct request_t *pRequest, struct 
 					
 					if( bSendMessage || ( mapPrefs.size( ) == 1 && mapPrefs["bmsgcomment"] == "1" ) )
 					{
-						CMySQLQuery *pQueryUser = new CMySQLQuery( "SELECT buid FROM users WHERE buid=" + vecQuery[3] );
+						setMessage.insert( vecQuery[3] );
+						bMsgUploader = true;
+					}
+
+					if( !bOffer )
+					{
+						CMySQLQuery *pQueryMessage = new CMySQLQuery( "SELECT bookmarks.buid,users_prefs.bmsgcommentbm FROM bookmarks LEFT JOIN users_prefs ON bookmarks.buid=users_prefs.buid WHERE bookmarks.bid=" + vecQuery[0] );
+								
+						vector<string> vecQueryMessage;
+					
+						vecQueryMessage.reserve(1);
+						
+						vecQueryMessage = pQueryMessage->nextRow( );
+
+						while( vecQueryMessage.size( ) == 2 )
+						{
+							if( !vecQueryMessage[0].empty( ) && vecQueryMessage[1] == "1" && vecQueryMessage[0] != pRequest->user.strUID )
+								setMessage.insert( vecQueryMessage[0] );
+
+							vecQueryMessage = pQueryMessage->nextRow( );
+						}
+						
+						delete pQueryMessage;
+					}
+
+					for ( set<string> :: iterator it = setMessage.begin( ); it != setMessage.end( ); it++ )
+					{
+						CMySQLQuery *pQueryUser = new CMySQLQuery( "SELECT buid FROM users WHERE buid=" + (*it) );
 					
 						if( pQueryUser->numRows( ) == 1 )
 						{
@@ -1202,9 +1236,25 @@ void CTracker :: serverResponseCommentsPOST( struct request_t *pRequest, struct 
 								strName = vecQuery[1];
 					
 							string strTitle = gmapLANG_CFG["admin_add_comment_title"];
-							string strMessage = UTIL_Xsprintf( gmapLANG_CFG["admin_add_comment"].c_str( ), UTIL_AccessToString( pRequest->user.ucAccess ).c_str( ), pRequest->user.strLogin.c_str( ), strPage.c_str( ), strName.c_str( ) );
+							string strMessage = string( );
+
+							if( (*it) == vecQuery[3] && bMsgUploader )
+							{
+								strMessage = UTIL_Xsprintf( gmapLANG_CFG["admin_add_comment"].c_str( ), UTIL_AccessToString( pRequest->user.ucAccess ).c_str( ), pRequest->user.strLogin.c_str( ), strPage.c_str( ), strName.c_str( ) );
 					
-							sendMessage( pRequest->user.strLogin, pRequest->user.strUID, vecQuery[3], pRequest->strIP, strTitle, strMessage );
+								if( bSendMessage )
+								{
+									sendMessage( pRequest->user.strLogin, pRequest->user.strUID, (*it), pRequest->strIP, strTitle, strMessage );
+								}
+								else
+									sendMessage( "", "0", (*it), "127.0.0.1", strTitle, strMessage );
+							}
+							else
+							{
+								strMessage = UTIL_Xsprintf( gmapLANG_CFG["admin_add_comment_bookmarked"].c_str( ), UTIL_AccessToString( pRequest->user.ucAccess ).c_str( ), pRequest->user.strLogin.c_str( ), strPage.c_str( ), strName.c_str( ) );
+
+								sendMessage( "", "0", (*it), "127.0.0.1", strTitle, strMessage );
+							}
 						}
 						
 						delete pQueryUser;

@@ -942,7 +942,7 @@ void CTracker :: serverResponseUsersGET( struct request_t *pRequest, struct resp
 							pResponse->strContent += "<td class=\"admin\">";
 							if( pRequest->user.ucAccess & m_ucAccessEditUsers )
 								pResponse->strContent += "[<a class=\"black\" title=\"" + gmapLANG_CFG["edit"] + "\" href=\"" + RESPONSE_STR_USERS_HTML + "?uid=" + pUsersT[ulKey].strUID + "&amp;action=edit\">" + gmapLANG_CFG["edit"] + "</a>]";
-							if( pRequest->user.ucAccess & m_ucAccessEditUsers )
+							if( pRequest->user.ucAccess & m_ucAccessDelUsers )
 								pResponse->strContent += "[<a class=\"red\" title=\"" + gmapLANG_CFG["delete"] + "\" href=\"" + RESPONSE_STR_USERS_HTML + "?uid=" + pUsersT[ulKey].strUID+ "&amp;action=delete\">" + gmapLANG_CFG["delete"] + "</a>]";
 							pResponse->strContent += "</td>";
 						}
