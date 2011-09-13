@@ -223,6 +223,17 @@ void CTracker :: serverResponseAdmin( struct request_t *pRequest, struct respons
 			return JS_ReturnToPage( pRequest, pResponse, ADMIN_HTML + "?func=access" );
 		}
 		
+		if( pRequest->mapParams["submit_invite_button"] == gmapLANG_CFG["Submit"] )
+		{
+			if( pRequest->mapParams.find( "invite" ) != pRequest->mapParams.end( ) && pRequest->mapParams["invite"] == "on" )
+				CFG_SetInt( "bnbt_invite_enable", 1 );
+			else
+				CFG_SetInt( "bnbt_invite_enable", 0 );
+			CFG_Close( CFG_FILE );
+			
+			return JS_ReturnToPage( pRequest, pResponse, ADMIN_HTML + "?func=config" );
+		}
+		
 		if( pRequest->mapParams["submit_bonus_trade_button"] == gmapLANG_CFG["Submit"] )
 		{
 			const string cstrBonusTradeRate = pRequest->mapParams["trade_rate"];
@@ -287,6 +298,7 @@ void CTracker :: serverResponseAdmin( struct request_t *pRequest, struct respons
 		
 		if( pRequest->mapParams["submit_new_user_gift_button"] == gmapLANG_CFG["Submit"] )
 		{
+			const string cstrGiftRule = pRequest->mapParams["gift_rule"];
 			const string cstrGiftUploaded = pRequest->mapParams["gift_uploaded"];
 			const string cstrGiftDownloaded = pRequest->mapParams["gift_downloaded"];
 			const string cstrGiftBonus = pRequest->mapParams["gift_bonus"];
@@ -300,8 +312,14 @@ void CTracker :: serverResponseAdmin( struct request_t *pRequest, struct respons
 			for( int i = 0; i < cstrGiftBonus.length( ) && bNum ; i++ )
 				if( !isdigit( cstrGiftBonus[i] ) )
 					bNum  = false;
+			if( pRequest->mapParams.find( "gift" ) != pRequest->mapParams.end( ) && pRequest->mapParams["gift"] == "on" )
+				CFG_SetInt( "bnbt_new_user_gift_enable", 1 );
+			else
+				CFG_SetInt( "bnbt_new_user_gift_enable", 0 );
+			CFG_Close( CFG_FILE );
 			if( bNum )
 			{
+				CFG_SetString( "bnbt_new_user_gift_rule", cstrGiftRule );
 				CFG_SetString( "bnbt_new_user_gift_uploaded", cstrGiftUploaded );
 				CFG_SetString( "bnbt_new_user_gift_downloaded", cstrGiftDownloaded );
 				CFG_SetString( "bnbt_new_user_gift_bonus", cstrGiftBonus );
@@ -1220,6 +1238,21 @@ void CTracker :: serverResponseAdmin( struct request_t *pRequest, struct respons
 		{
 			pResponse->strContent += "<table class=\"admin_function\">\n";
 			
+			pResponse->strContent += "<tr class=\"admin_function\">\n";
+			pResponse->strContent += "<td class=\"admin_function\">\n";
+			pResponse->strContent += "<div class=\"admin_invite\">\n";
+			pResponse->strContent += "<form method=\"get\" action=\"" + RESPONSE_STR_ADMIN_HTML + "\">\n";
+			pResponse->strContent += "<p class=\"admin_invite\"><input id=\"id_invite\" name=\"invite\" type=checkbox";
+		
+			if( CFG_GetInt( "bnbt_invite_enable", 0 ) == 0 ? false : true )
+				pResponse->strContent += " checked";
+			
+			pResponse->strContent += "><label for=\"id_invite\">" + gmapLANG_CFG["admin_invite_enable"] + "</label>";
+			pResponse->strContent += Button_Submit( "submit_invite", string( gmapLANG_CFG["Submit"] ) );
+			pResponse->strContent += "</p>";
+			pResponse->strContent += "</form></div>\n";
+			pResponse->strContent += "</form></td></tr>\n";
+			
 			string strBonusTradeRate = CFG_GetString( "bnbt_bonus_trade_rate", "500" );
 			
 			pResponse->strContent += "<tr class=\"admin_function\">\n";
@@ -1238,6 +1271,34 @@ void CTracker :: serverResponseAdmin( struct request_t *pRequest, struct respons
 			pResponse->strContent += "</p></form></div>\n";
 			pResponse->strContent += "</form></td></tr>\n";
 			
+			string strGiftRule = CFG_GetString( "bnbt_new_user_gift_rule", string( ) );
+			string strGiftUploaded = CFG_GetString( "bnbt_new_user_gift_uploaded", "0" );
+			string strGiftDownloaded = CFG_GetString( "bnbt_new_user_gift_downloaded", "0" );
+			string strGiftBonus = CFG_GetString( "bnbt_new_user_gift_bonus", "0" );
+			
+			pResponse->strContent += "<tr class=\"admin_function\">\n";
+			pResponse->strContent += "<td class=\"admin_function\">\n";
+			pResponse->strContent += "<div class=\"admin_new_user_gift\">\n";
+			pResponse->strContent += "<form method=\"get\" action=\"" + RESPONSE_STR_ADMIN_HTML + "\">\n";
+			pResponse->strContent += "<p>" + gmapLANG_CFG["admin_new_user_gift"] + "</p>\n\n" ;
+			pResponse->strContent += "<p><input id=\"id_gift_enable\" name=\"gift\" type=checkbox";
+		
+			if( CFG_GetInt( "bnbt_new_user_gift_enable", 0 ) == 0 ? false : true )
+				pResponse->strContent += " checked";
+			
+			pResponse->strContent += "><label for=\"id_gift_enable\">" + gmapLANG_CFG["admin_new_user_gift_enable"] + "</label></p>";
+			pResponse->strContent += "<p class=\"admin_add_gift\">" + gmapLANG_CFG["admin_new_user_gift_rule"] + "<input name=\"gift_rule\" type=text size=15 value=\"" + strGiftRule + "\"></p>";
+			pResponse->strContent += "<p class=\"admin_add_gift\"><input id=\"id_gift_uploaded\" name=\"gift_uploaded\" type=text size=20 value=\"";
+			pResponse->strContent += strGiftUploaded + "\">(GB)" + gmapLANG_CFG["user_uploaded"] + "</p>\n";
+			pResponse->strContent += "<p class=\"admin_add_gift\"><input id=\"id_gift_downloaded\" name=\"gift_downloaded\" type=text size=20 value=\"";
+			pResponse->strContent += strGiftDownloaded + "\">(GB)" + gmapLANG_CFG["user_downloaded"] + "</p>\n";
+			pResponse->strContent += "<p class=\"admin_add_gift\"><input id=\"id_gift_bonus\" name=\"gift_bonus\" type=text size=20 value=\"";
+			pResponse->strContent += strGiftBonus + "\">" + gmapLANG_CFG["user_bonus"] + "</p>\n";
+			pResponse->strContent += Button_Submit( "submit_new_user_gift", string( gmapLANG_CFG["Submit"] ) );
+			pResponse->strContent += "</form>\n";
+			pResponse->strContent += "\n</div>\n";
+			pResponse->strContent += "</td></tr>\n";
+			
 			pResponse->strContent += "<tr class=\"admin_function\">\n";
 			pResponse->strContent += "<td class=\"admin_function\">\n";
 			pResponse->strContent += "<div class=\"admin_add_gift\">\n";
@@ -1250,26 +1311,6 @@ void CTracker :: serverResponseAdmin( struct request_t *pRequest, struct respons
 			pResponse->strContent += "<p class=\"admin_add_gift\">" + gmapLANG_CFG["users_editing_user_add"] + "<input id=\"id_add_bonus\" name=\"add_bonus\" type=text size=20";
 			pResponse->strContent += " value=\"0\">" + gmapLANG_CFG["user_bonus"] + "</p>\n";
 			pResponse->strContent += Button_Submit( "submit_add_gift", string( gmapLANG_CFG["Submit"] ) );
-			pResponse->strContent += "</form>\n";
-			pResponse->strContent += "\n</div>\n";
-			pResponse->strContent += "</td></tr>\n";
-			
-			string strGiftUploaded = CFG_GetString( "bnbt_new_user_gift_uploaded", "0" );
-			string strGiftDownloaded = CFG_GetString( "bnbt_new_user_gift_downloaded", "0" );
-			string strGiftBonus = CFG_GetString( "bnbt_new_user_gift_bonus", "0" );
-			
-			pResponse->strContent += "<tr class=\"admin_function\">\n";
-			pResponse->strContent += "<td class=\"admin_function\">\n";
-			pResponse->strContent += "<div class=\"admin_new_user_gift\">\n";
-			pResponse->strContent += "<form method=\"get\" action=\"" + RESPONSE_STR_ADMIN_HTML + "\">\n";
-			pResponse->strContent += "<p>" + gmapLANG_CFG["admin_new_user_gift"] + "</p>\n\n" ;
-			pResponse->strContent += "<p class=\"admin_add_gift\"><input id=\"id_add_uploaded\" name=\"gift_uploaded\" type=text size=20 value=\"";
-			pResponse->strContent += strGiftUploaded + "\">(GB)" + gmapLANG_CFG["user_uploaded"] + "</p>\n";
-			pResponse->strContent += "<p class=\"admin_add_gift\"><input id=\"id_add_downloaded\" name=\"gift_downloaded\" type=text size=20 value=\"";
-			pResponse->strContent += strGiftDownloaded + "\">(GB)" + gmapLANG_CFG["user_downloaded"] + "</p>\n";
-			pResponse->strContent += "<p class=\"admin_add_gift\"><input id=\"id_add_bonus\" name=\"gift_bonus\" type=text size=20 value=\"";
-			pResponse->strContent += strGiftBonus + "\">" + gmapLANG_CFG["user_bonus"] + "</p>\n";
-			pResponse->strContent += Button_Submit( "submit_new_user_gift", string( gmapLANG_CFG["Submit"] ) );
 			pResponse->strContent += "</form>\n";
 			pResponse->strContent += "\n</div>\n";
 			pResponse->strContent += "</td></tr>\n";
@@ -1425,7 +1466,10 @@ void CTracker :: serverResponseAdmin( struct request_t *pRequest, struct respons
 			
 				delete pQueryIP;
 				
-				pResponse->strContent += Button_JS_Link( "link_count", gmapLANG_CFG["admin_count_peers"] + " (" + vecQueryIP[0] + ")", "admin_count()" );
+				if( vecQueryIP.size( ) == 1 )
+					pResponse->strContent += Button_JS_Link( "link_count", gmapLANG_CFG["admin_count_peers"] + " (" + vecQueryIP[0] + ")", "admin_count()" );
+				else
+					pResponse->strContent += Button_JS_Link( "link_count", gmapLANG_CFG["admin_count_peers"] + " (0)", "admin_count()" );
 			}
 			
 			pResponse->strContent += Button_JS_Link( "link_refresh_static", gmapLANG_CFG["admin_refresh_static"], "admin_refresh_static()" );
@@ -2290,7 +2334,9 @@ void CTracker :: tableXStatsPeer( struct request_t *pRequest, struct response_t 
 	
 	delete pQueryIP;
 	
-	int64 iGreatestUnique = UTIL_StringTo64( vecQueryIP[0].c_str( ) );
+	int64 iGreatestUnique = 0;
+	if( vecQueryIP.size( ) == 1 )
+		iGreatestUnique = UTIL_StringTo64( vecQueryIP[0].c_str( ) );
 
 	if( m_bCountUniquePeers )
 	{

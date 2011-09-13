@@ -474,8 +474,7 @@ void CTracker :: serverResponseStatsGET( struct request_t *pRequest, struct resp
 			bOffer = true;
 		}
 
-		
-		if( cstrID.find( " " ) != string :: npos )
+		if( cstrID.find_first_not_of( "1234567890" ) != string :: npos )
 			cstrID.erase( );
 
 		vector< pair< string, string > > vecParams;
@@ -802,7 +801,15 @@ void CTracker :: serverResponseStatsGET( struct request_t *pRequest, struct resp
 		pResponse->strContent += "  element.style.display=\"\";\n";
 		pResponse->strContent += "}\n";
 		
-		pResponse->strContent += "function change(id,show_name,hide_name) {\n";
+		pResponse->strContent += "function change(id) {\n";
+		pResponse->strContent += "  var element = document.getElementById( id );\n";
+		pResponse->strContent += "  if (element.style.display == \"\")\n";
+		pResponse->strContent += "    hide( id );\n";
+		pResponse->strContent += "  else\n";
+		pResponse->strContent += "    display( id );\n";
+		pResponse->strContent += "}\n";
+		
+		pResponse->strContent += "function change_version(id,show_name,hide_name) {\n";
 		pResponse->strContent += "  var element = document.getElementById( id );\n";
 		pResponse->strContent += "  if (element.style.display == \"\") {\n";
 		pResponse->strContent += "    hide( id );\n";
@@ -940,9 +947,9 @@ void CTracker :: serverResponseStatsGET( struct request_t *pRequest, struct resp
 			}
 			else
 			{
-				pQuery = new CMySQLQuery( "SELECT bhash,bfilename,bname,badded,bsize,bfiles,bcomment,btag,btitle,bintr,buploader,buploaderid,bimdb,bimdbid,bimdbupdated,bdefault_down,bdefault_up,bfree_down,bfree_up,bfree_time,UNIX_TIMESTAMP(bfree_to),btop,bclassic,breq,bnodownload,bnocomment,bseeders,bleechers,bcompleted,bupdated,bpost FROM " + strDatabase + " WHERE bid=" + cstrID );
+				pQuery = new CMySQLQuery( "SELECT bhash,bfilename,bname,badded,bsize,bfiles,bcomment,btag,btitle,bintr,buploader,buploaderid,bimdb,bimdbid,bimdbupdated,bdefault_down,bdefault_up,bfree_down,bfree_up,bfree_time,UNIX_TIMESTAMP(bfree_to),btop,btop_time,UNIX_TIMESTAMP(btop_to),bclassic,breq,bnodownload,bnocomment,bseeders,bleechers,bcompleted,bupdated,bseeded,bpost FROM " + strDatabase + " WHERE bid=" + cstrID );
 		
-				vecQuery.reserve(31);
+				vecQuery.reserve(34);
 			}
 
 			vecQuery = pQuery->nextRow( );
@@ -956,10 +963,10 @@ void CTracker :: serverResponseStatsGET( struct request_t *pRequest, struct resp
 			return;
 		}
 		
-		if( vecQuery.size( ) == 15 || vecQuery.size( ) == 31 )
+		if( vecQuery.size( ) == 15 || vecQuery.size( ) == 34 )
 			cstrHash = vecQuery[0];
 		
-		if( vecQuery.size( ) == 31 && vecQuery[30] == "1" )
+		if( vecQuery.size( ) == 34 && vecQuery[33] == "1" )
 			bPost = true;
 		
 		if( !cstrHash.empty( ) )
@@ -982,6 +989,7 @@ void CTracker :: serverResponseStatsGET( struct request_t *pRequest, struct resp
 			string strOldFreeTime = string( "0" );
 			string strOldDefaultDown = string( "100" );
 			string strOldDefaultUp = string( "100");
+			string strOldTopTime = string( "0" );
 
 			strCur = vecQuery[7];
 			strOldName = vecQuery[8];
@@ -998,6 +1006,7 @@ void CTracker :: serverResponseStatsGET( struct request_t *pRequest, struct resp
 				strOldFreeDown = vecQuery[17];
 				strOldFreeUp = vecQuery[18];
 				strOldFreeTime = vecQuery[19];
+				strOldTopTime = vecQuery[22];
 			}
 
 			const string cstrReturnPage( pRequest->mapParams["return"] );
@@ -1174,6 +1183,13 @@ void CTracker :: serverResponseStatsGET( struct request_t *pRequest, struct resp
 								pResponse->strContent += ">" + gmapLANG_CFG["top_level_"+CAtomInt( ucLoop ).toString( )] + "\n";
 							}
 							pResponse->strContent += "</select>\n";
+							pResponse->strContent += "<input id=\"id_top_change\" name=\"top_change\" type=checkbox onclick=\"javascript: change('id_top_time_change')\"> <label for=\"id_top_change\">" + gmapLANG_CFG["stats_top_change"] + "</label> \n";
+							pResponse->strContent += "<span id=\"id_top_time_change\" style=\"display: none\">";
+							pResponse->strContent += "<select name=\"top_from\">\n";
+							pResponse->strContent += "<option value=\"added\" selected>" + gmapLANG_CFG["stats_top_from_added"] + "\n";
+							pResponse->strContent += "<option value=\"now\">" + gmapLANG_CFG["stats_top_from_now"] + "\n";
+							pResponse->strContent += "</select>\n";
+							pResponse->strContent += gmapLANG_CFG["stats_top_time"] + "<input name=\"top_time\" type=text size=5 maxlength=3 value=\"" + strOldTopTime + "\">" + gmapLANG_CFG["stats_top_hours"] + "</span><br>";
 //							pResponse->strContent += "<input id=\"id_top\" name=\"top\" alt=\"[" + gmapLANG_CFG["top"] + "]\" type=checkbox";
 //							if( vecQuery[20] == "1" )
 //								pResponse->strContent += " checked";
@@ -1183,7 +1199,7 @@ void CTracker :: serverResponseStatsGET( struct request_t *pRequest, struct resp
 							for( unsigned char ucLoop = 0; ucLoop < 4; ucLoop++ )
 							{
 								pResponse->strContent += "<option value=\"" + CAtomInt( ucLoop ).toString( ) + "\"";
-								if( CAtomInt( ucLoop ).toString( ) == vecQuery[22] )
+								if( CAtomInt( ucLoop ).toString( ) == vecQuery[24] )
 									pResponse->strContent += " selected";
 								pResponse->strContent += ">" + gmapLANG_CFG["classic_level_"+CAtomInt( ucLoop ).toString( )] + "\n";
 							}
@@ -1193,22 +1209,22 @@ void CTracker :: serverResponseStatsGET( struct request_t *pRequest, struct resp
 //								pResponse->strContent += " checked";
 //							pResponse->strContent += "> <label for=\"id_hl\">" + gmapLANG_CFG["hl"] + "</label> \n";
 //							pResponse->strContent += "<input id=\"id_classic\" name=\"classic\" alt=\"[" + gmapLANG_CFG["classic"] + "]\" type=checkbox";
-//							if( vecQuery[22] == "1" )
+//							if( vecQuery[24] == "1" )
 //								pResponse->strContent += " checked";
 //							pResponse->strContent += "> <label for=\"id_classic\">" + gmapLANG_CFG["classic"] + "</label> \n";
 							if( !bPost )
 							{
 								pResponse->strContent += "<input id=\"id_req\" name=\"req\" alt=\"[" + gmapLANG_CFG["section_reqseeders"] + "]\" type=checkbox";
-								if( vecQuery[23] == "1" )
+								if( vecQuery[25] == "1" )
 									pResponse->strContent += " checked";
 								pResponse->strContent += "> <label for=\"id_req\">" + gmapLANG_CFG["section_reqseeders"] + "</label> \n";
 								pResponse->strContent += "<input id=\"id_nodownload\" name=\"nodownload\" alt=\"[" + gmapLANG_CFG["no_download"] + "]\" type=checkbox";
-								if( vecQuery[24] == "1" )
+								if( vecQuery[26] == "1" )
 									pResponse->strContent += " checked";
 								pResponse->strContent += "> <label for=\"id_nodownload\">" + gmapLANG_CFG["no_download"] + "</label> \n";
 							}
 							pResponse->strContent += "<input id=\"id_nocomment\" name=\"nocomment\" alt=\"[" + gmapLANG_CFG["no_comment"] + "]\" type=checkbox";
-							if( vecQuery[25] == "1" )
+							if( vecQuery[27] == "1" )
 								pResponse->strContent += " checked";
 							pResponse->strContent += "> <label for=\"id_nocomment\">" + gmapLANG_CFG["no_comment"] + "</label> \n";
 							pResponse->strContent += "</td>\n</tr>\n";
@@ -1247,17 +1263,7 @@ void CTracker :: serverResponseStatsGET( struct request_t *pRequest, struct resp
 			
 			if( !pRequest->user.strUID.empty( ) && !bPost && !bOffer && cstrThanks == "1" )
 			{
-				CMySQLQuery *pQuery = new CMySQLQuery( "SELECT buploaderid FROM allowed WHERE bid=" + cstrID );
-
-				vector<string> vecQuery;
-
-				vecQuery.reserve(1);
-
-				vecQuery = pQuery->nextRow( );
-	
-				delete pQuery;
-	
-				if( vecQuery.size( ) == 1 && vecQuery[0] != pRequest->user.strUID ) 
+				if( !strOldUploaderID.empty( ) && strOldUploaderID != pRequest->user.strUID ) 
 				{
 					unsigned int uiThanksBonus = CFG_GetInt( "bnbt_thanks_bonus", 3 );
 					CMySQLQuery *pQueryThanks = new CMySQLQuery( "SELECT bid,bthankerid FROM thanks WHERE bid=" + cstrID + " AND bthankerid=" + pRequest->user.strUID );
@@ -1275,7 +1281,7 @@ void CTracker :: serverResponseStatsGET( struct request_t *pRequest, struct resp
 						CMySQLQuery mq01( "INSERT INTO thanks (bid,bthankerid,bthanker,bthanktime) VALUES(" + cstrID + "," + pRequest->user.strUID + ",\'" + UTIL_StringToMySQL( pRequest->user.strLogin ) + "\',NOW())" );
 //						m_pCache->setUserData( vecQuery[0], 0, 0, uiThanksBonus * 100 );
 						CMySQLQuery mq02( "UPDATE allowed SET bthanks=bthanks+1 WHERE bid=" + cstrID );
-						CMySQLQuery mq03( "UPDATE users SET bbonus=bbonus+" + CAtomInt( uiThanksBonus * 100 ).toString( ) + " WHERE buid=" + vecQuery[0] );
+						CMySQLQuery mq03( "UPDATE users SET bbonus=bbonus+" + CAtomInt( uiThanksBonus * 100 ).toString( ) + " WHERE buid=" + strOldUploaderID );
 						m_pCache->setThanks( cstrID, SET_THANKS_ADD );
 
 						pResponse->strContent += "<p class=\"file_info\">" + gmapLANG_CFG["thanks_successful"] + "</p>";
@@ -1392,7 +1398,7 @@ void CTracker :: serverResponseStatsGET( struct request_t *pRequest, struct resp
 				bool bNoDownload = false;
 				if( !bOffer )
 				{
-					if( ( !vecQuery[24].empty( ) && vecQuery[24] == "1" ) || bPost )
+					if( ( !vecQuery[26].empty( ) && vecQuery[26] == "1" ) || bPost )
 						bNoDownload = true;
 				}
 				string strFunction = string( );
@@ -1418,9 +1424,9 @@ void CTracker :: serverResponseStatsGET( struct request_t *pRequest, struct resp
 
 						if( ( pRequest->user.ucAccess & m_ucAccessReq ) && passed > m_uiDownloaderTimeOutInterval )
 						{
-							if( !vecQuery[23].empty( ) && vecQuery[23] == "1" )
+							if( !vecQuery[25].empty( ) && vecQuery[25] == "1" )
 							{
-								if( atoi( vecQuery[26].c_str( ) ) > 0 )
+								if( atoi( vecQuery[28].c_str( ) ) > 0 )
 								{
 									strFunction += "<span class=\"pipe\"> | </span>";
 									strFunction += "<a id=\"request" + cstrID + "\" class=\"noreq\" href=\"javascript: ;\" onclick=\"javascript: request('" + cstrID + "','false','" + gmapLANG_CFG["cancel"] + gmapLANG_CFG["section_reqseeders_success"] + "');\">";
@@ -1431,7 +1437,7 @@ void CTracker :: serverResponseStatsGET( struct request_t *pRequest, struct resp
 							}
 							else
 							{
-								if( atoi( vecQuery[26].c_str( ) ) == 0 && strOldUploaderID != pRequest->user.strUID )
+								if( atoi( vecQuery[28].c_str( ) ) == 0 && strOldUploaderID != pRequest->user.strUID )
 								{
 									strFunction += "<span class=\"pipe\"> | </span>";
 									strFunction += "<a id=\"request" + cstrID + "\" class=\"req\" href=\"javascript: ;\" onclick=\"javascript: request('" + cstrID + "','true','" + gmapLANG_CFG["section_reqseeders_success"] + "');\">";
@@ -1622,26 +1628,26 @@ void CTracker :: serverResponseStatsGET( struct request_t *pRequest, struct resp
 				pResponse->strContent += "<tr class=\"file_info\">";
 				pResponse->strContent += "<th class=\"file_info\">" + gmapLANG_CFG["stats_live"] + ":</th>\n";
 				pResponse->strContent += "<td class=\"file_info\">";
-				if( ( atoi( vecQuery[26].c_str( ) ) > 0 || atoi( vecQuery[27].c_str( ) ) > 0 ) && !pRequest->user.strUID.empty( ) )
+				if( ( atoi( vecQuery[28].c_str( ) ) > 0 || atoi( vecQuery[29].c_str( ) ) > 0 ) && !pRequest->user.strUID.empty( ) )
 				{
 					pResponse->strContent += "<a class=\"active\" href=\"" + RESPONSE_STR_STATS_HTML + strJoined;
 					pResponse->strContent += "&amp;show=active#seeders\">";
 				}
-				pResponse->strContent += gmapLANG_CFG["stats_active_seeders"] + "(" + vecQuery[26] + ")/" + gmapLANG_CFG["stats_active_leechers"] + "(" + vecQuery[27] + ")";
-				if( ( atoi( vecQuery[26].c_str( ) ) > 0 || atoi( vecQuery[27].c_str( ) ) > 0 ) && !pRequest->user.strUID.empty( ) )
+				pResponse->strContent += gmapLANG_CFG["stats_active_seeders"] + "(" + vecQuery[28] + ")/" + gmapLANG_CFG["stats_active_leechers"] + "(" + vecQuery[29] + ")";
+				if( ( atoi( vecQuery[28].c_str( ) ) > 0 || atoi( vecQuery[29].c_str( ) ) > 0 ) && !pRequest->user.strUID.empty( ) )
 					pResponse->strContent += "</a>";
 				pResponse->strContent += "<span class=\"pipe\"> | </span>";
 				
-				if( atoi( vecQuery[28].c_str( ) ) > 0 && !pRequest->user.strUID.empty( ) )
+				if( atoi( vecQuery[30].c_str( ) ) > 0 && !pRequest->user.strUID.empty( ) )
 				{
 					pResponse->strContent += "<a href=\"" + RESPONSE_STR_STATS_HTML + strJoined;
 					pResponse->strContent += "&amp;show=completes#completes\">";
 				}
-				pResponse->strContent += gmapLANG_CFG["stats_completes"] + " (" + vecQuery[28] + ")";
-				if( atoi( vecQuery[28].c_str( ) ) > 0 && !pRequest->user.strUID.empty( ) )
+				pResponse->strContent += gmapLANG_CFG["stats_completes"] + " (" + vecQuery[30] + ")";
+				if( atoi( vecQuery[30].c_str( ) ) > 0 && !pRequest->user.strUID.empty( ) )
 					pResponse->strContent += "</a>";
 				if( !pRequest->user.strUID.empty( ) )
-					pResponse->strContent += " <span class=\"italic\">" + UTIL_Xsprintf( gmapLANG_CFG["stats_last_active"].c_str( ), vecQuery[29].c_str( ) ) + "</span>";
+					pResponse->strContent += " <span class=\"italic\">" + UTIL_Xsprintf( gmapLANG_CFG["stats_last_active"].c_str( ), vecQuery[31].c_str( ), vecQuery[32].c_str( ) ) + "</span>";
 
 				pResponse->strContent += "</td>\n</tr>\n";
 			}
@@ -1677,7 +1683,7 @@ void CTracker :: serverResponseStatsGET( struct request_t *pRequest, struct resp
 					if( vecQueryIMDb.size( ) == 13 )
 					{
 						pResponse->strContent += UTIL_Xsprintf( gmapLANG_CFG["result_x_found"].c_str( ), CAtomInt( pQueryIMDb->numRows( ) ).toString( ).c_str( ) );
-						pResponse->strContent += " <a class=\"index_filter\" href=\"javascript: ;\" onclick=\"javascript: this.innerHTML=change('stats_version','" + gmapLANG_CFG["version_show"] + "','" + gmapLANG_CFG["version_hide"] + "')\">";
+						pResponse->strContent += " <a class=\"index_filter\" href=\"javascript: ;\" onclick=\"javascript: this.innerHTML=change_version('stats_version','" + gmapLANG_CFG["version_show"] + "','" + gmapLANG_CFG["version_hide"] + "')\">";
 						pResponse->strContent += "<span class=\"blue\">" + gmapLANG_CFG["version_show"] + "</span></a>";
 						pResponse->strContent += "<table class=\"stats_version\" id=\"stats_version\" style=\"display: none\">\n";
 						
@@ -2024,16 +2030,6 @@ void CTracker :: serverResponseStatsGET( struct request_t *pRequest, struct resp
 				
 			if( !pRequest->user.strUID.empty( ) && !bPost && !bOffer )
 			{
-				CMySQLQuery *pQuery = new CMySQLQuery( "SELECT buploaderid FROM allowed WHERE bid=" + cstrID );
-
-				vector<string> vecQuery;
-
-				vecQuery.reserve(1);
-
-				vecQuery = pQuery->nextRow( );
-	
-				delete pQuery;
-
 				pResponse->strContent += "<tr class=\"file_info\" id=\"thanks\">";
 				pResponse->strContent += "<th class=\"file_info\">" + gmapLANG_CFG["thanker"] + ":</th>\n";
 				pResponse->strContent += "<td class=\"file_info\">";
@@ -2068,7 +2064,7 @@ void CTracker :: serverResponseStatsGET( struct request_t *pRequest, struct resp
 				pResponse->strContent += "<input name=\"id\" type=hidden value=\"" + cstrID + "\">\n";
 				pResponse->strContent += "<input name=\"thanks\" type=hidden value=\"1\">\n";
 				pResponse->strContent += "<input name=\"submit\" type=button onclick=\"javascript: saythanks( 'thanksForm', 'thanks' );\" value=\"";
-				if( vecQuery.size( ) == 1 && vecQuery[0] == pRequest->user.strUID )
+				if( !strOldUploaderID.empty( ) && strOldUploaderID == pRequest->user.strUID ) 
 				{
 					pResponse->strContent += gmapLANG_CFG["thanks_yourself"];
 					pResponse->strContent += "\" disabled";
@@ -2271,7 +2267,7 @@ void CTracker :: serverResponseStatsGET( struct request_t *pRequest, struct resp
 			bool bNoComment = false;
 			if( !bOffer )
 			{
-				if( !vecQuery[25].empty( ) && vecQuery[25] == "1" )
+				if( !vecQuery[27].empty( ) && vecQuery[27] == "1" )
 					bNoComment = true;
 			}
 			
@@ -2481,22 +2477,22 @@ void CTracker :: serverResponseStatsGET( struct request_t *pRequest, struct resp
 				pResponse->strContent += "<p class=\"denied\">" + gmapLANG_CFG["comments_post_disallowed"] + "</p>\n";
 
 
-			// Get a list of peers for the info hash
-			CMySQLQuery *pQuery = new CMySQLQuery( "SELECT bpeerid,buseragent,busername,buid,bip,bip6,bport,buploaded,bdownloaded,bleft,UNIX_TIMESTAMP(bconnected),UNIX_TIMESTAMP(bupdated),bupspeed,bdownspeed FROM dstate WHERE bid=" +  cstrID );
-			
-			vector<string> vecQuery;
-			
-			vecQuery.reserve(14);
-
-			vecQuery = pQuery->nextRow( );
-			
-			unsigned long ulKeySize = (unsigned long)pQuery->numRows( );
-
 			if( !cstrShow.empty( ) && cstrShow == "active" && !pRequest->user.strUID.empty( ) )
 			{
+				// Get a list of peers for the info hash
+				CMySQLQuery *pQuery = new CMySQLQuery( "SELECT bpeerid,buseragent,busername,buid,bip,bip6,bport,buploaded,bdownloaded,bleft,UNIX_TIMESTAMP(bconnected),UNIX_TIMESTAMP(bupdated),bupspeed,bdownspeed FROM dstate WHERE bid=" +  cstrID );
+				
+				vector<string> vecQuery;
+				
+				vecQuery.reserve(14);
+
+				vecQuery = pQuery->nextRow( );
+				
+				unsigned long ulKeySize = (unsigned long)pQuery->numRows( );
+
 				// add the peers into this structure one by one and sort it afterwards
 				
-				struct peer_t *pPeersT = new struct peer_t[pQuery->numRows( )];
+				struct peer_t *pPeersT = new struct peer_t[ulKeySize];
 
 				unsigned long ulCount = 0;
 
@@ -2817,7 +2813,7 @@ void CTracker :: serverResponseStatsGET( struct request_t *pRequest, struct resp
 							}
 
 							pResponse->strContent += "</th>\n";
-							pResponse->strContent += "<th class=\"bytes\">";
+							pResponse->strContent += "<th class=\"percent\">";
 
 							if( m_bSort )
 							{
@@ -3473,20 +3469,21 @@ void CTracker :: serverResponseStatsGET( struct request_t *pRequest, struct resp
 					pResponse->strContent.insert( iCountGoesHere, strTemp );
 
 				delete [] pPeersT;
+
+				delete pQuery;
 			}
-			delete pQuery;
 
-			CMySQLQuery *pQueryCompleted = new CMySQLQuery( "SELECT busername,buid,bcompleted FROM peers WHERE bid=" +  cstrID + " AND bcompleted!=0 ORDER BY bcompleted DESC" );
-
-			vector<string> vecQueryCompleted;
-			
-			vecQueryCompleted.reserve(3);
-
-			vecQueryCompleted = pQueryCompleted->nextRow( );
-			
-			if( vecQueryCompleted.size( ) == 3 )
+			if( !cstrShow.empty( ) && cstrShow == "completes" && !pRequest->user.strUID.empty( ) )
 			{
-				if( !cstrShow.empty( ) && cstrShow == "completes" && !pRequest->user.strUID.empty( ) )
+				CMySQLQuery *pQueryCompleted = new CMySQLQuery( "SELECT busername,buid,bcompleted FROM peers WHERE bid=" +  cstrID + " AND bcompleted!=0 ORDER BY bcompleted DESC" );
+
+				vector<string> vecQueryCompleted;
+				
+				vecQueryCompleted.reserve(3);
+
+				vecQueryCompleted = pQueryCompleted->nextRow( );
+				
+				if( vecQueryCompleted.size( ) == 3 )
 				{
 					pResponse->strContent += "<div class=\"stats_table\">\n";
 					pResponse->strContent += "<p class=\"completes\" id=\"completes\">" + gmapLANG_CFG["stats_completes"] + " (" + CAtomInt( pQueryCompleted->numRows( ) ).toString( ) + ")</p>\n";
@@ -3555,8 +3552,8 @@ void CTracker :: serverResponseStatsGET( struct request_t *pRequest, struct resp
 					pResponse->strContent += "</table>";
 					pResponse->strContent += "</div>\n";
 				}
+				delete pQueryCompleted;
 			}
-			delete pQueryCompleted;
 		}
 		else
 		{
@@ -3617,6 +3614,9 @@ void CTracker :: serverResponseStatsPOST( struct request_t *pRequest, struct res
 	string cstrFreeFrom = string( "added" );
 	string cstrDefaultDown = string( );
 	string cstrDefaultUp = string( );
+	bool bTopChange = false;
+	string cstrTopTime = string( "0" );
+	string cstrTopFrom = string( "added" );
 	string cstrReturnPage = string( );
 	
 	string cstrTop = string( "0" );
@@ -3716,6 +3716,12 @@ void CTracker :: serverResponseStatsPOST( struct request_t *pRequest, struct res
 							cstrDefaultUp = pData->toString( );
 						else if( strName == "top" )
 							cstrTop = pData->toString( );
+						else if( strName == "top_change" && pData->toString( ) == "on" )
+							bTopChange = true;
+						else if( strName == "top_time" )
+							cstrTopTime = pData->toString( );
+						else if( strName == "top_from" )
+							cstrTopFrom = pData->toString( );
 						else if( strName == "classic" )
 							cstrClassic = pData->toString( );
 //						else if( strName == "hl" && pData->toString( ) == "on" )
@@ -3778,6 +3784,11 @@ void CTracker :: serverResponseStatsPOST( struct request_t *pRequest, struct res
 			cstrFreeUp.erase( );
 			cstrFreeTime.erase( );
 		}
+
+		if( !bTopChange )
+			cstrTopTime.erase( );
+		if( cstrTop == "0" )
+			cstrTopTime = "0";
 		
 		bool bPost = false;
 	
@@ -3788,9 +3799,12 @@ void CTracker :: serverResponseStatsPOST( struct request_t *pRequest, struct res
 
 
 		bool bFromNow = false;
+		bool bTopFromNow = false;
 		
 		if( cstrFreeFrom == "now" )
 			bFromNow = true;
+		if( cstrTopFrom == "now" )
+			bTopFromNow = true;
 		
 		string strDatabase = string( );
 		string strIDName = string( );
@@ -3809,7 +3823,7 @@ void CTracker :: serverResponseStatsPOST( struct request_t *pRequest, struct res
 				cstrReturnPage = RESPONSE_STR_INDEX_HTML;
 		}
 			
-		if( cstrID.find( " " ) != string :: npos )
+		if( cstrID.find_first_not_of( "1234567890" ) != string :: npos )
 			cstrID.erase( );
 		
 		vector< pair< string, string > > vecParams;
@@ -3832,7 +3846,7 @@ void CTracker :: serverResponseStatsPOST( struct request_t *pRequest, struct res
 				
 		string strOldUploaderID = string( );
 		
-		if( vecQuery.size( ) > 0 )
+		if( vecQuery.size( ) == 2 )
 			strOldUploaderID = vecQuery[1];
 		
 		delete pQuery;
@@ -3882,11 +3896,14 @@ void CTracker :: serverResponseStatsPOST( struct request_t *pRequest, struct res
 				for( int i = 0; i < cstrDefaultUp.length( ) && bNum; i++ )
 					if( !isdigit( cstrDefaultUp[i] ) )
 						bNum  = false;
+				for( int i = 0; i < cstrTopTime.length( ) && bNum; i++ )
+					if( !isdigit( cstrTopTime[i] ) )
+						bNum  = false;
 				
 				if( ( ( !bOffer && ( pRequest->user.ucAccess & m_ucAccessEditTorrents ) ) || ( bOffer && ( pRequest->user.ucAccess & m_ucAccessEditOffers ) ) ) && bNum )
-					modifyTag( cstrID, cstrTag, cstrName, cstrIntr, string( ), string( ), cstrIP, cstrDefaultDown, cstrDefaultUp, cstrFreeDown, cstrFreeUp, cstrFreeTime, string( ), bFromNow, bOffer );
+					modifyTag( cstrID, cstrTag, cstrName, cstrIntr, string( ), string( ), cstrIP, cstrDefaultDown, cstrDefaultUp, cstrFreeDown, cstrFreeUp, cstrFreeTime, bFromNow, cstrTopTime, bTopFromNow, string( ), bOffer );
 				else
-					modifyTag( cstrID, cstrTag, cstrName, cstrIntr, string( ), string( ), cstrIP, string( ),  string( ), string( ),  string( ),  string( ), string( ), false, bOffer );
+					modifyTag( cstrID, cstrTag, cstrName, cstrIntr, string( ), string( ), cstrIP, string( ),  string( ), string( ),  string( ),  string( ), false, string( ), false, string( ), bOffer );
 				
 				string strIMDb = string( );
 				

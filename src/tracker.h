@@ -520,6 +520,7 @@ struct torrent_t
 	bool bAllow;
 	bool bNoComment;
 	unsigned char ucTop;
+	int64 iTopTo;
 	unsigned char ucClassic;
 //	bool bHL;
 //	bool bClassic;
@@ -603,7 +604,7 @@ public:
 	const string parseTorrent( const char *szDir );
 	const bool checkTag( const string &strTag );
 	const string addTag( const string &strInfoHash, const string &strTag, const string &strName, const string &strIntr, const string &strUploader, const string &strUploaderID, const string &strIP, const string &strDefaultDown, const string &strDefaultUp, const string &strFreeDown, const string &strFreeUp, const string &strFreeTime, const string &strComments, const bool bFromNow, const bool bOffer );
-	void modifyTag( const string &strID, const string &strTag, const string &strName, const string &strIntr, const string &strUploader, const string &strUploaderID, const string &strIP, const string &strDefaultDown, const string &strDefaultUp, const string &strFreeDown, const string &strFreeUp, const string &strFreeTime, const string &strComments, const bool bFromNow, const bool bOffer );
+	void modifyTag( const string &strID, const string &strTag, const string &strName, const string &strIntr, const string &strUploader, const string &strUploaderID, const string &strIP, const string &strDefaultDown, const string &strDefaultUp, const string &strFreeDown, const string &strFreeUp, const string &strFreeTime, const bool bFromNow, const string &strTopTime, const bool bTopFromNow, const string &strComments, const bool bOffer );
 	void deleteTag( const string &strInfoHash, const bool bOffer );
 	void addBonus( const string &strID, const string &strUID );
 	const string checkUserMD5( const string &strUID, const string &cstrMD5 );
@@ -1054,6 +1055,7 @@ public:
 	void setStatus( const string &cstrID, const unsigned char cucOpt );
 	void setSeeded( const string &cstrID, const unsigned char cucOpt );
 	void setFree( );
+	void setTop( );
 	void setLatest( const string &cstrAdded, bool bOffer = false );
 	time_t getLatest( bool bOffer = false );
 	unsigned long getSize( bool bOffer = false );

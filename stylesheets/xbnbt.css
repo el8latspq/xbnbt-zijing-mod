@@ -38,7 +38,7 @@
 		iframe{overflow:hidden} 
 	/* ----- standard image elements ----- */
 		img{border-width:0px}
-		img{vertical-align:top}
+		img{vertical-align:middle}
 		img{max-width:750px}
 	/* ----- standard table elements ----- */
 		table{margin-left:auto; margin-right:auto}
@@ -80,6 +80,10 @@
 	/* ----- specific hypertext elements ----- */
 		a.top_title{font-size:16pt; text-decoration:none}
 		a.top_title:hover{text-decoration:none}
+		a.top_logout{color:red; text-decoration:none}
+		a.top_logout:hover{text-decoration:underline}
+		a.top_talk{color:black; text-decoration:none}
+		a.top_talk:hover{text-decoration:underline}
 		a.sort{font-size:8pt; color:red}
 		a.sort:hover{color:white}
 		a.hot{color:red; text-decoration:none}
@@ -132,82 +136,101 @@
 	/* ----- specific div elements ----- */
 	/* ----- specific table elements ----- */
 		table.quote{margin:5px 0px 5px 0px}
-		table.top_header{width:100%}
+		table.top_header{width:80%}
+		table.top_bar{position:fixed; z-index:0}
+		table.top_bar{top:0px; left:0px}
 		table.top_bar{width:100%}
-		table.top_bar{margin-top:5px;margin-bottom:5px}
+		table.top_bar_hidden{height:21px}
+		table.top_bar_hidden{visibility:hidden}
+		/*table.top_bar{margin:-8px -8px 0px -8px}*/
+		table.top_bar{padding:0px 5px 0px 5px}
+		/*table.top_bar{margin-top:5px;margin-bottom:5px}*/
+		table.main_table{width:100%}
+		table.main_table{background-color:#f5f4eb}
 	/* ----- specific table rows ----- */
 		tr.top_header{background-color:#ccccff}
 		tr.own{background-color:#bbaf9b}
 		tr.even{background-color:#dee3e7}
 		tr.odd{background-color:#efefef}
 		tr.top_bar{background-color:#efefef}
-		tr.top_bar{border:1px solid #ccccff}
+		tr.top_bar{border:0px}
 	/* --- specific table headers --- */
-		th.tag{border-width:1px 0px 1px 0px}
-		th.name{border-width:1px 0px 1px 0px}
-		th.number{border-width:1px 0px 1px 0px}
-		th.date{border-width:1px 0px 1px 0px}
-		th.bytes{border-width:1px 0px 1px 0px}
-		th.percent{white-space:nowrap}
-		th.uploader{border-width:1px 0px 1px 0px}
-		th.admin{border-width:1px 0px 1px 0px}
-		th.exist{border-width:1px 0px 1px 0px}
-		th.seeded{border-width:1px 0px 1px 0px}
+		th.tag,th.name,th.number,th.date,th.bytes,th.percent,th.uploader,th.admin,th.exist,th.seeded,th.ip,th.client,th.updated,th.connected
+		{
+			border-width:1px 0px 1px 0px;
+		}
 	/* ----- specific table data ----- */
+		td.main_table_header{padding:0px}
+		td.main_table_header{border:0px}
+		td.main_table_torrent{padding:10px 10px 10px 10px}
+	/*	td.main_table_torrent{border-color:black}*/
+		td.main_table_torrent{border-top:1px solid black}
 		td.top_avatar{background-color:#ccccff}
 		td.top_avatar{border:0px}
-		td.top_avatar{text-align:center}
-		td.top_avatar{padding:0px 5px 0px 5px}
+		td.top_avatar{text-align:left}
+		td.top_avatar{padding:5px 5px 5px 5px}
 		td.static_header{background-color:#ccccff}
 		td.static_header{border:0px}
 		td.static_header{width:100%}
-		td.static_header{text-align:center}
+		td.static_header{text-align:center; line-height:1.5em}
+		td.static_header{white-space:normal}
 		td.quote{background-color:#efefef}
 		td.quote{border:1px black dotted}
 		td.quote{white-space:normal}
 		td.even{background-color:#dee3e7}
 		td.odd{background-color:#efefef}
 		td.top_login{text-align:left}
-		td.top_login{width:100%}
-		td.top_login{border:0px}
-		td.top_tool{text-align:right; vertical-align:top}
-		td.top_tool{border:0px}
+		td.top_login{padding:5px 8px 5px 8px}
+		td.top_login{border-color:transparent #ccccff black #ccccff}
+		td.top_login:hover{background-color:#dee3e7}
+		td.top_state{text-align:left}
+		td.top_state{padding:5px 8px 5px 8px}
+		td.top_state{width:100%}
+		td.top_state{border-color:transparent transparent black #ccccff}
+		td.top_trigger{text-align:center}
+		td.top_trigger{padding:5px 8px 5px 8px}
+		td.top_trigger{border-color:transparent #ccccff black #ccccff}
+	/*	td.top_trigger:hover{color:purple}*/
+		td.top_trigger:hover{background-color:#dee3e7}
+		td.top_tool{text-align:center}
+		td.top_tool{padding:5px 8px 5px 8px}
+		td.top_tool{border-color:transparent #ccccff black #ccccff}
+		div.top_tool_left,div.top_tool_right
+		{
+			position:fixed;
+			z-index:1;
+			border-style:solid;
+			border-width:1px;
+			border-color:transparent purple purple purple;
+			padding:10px 10px 10px 10px;
+			text-align:right;
+			line-height:1.5em;
+			font-size:9pt;
+			background-color:#efefef;
+		}
+		div.top_tool_left{text-align:left}
+		div.top_tool_right{text-align:right}
 		td.tag{text-align:center}
 		td.tag{padding:0px 0px 0px 0px}
 		td.tag{border-width:1px 0px 1px 0px}
-		td.admin{text-align:center}
-		td.admin{padding:5px 5px 5px 5px}
-		td.admin{border-width:1px 0px 1px 0px}
-		td.hash{text-align:left}
-		td.name{padding:5px 5px 5px 5px}
-		td.name{border-width:1px 0px 1px 0px}
-		td.name{white-space:normal} /* change to normal to wrap long lines */
-		td.name{text-align:left}
-		td.uploader{text-align:center}
-		td.uploader{padding:5px 5px 5px 5px}
-		td.uploader{border-width:1px 0px 1px 0px}
-		td.number{text-align:center}
-		td.number{padding:5px 5px 5px 5px}
-		td.number{border-width:1px 0px 1px 0px}
-		td.number_red{text-align:center}
+		td.admin,td.uploader,td.number,td.number_red,td.number_green,td.number_blue,td.date,td.bytes
+		{
+			text-align:center;
+			padding:5px 5px 5px 5px;
+			border-width:1px 0px 1px 0px;
+		}
+		td.name
+		{
+			min-width:400px;
+			text-align:left;
+			padding:5px 5px 5px 5px;
+			border-width:1px 0px 1px 0px;
+			white-space:normal; /* change to normal to wrap long lines */
+		}
 		td.number_red{color:red}
-		td.number_red{padding:5px 5px 5px 5px}
-		td.number_red{border-width:1px 0px 1px 0px}
-		td.number_green{text-align:center}
 		td.number_green{color:green}
-		td.number_green{padding:5px 5px 5px 5px}
-		td.number_green{border-width:1px 0px 1px 0px}
-		td.number_blue{text-align:center}
 		td.number_blue{color:blue}
-		td.number_blue{padding:5px 5px 5px 5px}
-		td.number_blue{border-width:1px 0px 1px 0px}
-		td.percent{text-align:center; white-space:nowrap}
-		td.date{text-align:center; white-space:nowrap}
-		td.date{padding:5px 5px 5px 5px}
-		td.date{border-width:1px 0px 1px 0px}
-		td.bytes{text-align:center; white-space:nowrap}
-		td.bytes{padding:5px 5px 5px 5px}
-		td.bytes{border-width:1px 0px 1px 0px}
+		td.date,td.bytes{white-space:nowrap}
 	/* ----- specific image elements ----- */
 		img.avatar{width:200px}
 		img.avatar{margin:0px 0px 0px 0px}
@@ -215,6 +238,8 @@
 		img.tag{border-width:0px}
 		img.code{margin:2px 2px 2px 2px} 
 	/* ----- specific span elements ----- */
+		span.top_pipe{margin-left:0.5em; margin-right:0.5em}
+		span.top_pipe{color:#ccccff}
 		span.top_subtitle{font-size:9pt}
 		span.top_subtitle{vertical-align:bottom}
 		span.pipe{color:#ccccff}
@@ -224,8 +249,6 @@
 		span.ip{color:blue}
 		span.filtered_by{color:black}
 		span.search_results_alt{text-align:center}
-		span.top_login1{font-size:9pt}
-		span.top_login2{font-size:9pt}
 		span.friends{color:#ff8c00; font-weight:bold}
 		span.retired{color:#1cc6d5; font-weight:bold}
 		span.vip{color:#009f00; font-weight:bold}
@@ -252,57 +275,66 @@
 		fieldset.quote{white-space:normal}
 		legend{background-color:#efefef}
 		legend{border:1px black dotted}
+	/* ----- specific hr elements ----- */	
+		hr.top_tool{}
 
 /* ----- header  ----- */
 		div.static_header{}
 		hr.header{}
 
 /* ----- footer  ----- */
+		tr.static_footer{background-color:#ccccff}
+		div.static_footer{white-space:normal}
 		hr.footer{}
 
 /* ----- navbar  ----- */
-		table.navbar{margin-top:5px; margin-bottom:5px}
-		table.navbar{background-color:transparent}
-		td.navbar_index{border:0px}
-		a.navbar_index{font-size:10pt}
-		td.navbar_login{border:0px}
-		a.navbar_login{font-size:10pt}
-		td.navbar_offer{border:0px}
-		a.navbar_offer{font-size:10pt}
-		td.navbar_upload{border:0px}
-		a.navbar_upload{font-size:10pt}
-		td.navbar_logout{border:0px}
-		a.navbar_logout{font-size:10pt}
-		td.navbar_signup{border:0px}
-		a.navbar_signup{font-size:10pt}
-		td.navbar_rss{border:0px}
-		a.navbar_rss{font-size:10pt}
-		td.navbar_xml{border:0px}
-		a.navbar_xml{font-size:10pt}
-		td.navbar_info{border:0px}
-		a.navbar_info{font-size:10pt}
-		td.navbar_rules{border:0px}
-		a.navbar_rules{font-size:10pt}
-		td.navbar_faq{border:0px}
-		a.navbar_faq{font-size:10pt}
-		td.navbar_staff{border:0px}
-		a.navbar_staff{font-size:10pt}
-		td.navbar_rank{border:0px}
-		a.navbar_rank{font-size:10pt}
-		td.navbar_log{border:0px}
-		a.navbar_log{font-size:10pt}
-		td.navbar_admin{border:0px}
-		a.navbar_admin{font-size:10pt}
-		td.navbar_users{border:0px}
-		a.navbar_users{font-size:10pt}
-		td.navbar_tags{border:0px}
-		a.navbar_tags{font-size:10pt}
-		td.navbar_language{border:0px}
-		a.navbar_language{font-size:10pt}
-		td.navbar_xstats{border:0px}
-		a.navbar_xstats{font-size:10pt}
-		td.navbar_xtorrent{border:0px}
-		a.navbar_xtorrent{font-size:10pt}
+		/*table.navbar{margin-top:5px; margin-bottom:5px}*/
+		tr.top_navbar{background-color:#ccccff}
+		td.top_navbar
+		{
+			border:0px;
+			padding:0px;
+			vertical-align:bottom;
+		}
+		table.navbar
+		{
+			background-color:transparent;
+			margin-left:5px;
+			border-collapse:separate;
+			border-spacing:0px;
+		}
+		tr.navbar{background-color:transparent}
+		td.navbar
+		{
+			padding:0px;
+			border:1px solid transparent;
+		/*	border-top:2px solid transparent;*/
+			border-bottom-style:none;
+		}
+		td.navbar:hover{border-color:purple}
+		/*td.navbar:hover{border-color:black}*/
+		td.navbar:hover{background-color:#f5f4eb}
+		td.navbar_index,td.navbar_login,td.navbar_offer,td.navbar_upload,td.navbar_logout,td.navbar_signup,td.navbar_rss,td.navbar_xml,td.navbar_info,td.navbar_rules,td.navbar_faq,td.navbar_staff,td.navbar_rank,td.navbar_log,td.navbar_admin,td.navbar_users,td.navbar_tags,td.navbar_language,td.navbar_xstats,td.navbar_xtorrent
+		{
+			padding:0px;
+			border:1px solid purple;
+		/*	border-top:2px solid purple;*/
+			border-bottom-style:none;
+			background-color:#f5f4eb;
+		}
+		a.navbar_index,a.navbar_login,a.navbar_offer,a.navbar_upload,a.navbar_logout,a.navbar_rss,a.navbar_xml,a.navbar_info,a.navbar_rules,a.navbar_faq,a.navbar_staff,a.navbar_rank,a.navbar_log,a.navbar_admin,a.navbar_users,a.navbar_tags,a.navbar_language,a.navbar_xstats,a.navbar_xtorrent
+		{
+			font-size:10pt;
+			text-decoration:none;
+			display:block;
+			padding:5px 10px 5px 10px;
+		}
+		a.navbar_signup
+		{
+			font-size:10pt;
+			text-decoration:none;
+			padding:5px 5px 5px 5px;
+		}
 		a.navbar_rules{color:blue}
 		a.navbar_faq{color:red}
 		span.navbar_new{font-size:10pt; color:red; font-weight:bold}
@@ -317,9 +349,8 @@
 		p.gen_index{text-align:center}
 		p.html_valid_index{text-align:center}
 	/* ----- specific ----- */
-		table.main_table{width:100%}
-		table.main_table{background-color:#f5f4eb}
 		table.torrent_table{text-align:center}
+	/*	table.torrent_table{min-width:80%}*/
 		table.index_filter{text-align:left}
 		table.index_filter{background-color:transparent}
 		table.index_announce{margin-top:5px; margin-bottom:5px}
@@ -339,7 +370,6 @@
 		tr.index_name{background-color:transparent}
 		td.top_split{border:0px}
 		td.top_split{padding-top:3px; padding-bottom:3px}
-		td.main_table_torrent{padding:10px 10px 10px 10px}
 		td.index_announce{background-color:blue}
 		td.index_announce{border:0px}
 		td.index_announce{padding:10px 10px 10px 10px}
@@ -366,9 +396,10 @@
 		td.index_admin{padding:5px 5px 5px 5px}
 		td.index_admin{border-width:1px 0px 1px 0px}
 		td.index_name{text-align:left; line-height:1.5em}
+		td.index_name{min-width:400px}
 		td.index_name{padding:5px 5px 3px 5px}
 		td.index_name{border-width:1px 0px 0px 0px}
-		td.index_name{white-space:normal} /* change to normal to wrap long lines */
+		td.index_name{white-space:normal; word-wrap:break-word} /* change to normal to wrap long lines */
 		td.download_left{text-align:left; line-height:1.5em}
 		td.download_left{padding:0px 5px 0px 0px}
 		td.download_left{border:0px}
@@ -411,10 +442,12 @@
 		a.stats_free:hover{text-decoration:underline}
 		a.stats_hl{color:#9400d3; text-decoration:none}
 		a.stats_hl:hover{text-decoration:underline}
-		a.index_announce{color:white; text-decoration:none}
-		a.index_announce:hover{text-decoration:underline}
-		a.index_messages_unread{color:white; text-decoration:none}
-		a.index_messages_unread:hover{text-decoration:underline}
+		a.index_announce,a.index_messages_unread
+		{
+			color:white;
+			text-decoration:none;
+		}
+		a.index_announce:hover,a.index_messages_unread:hover{text-decoration:underline}
 		a.index_filter{text-decoration:none}
 		a.filter_by{text-decoration:none}
 		a.imdb{font-size:8pt; font-weight:normal; text-decoration:none}
@@ -617,14 +650,16 @@
 		td.share{text-align:center}
 		td.share{padding:5px 5px 5px 5px}
 		td.share{border-width:1px 0px 1px 0px}
-		div.user_main_talk{border-left:1px solid #ccccff}
-		div.user_main_talk{border-right:1px solid #ccccff}
+		div.user_main_talk{border:1px solid #ccccff}
+		div.user_main_talk{border-bottom:0px}
 		div.user_main_talk{margin:5px 0px 5px 0px}
 		tr.preferences{}
 		td.preferences{text-align:left}
 		span.user_talk{margin-left:0.5em}
 		span.user_message{margin-left:0.5em}
 		span.user_friend{margin-left:0.5em}
+		a.user_detail_selected{color:blue; text-decoration:none}
+		a.user_detail_selected:hover{text-decoration:underline}
 
 /* ----- log.html ----- */
 	/* ----- specific ----- */
@@ -722,53 +757,79 @@
 		p.return_talk{text-align:center}
 		p.gen_talk{text-align:center}
 		p.html_valid_talk{text-align:center}
-		div.talk_table_posted{text-align:center}
-		div.talk_table_posted{margin-left:auto; margin-right:auto}
-		div.talk_table_posted{padding:10px 10px 10px 10px}
-		div.talk_table_posted{width:600px}
-		div.talk_table_posted{background-color:#eeeeff}
-		table.talk_table_posted{width:600px}
+		table.talk_table{width:750px}
+		tr.talk_table{border:0px}
+		tr.talk_table{background-color:#eeeeff}
+		td.talk_table_left_top,td.talk_table_left_bottom
+		{
+			border:0px;
+			border-left:1px solid #ccccff;
+			padding:5px;
+			vertical-align:top;
+			background-color:transparent;
+		}
+		td.talk_table_left_top{height:100%}
+		td.talk_table_right
+		{
+			border:0px;
+			border-left:1px solid #ccccff;
+			background-color:#dee3e7;
+			width:100%;
+			padding-left:0px;
+			padding-right:0px;
+			vertical-align:top;
+		}
+		td.talk_table_user{background-color:transparent}
+		td.talk_table_user{border:0px}
+		td.talk_table_user{font-size:12pt}
+		td.talk_table_cat{background-color:transparent}
+		td.talk_table_cat{border:0px}
+		td.talk_table_cat{padding:5px 0px 5px 0px}
+		table.talk_table_right{width:100%}
+		table.talk_table_right{background-color:transparent}
+		div.talk_table_posted
+		{
+			text-align:center;
+			border-top:1px dotted purple;
+			margin-left:auto;
+			margin-right:auto;
+			padding:5px 10px 5px 10px;
+			width:560px;
+			background-color:transparent;
+		}
+		table.talk_table_posted{width:560px}
 		table.talk_table_posted{table-layout:fixed}
 		table.talk_table_reply{width:100%}
 		tr.talk_body{background-color:#eeeeff}
-/*		tr.talk_body:hover{background-color:#dee3e7}*/
 		td.talk_body{width:100%}
 		td.talk_body{text-align:left}
-		td.talk_body{border-left:0px; border-right:0px}
+		td.talk_body{border:0px}
+		td.talk_body{border-bottom:1px solid #ccccff}
 		td.talk_body{padding:5px 5px 5px 5px}
 		td.talk_body{white-space:normal; word-wrap:break-word}
 		tr.talk_body_reply{background-color:#dee3e7}
-/*		tr.talk_body_reply:hover{background-color:#dee3e7}*/
 		td.talk_body_reply{text-align:left}
-		td.talk_body_reply{border-left:0px; border-right:0px; border-top:1px solid #ccccff; border-bottom:0px}
+		td.talk_body_reply{border:0px}
+		td.talk_body_reply{border-bottom:1px solid #ccccff}
 		td.talk_body_reply{padding:5px 5px 5px 5px}
 		td.talk_body_reply{white-space:normal; word-wrap:break-word}
 		span.talk_header{margin-right:0.5em}
 		div.talk_function{float:right}
-		p.talk_table_posted{text-align:center}
-		p.talk_posted{text-align:center}
-		p.fill_all{text-align:center}
-		div.talk_table{text-align:center}
-		p.talk_table{text-align:center}
-		table.talk_table{}
-		tr.talk_table{}
-		td.talk_table{text-align:left}
 		div.talk_table_post{text-align:center}
-		p.talk_table_post{text-align:center}
-		table.talk_table_post{width:600px}
+		div.talk_table_post{padding:5px 0px 5px 0px}
+		table.talk_table_post{width:560px}
 		table.talk_table_post{table-layout:fixed}
-		textarea.talk{width:594px}
-/*		td.talk_table_header{width:100%}*/
+		textarea.talk{width:554px}
 		td.talk_table_header{text-align:left}
 		td.talk_table_header{padding:0px 0px 0px 0px}
 		td.talk_table_header{border:0px}
-		td.talk_table_left{text-align:right}
-		td.talk_table_left{padding:0px 0px 0px 0px}
-		td.talk_table_left{border:0px}
+		td.talk_table_count{text-align:right}
+		td.talk_table_count{padding:0px 0px 0px 0px}
+		td.talk_table_count{border:0px}
 		td.talk_table_tag{text-align:left}
 		td.talk_table_tag{padding:0px 0px 0px 0px}
 		td.talk_table_tag{border:0px}
-		tr.talk_table_post{background-color:#f5f4eb}
+		tr.talk_table_post{background-color:#eeeeff}
 		td.talk_table_post{text-align:left}
 		td.talk_table_post{padding:0px 0px 0px 0px}
 		td.talk_table_post{border:0px}
@@ -782,14 +843,36 @@
 		td.talk_function{padding:5px 5px 5px 5px}
 		span.talk_table_header{font-weight:bold}
 		span.talk_table_header{color:purple}
-		span.talk_table_left{font-weight:bold}
+		span.talk_table_count{font-weight:bold}
 		span.talk_table_hint{font-style:italic}
 		span.talk_reply_hint{font-style:italic}
 		span.talk_reply_hint{margin-left:1em}
-		a.talk_time{font-size:8pt; font-weight:normal; text-decoration:none; color:grey}
-		a.talk_time{border-bottom:1px dotted}
-		a.talk_time:hover{border-bottom:1px solid}
-		a.talk_time:hover{color:purple}
+		p.talk_user{font-size:10pt}
+		a.talk_user{font-size:10pt; text-decoration:none}
+		a.talk_cat,a.talk_cat_selected{
+			display:block;
+			border-bottom:1px dotted purple;
+			padding:10px 10px 10px 10px;
+			font-size:10pt;
+			text-decoration:none;
+		}
+		/*a.talk_cat:hover{background-color:#eeeeff}*/
+		a.talk_cat:hover,a.talk_cat_selected:hover{text-decoration:underline}
+		a.talk_cat_selected{background-color:#eeeeff}
+		a.talk_cat_selected{color:blue}
+		a.talk_time
+		{
+			font-size:8pt;
+			font-weight:normal;
+			text-decoration:none;
+			color:grey;
+			border-bottom:1px dotted;
+		}
+		a.talk_time:hover
+		{
+			border-bottom:1px solid;
+			color:purple;
+		}
 		a.talk_link{color:#808028}
 		a.talk_link:hover{color:white; text-decoration:none}
 		a.talk_link:hover{background-color:#808028}
@@ -803,41 +886,52 @@
 		a.talk_torrent{color:purple; text-decoration:none}
 		a.talk_torrent:hover{color:white}
 		a.talk_torrent:hover{background-color:purple}
-		a.talk_reply_link{font-size:8pt; font-weight:normal; text-decoration:none; color:#808028}
-		a.talk_reply_link{border-bottom:1px dotted}
-		a.talk_reply_link{margin-left:0.5em}
-		a.talk_reply_link:hover{border-bottom:1px solid}
-		a.talk_reply_link:hover{color:purple}
-		a.talk_reply_times{font-size:8pt; font-weight:normal; text-decoration:none; color:#808028}
-		a.talk_reply_times{border-bottom:1px dotted}
-		a.talk_reply_times{margin-left:0.5em}
-		a.talk_reply_times:hover{border-bottom:1px solid}
-		a.talk_reply_times:hover{color:purple}
-		a.talk_rt_link{font-size:8pt; font-weight:normal; text-decoration:none; color:#808028}
-		a.talk_rt_link{border-bottom:1px dotted}
-		a.talk_rt_link{margin-left:0.5em}
-		a.talk_rt_link:hover{border-bottom:1px solid}
-		a.talk_rt_link:hover{color:purple}
-		a.talk_reply{font-size:8pt; font-weight:normal; text-decoration:none; color:purple}
-		a.talk_reply{border-bottom:1px dotted}
-		a.talk_reply{margin-left:0.5em}
-		a.talk_reply:hover{color:white}
-		a.talk_reply:hover{background-color:purple}
-		a.talk_rt{font-size:8pt; font-weight:normal; text-decoration:none; color:purple}
-		a.talk_rt{border-bottom:1px dotted}
-		a.talk_rt{margin-left:0.5em}
-		a.talk_rt:hover{color:white}
-		a.talk_rt:hover{background-color:purple}
-		a.talk_delete{font-size:8pt; font-weight:normal; text-decoration:none; color:red}
-		a.talk_delete{border-bottom:1px dotted}
-		a.talk_delete{margin-left:0.5em}
-		a.talk_delete:hover{color:white}
-		a.talk_delete:hover{background-color:red}
+		a.talk_reply_link,a.talk_reply_times,a.talk_rt_link
+		{
+			font-size:8pt;
+			font-weight:normal;
+			text-decoration:none;
+			color:#808028;
+			border-bottom:1px dotted;
+			margin-left:0.5em;
+		}
+		a.talk_reply_link:hover,a.talk_reply_times:hover,a.talk_rt_link:hover
+		{
+			border-bottom:1px solid;
+			color:purple;
+		}
+		a.talk_reply,a.talk_rt
+		{
+			font-size:8pt;
+			font-weight:normal;
+			text-decoration:none;
+			color:purple;
+			border-bottom:1px dotted;
+			margin-left:0.5em;
+		}
+		a.talk_reply:hover,a.talk_rt:hover
+		{
+			color:white;
+			background-color:purple;
+		}
+		a.talk_delete
+		{
+			font-size:8pt;
+			font-weight:normal;
+			text-decoration:none;
+			color:red;
+			border-bottom:1px dotted;
+			margin-left:0.5em;
+		}
+		a.talk_delete:hover
+		{
+			color:white;
+			background-color:red;
+		}
 		a.talk_more{font-size:9pt; color:purple}
 		a.talk_more:hover{color:white}
 		a.talk_more:hover{background-color:purple}
-		div.talk{text-align:left}
-		div.talk{line-height: 1.5em}
+		div.talk{text-align:left; line-height: 1.8em}
 		div.talk_reply{text-align:center}
 		div.talk_reply{background-color:#dee3e7}
 		div.talk_reply{border:1px dotted purple}
@@ -847,35 +941,34 @@
 		div.talk_rt{border:1px dashed purple}
 		div.talk_rt{margin:5px 5px 5px 5px}
 		div.talk_rt{padding:5px 5px 5px 5px}
+		div.talk_torrent{text-align:left; line-height:1.5em}
 		div.talk_torrent{background-color:#faffe0}
 		div.talk_torrent{border:1px solid #fffcaa}
 		div.talk_torrent{margin:5px 5px 5px 5px}
 		div.talk_torrent{padding:5px 5px 5px 5px}
 		div.talk_reply_form{text-align:left}
-		div.talk_reply_history{background-color:#faffe0}
-		div.talk_reply_history{border:1px solid #fffcaa}
-/*		div.talk_reply_history{margin:5px 5px 5px 5px}*/
-		div.talk_reply_history{padding:5px 5px 5px 5px}
-		div.talk_reply_to_talk{background-color:#faffe0}
-		div.talk_reply_to_talk{border:1px solid #fffcaa}
-/*		div.talk_reply_to_talk{margin:5px 5px 5px 5px}*/
-		div.talk_reply_to_talk{padding:5px 5px 5px 5px}
-		div.talk_user{background-color:#faffe0}
-		div.talk_user{border:1px solid #fffcaa}
-/*		div.talk_user{margin:5px 5px 5px 5px}*/
-		div.talk_user{padding:5px 5px 5px 5px}
-		div.talk_tag{background-color:#faffe0}
-		div.talk_tag{border:1px solid #fffcaa}
-/*		div.talk_tag{margin:5px 5px 5px 5px}*/
-		div.talk_tag{padding:5px 5px 5px 5px}
+		div.talk_reply_history,div.talk_reply_to_talk
+		{
+			background-color:#faffe0;
+			border:1px solid #fffcaa;
+			/*margin:5px 5px 5px 5px;*/
+			padding:5px 5px 5px 5px;
+		}
+		div.talk_user,div.talk_tag
+		{
+			background-color:#faffe0;
+			border:1px solid #fffcaa;
+			/*margin:5px 5px 5px 5px;*/
+			padding:5px 5px 5px 5px;
+		}
 		span.talk_tag{font-weight:bold; color:purple}
 		span.talk_torrent{font-size:8pt}
-		span.talk_reply{font-size:8pt; color:#808028}
-		span.talk_reply{margin-left:0.5em}
-		span.talk_reply_times{font-size:8pt; color:#808028}
-		span.talk_reply_times{margin-left:0.5em}
-		span.talk_rt_times{font-size:8pt; color:#808028}
-		span.talk_rt_times{margin-left:0.5em}
+		span.talk_reply,span.talk_reply_times,span.talk_rt_times
+		{
+			font-size:8pt;
+			color:#808028;
+			margin-left:0.5em;
+		}
 
 /* ----- messages.html ----- */
 		table.messages_table_posted{width:800px}
@@ -1010,8 +1103,7 @@
 		td.faq_name{width:100%}
 		td.faq_admin{border:0px}
 		td.faq_admin{text-align:center}
-		td.faq_content{white-space:normal}
-		td.faq_content{word-wrap:break-word}
+		td.faq_content{white-space:normal; word-wrap:break-word}
 
 /* ----- messages.html ----- */
 	/* ----- specific ----- */		
@@ -1075,22 +1167,12 @@
 		a.noreq{color:blue; text-decoration:none}
 		a.noreq:hover{text-decoration:underline}
 		td.path{text-align:left}
-		td.ip{text-align:center}
-		td.ip{padding:5px 5px 5px 5px}
-		td.ip{border-width:1px 0px 1px 0px}
-		td.client{padding:5px 5px 5px 5px}
-		td.client{border-width:1px 0px 1px 0px}
-		td.percent{padding:5px 5px 5px 5px}
-		td.percent{border-width:1px 0px 1px 0px}
-		td.updated{padding:5px 5px 5px 5px}
-		td.updated{border-width:1px 0px 1px 0px}
-		td.connected{text-align:right}
-		td.connected{padding:5px 5px 5px 5px}
-		td.connected{border-width:1px 0px 1px 0px}
-		th.ip{border-width:1px 0px 1px 0px}
-		th.client{border-width:1px 0px 1px 0px}
-		th.updated{border-width:1px 0px 1px 0px}
-		th.connected{border-width:1px 0px 1px 0px}
+		td.ip,td.client,td.percent,td.updated,td.connected
+		{
+			padding:5px 5px 5px 5px;
+			border-width:1px 0px 1px 0px;
+		}
+		td.percent{white-space:nowrap}
 		hr.stats_hr{}
 		td.upload_sub{padding:0px 0px 0px 0px}
 		table.subs{width:100%}

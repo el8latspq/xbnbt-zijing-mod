@@ -1159,7 +1159,7 @@ void CTracker :: serverResponseUploadPOST( struct request_t *pRequest, struct re
 							}
 						}
 						
-						modifyTag( strUploadedID, strTag, strPostedName, strIntr, pRequest->user.strLogin, pRequest->user.strUID, pRequest->strIP, strDefaultDown, strDefaultUp, strFreeDown, strFreeUp, strFreeTime, string( ), false, bOffer );
+						modifyTag( strUploadedID, strTag, strPostedName, strIntr, pRequest->user.strLogin, pRequest->user.strUID, pRequest->strIP, strDefaultDown, strDefaultUp, strFreeDown, strFreeUp, strFreeTime, false, string( ), false, string( ), bOffer );
 					
 						string strIMDb = string( );
 					

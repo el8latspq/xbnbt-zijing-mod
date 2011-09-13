@@ -354,9 +354,9 @@ CTracker :: CTracker( )
 	// login1=not logged in
 	
 	// validate1=validate RSS without images
-	m_strValidate1 = UTIL_Xsprintf( "document.write( \"<a rel=\'%s\' title=\'%s\' href=\'http://www.feedvalidator.org/check?url=http://\" + parent.location.host + \"/%s\'>%s<\\/a>\" );", STR_TARGET_REL.c_str( ), gmapLANG_CFG["valid_rss"].c_str( ), rssdump.strName.c_str( ), gmapLANG_CFG["valid_rss"].c_str( ) );
+//	m_strValidate1 = UTIL_Xsprintf( "document.write( \"<a rel=\'%s\' title=\'%s\' href=\'http://www.feedvalidator.org/check?url=http://\" + parent.location.host + \"/%s\'>%s<\\/a>\" );", STR_TARGET_REL.c_str( ), gmapLANG_CFG["valid_rss"].c_str( ), rssdump.strName.c_str( ), gmapLANG_CFG["valid_rss"].c_str( ) );
 	// validate2=validate RSS with images
-	m_strValidate2 = UTIL_Xsprintf( "document.write( \"<a rel=\'%s\' title=\'%s\' href=\'http://www.feedvalidator.org/check?url=http://\" + parent.location.host + \"/%s\'><img src=\'%s\' alt=\'%s\' height=\'31\' width=\'88\'><\\/a>\" );", STR_TARGET_REL.c_str( ), gmapLANG_CFG["valid_rss"].c_str( ), rssdump.strName.c_str( ), m_strRSSValidImage.c_str( ), gmapLANG_CFG["valid_rss"].c_str( ) );
+//	m_strValidate2 = UTIL_Xsprintf( "document.write( \"<a rel=\'%s\' title=\'%s\' href=\'http://www.feedvalidator.org/check?url=http://\" + parent.location.host + \"/%s\'><img src=\'%s\' alt=\'%s\' height=\'31\' width=\'88\'><\\/a>\" );", STR_TARGET_REL.c_str( ), gmapLANG_CFG["valid_rss"].c_str( ), rssdump.strName.c_str( ), m_strRSSValidImage.c_str( ), gmapLANG_CFG["valid_rss"].c_str( ) );
 	// JS Reduce Characters - JS_Valid_Check( )
 	m_strJSReduce = UTIL_Xsprintf( gmapLANG_CFG["js_reduce_characters"].c_str( ), CAtomInt( m_uiCommentLength ).toString( ).c_str( ) );
 	m_strJSMsgReduce = UTIL_Xsprintf( gmapLANG_CFG["js_reduce_characters"].c_str( ), CAtomInt( m_uiMessageLength ).toString( ).c_str( ) );
@@ -367,7 +367,7 @@ CTracker :: CTracker( )
 	m_strJSMsgLength = UTIL_Xsprintf( gmapLANG_CFG["js_message_length"].c_str( ), "\" + theform.message.value.getBytes() + \"" );
 	m_strJSTalkLength = UTIL_Xsprintf( gmapLANG_CFG["js_talk_length"].c_str( ), "\" + theform.talk.value.getBytes() + \"" );
 	// RSS local link for info.html
-	m_strRSSLocalLink = UTIL_Xsprintf( "document.write( \"<a rel=\'%s\' title=\'%s\' href=\'http://\" + parent.location.host + \"/%s\'>http://\" + parent.location.host + \"/%s<\\/a>\" );", STR_TARGET_REL.c_str( ), gmapLANG_CFG["navbar_rss"].c_str( ), rssdump.strName.c_str( ), rssdump.strName.c_str( ) );
+//	m_strRSSLocalLink = UTIL_Xsprintf( "document.write( \"<a rel=\'%s\' title=\'%s\' href=\'http://\" + parent.location.host + \"/%s\'>http://\" + parent.location.host + \"/%s<\\/a>\" );", STR_TARGET_REL.c_str( ), gmapLANG_CFG["navbar_rss"].c_str( ), rssdump.strName.c_str( ), rssdump.strName.c_str( ) );
 
 	// XBNBT initialise tags for internal mouseover
 	if( gbDebug )
@@ -2256,7 +2256,7 @@ const string CTracker :: addTag( const string &strInfoHash, const string &strTag
 	return string( );
 }
 
-void CTracker :: modifyTag( const string &strID, const string &strTag, const string &strName, const string & strIntr, const string &strUploader, const string &strUploaderID, const string &strIP, const string &strDefaultDown, const string &strDefaultUp, const string &strFreeDown, const string &strFreeUp, const string &strFreeTime, const string &strComments, const bool bFromNow, const bool bOffer )
+void CTracker :: modifyTag( const string &strID, const string &strTag, const string &strName, const string & strIntr, const string &strUploader, const string &strUploaderID, const string &strIP, const string &strDefaultDown, const string &strDefaultUp, const string &strFreeDown, const string &strFreeUp, const string &strFreeTime, const bool bFromNow, const string &strTopTime, const bool bTopFromNow, const string &strComments, const bool bOffer )
 {
 	if( gbDebug )
 		if( gucDebugLevel & DEBUG_TRACKER )
@@ -2333,6 +2333,24 @@ void CTracker :: modifyTag( const string &strID, const string &strTag, const str
 						strQuery += ", bfree_to=NOW()+INTERVAL " + strFreeTime + " HOUR";
 					else
 						strQuery += ", bfree_to=0";
+				}
+			}
+			if( !strTopTime.empty( ) && UTIL_StringTo64( strTopTime.c_str( ) ) >= 0 )
+			{
+				if( !bTopFromNow )
+				{
+					strQuery += ", btop_time=" + strTopTime;
+					if( UTIL_StringTo64( strTopTime.c_str( ) ) > 0 )
+						strQuery += ", btop_to=badded+INTERVAL " + strTopTime + " HOUR";
+					else
+						strQuery += ", btop_to=0";
+				}
+				else
+				{
+					if( UTIL_StringTo64( strTopTime.c_str( ) ) > 0 )
+						strQuery += ", btop_to=NOW()+INTERVAL " + strTopTime + " HOUR";
+					else
+						strQuery += ", btop_to=0";
 				}
 			}
 		}
@@ -2621,20 +2639,21 @@ user_t CTracker :: getUser( const string &strUID, const string &strMyUID, const 
 	user.strInvites.erase( );
 	user.strInviter.erase( );
 	user.strInviterID.erase( );
+	user.ucInvitable = 1;
 //	user.strTalk.erase( );
 //	user.strTalkRef.erase( );
 	
-	CMySQLQuery *pQuery = new CMySQLQuery( "SELECT buid,busername,bmd5,bcreated,bpasskey,bemail,baccess,bgroup,btitle,buploaded,bdownloaded,bbonus,bip,bseedbonus,UNIX_TIMESTAMP(blast),UNIX_TIMESTAMP(bwarned),binvites,binviter,binviterid FROM users WHERE buid=" + strUID );
+	CMySQLQuery *pQuery = new CMySQLQuery( "SELECT buid,busername,bmd5,bcreated,bpasskey,bemail,baccess,bgroup,btitle,buploaded,bdownloaded,bbonus,bip,bseedbonus,UNIX_TIMESTAMP(blast),UNIX_TIMESTAMP(bwarned),binvites,binviter,binviterid,binvitable FROM users WHERE buid=" + strUID );
 	
 	vector<string> vecQuery;
 	
-	vecQuery.reserve(19);
+	vecQuery.reserve(20);
 
 	vecQuery = pQuery->nextRow( );
 	
 	delete pQuery;
 
-	if( vecQuery.size( ) == 19 )
+	if( vecQuery.size( ) == 20 )
 	{
 		user.strUID = vecQuery[0];
 		user.strLogin = vecQuery[1];
@@ -2692,6 +2711,7 @@ user_t CTracker :: getUser( const string &strUID, const string &strMyUID, const 
 			user.strInvites = vecQuery[16];
 			user.strInviter = vecQuery[17];
 			user.strInviterID = vecQuery[18];
+			user.ucInvitable = (unsigned char)atoi( vecQuery[19].c_str( ) );
 		}
 	}
 	
@@ -3060,14 +3080,35 @@ const string CTracker :: addUser( const string &strLogin, const string &strPass,
 	else
 		strQuery += "\'," + CAtomInt( m_ucMemberAccess ).toString( );
 	
-	int64 iUploaded = CFG_GetInt( "bnbt_new_user_gift_uploaded", 0 );
-	int64 iDownloaded = CFG_GetInt( "bnbt_new_user_gift_downloaded", 0 );
-	int64 iBonus = CFG_GetInt( "bnbt_new_user_gift_bonus", 0 );
+	int64 iUploaded = 0, iDownloaded = 0, iBonus = 0;
+
+	if( CFG_GetInt( "bnbt_new_user_gift_enable", 0 ) == 0 ? false : true )
+	{
+		string strRule = CFG_GetString( "bnbt_new_user_gift_rule", string( ) );
+
+		iUploaded = CFG_GetInt( "bnbt_new_user_gift_uploaded", 0 );
+		iDownloaded = CFG_GetInt( "bnbt_new_user_gift_downloaded", 0 );
+		iBonus = CFG_GetInt( "bnbt_new_user_gift_bonus", 0 );
 	
-	iUploaded = iUploaded * 1024 * 1024 * 1024;
-	iDownloaded = iDownloaded * 1024 * 1024 * 1024;
-	iBonus = iBonus * 100;
-	
+		vector<string> vecRule;
+		vecRule.reserve(9);
+
+		vecRule = UTIL_SplitToVectorStrict( strRule, "|" );
+		iUploaded = iUploaded * 1024 * 1024 * 1024;
+		iDownloaded = iDownloaded * 1024 * 1024 * 1024;
+		iBonus = iBonus * 100;
+		
+		if( !vecRule.empty( ) )
+		{
+			if( strMail.empty( ) || strMail.substr( strMail.find( "@" ) ) != gmapLANG_CFG["signup_mail1"] || !UTIL_MatchVector( strMail, vecRule, MATCH_METHOD_NONCASE_OR ) )
+			{
+				iUploaded = 0;
+				iDownloaded = 0;
+				iBonus = 0;
+			}
+		}
+	}
+
 	strQuery += "," + CAtomLong( iUploaded ).toString( );
 	strQuery += "," + CAtomLong( iDownloaded ).toString( );
 	strQuery += "," + CAtomLong( iBonus ).toString( );
@@ -3555,6 +3596,13 @@ void CTracker :: Announce( const struct announce_t &ann, bool &bRespond )
 	if( gbDebug )
 		if( gucDebugLevel & DEBUG_TRACKER )
 			UTIL_LogPrint( "Announce: event (%s)\n", ann.strEvent.c_str( ) );
+	
+	unsigned char ucEvent = EVENT_UNKNOWN;
+
+	if( ann.strEvent.empty( ) ) ucEvent = EVENT_UPDATE;
+	else if( ann.strEvent == EVENT_STR_STARTED ) ucEvent = EVENT_STARTED;
+	else if( ann.strEvent == EVENT_STR_COMPLETED ) ucEvent = EVENT_COMPLETED;
+	else if( ann.strEvent == EVENT_STR_STOPPED ) ucEvent = EVENT_STOPPED;
 
 	bool bPeerFound = false;
 	bool bCompleted = false;
@@ -3656,6 +3704,7 @@ void CTracker :: Announce( const struct announce_t &ann, bool &bRespond )
 			strIP = vecQueryPeer[0];
 		
 		string strQuery = "UPDATE dstate SET busername=\'" + UTIL_StringToMySQL( ann.strUsername ) + "\'";
+		string strQueryStatistics = string( );
 
 		// Announce key support
 		if( m_bAnnounceKeySupport )
@@ -3807,15 +3856,12 @@ void CTracker :: Announce( const struct announce_t &ann, bool &bRespond )
 //							m_pCache->setUserData( ann.strUID, iFreeUp * ( ann.iUploaded - iPeerUploaded ) / 100, iFreeDown * ( ann.iDownloaded - iPeerDownloaded ) / 100, 0 );
 							CMySQLQuery mq01( "UPDATE users SET buploaded=buploaded+" + CAtomLong( iFreeUp * ( ann.iUploaded - iPeerUploaded ) / 100 ).toString( ) + ",bdownloaded=bdownloaded+" + CAtomLong( iFreeDown * ( ann.iDownloaded - iPeerDownloaded ) / 100 ).toString( ) + " WHERE buid=" + ann.strUID );
 							
- 							string strQueryStatistics = string( );
 							strQueryStatistics = "UPDATE statistics SET buploaded=buploaded+" + CAtomLong( ann.iUploaded - iPeerUploaded ).toString( ) + ",bdownloaded=bdownloaded+" + CAtomLong( ann.iDownloaded - iPeerDownloaded ).toString( );
 							if( ann.iLeft > 0 || iPeerLeft > 0 )
 								strQueryStatistics += ",bdowntime=bdowntime+";
 							else
 								strQueryStatistics += ",bseedtime=bseedtime+";
 							strQueryStatistics += CAtomLong( iUpdatedInterval ).toString( );
-							strQueryStatistics += " WHERE buid=" + ann.strUID + " AND bid=" + ann.strID;
-			 				CMySQLQuery mq02( strQueryStatistics );
 						}
 						
 						if( iPeerUploaded > ann.iUploaded || iPeerDownloaded > ann.iDownloaded || iUpdatedInterval == 0 )
@@ -3947,15 +3993,12 @@ void CTracker :: Announce( const struct announce_t &ann, bool &bRespond )
 //				m_pCache->setUserData( ann.strUID, iFreeUp * ( ann.iUploaded - iPeerUploaded ) / 100, iFreeDown * ( ann.iDownloaded - iPeerDownloaded ) / 100, 0 );
 				CMySQLQuery mq01( "UPDATE users SET buploaded=buploaded+" + CAtomLong( iFreeUp * ( ann.iUploaded - iPeerUploaded ) / 100 ).toString( ) + ",bdownloaded=bdownloaded+" + CAtomLong( iFreeDown * ( ann.iDownloaded - iPeerDownloaded ) / 100 ).toString( ) + " WHERE buid=" + ann.strUID );
 				
-				string strQueryStatistics = string( );
 				strQueryStatistics = "UPDATE statistics SET buploaded=buploaded+" + CAtomLong( ann.iUploaded - iPeerUploaded ).toString( ) + ",bdownloaded=bdownloaded+" + CAtomLong( ann.iDownloaded - iPeerDownloaded ).toString( );
 				if( ann.iLeft > 0 || iPeerLeft > 0 )
 					strQueryStatistics += ",bdowntime=bdowntime+";
 				else
 					strQueryStatistics += ",bseedtime=bseedtime+";
 				strQueryStatistics += CAtomLong( iUpdatedInterval ).toString( );
-				strQueryStatistics += " WHERE buid=" + ann.strUID + " AND bid=" + ann.strID;
- 				CMySQLQuery mq02( strQueryStatistics );
 			}
 			
 			if( iPeerUploaded > ann.iUploaded || iPeerDownloaded > ann.iDownloaded || iUpdatedInterval == 0 )
@@ -3987,8 +4030,22 @@ void CTracker :: Announce( const struct announce_t &ann, bool &bRespond )
 			strQuery += ",buseragent=\'" + UTIL_StringToMySQL( ann.strUserAgent ) + "\'";
 		}
 		
+		if( ucEvent == EVENT_COMPLETED && !bCompleted )
+		{
+			strQuery += ",bcompleted=1";
+
+			if( !strQueryStatistics.empty( ) )
+				strQueryStatistics += ",bcompleted=NOW()";
+			else
+				strQueryStatistics = "UPDATE statistics SET bcompleted=NOW()";
+		}
 		strQuery += " WHERE bid=" + ann.strID + " AND buid=" + ann.strUID + " AND bpeerid=\'" + UTIL_StringToMySQL( ann.strPeerID ) + "\'";
 		CMySQLQuery mq01( strQuery );
+		if( !strQueryStatistics.empty( ) )
+		{
+			strQueryStatistics += " WHERE buid=" + ann.strUID + " AND bid=" + ann.strID;
+			CMySQLQuery mq02( strQueryStatistics );
+		}
 //		CMySQLQuery mq02( "UPDATE allowed SET bupdated=NOW() WHERE bid=" + ann.strID );
 	}
 	else
@@ -3997,13 +4054,6 @@ void CTracker :: Announce( const struct announce_t &ann, bool &bRespond )
 			if( gucDebugLevel & DEBUG_TRACKER )
 				UTIL_LogPrint( "Announce: peer (%s) not found\n", ann.strPeerID.c_str( ) );
 	}
-	
-	unsigned char ucEvent = EVENT_UNKNOWN;
-
-	if( ann.strEvent.empty( ) ) ucEvent = EVENT_UPDATE;
-	else if( ann.strEvent == EVENT_STR_STARTED ) ucEvent = EVENT_STARTED;
-	else if( ann.strEvent == EVENT_STR_COMPLETED ) ucEvent = EVENT_COMPLETED;
-	else if( ann.strEvent == EVENT_STR_STOPPED ) ucEvent = EVENT_STOPPED;
 
 	switch( ucEvent )
 	{
@@ -4015,7 +4065,7 @@ void CTracker :: Announce( const struct announce_t &ann, bool &bRespond )
 				if( ann.iLeft == 0 )
 				{
 					m_pCache->setActive( ann.strID, SET_SEEDER_ADD_V6 );
-					CMySQLQuery mq03( "UPDATE allowed SET bseeders6=bseeders6+1,bupdated=NOW() WHERE bid=" + ann.strID );
+					CMySQLQuery mq03( "UPDATE allowed SET bseeders6=bseeders6+1,bupdated=NOW(),bseeded=NOW() WHERE bid=" + ann.strID );
 				}
 				else
 				{
@@ -4093,12 +4143,12 @@ void CTracker :: Announce( const struct announce_t &ann, bool &bRespond )
 				if( bIPv6Announce )
 				{
 					m_pCache->setActive( ann.strID, SET_SEEDER_ADD_BOTH );
-					CMySQLQuery mq03( "UPDATE allowed SET bseeders=bseeders+1,bseeders6=bseeders6+1,bupdated=NOW() WHERE bid=" + ann.strID );
+					CMySQLQuery mq03( "UPDATE allowed SET bseeders=bseeders+1,bseeders6=bseeders6+1,bupdated=NOW(),bseeded=NOW() WHERE bid=" + ann.strID );
 				}
 				else
 				{
 					m_pCache->setActive( ann.strID, SET_SEEDER_ADD );
-					CMySQLQuery mq03( "UPDATE allowed SET bseeders=bseeders+1,bupdated=NOW() WHERE bid=" + ann.strID );
+					CMySQLQuery mq03( "UPDATE allowed SET bseeders=bseeders+1,bupdated=NOW(),bseeded=NOW() WHERE bid=" + ann.strID );
 				}
 //				m_pCache->setUserStatus( ann.strUID, SET_USER_SEEDING_ADD );
 				CMySQLQuery mq04( "UPDATE users SET bseeding=bseeding+1 WHERE buid=" + ann.strUID );
@@ -4152,7 +4202,7 @@ void CTracker :: Announce( const struct announce_t &ann, bool &bRespond )
 				if( ann.iLeft == 0 )
 				{
 					m_pCache->setActive( ann.strID, SET_SEEDER_ADD_V6 );
-					CMySQLQuery mq03( "UPDATE allowed SET bseeders6=bseeders6+1,bupdated=NOW() WHERE bid=" + ann.strID );
+					CMySQLQuery mq03( "UPDATE allowed SET bseeders6=bseeders6+1,bupdated=NOW(),bseeded=NOW() WHERE bid=" + ann.strID );
 				}
 				else
 				{
@@ -4171,24 +4221,24 @@ void CTracker :: Announce( const struct announce_t &ann, bool &bRespond )
 			
 			if( !bCompleted )
 			{
-				CMySQLQuery mq01( "UPDATE dstate SET bcompleted=1 WHERE bid=" + ann.strID + " AND buid=" + ann.strUID + " AND bpeerid=\'" + UTIL_StringToMySQL( ann.strPeerID ) + "\'" );
+//				CMySQLQuery mq01( "UPDATE dstate SET bcompleted=1 WHERE bid=" + ann.strID + " AND buid=" + ann.strUID + " AND bpeerid=\'" + UTIL_StringToMySQL( ann.strPeerID ) + "\'" );
 				CMySQLQuery mq02( "INSERT INTO peers (bid,busername,buid,bip,buploaded,bdownloaded,bcompleted) VALUES (" + ann.strID + ",\'" + UTIL_StringToMySQL( ann.strUsername ) + "\'," + ann.strUID + ",\'" + UTIL_StringToMySQL( ann.strIP ) + "\'," + CAtomLong( ann.iUploaded ).toString( ) + "," + CAtomLong( ann.iDownloaded ).toString( ) + ",NOW())" );
-				CMySQLQuery mq03( "UPDATE statistics SET bcompleted=NOW() WHERE buid=" + ann.strUID + " AND bid=" + ann.strID );
+//				CMySQLQuery mq03( "UPDATE statistics SET bcompleted=NOW() WHERE buid=" + ann.strUID + " AND bid=" + ann.strID );
 				
 				m_pCache->setCompleted( ann.strID, SET_COMPLETED_ADD );
-				CMySQLQuery mq04( "UPDATE allowed SET bcompleted=bcompleted+1,bupdated=NOW() WHERE bid=" + ann.strID );
-//					addBonus( ann.strID, ann.strUID );
+//				CMySQLQuery mq04( "UPDATE allowed SET bcompleted=bcompleted+1,bupdated=NOW() WHERE bid=" + ann.strID );
+//				addBonus( ann.strID, ann.strUID );
 				if( ann.iLeft == 0 )
 				{
 					if( bIPv6 )
 					{
 						m_pCache->setActive( ann.strID, SET_SEEDER_A_LEECHER_M_BOTH );
-						CMySQLQuery mq02( "UPDATE allowed SET bseeders=bseeders+1,bseeders6=bseeders6+1,bleechers=bleechers-1,bleechers6=bleechers6-1 WHERE bid=" + ann.strID + " AND bleechers>0" );
+						CMySQLQuery mq02( "UPDATE allowed SET bseeders=bseeders+1,bseeders6=bseeders6+1,bleechers=bleechers-1,bleechers6=bleechers6-1,bcompleted=bcompleted+1,bupdated=NOW(),bseeded=NOW() WHERE bid=" + ann.strID + " AND bleechers>0" );
 					}
 					else
 					{
 						m_pCache->setActive( ann.strID, SET_SEEDER_A_LEECHER_M );
-						CMySQLQuery mq02( "UPDATE allowed SET bseeders=bseeders+1,bleechers=bleechers-1 WHERE bid=" + ann.strID + " AND bleechers>0" );
+						CMySQLQuery mq02( "UPDATE allowed SET bseeders=bseeders+1,bleechers=bleechers-1,bcompleted=bcompleted+1,bupdated=NOW(),bseeded=NOW() WHERE bid=" + ann.strID + " AND bleechers>0" );
 					}
 //					m_pCache->setUserStatus( ann.strUID, SET_USER_SEEDING_A_LEECHING_M );
 					CMySQLQuery mq03( "UPDATE users SET bseeding=bseeding+1,bleeching=bleeching-1 WHERE buid=" + ann.strUID + " AND bleeching>0" );
@@ -4921,7 +4971,10 @@ void CTracker :: serverResponseBencodeInfo( struct request_t *pRequest, struct r
 
 	delete pQuery;
 
-	pData->setItem( "files", new CAtomString( vecQuery[0] ) );
+	if( vecQuery.size( ) == 1 )
+		pData->setItem( "files", new CAtomString( vecQuery[0] ) );
+	else
+		pData->setItem( "files", new CAtomString( "0" ) );
 	
 	unsigned long ulPeers = 0;
 
@@ -4935,7 +4988,10 @@ void CTracker :: serverResponseBencodeInfo( struct request_t *pRequest, struct r
 
 	delete pQueryPeer;
 
-	pData->setItem( "peers", new CAtomString( vecQueryPeer[0] ) );
+	if( vecQueryPeer.size( ) == 1 )
+		pData->setItem( "peers", new CAtomString( vecQueryPeer[0] ) );
+	else
+		pData->setItem( "peers", new CAtomString( "0" ) );
 	
 	CMySQLQuery *pQueryIP = new CMySQLQuery( "SELECT COUNT(*) FROM ips WHERE bcount>0" );
 				
@@ -4948,7 +5004,12 @@ void CTracker :: serverResponseBencodeInfo( struct request_t *pRequest, struct r
 	delete pQueryIP;
 
 	if( m_bCountUniquePeers )
-		pData->setItem( "unique", new CAtomString( vecQueryIP[0] ) );
+	{
+		if( vecQueryIP.size( ) == 1 )
+			pData->setItem( "unique", new CAtomString( vecQueryIP[0] ) );
+		else
+			pData->setItem( "unique", new CAtomString( "0" ) );
+	}
 
 	pResponse->strContent = Encode( pData );
 	pResponse->bCompressOK = false;
@@ -5440,6 +5501,7 @@ void CTracker :: HTML_Nav_Bar( struct request_t *pRequest, struct response_t *pR
 {
 	if( !cstrCSS.empty( ) )
 	{
+		const string cstrURL( pRequest->strURL );
 		// This funtion builds a navbar
 		// start navbar
 		pResponse->strContent += "<div class=\"navbar_" + cstrCSS + "\">\n";
@@ -5449,38 +5511,58 @@ void CTracker :: HTML_Nav_Bar( struct request_t *pRequest, struct response_t *pR
 		// Index (RTT)
 		if( !pRequest->user.strUID.empty( ) && ( pRequest->user.ucAccess & m_ucAccessViewTorrents ) )
 		{
-			pResponse->strContent += "<td class=\"navbar_index\"><a title=\"" + gmapLANG_CFG["navbar_index"] + "\" class=\"navbar_index\" href=\"" + RESPONSE_STR_INDEX_HTML + "\">" + gmapLANG_CFG["navbar_index"] + "</a>";
+			pResponse->strContent += "<td class=\"navbar";
+//			if( cstrCSS == CSS_INDEX )
+			if( cstrURL == RESPONSE_STR_SEPERATOR || cstrURL == RESPONSE_STR_INDEX_HTML || cstrURL == "/index.htm" )
+				pResponse->strContent += "_index";
+			pResponse->strContent += "\"><a title=\"" + gmapLANG_CFG["navbar_index"] + "\" class=\"navbar_index\" href=\"" + RESPONSE_STR_INDEX_HTML + "\">" + gmapLANG_CFG["navbar_index"];
 			if( bNewIndex )
 				pResponse->strContent += "<span class=\"navbar_new\">(" + gmapLANG_CFG["new"] + ")</span>";
-			pResponse->strContent += "</td>\n";
-// 			pResponse->strContent += "<td class=\"navbar_pipe_login_" + cstrCSS + "\">|</span>";
-// 			pResponse->strContent += "<span class=\"navbar_index_" + cstrCSS + "\"><a title=\"" + gmapLANG_CFG["navbar_index"] + "\" class=\"navbar_index_" + cstrCSS + "\" href=\"" + RESPONSE_STR_INDEX_HTML + "\">" + gmapLANG_CFG["navbar_index"] + "</a></span>\n";
-// 			pResponse->strContent += "<span class=\"navbar_pipe_login_" + cstrCSS + "\">|</span>";
+			pResponse->strContent += "</a></td>\n";
 		}
 		
 		// upload
 		if( !pRequest->user.strUID.empty( ) && ( pRequest->user.ucAccess & m_ucAccessUploadTorrents ) )
-			pResponse->strContent += "<td class=\"navbar_upload\"><a title=\"" + gmapLANG_CFG["navbar_upload"] + "\" class=\"navbar_upload\" href=\"" + RESPONSE_STR_UPLOAD_HTML + "\">" + gmapLANG_CFG["navbar_upload"] + "</a></td>\n";
+		{
+			pResponse->strContent += "<td class=\"navbar";
+//			if( cstrCSS == CSS_UPLOAD )
+			if( cstrURL == RESPONSE_STR_UPLOAD_HTML )
+				pResponse->strContent += "_upload";
+			pResponse->strContent += "\"><a title=\"" + gmapLANG_CFG["navbar_upload"] + "\" class=\"navbar_upload\" href=\"" + RESPONSE_STR_UPLOAD_HTML + "\">" + gmapLANG_CFG["navbar_upload"] + "</a></td>\n";
+		}
 		else if( ( !m_strOfferDir.empty( ) && !pRequest->user.strUID.empty( ) && ( pRequest->user.ucAccess & m_ucAccessUploadOffers ) ) )
-			pResponse->strContent += "<td class=\"navbar_upload\"><a title=\"" + gmapLANG_CFG["navbar_upload_offer"] + "\" class=\"navbar_upload\" href=\"" + RESPONSE_STR_UPLOAD_HTML + "\">" + gmapLANG_CFG["navbar_upload_offer"] + "</a></td>\n";
-// 			pResponse->strContent += "<span class=\"navbar_pipe_upload_" + cstrCSS + "\">|</span><span class=\"navbar_upload_" + cstrCSS + "\"><a title=\"" + gmapLANG_CFG["navbar_upload"] + "\" class=\"navbar_upload_" + cstrCSS + "\" href=\"" + RESPONSE_STR_UPLOAD_HTML + "\">" + gmapLANG_CFG["navbar_upload"] + "</a></span>\n";
+		{
+			pResponse->strContent += "<td class=\"navbar";
+//			if( cstrCSS == CSS_UPLOAD )
+			if( cstrURL == RESPONSE_STR_UPLOAD_HTML )
+				pResponse->strContent += "_upload";
+			pResponse->strContent += "\"><a title=\"" + gmapLANG_CFG["navbar_upload_offer"] + "\" class=\"navbar_upload\" href=\"" + RESPONSE_STR_UPLOAD_HTML + "\">" + gmapLANG_CFG["navbar_upload_offer"] + "</a></td>\n";
+		}
 		
 		// offer
 		if( !pRequest->user.strUID.empty( ) && ( pRequest->user.ucAccess & m_ucAccessViewOffers ) )
 		{
-			pResponse->strContent += "<td class=\"navbar_offer\"><a title=\"" + gmapLANG_CFG["navbar_offer"] + "\" class=\"navbar_offer\" href=\"" + RESPONSE_STR_OFFER_HTML + "\">" + gmapLANG_CFG["navbar_offer"] + "</a>";
+			pResponse->strContent += "<td class=\"navbar";
+//			if( cstrCSS == CSS_OFFER )
+			if( cstrURL == RESPONSE_STR_OFFER_HTML )
+				pResponse->strContent += "_offer";
+			pResponse->strContent += "\"><a title=\"" + gmapLANG_CFG["navbar_offer"] + "\" class=\"navbar_offer\" href=\"" + RESPONSE_STR_OFFER_HTML + "\">" + gmapLANG_CFG["navbar_offer"];
 			if( bNewOffer )
 				pResponse->strContent += "<span class=\"navbar_new\">(" + gmapLANG_CFG["new"] + ")</span>";
-			pResponse->strContent += "</td>\n";
+			pResponse->strContent += "</a></td>\n";
 		}
 
 		// login & my torrents
 		if( pRequest->user.strUID.empty( ) )
-			pResponse->strContent += "<td class=\"navbar_login\"><a title=\"" + gmapLANG_CFG["navbar_login"] + "\" class=\"navbar_login\" href=\"" + RESPONSE_STR_LOGIN_HTML + "\">" + gmapLANG_CFG["navbar_login"] + "</a></td>\n";
-// 			pResponse->strContent += "<span class=\"navbar_login_" + cstrCSS + "\"><a title=\"" + gmapLANG_CFG["navbar_login"] + "\" class=\"navbar_login_" + cstrCSS + "\" href=\"" + RESPONSE_STR_LOGIN_HTML + "\">" + gmapLANG_CFG["navbar_login"] + "</a></span>\n";
-		else
-			pResponse->strContent += "<td class=\"navbar_login\"><a title=\"" + gmapLANG_CFG["navbar_my_torrents"] + "\" class=\"navbar_login\" href=\"" + RESPONSE_STR_LOGIN_HTML + "\">" + gmapLANG_CFG["navbar_my_torrents"] + "</a></td>\n";
-// 			pResponse->strContent += "<span class=\"navbar_login_" + cstrCSS + "\"><a title=\"" + gmapLANG_CFG["navbar_my_torrents"] + "\" class=\"navbar_login_" + cstrCSS + "\" href=\"" + RESPONSE_STR_LOGIN_HTML + "\">" + gmapLANG_CFG["navbar_my_torrents"] + "</a></span>\n";
+		{
+                        pResponse->strContent += "<td class=\"navbar";
+//			if( cstrCSS == CSS_LOGIN )
+			if( cstrURL == RESPONSE_STR_LOGIN_HTML )
+				pResponse->strContent += "_login";
+			pResponse->strContent += "\"><a title=\"" + gmapLANG_CFG["navbar_login"] + "\" class=\"navbar_login\" href=\"" + RESPONSE_STR_LOGIN_HTML + "\">" + gmapLANG_CFG["navbar_login"] + "</a></td>\n";
+		}
+//		else
+//			pResponse->strContent += "<td class=\"navbar_login\"><a title=\"" + gmapLANG_CFG["navbar_my_torrents"] + "\" class=\"navbar_login\" href=\"" + RESPONSE_STR_LOGIN_HTML + "\">" + gmapLANG_CFG["navbar_my_torrents"] + "</a></td>\n";
 
 		// logout
 // 		if( !pRequest->user.strLogin.empty( ) )
@@ -5491,10 +5573,21 @@ void CTracker :: HTML_Nav_Bar( struct request_t *pRequest, struct response_t *pR
 		if( pRequest->user.ucAccess & m_ucAccessSignup )
 		{
 			if( pRequest->user.strUID.empty( ) )
-				pResponse->strContent += "<td class=\"navbar_signup\"><a title=\"" + gmapLANG_CFG["navbar_sign_up_school"] + "\" class=\"navbar_signup\" href=\"" + RESPONSE_STR_SIGNUP_SCHOOL_HTML + "\">" + gmapLANG_CFG["navbar_sign_up_school"] + "</a> / " + "<a title=\"" + gmapLANG_CFG["navbar_sign_up_invite"] + "\" class=\"navbar_signup\" href=\"" + RESPONSE_STR_INVITE_HTML + "\">" + gmapLANG_CFG["navbar_sign_up_invite"] + "</a></td>\n";
-			else if( pRequest->user.ucAccess & m_ucAccessSignupDirect )
-				pResponse->strContent += "<td class=\"navbar_signup\"><a title=\"" + gmapLANG_CFG["navbar_sign_up"] + "\" class=\"navbar_signup\" href=\"" + RESPONSE_STR_SIGNUP_HTML + "\">" + gmapLANG_CFG["navbar_sign_up"] + "</a></td>\n";
-// 			pResponse->strContent += "<span class=\"navbar_pipe_signup_" + cstrCSS + "\">|</span><span class=\"navbar_signup_" + cstrCSS + "\"><a title=\"" + gmapLANG_CFG["navbar_sign_up"] + "\" class=\"navbar_signup_" + cstrCSS + "\" href=\"" + RESPONSE_STR_SIGNUP_HTML + "\">" + gmapLANG_CFG["navbar_sign_up"] + "</a></span>\n";
+			{
+				pResponse->strContent += "<td class=\"navbar";
+//				if( cstrCSS == CSS_SIGNUP )
+				if( cstrURL == RESPONSE_STR_SIGNUP_SCHOOL_HTML || cstrURL == RESPONSE_STR_INVITE_HTML )
+					pResponse->strContent += "_signup";
+				pResponse->strContent += "\"><a title=\"" + gmapLANG_CFG["navbar_sign_up_school"] + "\" class=\"navbar_signup\" href=\"" + RESPONSE_STR_SIGNUP_SCHOOL_HTML + "\">" + gmapLANG_CFG["navbar_sign_up_school"] + "</a> / " + "<a title=\"" + gmapLANG_CFG["navbar_sign_up_invite"] + "\" class=\"navbar_signup\" href=\"" + RESPONSE_STR_INVITE_HTML + "\">" + gmapLANG_CFG["navbar_sign_up_invite"] + "</a></td>\n";
+			}
+//			else if( pRequest->user.ucAccess & m_ucAccessSignupDirect )
+//			{
+//				pResponse->strContent += "<td class=\"navbar";
+////				if( cstrCSS == CSS_SIGNUP )
+//				if( cstrURL == RESPONSE_STR_SIGNUP_HTML )
+//					pResponse->strContent += "_signup";
+//				pResponse->strContent += "\"><a title=\"" + gmapLANG_CFG["navbar_sign_up"] + "\" class=\"navbar_signup\" href=\"" + RESPONSE_STR_SIGNUP_HTML + "\">" + gmapLANG_CFG["navbar_sign_up"] + "</a></td>\n";
+//			}
 		}
 
 		// RSS
@@ -5502,11 +5595,8 @@ void CTracker :: HTML_Nav_Bar( struct request_t *pRequest, struct response_t *pR
 // 		{
 // 			if( !rssdump.strURL.empty( ) )
 // 				pResponse->strContent += "<td class=\"navbar_rss\"><a rel=\"" + STR_TARGET_REL + "\" title=\"" + gmapLANG_CFG["navbar_rss"] + "\" class=\"navbar_rss\" href=\"" + rssdump.strURL + rssdump.strName + "\">" + gmapLANG_CFG["navbar_rss"] + "</a></td>\n";
-// // 				pResponse->strContent += "<span class=\"navbar_pipe_rss_" + cstrCSS + "\">|</span><span class=\"navbar_rss_" + cstrCSS + "\"><a rel=\"" + STR_TARGET_REL + "\" title=\"" + gmapLANG_CFG["navbar_rss"] + "\" class=\"navbar_rss_" + cstrCSS + "\" href=\"" + rssdump.strURL + rssdump.strName + "\">" + gmapLANG_CFG["navbar_rss"] + "</a></span>\n";
 // 			else if( m_bServeLocal )
 // 				pResponse->strContent += "<td class=\"navbar_rss\"><a rel=\"" + STR_TARGET_REL + "\" title=\"" + gmapLANG_CFG["navbar_rss"] + "\" class=\"navbar_rss\" href=\"" + RESPONSE_STR_SEPERATOR + rssdump.strName + "\">" + gmapLANG_CFG["navbar_rss"] + "</a></td>\n";
-
-// // 				pResponse->strContent += "<span class=\"navbar_pipe_rss_" + cstrCSS + "\">|</span><span class=\"navbar_rss_" + cstrCSS + "\"><a rel=\"" + STR_TARGET_REL + "\" title=\"" + gmapLANG_CFG["navbar_rss"] + "\" class=\"navbar_rss_" + cstrCSS + "\" href=\"" + RESPONSE_STR_SEPERATOR + rssdump.strName + "\">" + gmapLANG_CFG["navbar_rss"] + "</a></span>\n";
 // 		}
 
 		// XML
@@ -5514,69 +5604,111 @@ void CTracker :: HTML_Nav_Bar( struct request_t *pRequest, struct response_t *pR
 // 		{
 // 			if( !xmldump.strURL.empty( ) )
 // 				pResponse->strContent += "<td class=\"navbar_xml\"><a rel=\"" + STR_TARGET_REL + "\" title=\"" + gmapLANG_CFG["navbar_xml"] + "\" class=\"navbar_xml\" href=\"" + xmldump.strURL + xmldump.strName + "\">" + gmapLANG_CFG["navbar_xml"] + "</a></td>\n";
-// // 				pResponse->strContent += "<span class=\"navbar_pipe_xml_" + cstrCSS + "\">|</span><span class=\"navbar_xml_" + cstrCSS + "\"><a rel=\"" + STR_TARGET_REL + "\" title=\"" + gmapLANG_CFG["navbar_xml"] + "\" class=\"navbar_xml_" + cstrCSS + "\" href=\"" + xmldump.strURL + xmldump.strName + "\">" + gmapLANG_CFG["navbar_xml"] + "</a></span>\n";
 // 			else if( m_bServeLocal )
 // 				pResponse->strContent += "<td class=\"navbar_xml\"><a rel=\"" + STR_TARGET_REL + "\" title=\"" + gmapLANG_CFG["navbar_xml"] + "\" class=\"navbar_xml\" href=\"" + RESPONSE_STR_SEPERATOR + xmldump.strName + "\">" + gmapLANG_CFG["navbar_xml"] + "</a></td>\n";
-// // 				pResponse->strContent += "<span class=\"navbar_pipe_xml_" + cstrCSS + "\">|</span><span class=\"navbar_xml_" + cstrCSS + "\"><a rel=\"" + STR_TARGET_REL + "\" title=\"" + gmapLANG_CFG["navbar_xml"] + "\" class=\"navbar_xml_" + cstrCSS + "\" href=\"" + RESPONSE_STR_SEPERATOR + xmldump.strName + "\">" + gmapLANG_CFG["navbar_xml"] + "</a></span>\n";
 // 		}
 
-		// info
-//		if( !pRequest->user.strUID.empty( ) && ( pRequest->user.ucAccess & m_ucAccessView ) )
-		if( ( pRequest->user.ucAccess & m_ucAccessView ) )
-			pResponse->strContent += "<td class=\"navbar_info\"><a class=\"navbar_info\" title=\"" + gmapLANG_CFG["navbar_info"] + "\" href=\"" + RESPONSE_STR_INFO_HTML + "\">" + gmapLANG_CFG["navbar_info"] + "</a></td>\n";
-// 			pResponse->strContent += "<span class=\"navbar_pipe_info_" + cstrCSS + "\">|</span><span class=\"navbar_info_" + cstrCSS + "\"><a class=\"navbar_info_" + cstrCSS + "\" title=\"" + gmapLANG_CFG["navbar_info"] + "\" href=\"" + RESPONSE_STR_INFO_HTML + "\">" + gmapLANG_CFG["navbar_info"] + "</a></span>\n";
+		// rank
+		if( !pRequest->user.strUID.empty( ) && ( pRequest->user.ucAccess & m_ucAccessView ) )
+		{
+			pResponse->strContent += "<td class=\"navbar";
+//			if( cstrCSS == CSS_RANK )
+			if( cstrURL == RESPONSE_STR_RANK_HTML )
+				pResponse->strContent += "_rank";
+			pResponse->strContent += "\"><a class=\"navbar_rank\" title=\"" + gmapLANG_CFG["navbar_rank"] + "\" href=\"" + RESPONSE_STR_RANK_HTML + "\">" + gmapLANG_CFG["navbar_rank"] + "</a></td>\n";
+		}
 
 		// rules
 		if( !pRequest->user.strUID.empty( ) && ( pRequest->user.ucAccess & m_ucAccessView ) )
-			pResponse->strContent += "<td class=\"navbar_rules\"><a class=\"navbar_rules\" title=\"" + gmapLANG_CFG["navbar_rules"] + "\" href=\"" + RESPONSE_STR_RULES_HTML + "\">" + gmapLANG_CFG["navbar_rules"] + "</a></td>\n";
+		{
+			pResponse->strContent += "<td class=\"navbar";
+//			if( cstrCSS == CSS_RULES )
+			if( cstrURL == RESPONSE_STR_RULES_HTML )
+				pResponse->strContent += "_rules";
+			pResponse->strContent += "\"><a class=\"navbar_rules\" title=\"" + gmapLANG_CFG["navbar_rules"] + "\" href=\"" + RESPONSE_STR_RULES_HTML + "\">" + gmapLANG_CFG["navbar_rules"] + "</a></td>\n";
+		}
 
 		// faq
 		if( !pRequest->user.strUID.empty( ) && ( pRequest->user.ucAccess & m_ucAccessView ) )
-			pResponse->strContent += "<td class=\"navbar_faq\"><a class=\"navbar_faq\" title=\"" + gmapLANG_CFG["navbar_faq"] + "\" href=\"" + RESPONSE_STR_FAQ_HTML + "\">" + gmapLANG_CFG["navbar_faq"] + "</a></td>\n";
+		{
+			pResponse->strContent += "<td class=\"navbar";
+//			if( cstrCSS == CSS_FAQ )
+			if( cstrURL == RESPONSE_STR_FAQ_HTML )
+				pResponse->strContent += "_faq";
+			pResponse->strContent += "\"><a class=\"navbar_faq\" title=\"" + gmapLANG_CFG["navbar_faq"] + "\" href=\"" + RESPONSE_STR_FAQ_HTML + "\">" + gmapLANG_CFG["navbar_faq"] + "</a></td>\n";
+		}
+
+		// info
+//		if( !pRequest->user.strUID.empty( ) && ( pRequest->user.ucAccess & m_ucAccessView ) )
+		if( pRequest->user.ucAccess & m_ucAccessView )
+		{
+			pResponse->strContent += "<td class=\"navbar";
+//			if( cstrCSS == CSS_INFO )
+			if( cstrURL == RESPONSE_STR_INFO_HTML )
+				pResponse->strContent += "_info";
+			pResponse->strContent += "\"><a class=\"navbar_info\" title=\"" + gmapLANG_CFG["navbar_info"] + "\" href=\"" + RESPONSE_STR_INFO_HTML + "\">" + gmapLANG_CFG["navbar_info"] + "</a></td>\n";
+		}
 
 		// staff
 		if( !pRequest->user.strUID.empty( ) && ( pRequest->user.ucAccess & m_ucAccessView ) )
-			pResponse->strContent += "<td class=\"navbar_staff\"><a class=\"navbar_staff\" title=\"" + gmapLANG_CFG["navbar_staff"] + "\" href=\"" + RESPONSE_STR_STAFF_HTML + "\">" + gmapLANG_CFG["navbar_staff"] + "</a></td>\n";
+		{
+			pResponse->strContent += "<td class=\"navbar";
+//			if( cstrCSS == CSS_STAFF )
+			if( cstrURL == RESPONSE_STR_STAFF_HTML )
+				pResponse->strContent += "_staff";
+			pResponse->strContent += "\"><a class=\"navbar_staff\" title=\"" + gmapLANG_CFG["navbar_staff"] + "\" href=\"" + RESPONSE_STR_STAFF_HTML + "\">" + gmapLANG_CFG["navbar_staff"] + "</a></td>\n";
+		}
 		
-		// staff
-		if( !pRequest->user.strUID.empty( ) && ( pRequest->user.ucAccess & m_ucAccessView ) )
-			pResponse->strContent += "<td class=\"navbar_rank\"><a class=\"navbar_rank\" title=\"" + gmapLANG_CFG["navbar_rank"] + "\" href=\"" + RESPONSE_STR_RANK_HTML + "\">" + gmapLANG_CFG["navbar_rank"] + "</a></td>\n";
-
-		// log
-		if( !pRequest->user.strUID.empty( ) && ( pRequest->user.ucAccess & m_ucAccessViewLog ) )
-			pResponse->strContent += "<td class=\"navbar_log\"><a title=\"" + gmapLANG_CFG["navbar_log"] + "\" class=\"navbar_log\" href=\"" + RESPONSE_STR_LOG_HTML + "\">" + gmapLANG_CFG["navbar_log"] + "</a></td>\n";
-// 			pResponse->strContent += "<span class=\"navbar_pipe_admin_" + cstrCSS + "\">|</span><span class=\"navbar_admin_" + cstrCSS + "\"><a title=\"" + gmapLANG_CFG["navbar_admin"] + "\" class=\"navbar_admin_" + cstrCSS + "\" href=\"" + RESPONSE_STR_ADMIN_HTML + "\">" + gmapLANG_CFG["navbar_admin"] + "</a></span>\n";
+		// users
+		if( !pRequest->user.strUID.empty( ) && ( pRequest->user.ucAccess & m_ucAccessViewUsers ) )
+		{
+			pResponse->strContent += "<td class=\"navbar";
+//			if( cstrCSS == CSS_USERS )
+			if( cstrURL == RESPONSE_STR_USERS_HTML )
+				pResponse->strContent += "_users";
+			pResponse->strContent += "\"><a title=\"" + gmapLANG_CFG["navbar_users"] + "\" class=\"navbar_users\" href=\"" + RESPONSE_STR_USERS_HTML + "\">" + gmapLANG_CFG["navbar_users"] + "</a></td>\n";
+		}
 
 		// admin
 		if( pRequest->user.ucAccess & m_ucAccessAdmin )
-			pResponse->strContent += "<td class=\"navbar_admin\"><a title=\"" + gmapLANG_CFG["navbar_admin"] + "\" class=\"navbar_admin\" href=\"" + RESPONSE_STR_ADMIN_HTML + "\">" + gmapLANG_CFG["navbar_admin"] + "</a></td>\n";
-// 			pResponse->strContent += "<span class=\"navbar_pipe_admin_" + cstrCSS + "\">|</span><span class=\"navbar_admin_" + cstrCSS + "\"><a title=\"" + gmapLANG_CFG["navbar_admin"] + "\" class=\"navbar_admin_" + cstrCSS + "\" href=\"" + RESPONSE_STR_ADMIN_HTML + "\">" + gmapLANG_CFG["navbar_admin"] + "</a></span>\n";
+		{
+			pResponse->strContent += "<td class=\"navbar";
+//			if( cstrCSS == CSS_ADMIN )
+			if( cstrURL == RESPONSE_STR_ADMIN_HTML )
+				pResponse->strContent += "_admin";
+			pResponse->strContent += "\"><a title=\"" + gmapLANG_CFG["navbar_admin"] + "\" class=\"navbar_admin\" href=\"" + RESPONSE_STR_ADMIN_HTML + "\">" + gmapLANG_CFG["navbar_admin"] + "</a></td>\n";
+		}
 
-		// users
-		if( !pRequest->user.strUID.empty( ) && ( pRequest->user.ucAccess & m_ucAccessViewUsers ) )
-			pResponse->strContent += "<td class=\"navbar_users\"><a title=\"" + gmapLANG_CFG["navbar_users"] + "\" class=\"navbar_users\" href=\"" + RESPONSE_STR_USERS_HTML + "\">" + gmapLANG_CFG["navbar_users"] + "</a></td>\n";
-// 			pResponse->strContent += "<span class=\"navbar_pipe_users_" + cstrCSS + "\">|</span><span class=\"navbar_users_" + cstrCSS + "\"><a title=\"" + gmapLANG_CFG["navbar_users"] + "\" class=\"navbar_users_" + cstrCSS + "\" href=\"" + RESPONSE_STR_USERS_HTML + "\">" + gmapLANG_CFG["navbar_users"] + "</a></span>\n";
+		// log
+		if( !pRequest->user.strUID.empty( ) && ( pRequest->user.ucAccess & m_ucAccessViewLog ) )
+		{
+			pResponse->strContent += "<td class=\"navbar";
+//			if( cstrCSS == CSS_LOG )
+			if( cstrURL == RESPONSE_STR_LOG_HTML )
+				pResponse->strContent += "_log";
+			pResponse->strContent += "\"><a title=\"" + gmapLANG_CFG["navbar_log"] + "\" class=\"navbar_log\" href=\"" + RESPONSE_STR_LOG_HTML + "\">" + gmapLANG_CFG["navbar_log"] + "</a></td>\n";
+		}
 
 		// tags
-		if( !pRequest->user.strUID.empty( ) && ( pRequest->user.ucAccess & m_ucAccessAdmin ) )
-			pResponse->strContent += "<td class=\"navbar_tags\"><a title=\"" + gmapLANG_CFG["navbar_tags"] + "\" class=\"navbar_tags\" href=\"" + RESPONSE_STR_TAGS_HTML + "\">" + gmapLANG_CFG["navbar_tags"] + "</a></td>\n";
-// 			pResponse->strContent += "<span class=\"navbar_pipe_tags_" + cstrCSS + "\">|</span><span class=\"navbar_tags_" + cstrCSS + "\"><a title=\"" + gmapLANG_CFG["navbar_tags"] + "\" class=\"navbar_tags_" + cstrCSS + "\" href=\"" + RESPONSE_STR_TAGS_HTML + "\">" + gmapLANG_CFG["navbar_tags"] + "</a></span>\n";
+//		if( !pRequest->user.strUID.empty( ) && ( pRequest->user.ucAccess & m_ucAccessAdmin ) )
+//			pResponse->strContent += "<td class=\"navbar_tags\"><a title=\"" + gmapLANG_CFG["navbar_tags"] + "\" class=\"navbar_tags\" href=\"" + RESPONSE_STR_TAGS_HTML + "\">" + gmapLANG_CFG["navbar_tags"] + "</a></td>\n";
 
 		// language
 // 		if( pRequest->user.ucAccess & ACCESS_ADMIN )
 // 			pResponse->strContent += "<td class=\"navbar_language\"><a title=\"" + gmapLANG_CFG["navbar_language"] + "\" class=\"navbar_language\" href=\"" + RESPONSE_STR_LANGUAGE_HTML + "\">" + gmapLANG_CFG["navbar_language"] + "</a></td>\n";
-// 			pResponse->strContent += "<span class=\"navbar_pipe_language_" + cstrCSS + "\">|</span><span class=\"navbar_language_" + cstrCSS + "\"><a title=\"" + gmapLANG_CFG["navbar_language"] + "\" class=\"navbar_language_" + cstrCSS + "\" href=\"" + RESPONSE_STR_LANGUAGE_HTML + "\">" + gmapLANG_CFG["navbar_language"] + "</a></span>\n";
 
 		// xstats
 		if( !pRequest->user.strUID.empty( ) && ( pRequest->user.ucAccess & m_ucAccessViewXStates ) )
-			pResponse->strContent += "<td class=\"navbar_xstats\"><a title=\"" + gmapLANG_CFG["navbar_xstats"] + "\" class=\"navbar_xstats\" href=\"" + RESPONSE_STR_XSTATS_HTML + "\">" + gmapLANG_CFG["navbar_xstats"] + "</a></td>\n";
-// 			pResponse->strContent += "<span class=\"navbar_pipe_xstats_" + cstrCSS + "\">|</span><span class=\"navbar_xstats_" + cstrCSS + "\"><a title=\"" + gmapLANG_CFG["navbar_xstats"] + "\" class=\"navbar_xstats_" + cstrCSS + "\" href=\"" + RESPONSE_STR_XSTATS_HTML + "\">" + gmapLANG_CFG["navbar_xstats"] + "</a></span>\n";
+		{
+			pResponse->strContent += "<td class=\"navbar";
+			if( cstrURL == RESPONSE_STR_XSTATS_HTML )
+				pResponse->strContent += "_xstats";
+			pResponse->strContent += "\"><a title=\"" + gmapLANG_CFG["navbar_xstats"] + "\" class=\"navbar_xstats\" href=\"" + RESPONSE_STR_XSTATS_HTML + "\">" + gmapLANG_CFG["navbar_xstats"] + "</a></td>\n";
+		}
 
 		// xtorrent
 // 		if( pRequest->user.ucAccess & ACCESS_ADMIN )
 // 			pResponse->strContent += "<td class=\"navbar_xtorrent\"><a title=\"" + gmapLANG_CFG["navbar_xtorrent"] + "\" class=\"navbar_xtorrent\" href=\"" + RESPONSE_STR_XTORRENT_HTML + "\">" + gmapLANG_CFG["navbar_xtorrent"] + "</a></td>\n";
-// 			pResponse->strContent += "<span class=\"navbar_pipe_xtorrent_" + cstrCSS + "\">|</span><span class=\"navbar_xtorrent_" + cstrCSS + "\"><a title=\"" + gmapLANG_CFG["navbar_xtorrent"] + "\" class=\"navbar_xtorrent_" + cstrCSS + "\" href=\"" + RESPONSE_STR_XTORRENT_HTML + "\">" + gmapLANG_CFG["navbar_xtorrent"] + "</a></span>\n";
-
 
 		// close navbar
 		pResponse->strContent += "</tr>\n</table>\n</div>\n";
@@ -5798,47 +5930,92 @@ void CTracker :: HTML_Common_Begin( struct request_t *pRequest, struct response_
 	pResponse->strContent += "</head>\n\n<body>\n\n";
 
 	// include JS_Target
-	if( !STR_TARGET_REL.empty( ) && !STR_TARGET_BLANK.empty( ) )
-		pResponse->strContent += JS_Target( STR_TARGET_REL, STR_TARGET_BLANK );
+//	if( !STR_TARGET_REL.empty( ) && !STR_TARGET_BLANK.empty( ) )
+//		pResponse->strContent += JS_Target( STR_TARGET_REL, STR_TARGET_BLANK );
 
-	// display login status (login1=not logged in) (login2=logged in)
-	pResponse->strContent += "<table class=\"top_header\">\n";
-	pResponse->strContent += "<tr class=\"top_header\">\n";
-	pResponse->strContent += "<td class=\"top_avatar\">\n";
-//	pResponse->strContent += "<a class=\"top_title\" href=\"" + RESPONSE_STR_INDEX_HTML + "\">" + m_strTitle + "</a>";
-	pResponse->strContent += "<a class=\"top_title\" href=\"" + RESPONSE_STR_INDEX_HTML + "\">" + gmapLANG_CFG["avatar"] + "</a>";
-//	pResponse->strContent += "<br><span class=\"top_subtitle\">" + m_strSubTitle + "</span>";
-	pResponse->strContent += "</td>\n";
+	pResponse->strContent += "<script type=\"text/javascript\">\n";
+	pResponse->strContent += "<!--\n";
+
+	pResponse->strContent += "function getTop(e){\n";
+	pResponse->strContent += "var offset=e.offsetTop;\n";
+	pResponse->strContent += "  if(e.offsetParent!=null) offset+=getTop(e.offsetParent);\n";
+	pResponse->strContent += "  return offset;\n";
+	pResponse->strContent += "}\n";
+
+	pResponse->strContent += "function getLeft(e){\n";
+	pResponse->strContent += "var offset=e.offsetLeft;\n";
+	pResponse->strContent += "  if(e.offsetParent!=null) offset+=getLeft(e.offsetParent);\n";
+	pResponse->strContent += "  return offset;\n";
+	pResponse->strContent += "}\n";
 	
-	// Display static header
-	if( ( ( bIndex && ( pRequest->user.ucAccess & m_ucAccessView ) ) || m_bStaticAll ) && !m_strStaticHeader.empty( ) )
-	{
-		pResponse->strContent += "<td class=\"static_header\">\n";
-		pResponse->strContent += "<div class=\"static_header\">\n" + m_strStaticHeader + "\n</div>\n</td>\n";
-	}
-	pResponse->strContent += "</tr>\n</table>\n";
+	// hideTool
+	pResponse->strContent += "function hideTool( event, idTool, idTrigger ) {\n";
+	pResponse->strContent += "  var tool = document.getElementById( idTool );\n";
+	pResponse->strContent += "  var trigger = document.getElementById( idTrigger );\n";
+	pResponse->strContent += "  if( tool ) {\n";
+	pResponse->strContent += "    if( event.relatedTarget && event.relatedTarget.id != idTool && event.relatedTarget.id != idTrigger )\n";
+	pResponse->strContent += "      tool.style.display=\"none\";\n";
+	pResponse->strContent += "    else\n";
+	pResponse->strContent += "      if( !event.relatedTarget )\n";
+	pResponse->strContent += "        tool.style.display=\"none\";\n";
+	pResponse->strContent += "  }\n";
+//	pResponse->strContent += "  hideTrigger( idTrigger );\n";
+	pResponse->strContent += "}\n";
+	
+	// showToolLeft
+	pResponse->strContent += "function showToolLeft( idTool, idTrigger ) {\n";
+	pResponse->strContent += "  var tool = document.getElementById( idTool );\n";
+	pResponse->strContent += "  var trigger = document.getElementById( idTrigger );\n";
+	pResponse->strContent += "  var triggerTop = parseInt(getTop( trigger ));\n";
+	pResponse->strContent += "  var triggerLeft = parseInt(getLeft( trigger ));\n";
+	pResponse->strContent += "  var triggerHeight = parseInt(trigger.offsetHeight);\n";
+	pResponse->strContent += "  if( tool && tool.style.display==\"none\" ) {\n";
+	pResponse->strContent += "    tool.style.display=\"\";\n";
+	pResponse->strContent += "    tool.style.top=(triggerTop+triggerHeight).toString()+'px';\n";
+	pResponse->strContent += "    tool.style.left=triggerLeft.toString()+'px';\n";
+//	pResponse->strContent += "    showTrigger( idTrigger );\n";
+	pResponse->strContent += "  }\n";
+	pResponse->strContent += "}\n";
+
+	// showToolRight
+	pResponse->strContent += "function showToolRight( idTool, idTrigger ) {\n";
+	pResponse->strContent += "  var tool = document.getElementById( idTool );\n";
+	pResponse->strContent += "  var trigger = document.getElementById( idTrigger );\n";
+	pResponse->strContent += "  var triggerTop = parseInt(getTop( trigger ));\n";
+	pResponse->strContent += "  var triggerLeft = parseInt(getLeft( trigger ));\n";
+	pResponse->strContent += "  var triggerHeight = parseInt(trigger.offsetHeight);\n";
+	pResponse->strContent += "  var triggerWidth = parseInt(trigger.offsetWidth);\n";
+	pResponse->strContent += "  if( tool && tool.style.display==\"none\" ) {\n";
+	pResponse->strContent += "    tool.style.display=\"\";\n";
+	pResponse->strContent += "    var toolWidth = parseInt(tool.offsetWidth);\n";
+	pResponse->strContent += "    tool.style.top=(triggerTop+triggerHeight).toString()+'px';\n";
+	pResponse->strContent += "    if( triggerLeft+triggerWidth > document.documentElement.clientWidth )\n";
+	pResponse->strContent += "      tool.style.left=(document.documentElement.clientWidth-toolWidth).toString()+'px';\n";
+	pResponse->strContent += "    else\n";
+	pResponse->strContent += "      tool.style.left=(triggerLeft+triggerWidth-toolWidth).toString()+'px';\n";
+//	pResponse->strContent += "    showTrigger( idTrigger );\n";
+	pResponse->strContent += "  }\n";
+	pResponse->strContent += "}\n";
+
+	// hideTrigger
+	pResponse->strContent += "function hideTrigger( idTrigger ) {\n";
+	pResponse->strContent += "  var trigger = document.getElementById( idTrigger );\n";
+	pResponse->strContent += "  trigger.style.borderBottomColor=\"\";\n";
+	pResponse->strContent += "}\n";
+
+	// showTrigger
+	pResponse->strContent += "function showTrigger( idTrigger ) {\n";
+	pResponse->strContent += "  var trigger = document.getElementById( idTrigger );\n";
+	pResponse->strContent += "  trigger.style.borderBottomColor=\"transparent\";\n";
+	pResponse->strContent += "}\n";
+
+	pResponse->strContent += "//-->\n";
+	pResponse->strContent += "</script>\n\n";
+
 	pResponse->strContent += "<table class=\"top_bar\">\n";
-	pResponse->strContent += "<tr class=\"top_bar\"><td class=\"top_login\">\n";
-	
-	string strLocation = string( );
-	
-	if( pRequest->strIP.find( ":" ) == string :: npos )
-	{
-		if( pRequest->strIP.find( "172.21." ) == 0 || pRequest->strIP.find( "58.192." ) == 0 || pRequest->strIP.find( "180.209." ) == 0 )
-			strLocation = gmapLANG_CFG["location_ipv4_nju_bras"];
-		else
-			strLocation = gmapLANG_CFG["location_ipv4_nju"];
-	}
-	else
-	{
-		if( pRequest->strIP.find( "2001:da8:1007:" ) == 0 || pRequest->strIP.find( "2001:250:5002:" ) == 0 )
-			strLocation = gmapLANG_CFG["location_ipv6_nju"];
-		else if( pRequest->strIP.find( "2001:" ) == 0 && pRequest->strIP.find( "2001:0:" ) != 0 )
-			strLocation = gmapLANG_CFG["location_ipv6_cernet"];
-		else
-			strLocation = gmapLANG_CFG["location_ipv6_other"];
-	}
-	
+	pResponse->strContent += "<tr class=\"top_bar\">\n";
+	pResponse->strContent += "<td class=\"top_login\" id=\"tdLoginTrigger\" onMouseOver=\"javascript: showToolLeft('tdLogin','tdLoginTrigger');\" onMouseOut=\"javascript: hideTool(event,'tdLogin','tdLoginTrigger');\">\n";
+
 	CMySQLQuery *pQueryUser = 0;
 	
 	vector<string> vecQueryUser;
@@ -5853,74 +6030,76 @@ void CTracker :: HTML_Common_Begin( struct request_t *pRequest, struct response_
 	}
 		
 	delete pQueryUser;
-	
+
 	if( pRequest->user.strUID.empty( ) )
 	{
-		pResponse->strContent += "<span class=\"top_login1\">";
 		pResponse->strContent += UTIL_Xsprintf( gmapLANG_CFG["login1"].c_str( ), string( "<a class=\"red\" title=\"" + gmapLANG_CFG["login"] + "\" href=\"" + RESPONSE_STR_LOGIN_HTML + "\">" ).c_str( ), "</a>" );
-		pResponse->strContent += "<br>" + UTIL_Xsprintf( gmapLANG_CFG["show_ip"].c_str( ), string( "<span class=\"blue\">" + pRequest->strIP + "</span>" ).c_str( ) ) + " " + strLocation + "</span>";
+		pResponse->strContent += "</td>\n";
 	}
-	else
+	else if( vecQueryUser.size( ) == 12 )
 	{
 		CMySQLQuery mq01( "UPDATE users SET bip=\'" + UTIL_StringToMySQL( pRequest->strIP ) + "\' WHERE buid=" + pRequest->user.strUID );
 		
+		pResponse->strContent += UTIL_Xsprintf( gmapLANG_CFG["login2"].c_str( ), getUserLink( pRequest->user.strUID, pRequest->user.strLogin ).c_str( ) );
+
+		pResponse->strContent += "<span class=\"top_pipe\">|</span>";
+		pResponse->strContent += "<a class=\"top_logout\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?logout=1\">" + gmapLANG_CFG["login2_logout"] + "</a>";
+
+
+
+		pResponse->strContent += "</td>\n<td class=\"top_trigger\" id=\"tdToolTrigger\" onMouseOver=\"javascript: showToolLeft('tdTool','tdToolTrigger');\" onMouseOut=\"javascript: hideTool(event,'tdTool','tdToolTrigger');\">";
+		pResponse->strContent += "<a title=\"" + gmapLANG_CFG["login2_profile"] + "\" href=\"" + RESPONSE_STR_LOGIN_HTML + "\">";
+		pResponse->strContent += gmapLANG_CFG["login2_tool_icon"];
+		pResponse->strContent += "</a></td>\n";
+
+		pResponse->strContent += "<td class=\"top_state\">\n";
+
 		int64 ulUploaded;
 		int64 ulDownloaded;
 		float flShareRatio;
 		int64 ulBonus;
 
-		pResponse->strContent += "<span class=\"top_login2\">" + UTIL_Xsprintf( gmapLANG_CFG["login2"].c_str( ), getUserLink( pRequest->user.strUID, pRequest->user.strLogin ).c_str( ) );
-		if( vecQueryUser.size( ) == 12 )
+		ulUploaded = UTIL_StringTo64( vecQueryUser[0].c_str( ) );
+		ulDownloaded = UTIL_StringTo64( vecQueryUser[1].c_str( ) );
+		ulBonus = UTIL_StringTo64( vecQueryUser[2].c_str( ) );
+	
+		if( ulDownloaded == 0 )
 		{
-			pRequest->user.strInvites = vecQueryUser[8];
-
-			pResponse->strContent += " " + UTIL_Xsprintf( gmapLANG_CFG["login2_tools"].c_str( ), string( "<a class=\"bookmark\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?show=bookmarks\">" ).c_str( ), "</a>", string( "<a class=\"friend\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?show=friends\">" ).c_str( ), "</a>", string( "<a class=\"blue\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?show=invites\">" ).c_str( ), string( vecQueryUser[8] + "</a>" ).c_str( ), string( "<a class=\"red\" title=\"" + gmapLANG_CFG["navbar_logout"] + "\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?logout=1\">" ).c_str( ), "</a>" );
+			if( ulUploaded == 0 )
+				flShareRatio = 0;
+			else
+				flShareRatio = -1;
 		}
-		pResponse->strContent += "<br>" + UTIL_Xsprintf( gmapLANG_CFG["show_ip"].c_str( ), string( "<span class=\"ip\">" + pRequest->strIP + "</span>" ).c_str( ) ) + " " + strLocation + "<br>";
-		if( vecQueryUser.size( ) == 12 )
-		{
-			ulUploaded = UTIL_StringTo64( vecQueryUser[0].c_str( ) );
-			ulDownloaded = UTIL_StringTo64( vecQueryUser[1].c_str( ) );
-			ulBonus = UTIL_StringTo64( vecQueryUser[2].c_str( ) );
+		else
+			flShareRatio = (float)ulUploaded / (float)ulDownloaded;
 		
-			if( ulDownloaded == 0 )
-			{
-				if( ulUploaded == 0 )
-					flShareRatio = 0;
-				else
-					flShareRatio = -1;
-			}
-			else
-				flShareRatio = (float)ulUploaded / (float)ulDownloaded;
-			
-			pRequest->user.ulUploaded = ulUploaded;
-			pRequest->user.ulDownloaded = ulDownloaded;
-			pRequest->user.ulBonus = ulBonus;
-			pRequest->user.flShareRatio = flShareRatio;
+		pRequest->user.ulUploaded = ulUploaded;
+		pRequest->user.ulDownloaded = ulDownloaded;
+		pRequest->user.ulBonus = ulBonus;
+		pRequest->user.flShareRatio = flShareRatio;
 
-			char szFloat[16];
-			string strShareRatio = string( );
-			if( ( -1.001 < flShareRatio ) && ( flShareRatio < -0.999 ) )
-				strShareRatio = gmapLANG_CFG["perfect"];
-			else
-			{
-				memset( szFloat, 0, sizeof( szFloat ) / sizeof( char ) );
-				snprintf( szFloat, sizeof( szFloat ) / sizeof( char ), "%0.3f", flShareRatio );
-				strShareRatio = string( szFloat );
-			}
-			pResponse->strContent += UTIL_Xsprintf( gmapLANG_CFG["user_state"].c_str( ), string( "<span class=\"blue\">" + vecQueryUser[3] + "</span>" ).c_str( ), string( "<span class=\"green\">" + vecQueryUser[4] + "</span>" ).c_str( ), string( "<span class=\"purple\">" + strShareRatio + "</span>" ).c_str( ), string( "<span class=\"blue\">" + UTIL_BytesToString( ulUploaded ) + "</span>" ).c_str( ), string( "<span class=\"green\">" + UTIL_BytesToString( ulDownloaded ) + "</span>" ).c_str( ), string( "<a class=\"red\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?show=bonus\">" + CAtomLong( ulBonus / 100 ).toString( ) + "." + CAtomInt( ( ulBonus % 100 ) / 10 ).toString( ) + CAtomInt( ulBonus % 10 ).toString( ) + "</a>" ).c_str( ) ) + " </span>";
+		char szFloat[16];
+		string strShareRatio = string( );
+		if( ( -1.001 < flShareRatio ) && ( flShareRatio < -0.999 ) )
+			strShareRatio = gmapLANG_CFG["perfect"];
+		else
+		{
+			memset( szFloat, 0, sizeof( szFloat ) / sizeof( char ) );
+			snprintf( szFloat, sizeof( szFloat ) / sizeof( char ), "%0.3f", flShareRatio );
+			strShareRatio = string( szFloat );
 		}
-	}
-	time_t tNow = time( 0 );
-	char *szTime = asctime( localtime( &tNow ) );
-	szTime[strlen( szTime ) - 1] = TERM_CHAR;
+		pResponse->strContent += "<span class=\"top_state\">";
+		pResponse->strContent += UTIL_Xsprintf( gmapLANG_CFG["login2_state_active"].c_str( ), string( "<span class=\"blue\">" + vecQueryUser[3] + "</span>" ).c_str( ), string( "<span class=\"green\">" + vecQueryUser[4] + "</span>" ).c_str( ) );
+		pResponse->strContent += "<span class=\"top_pipe\">|</span>";
+		pResponse->strContent += UTIL_Xsprintf( gmapLANG_CFG["login2_state_buffer"].c_str( ), string( "<span class=\"purple\">" + strShareRatio + "</span>" ).c_str( ), string( "<span class=\"blue\">" + UTIL_BytesToString( ulUploaded ) + "</span>" ).c_str( ), string( "<span class=\"green\">" + UTIL_BytesToString( ulDownloaded ) + "</span>" ).c_str( ), string( "<a class=\"red\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?show=bonus\">" + CAtomLong( ulBonus / 100 ).toString( ) + "." + CAtomInt( ( ulBonus % 100 ) / 10 ).toString( ) + CAtomInt( ulBonus % 10 ).toString( ) + "</a>" ).c_str( ) );
+		pResponse->strContent += "</span>";
+		pResponse->strContent += "</td>\n<td class=\"top_tool\">";
+		pResponse->strContent += "<a href=\"javascript: scroll(0,0);\">" + gmapLANG_CFG["login2_gotop_icon"] + "</a>";
 
-	unsigned long ulCount = 0;
+		unsigned long ulCount = 0;
+		unsigned long ulRead = 0;
+		unsigned long ulUnread = 0;
 
-	unsigned long ulRead = 0;
-	unsigned long ulUnread = 0;
-	if( !pRequest->user.strUID.empty( ) )
-	{
 		CMySQLQuery *pQuery = new CMySQLQuery( "SELECT bread,COUNT(*) FROM messages WHERE bsendtoid=" + pRequest->user.strUID + " GROUP BY bread" );
 				
 		vector<string> vecQuery;
@@ -5940,91 +6119,218 @@ void CTracker :: HTML_Common_Begin( struct request_t *pRequest, struct response_
 		}
 		delete pQuery;
 		ulCount = ulUnread + ulRead;
-	}
-	pResponse->strContent += "</td>\n<td class=\"top_tool\">";
-	pResponse->strContent += "<span class=\"top_tool\">" + gmapLANG_CFG["info_server_time"] + ": " + string( szTime ) + "<br>";
-	if( !pRequest->user.strUID.empty( ) )
-	{
+
+		pResponse->strContent += "</td>\n<td class=\"top_tool\" id=\"tdMessageTrigger\"";
+
 		if( ulUnread > 0 )
-			pResponse->strContent += "<a class=\"red\" title=\"" + gmapLANG_CFG["messages_have_unread"] + "\" href=\"" + RESPONSE_STR_MESSAGES_HTML + "\">" + gmapLANG_CFG["messages_have_unread"] + "</a>: ";
+		{
+			pResponse->strContent += " onMouseOver=\"javascript: showToolRight('tdMessage','tdMessageTrigger');\" onMouseOut=\"javascript: hideTool(event,'tdMessage','tdMessageTrigger');\">";
+			pResponse->strContent += "<a class=\"red\" title=\"" + gmapLANG_CFG["messages_have_unread"] + "\" href=\"" + RESPONSE_STR_MESSAGES_HTML + "\">" + gmapLANG_CFG["login2_message_unread_icon"];
+			pResponse->strContent += UTIL_Xsprintf( gmapLANG_CFG["messages_state_unread"].c_str( ), CAtomInt( ulUnread ).toString( ).c_str( ) );
+			pResponse->strContent += "</a>";
+		}
 		else
-			pResponse->strContent += "<a class=\"black\" title=\"" + gmapLANG_CFG["messages"] + "\" href=\"" + RESPONSE_STR_MESSAGES_HTML + "\">" + gmapLANG_CFG["messages"] + "</a>: ";
-		pResponse->strContent += UTIL_Xsprintf( gmapLANG_CFG["messages_state"].c_str( ), CAtomInt( ulCount ).toString( ).c_str( ), CAtomInt( ulUnread ).toString( ).c_str( ) );
-	}
-	if( ( pRequest->user.ucAccess & m_ucAccessRSS ) && !rssdump.strName.empty( ) )
-	{
-		string cstrFilter( pRequest->mapParams["tag"] );
-		const string cstrMedium( pRequest->mapParams["medium"] );
-		const string cstrQuality( pRequest->mapParams["quality"] );
-		const string cstrEncode( pRequest->mapParams["encode"] );
-		const string cstrSearch( pRequest->mapParams["search"] );
-		const string cstrUploader( pRequest->mapParams["uploader"] );
-		const string cstrMatch( pRequest->mapParams["match"] );
-		const string cstrNoTag( pRequest->mapParams["notag"] );
-
-		string strPageParameters = string( );
-		
-		if( cstrFilter.empty( ) && !pRequest->user.strUID.empty( ) && cstrNoTag != "1" )
 		{
-			CMySQLQuery *pQueryPrefs = new CMySQLQuery( "SELECT bdefaulttag FROM users_prefs WHERE buid=" + pRequest->user.strUID );
-		
-			map<string, string> mapPrefs;
-
-			mapPrefs = pQueryPrefs->nextRowMap( );
-
-			delete pQueryPrefs;
-			
-			cstrFilter = mapPrefs["bdefaulttag"];
+			pResponse->strContent += ">";
+			pResponse->strContent += "<a class=\"black\" title=\"" + gmapLANG_CFG["messages"] + "\" href=\"" + RESPONSE_STR_MESSAGES_HTML + "\">" + gmapLANG_CFG["login2_message_icon"] + "</a>";
+			pResponse->strContent += UTIL_Xsprintf( gmapLANG_CFG["messages_state_unread"].c_str( ), CAtomInt( ulUnread ).toString( ).c_str( ) );
 		}
-		
-		vector< pair< string, string > > vecParams;
-		vecParams.reserve(64);
-		
-		vecParams.push_back( pair<string, string>( string( "tag" ), cstrFilter ) );
-		vecParams.push_back( pair<string, string>( string( "medium" ), cstrMedium ) );
-		vecParams.push_back( pair<string, string>( string( "quality" ), cstrQuality ) );
-		vecParams.push_back( pair<string, string>( string( "encode" ), cstrEncode ) );
-		vecParams.push_back( pair<string, string>( string( "search" ), cstrSearch ) );
-		vecParams.push_back( pair<string, string>( string( "uploader" ), cstrUploader ) );
-		vecParams.push_back( pair<string, string>( string( "match" ), cstrMatch ) );
-		
-		strPageParameters += UTIL_HTMLJoin( vecParams, string( "?" ), string( "&" ), string( "=" ) );
+//			pResponse->strContent += UTIL_Xsprintf( gmapLANG_CFG["messages_state"].c_str( ), CAtomInt( ulCount ).toString( ).c_str( ), CAtomInt( ulUnread ).toString( ).c_str( ) );
+
+		unsigned long ulTalk = 0;
+		unsigned long ulHome = 0;
+		unsigned long ulMentions = 0;
+		unsigned long ulTorrents = 0;
+
+		ulHome = atoi( vecQueryUser[9].c_str( ) );
+		ulMentions = atoi( vecQueryUser[10].c_str( ) );
+		ulTorrents = atoi( vecQueryUser[11].c_str( ) );
+		ulTalk = ulHome + ulMentions + ulTorrents;
+
+		pResponse->strContent += "</td>\n<td class=\"top_trigger\" id=\"tdTalkTrigger\" onMouseOver=\"javascript: showToolLeft('tdTalk','tdTalkTrigger');\" onMouseOut=\"javascript: hideTool(event,'tdTalk','tdTalkTrigger');\">";
+		pResponse->strContent += "<a class=\"top_talk\" href=\"" + RESPONSE_STR_TALK_HTML + "\">" + gmapLANG_CFG["login2_talk"] + "</a>";
+//		pResponse->strContent += gmapLANG_CFG["login2_talk"];
+//		if( ulTalk > ulHome )
+		if( ulTalk > 0 )
+			pResponse->strContent += "<span class=\"hot\">(" + CAtomLong( ulTalk ).toString( ) + ")</span>";
+		pResponse->strContent += "<span class=\"top_pipe\">|</span>";
+		pResponse->strContent += "<a class=\"top_talk\" href=\"" + RESPONSE_STR_TALK_HTML + "?show=all\">" + gmapLANG_CFG["talk_show_all"] + "</a>";
+//		pResponse->strContent += "<a class=\"top_talk\" href=\"" + RESPONSE_STR_TALK_HTML + "\">" + gmapLANG_CFG["talk_show_home"] + "</a>";
+//		if( ulHome > 0 )
+//			pResponse->strContent += "<span class=\"hot\">(" + vecQueryUser[9] + ")</span>";
+
+		pResponse->strContent += "</td>\n<td class=\"top_trigger\" id=\"tdClientTrigger\" onMouseOver=\"javascript: showToolRight('tdClient','tdClientTrigger');\" onMouseOut=\"javascript: hideTool(event,'tdClient','tdClientTrigger');\">";
+		pResponse->strContent += gmapLANG_CFG["login2_client_icon"];
+
+		pRequest->user.strInvites = vecQueryUser[8];
+
+//		if( ( pRequest->user.ucAccess & m_ucAccessRSS ) && !rssdump.strName.empty( ) )
+		if( pRequest->user.ucAccess & m_ucAccessRSS )
+		{
+			string cstrFilter( pRequest->mapParams["tag"] );
+			const string cstrMedium( pRequest->mapParams["medium"] );
+			const string cstrQuality( pRequest->mapParams["quality"] );
+			const string cstrEncode( pRequest->mapParams["encode"] );
+			const string cstrSearch( pRequest->mapParams["search"] );
+			const string cstrUploader( pRequest->mapParams["uploader"] );
+			const string cstrMatch( pRequest->mapParams["match"] );
+			const string cstrNoTag( pRequest->mapParams["notag"] );
+
+			string strPageParameters = string( );
 			
-		if( !pRequest->user.strUID.empty( ) )
-			pResponse->strContent += "<span class=\"pipe\"> | </span>";
-		if( !rssdump.strURL.empty( ) )
-			pResponse->strContent += "<a rel=\"" + STR_TARGET_REL + "\" title=\"" + gmapLANG_CFG["navbar_rss"] + "\" href=\"" + rssdump.strURL + rssdump.strName + strPageParameters + "\">" + gmapLANG_CFG["navbar_rss"] + "</a>\n";
-		else if( m_bServeLocal )
-			pResponse->strContent += "<a rel=\"" + STR_TARGET_REL + "\" title=\"" + gmapLANG_CFG["navbar_rss"] + "\" href=\"" + RESPONSE_STR_SEPERATOR + rssdump.strName + strPageParameters + "\">" + gmapLANG_CFG["navbar_rss"] + "</a>\n";
+			if( cstrFilter.empty( ) && !pRequest->user.strUID.empty( ) && cstrNoTag != "1" )
+			{
+				CMySQLQuery *pQueryPrefs = new CMySQLQuery( "SELECT bdefaulttag FROM users_prefs WHERE buid=" + pRequest->user.strUID );
+			
+				map<string, string> mapPrefs;
+
+				mapPrefs = pQueryPrefs->nextRowMap( );
+
+				delete pQueryPrefs;
+				
+				cstrFilter = mapPrefs["bdefaulttag"];
+			}
+			
+			vector< pair< string, string > > vecParams;
+			vecParams.reserve(64);
+			
+			vecParams.push_back( pair<string, string>( string( "tag" ), cstrFilter ) );
+			vecParams.push_back( pair<string, string>( string( "medium" ), cstrMedium ) );
+			vecParams.push_back( pair<string, string>( string( "quality" ), cstrQuality ) );
+			vecParams.push_back( pair<string, string>( string( "encode" ), cstrEncode ) );
+			vecParams.push_back( pair<string, string>( string( "search" ), cstrSearch ) );
+			vecParams.push_back( pair<string, string>( string( "uploader" ), cstrUploader ) );
+			vecParams.push_back( pair<string, string>( string( "match" ), cstrMatch ) );
+			
+			strPageParameters += UTIL_HTMLJoin( vecParams, string( "?" ), string( "&" ), string( "=" ) );
+				
+			pResponse->strContent += "<span class=\"top_pipe\">|</span>";
+//			if( !rssdump.strURL.empty( ) )
+//				pResponse->strContent += "<a class=\"black\" target=\"_blank\" title=\"" + gmapLANG_CFG["navbar_rss"] + "\" href=\"" + rssdump.strURL + rssdump.strName + strPageParameters + "\">" + gmapLANG_CFG["navbar_rss"] + "</a>\n";
+//			else if( m_bServeLocal )
+				pResponse->strContent += "<a class=\"black\" target=\"_blank\" title=\"" + gmapLANG_CFG["navbar_rss"] + "\" href=\"" + RESPONSE_STR_SEPERATOR + rssdump.strName + strPageParameters + "\">" + gmapLANG_CFG["navbar_rss"] + "</a>\n";
+		}
+		pResponse->strContent += "</td>\n";
+
+		pResponse->strContent += "<div class=\"top_tool_left\" style=\"display:none\" id=\"tdLogin\" onMouseOver=\"javascript: showToolLeft('tdLogin','tdLoginTrigger');\" onMouseOut=\"javascript: hideTool(event,'tdLogin','tdLoginTrigger');\">\n";
+
+		string strLocation = string( );
+		
+		if( pRequest->strIP.find( ":" ) == string :: npos )
+		{
+			if( pRequest->strIP.find( "172.21." ) == 0 || pRequest->strIP.find( "58.192." ) == 0 || pRequest->strIP.find( "180.209." ) == 0 )
+				strLocation = gmapLANG_CFG["location_ipv4_nju_bras"];
+			else
+				strLocation = gmapLANG_CFG["location_ipv4_nju"];
+		}
+		else
+		{
+			if( pRequest->strIP.find( "2001:da8:1007:" ) == 0 || pRequest->strIP.find( "2001:250:5002:" ) == 0 )
+				strLocation = gmapLANG_CFG["location_ipv6_nju"];
+			else if( pRequest->strIP.find( "2001:" ) == 0 && pRequest->strIP.find( "2001:0:" ) != 0 )
+				strLocation = gmapLANG_CFG["location_ipv6_cernet"];
+			else
+				strLocation = gmapLANG_CFG["location_ipv6_other"];
+		}
+
+		pResponse->strContent += UTIL_Xsprintf( gmapLANG_CFG["show_location"].c_str( ), string( "<span class=\"ip\" onMouseOver=\"javascript: showToolLeft('tdLogin','tdLoginTrigger');\">" + strLocation + "</span>" ).c_str( ) );
+		pResponse->strContent += "<br>";
+		pResponse->strContent += UTIL_Xsprintf( gmapLANG_CFG["show_ip"].c_str( ), string( "<span class=\"ip\" onMouseOver=\"javascript: showToolLeft('tdLogin','tdLoginTrigger');\">" + pRequest->strIP + "</span>" ).c_str( ) );
+
+		time_t tNow = time( 0 );
+		char *szTime = asctime( localtime( &tNow ) );
+		szTime[strlen( szTime ) - 1] = TERM_CHAR;
+		pResponse->strContent += "<br>" + gmapLANG_CFG["info_server_time"] + ": " + string( szTime );
+		pResponse->strContent += "</div>";
+
+		pResponse->strContent += "<div class=\"top_tool_left\" style=\"display:none\" id=\"tdTool\" onMouseOver=\"javascript: showToolLeft('tdTool','tdToolTrigger');\" onMouseOut=\"javascript: hideTool(event,'tdTool','tdToolTrigger');\">\n";
+
+//		pResponse->strContent += "<a class=\"black\" href=\"" + RESPONSE_STR_LOGIN_HTML + "\">" + gmapLANG_CFG["login2_profile"] + "</a>";
+//		pResponse->strContent += "[ <a class=\"bookmark\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?show=bookmarks\">" + gmapLANG_CFG["login2_bookmarks"] + "</a> ]";
+//		pResponse->strContent += " [ <a class=\"friend\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?show=friends\">" + gmapLANG_CFG["login2_friends"] + "</a> ]";
+//		pResponse->strContent += " [ <a class=\"blue\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?show=invites\">" + UTIL_Xsprintf( gmapLANG_CFG["login2_invites"].c_str( ), vecQueryUser[8].c_str( ) ) + "</a> ]";
+
+		pResponse->strContent += "<a class=\"black\" href=\"" + RESPONSE_STR_USERS_HTML + "?uid=" + pRequest->user.strUID + "&amp;action=edit\">" + gmapLANG_CFG["user_detail_edit"] + "</a><br>";
+		pResponse->strContent += "<a class=\"black\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?show=bonus\">" + gmapLANG_CFG["user_detail_bonus"] + "</a><br>";
+		pResponse->strContent += "<a class=\"black\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?show=preferences\">" + gmapLANG_CFG["user_detail_preferences"] + "</a>";
+		pResponse->strContent += "<hr class=\"top_tool\" onMouseOver=\"javascript: showToolLeft('tdTool','tdToolTrigger');\"></hr>";
+
+		pResponse->strContent += "<a class=\"bookmark\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?show=bookmarks\">" + gmapLANG_CFG["user_detail_bookmarks"] + "</a><br>";
+		pResponse->strContent += "<a class=\"black\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?show=torrents\">" + gmapLANG_CFG["user_detail_torrents"] + "</a><br>";
+		pResponse->strContent += "<a class=\"black\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?show=active\">" + gmapLANG_CFG["user_detail_active"] + "</a><br>";
+		pResponse->strContent += "<a class=\"black\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?show=completed\">" + gmapLANG_CFG["user_detail_completed"] + "</a><br>";
+		pResponse->strContent += "<a class=\"friend\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?show=friends\">" + gmapLANG_CFG["user_detail_friends"] + "</a><br>";
+		pResponse->strContent += "<a class=\"friend\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?show=friendeds\">" + gmapLANG_CFG["user_detail_friendeds"] + "</a><br>";
+		pResponse->strContent += "<a class=\"blue\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?show=invites\">" + gmapLANG_CFG["user_detail_invites"] + "</a><br>";
+		pResponse->strContent += "<a class=\"black\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?show=comments\">" + gmapLANG_CFG["user_detail_comments"] + "</a>";
+		pResponse->strContent += "</div>";
+		
+		pResponse->strContent += "<div class=\"top_tool_left\" style=\"display:none\" id=\"tdTalk\" onMouseOver=\"javascript: showToolLeft('tdTalk','tdTalkTrigger');\" onMouseOut=\"javascript: hideTool(event,'tdTalk','tdTalkTrigger');\">\n";
+
+//		pResponse->strContent += "<span class=\"top_tool\">" + gmapLANG_CFG["talk_page"] + ": ";
+		pResponse->strContent += "<a class=\"top_talk\" href=\"" + RESPONSE_STR_TALK_HTML + "\">" + gmapLANG_CFG["talk_show_home"] + "</a>";
+		if( ulHome > 0 )
+			pResponse->strContent += "<span class=\"hot\">(" + vecQueryUser[9] + ")</span>";
+
+		pResponse->strContent += "<br>";
+		pResponse->strContent += "<a class=\"top_talk\" href=\"" + RESPONSE_STR_TALK_HTML + "?show=mentions\">" + gmapLANG_CFG["talk_show_mentions"] + "</a>";
+		if( ulMentions > 0 )
+			pResponse->strContent += "<span class=\"hot\">(" + vecQueryUser[10] + ")</span>";
+
+		pResponse->strContent += "<br>";
+		pResponse->strContent += "<a class=\"top_talk\" href=\"" + RESPONSE_STR_TALK_HTML + "?show=tofriend\">" + gmapLANG_CFG["talk_show_tofriend"] + "</a>";
+
+		pResponse->strContent += "<br>";
+		pResponse->strContent += "<a class=\"top_talk\" href=\"" + RESPONSE_STR_TALK_HTML + "?show=torrents\">" + gmapLANG_CFG["talk_show_torrents"] + "</a>";
+		if( ulTorrents > 0 )
+			pResponse->strContent += "<span class=\"hot\">(" + vecQueryUser[11] + ")</span>";
+
+//		pResponse->strContent += "<br>";
+//		pResponse->strContent += "<a class=\"top_talk\" href=\"" + RESPONSE_STR_TALK_HTML + "?show=all\">" + gmapLANG_CFG["talk_show_all"] + "</a>";
+//		pResponse->strContent += "</span>";
+
+		pResponse->strContent += "</div>\n";
+
+		if( ulUnread > 0 )
+		{
+			pResponse->strContent += "<div class=\"top_tool_right\" style=\"display:none\" id=\"tdMessage\" onMouseOver=\"javascript: showToolRight('tdMessage','tdMessageTrigger');\" onMouseOut=\"javascript: hideTool(event,'tdMessage','tdMessageTrigger');\">\n";
+			pResponse->strContent += gmapLANG_CFG["messages_unread_notice"];
+			pResponse->strContent += "</div>\n";
+			pResponse->strContent += "<script type=\"text/javascript\">showToolRight('tdMessage','tdMessageTrigger');</script>";
+		}
 	}
-	pResponse->strContent += "</span>";
+//	pResponse->strContent += "</td>\n<td class=\"top_info\">";
+	pResponse->strContent += "</tr></table>\n";
 	
-	if( !pRequest->user.strUID.empty( ) )
-	{
-		if( vecQueryUser.size( ) == 12 )
-		{
-			pResponse->strContent += "<br><span class=\"top_tool\">" + gmapLANG_CFG["talk_page"] + ": ";
-			pResponse->strContent += "<a href=\"" + RESPONSE_STR_TALK_HTML + "\">" + gmapLANG_CFG["talk_show_home"] + "</a>";
-			if( vecQueryUser[9] != "0" )
-				pResponse->strContent += "<span class=\"hot\">(" + vecQueryUser[9] + ")</span>";
-			pResponse->strContent += "<span class=\"pipe\"> | </span>";
-			pResponse->strContent += "<a href=\"" + RESPONSE_STR_TALK_HTML + "?show=mentions\">" + gmapLANG_CFG["talk_show_mentions"] + "</a>";
-			if( vecQueryUser[10] != "0" )
-				pResponse->strContent += "<span class=\"hot\">(" + vecQueryUser[10] + ")</span>";
-			pResponse->strContent += "<span class=\"pipe\"> | </span>";
-			pResponse->strContent += "<a href=\"" + RESPONSE_STR_TALK_HTML + "?show=tofriend\">" + gmapLANG_CFG["talk_show_tofriend"] + "</a>";
-			pResponse->strContent += "<span class=\"pipe\"> | </span>";
-			pResponse->strContent += "<a href=\"" + RESPONSE_STR_TALK_HTML + "?show=torrents\">" + gmapLANG_CFG["talk_show_torrents"] + "</a>";
-			if( vecQueryUser[11] != "0" )
-				pResponse->strContent += "<span class=\"hot\">(" + vecQueryUser[11] + ")</span>";
-			pResponse->strContent += "<span class=\"pipe\"> | </span>";
-			pResponse->strContent += "<a href=\"" + RESPONSE_STR_TALK_HTML + "?show=all\">" + gmapLANG_CFG["talk_show_all"] + "</a>";
-			pResponse->strContent += "</span>";
-		}
-	}
-		
+	pResponse->strContent += "<table class=\"top_bar_hidden\">\n";
+	pResponse->strContent += "<tr class=\"top_bar_hidden\"><td class=\"top_bar_hidden\">\n";
 	pResponse->strContent += "</td></tr></table>\n";
+
+	// display login status (login1=not logged in) (login2=logged in)
+//	pResponse->strContent += "<table class=\"main_table\">\n";
+//	pResponse->strContent += "<tr class=\"main_table_header\">\n";
+//	pResponse->strContent += "<td class=\"main_table_header\">\n";
+
+	pResponse->strContent += "<table class=\"top_header\">\n";
+	pResponse->strContent += "<tr class=\"top_header\">\n";
+	pResponse->strContent += "<td class=\"top_avatar\" rowspan=2>\n";
+//	pResponse->strContent += "<a class=\"top_title\" href=\"" + RESPONSE_STR_INDEX_HTML + "\">" + m_strTitle + "</a>";
+	pResponse->strContent += "<a class=\"top_avatar\" href=\"" + RESPONSE_STR_INDEX_HTML + "\">" + gmapLANG_CFG["avatar"] + "</a>";
+//	pResponse->strContent += "<br><span class=\"top_subtitle\">" + m_strSubTitle + "</span>";
+	pResponse->strContent += "</td>\n";
 	
+	// Display static header
+	if( ( ( bIndex && ( pRequest->user.ucAccess & m_ucAccessView ) ) || m_bStaticAll ) && !m_strStaticHeader.empty( ) )
+	{
+//		pResponse->strContent += "<td class=\"static_header\" rowspan=2>\n";
+		pResponse->strContent += "<td class=\"static_header\">\n";
+		pResponse->strContent += m_strStaticHeader + "\n</td>\n";
+	}
+
+//	pResponse->strContent += "<td class=\"static_header\"></td>";
+	pResponse->strContent += "</tr>\n";
+
+	// Display navbar
 	bool bNewIndex = false;
 	bool bNewOffer = false;
 	int64 last_time_index = 0;
@@ -6063,6 +6369,14 @@ void CTracker :: HTML_Common_Begin( struct request_t *pRequest, struct response_
 		bNewIndex = true;
 	if( last_time_offer < m_pCache->getLatest( true ) )
 		bNewOffer = true;
+	pResponse->strContent += "<tr class=\"top_navbar\">\n<td class=\"top_navbar\">";
+	
+	if( ( m_ucNavbar == 1 ) || ( m_ucNavbar == 3 ) )
+		HTML_Nav_Bar( pRequest, pResponse, cstrCSS, bNewIndex, bNewOffer );
+	pResponse->strContent += "</td>\n</tr>\n";
+	pResponse->strContent += "</table>\n";
+	
+//	pResponse->strContent += "</td>\n</tr>\n";
 	// display tracker title
 // 	if( bIndex && !m_strTitle.empty( ) )
 // 		pResponse->strContent += "<h1 class=\"header_" + cstrCSS + "\">" + m_strTitle + "</h1>\n\n";
@@ -6072,12 +6386,13 @@ void CTracker :: HTML_Common_Begin( struct request_t *pRequest, struct response_
 // 		pResponse->strContent += "<h3 class=\"header_" + cstrCSS + "\">" + cstrTitle + "</h3>\n\n";
 
 // 	pResponse->strContent += "\n<p>";
-	pResponse->strContent += "<table class=\"main_table\">\n<tr class=\"main_table_navbar\">\n<td class=\"main_table_navbar\">";
+//	pResponse->strContent += "<table class=\"main_table\">\n<tr class=\"main_table_navbar\">\n<td class=\"main_table_navbar\">";
+	pResponse->strContent += "<table class=\"main_table\">\n";
 	// Display navbar
 	
-	if( ( m_ucNavbar == 1 ) || ( m_ucNavbar == 3 ) )
-		HTML_Nav_Bar( pRequest, pResponse, cstrCSS, bNewIndex, bNewOffer );
-	pResponse->strContent += "</td>\n</tr>\n";
+//	if( ( m_ucNavbar == 1 ) || ( m_ucNavbar == 3 ) )
+//		HTML_Nav_Bar( pRequest, pResponse, cstrCSS, bNewIndex, bNewOffer );
+//	pResponse->strContent += "</td>\n</tr>\n";
 	pResponse->strContent += "<tr class=\"main_table_torrent\">\n<td class=\"main_table_torrent\">\n";
 
 	// display redirect message if TRUE
@@ -6142,91 +6457,99 @@ void CTracker :: HTML_Common_End( struct request_t *pRequest, struct response_t 
 			pResponse->strContent += "<p class=\"users_online\">" + UTIL_Xsprintf( gmapLANG_CFG["user_online"].c_str( ), CAtomInt( cuiOnline ).toString( ).c_str( ) ) + "</p>\n\n";
 	}
 
-	pResponse->strContent += "</td></tr></table>";
+	pResponse->strContent += "</td></tr>";
 	if( ( ( bIndex && ( pRequest->user.ucAccess & m_ucAccessView ) ) || m_bStaticAll ) && !m_strStaticFooter.empty( ) )
+	{
+		pResponse->strContent += "<tr class=\"static_footer\">\n";
+		pResponse->strContent += "<td class=\"static_footer\">\n";
 		pResponse->strContent += "<div class=\"static_footer\">\n" + m_strStaticFooter + "\n</div>\n\n";
+		pResponse->strContent += "</td></tr>";
+	}
+	pResponse->strContent += "\n</table>";
 	
 	// display the powered_by logo
 	if( bIndex )
 	{
 		// Display Powered By
 		pResponse->strContent += "<p class=\"powered_by\">POWERED By \n";
-		pResponse->strContent += "<a rel=\"" + STR_TARGET_REL + "\" title=\"http://xbnbt.sourceforge.net/\" href=\"http://xbnbt.sourceforge.net/\"\n";
-		pResponse->strContent += "onMouseOver=\"window.status=\'" + XBNBT_VER + "\'; return true\"\n"; // BUILD INFORMATION
-		pResponse->strContent += "onMouseOut=\"window.status=window.defaultStatus; return true\">" + XBNBT_VER + "</a> \n";
+//		pResponse->strContent += "<a rel=\"" + STR_TARGET_REL + "\" title=\"http://xbnbt.sourceforge.net/\" href=\"http://xbnbt.sourceforge.net/\"\n";
+//		pResponse->strContent += "onMouseOver=\"window.status=\'" + XBNBT_VER + "\'; return true\"\n"; // BUILD INFORMATION
+//		pResponse->strContent += "onMouseOut=\"window.status=window.defaultStatus; return true\">" + XBNBT_VER + "</a> \n";
+//		pResponse->strContent += "based on BNBT " + string( BNBT_VER ) + "</p>\n\n";
+		pResponse->strContent += "<a target=\"_blank\" href=\"https://github.com/el8latspq/xbnbt-zijing-mod\">" + XBNBT_VER + "</a> ";
 		pResponse->strContent += "based on BNBT " + string( BNBT_VER ) + "</p>\n\n";
 	}
 
 	// Display HTML, CSS & RSS validators
 // 	if( m_ucShowValidator != 0 || ( pRequest->user.ucAccess & ACCESS_ADMIN ) )
-	if( m_ucShowValidator != 0 )
-	{
-		string cstrCynthia = string( );
-		const string cstrHashString( pRequest->mapParams["info_hash"] );
-
-		switch( m_ucShowValidator )
-		{
-		case VALID_ADMIN:
-		case VALID_TEXT:
-			// show validator link only, default for admin
-			pResponse->strContent += "<p class=\"html_valid_" + cstrCSS + "\">\n";
-			// HTML
-			pResponse->strContent += "<a rel=\"" + STR_TARGET_REL + "\" title=\"" + gmapLANG_CFG["valid_html"] + "\" href=\"http://validator.w3.org/check?uri=referer\">" + gmapLANG_CFG["valid_html"] + "</a>\n";
-			// CSS
-			pResponse->strContent += "<span class=\"pipe\">|</span><a rel=\"" + STR_TARGET_REL + "\" title=\"" + gmapLANG_CFG["valid_css"] + "\" href=\"http://jigsaw.w3.org/css-validator/check/referer\">" + gmapLANG_CFG["valid_css"] + "</a>\n";
-
-			// RSS
-			if( !rssdump.strName.empty( ) )
-			{
-				if( !rssdump.strURL.empty( ) )
-					pResponse->strContent += "<span class=\"pipe\">|</span><a rel=\"" + STR_TARGET_REL + "\" class=\"rss_valid\" title=\"" + gmapLANG_CFG["valid_rss"] + "\" href=\"http://www.feedvalidator.org/check?url=" + rssdump.strURL + rssdump.strName + "\">" + gmapLANG_CFG["valid_rss"] + "</a>\n";
-				else if( m_bServeLocal )
-					pResponse->strContent += "<span class=\"pipe\">|</span><script type=\"text/javascript\">" + m_strValidate1 + "</script>";
-			}
-
-			// Cynthia
-			if( cstrHashString.empty( ) )
-				cstrCynthia = UTIL_Xsprintf( "document.write( \"<a rel=\'%s\' title=\'%s\' href=\'http://www.contentquality.com/mynewtester/cynthia.exe?rptmode=2&url1=http://\" + parent.location.host + \"%s\'>%s<\\/a>\" );", STR_TARGET_REL.c_str( ), gmapLANG_CFG["cynthia_tested"].c_str( ), string( pRequest->strURL ).c_str( ), gmapLANG_CFG["cynthia_tested"].c_str( ) );
-			else
-				cstrCynthia = UTIL_Xsprintf( "document.write( \"<a rel=\'%s\' title=\'%s\' href=\'http://www.contentquality.com/fulloptions.asp?rptmode=2&url1=http://\" + parent.location.host + \"%s?info_hash=%s\'>%s<\\/a>\" );", STR_TARGET_REL.c_str( ), gmapLANG_CFG["cynthia_tested"].c_str( ), string( pRequest->strURL ).c_str( ), cstrHashString.c_str( ), gmapLANG_CFG["cynthia_tested"].c_str( ) );
-
-			pResponse->strContent += "<span class=\"pipe\">|</span><script type=\"text/javascript\">" + cstrCynthia + "</script></p>\n\n";
-
-			break;
-		case VALID_IMAGE:
-			// show validator with image
-			pResponse->strContent += "<p class=\"html_valid_" + cstrCSS + "\">\n";
-			// HTML
-			pResponse->strContent += "<a rel=\"" + STR_TARGET_REL + "\" title=\"" + gmapLANG_CFG["valid_html"] + "\" href=\"http://validator.w3.org/check?uri=referer\"><img style=\"border:0;width:88px;height:31px\" src=\"http://www.w3.org/Icons/valid-html401\" alt=\"" + gmapLANG_CFG["valid_html"] + "\"></a>\n";
-			// CSS
-			pResponse->strContent += "<span class=\"pipe\">|</span><a rel=\"" + STR_TARGET_REL + "\" title=\"" + gmapLANG_CFG["valid_css"] + "\" href=\"http://jigsaw.w3.org/css-validator/check/referer\"><img style=\"border:0;width:88px;height:31px\" src=\"http://jigsaw.w3.org/css-validator/images/vcss\" alt=\"" + gmapLANG_CFG["valid_css"] + "\"></a>\n";
-
-			// RSS
-			if( !rssdump.strName.empty( ) )
-			{
-				if( !rssdump.strURL.empty( ) )
-					pResponse->strContent += "<span class=\"pipe\">|</span><a rel=\"" + STR_TARGET_REL + "\" class=\"rss_valid\" title=\"" + gmapLANG_CFG["valid_rss"] + "\" href=\"http://www.feedvalidator.org/check?url=" + rssdump.strURL + rssdump.strName + "\"><img style=\"border:0;width:88px;height:31px\" src=\"" + m_strRSSValidImage + "\" alt=\"" + gmapLANG_CFG["valid_rss"] + "\"</a>\n";
-				else if( m_bServeLocal )
-					pResponse->strContent += "<span class=\"pipe\">|</span><script type=\"text/javascript\">" + m_strValidate2 + "</script>\n";
-			}
-
-			// Cynthia
-			if( cstrHashString.empty( ) )
-				cstrCynthia = UTIL_Xsprintf( "document.write( \"<a rel=\'%s\' title=\'%s\' href=\'http://www.contentquality.com/mynewtester/cynthia.exe?rptmode=2&url1=http://\" + parent.location.host + \"%s\'><img style=\'border:0;width:88px;height:31px\' src=\'http://www.CynthiaSays.com/images/Ctested.gif\' alt=\'%s\'><\\/a>\" );", STR_TARGET_REL.c_str( ), gmapLANG_CFG["cynthia_tested"].c_str( ), string( pRequest->strURL ).c_str( ), gmapLANG_CFG["cynthia_tested"].c_str( ) );
-			else
-				cstrCynthia = UTIL_Xsprintf( "document.write( \"<a rel=\'%s\' title=\'%s\' href=\'http://www.contentquality.com/fulloptions.asp?rptmode=2&url1=http://\" + parent.location.host + \"%s?info_hash=%s\'><img style=\'border:0;width:88px;height:31px\' src=\'http://www.CynthiaSays.com/images/Ctested.gif\' alt=\'%s\'><\\/a>\" );", STR_TARGET_REL.c_str( ), gmapLANG_CFG["cynthia_tested"].c_str( ), string( pRequest->strURL ).c_str( ), cstrHashString.c_str( ), gmapLANG_CFG["cynthia_tested"].c_str( ) );
-
-			pResponse->strContent += "<span class=\"pipe\">|</span><script type=\"text/javascript\">" + cstrCynthia + "</script>\n";
-
-			// XBNBT Home Page
-			pResponse->strContent += "<span class=\"pipe\">|</span><a rel=\"" + STR_TARGET_REL + "\" title=\"XBNBT Home Page\" href=\"http://xbnbt.sourceforge.net/\"><img style=\"border:0;width:88px;height:31px\" src=\"http://sourceforge.net/sflogo.php?group_id=115094&type=1\" alt=\"SF Logo (XBNBT)\"></a>\n</p>\n\n";
-
-			break;
-		default:
-			// Do not show validator
-			;
-		}
-	}
+//	if( m_ucShowValidator != 0 )
+//	{
+//		string cstrCynthia = string( );
+//		const string cstrHashString( pRequest->mapParams["info_hash"] );
+//
+//		switch( m_ucShowValidator )
+//		{
+//		case VALID_ADMIN:
+//		case VALID_TEXT:
+//			// show validator link only, default for admin
+//			pResponse->strContent += "<p class=\"html_valid_" + cstrCSS + "\">\n";
+//			// HTML
+//			pResponse->strContent += "<a rel=\"" + STR_TARGET_REL + "\" title=\"" + gmapLANG_CFG["valid_html"] + "\" href=\"http://validator.w3.org/check?uri=referer\">" + gmapLANG_CFG["valid_html"] + "</a>\n";
+//			// CSS
+//			pResponse->strContent += "<span class=\"pipe\">|</span><a rel=\"" + STR_TARGET_REL + "\" title=\"" + gmapLANG_CFG["valid_css"] + "\" href=\"http://jigsaw.w3.org/css-validator/check/referer\">" + gmapLANG_CFG["valid_css"] + "</a>\n";
+//
+//			// RSS
+//			if( !rssdump.strName.empty( ) )
+//			{
+//				if( !rssdump.strURL.empty( ) )
+//					pResponse->strContent += "<span class=\"pipe\">|</span><a rel=\"" + STR_TARGET_REL + "\" class=\"rss_valid\" title=\"" + gmapLANG_CFG["valid_rss"] + "\" href=\"http://www.feedvalidator.org/check?url=" + rssdump.strURL + rssdump.strName + "\">" + gmapLANG_CFG["valid_rss"] + "</a>\n";
+//				else if( m_bServeLocal )
+//					pResponse->strContent += "<span class=\"pipe\">|</span><script type=\"text/javascript\">" + m_strValidate1 + "</script>";
+//			}
+//
+//			// Cynthia
+//			if( cstrHashString.empty( ) )
+//				cstrCynthia = UTIL_Xsprintf( "document.write( \"<a rel=\'%s\' title=\'%s\' href=\'http://www.contentquality.com/mynewtester/cynthia.exe?rptmode=2&url1=http://\" + parent.location.host + \"%s\'>%s<\\/a>\" );", STR_TARGET_REL.c_str( ), gmapLANG_CFG["cynthia_tested"].c_str( ), string( pRequest->strURL ).c_str( ), gmapLANG_CFG["cynthia_tested"].c_str( ) );
+//			else
+//				cstrCynthia = UTIL_Xsprintf( "document.write( \"<a rel=\'%s\' title=\'%s\' href=\'http://www.contentquality.com/fulloptions.asp?rptmode=2&url1=http://\" + parent.location.host + \"%s?info_hash=%s\'>%s<\\/a>\" );", STR_TARGET_REL.c_str( ), gmapLANG_CFG["cynthia_tested"].c_str( ), string( pRequest->strURL ).c_str( ), cstrHashString.c_str( ), gmapLANG_CFG["cynthia_tested"].c_str( ) );
+//
+//			pResponse->strContent += "<span class=\"pipe\">|</span><script type=\"text/javascript\">" + cstrCynthia + "</script></p>\n\n";
+//
+//			break;
+//		case VALID_IMAGE:
+//			// show validator with image
+//			pResponse->strContent += "<p class=\"html_valid_" + cstrCSS + "\">\n";
+//			// HTML
+//			pResponse->strContent += "<a rel=\"" + STR_TARGET_REL + "\" title=\"" + gmapLANG_CFG["valid_html"] + "\" href=\"http://validator.w3.org/check?uri=referer\"><img style=\"border:0;width:88px;height:31px\" src=\"http://www.w3.org/Icons/valid-html401\" alt=\"" + gmapLANG_CFG["valid_html"] + "\"></a>\n";
+//			// CSS
+//			pResponse->strContent += "<span class=\"pipe\">|</span><a rel=\"" + STR_TARGET_REL + "\" title=\"" + gmapLANG_CFG["valid_css"] + "\" href=\"http://jigsaw.w3.org/css-validator/check/referer\"><img style=\"border:0;width:88px;height:31px\" src=\"http://jigsaw.w3.org/css-validator/images/vcss\" alt=\"" + gmapLANG_CFG["valid_css"] + "\"></a>\n";
+//
+//			// RSS
+//			if( !rssdump.strName.empty( ) )
+//			{
+//				if( !rssdump.strURL.empty( ) )
+//					pResponse->strContent += "<span class=\"pipe\">|</span><a rel=\"" + STR_TARGET_REL + "\" class=\"rss_valid\" title=\"" + gmapLANG_CFG["valid_rss"] + "\" href=\"http://www.feedvalidator.org/check?url=" + rssdump.strURL + rssdump.strName + "\"><img style=\"border:0;width:88px;height:31px\" src=\"" + m_strRSSValidImage + "\" alt=\"" + gmapLANG_CFG["valid_rss"] + "\"</a>\n";
+//				else if( m_bServeLocal )
+//					pResponse->strContent += "<span class=\"pipe\">|</span><script type=\"text/javascript\">" + m_strValidate2 + "</script>\n";
+//			}
+//
+//			// Cynthia
+//			if( cstrHashString.empty( ) )
+//				cstrCynthia = UTIL_Xsprintf( "document.write( \"<a rel=\'%s\' title=\'%s\' href=\'http://www.contentquality.com/mynewtester/cynthia.exe?rptmode=2&url1=http://\" + parent.location.host + \"%s\'><img style=\'border:0;width:88px;height:31px\' src=\'http://www.CynthiaSays.com/images/Ctested.gif\' alt=\'%s\'><\\/a>\" );", STR_TARGET_REL.c_str( ), gmapLANG_CFG["cynthia_tested"].c_str( ), string( pRequest->strURL ).c_str( ), gmapLANG_CFG["cynthia_tested"].c_str( ) );
+//			else
+//				cstrCynthia = UTIL_Xsprintf( "document.write( \"<a rel=\'%s\' title=\'%s\' href=\'http://www.contentquality.com/fulloptions.asp?rptmode=2&url1=http://\" + parent.location.host + \"%s?info_hash=%s\'><img style=\'border:0;width:88px;height:31px\' src=\'http://www.CynthiaSays.com/images/Ctested.gif\' alt=\'%s\'><\\/a>\" );", STR_TARGET_REL.c_str( ), gmapLANG_CFG["cynthia_tested"].c_str( ), string( pRequest->strURL ).c_str( ), cstrHashString.c_str( ), gmapLANG_CFG["cynthia_tested"].c_str( ) );
+//
+//			pResponse->strContent += "<span class=\"pipe\">|</span><script type=\"text/javascript\">" + cstrCynthia + "</script>\n";
+//
+//			// XBNBT Home Page
+//			pResponse->strContent += "<span class=\"pipe\">|</span><a rel=\"" + STR_TARGET_REL + "\" title=\"XBNBT Home Page\" href=\"http://xbnbt.sourceforge.net/\"><img style=\"border:0;width:88px;height:31px\" src=\"http://sourceforge.net/sflogo.php?group_id=115094&type=1\" alt=\"SF Logo (XBNBT)\"></a>\n</p>\n\n";
+//
+//			break;
+//		default:
+//			// Do not show validator
+//			;
+//		}
+//	}
 
 	// Final responses
 	// XML Reset Alert
@@ -6883,15 +7206,15 @@ void CCache :: resetCache( bool bOffer )
 		
 		ulSize = 0;
 	
-		CMySQLQuery *pQuery = new CMySQLQuery( "SELECT bid,bfilename,bname,badded,bsize,bfiles,btag,btitle,bip,buploader,buploaderid,bimdb,bimdbid,bdefault_down,bdefault_up,bfree_down,bfree_up,UNIX_TIMESTAMP(bfree_to),btop,bclassic,breq,bnodownload,bseeders,bseeders6,bleechers,bleechers6,bcompleted,bcomments,bthanks,bshares,bsubs,bpost FROM allowed ORDER BY bid DESC" );
+		CMySQLQuery *pQuery = new CMySQLQuery( "SELECT bid,bfilename,bname,badded,bsize,bfiles,btag,btitle,bip,buploader,buploaderid,bimdb,bimdbid,bdefault_down,bdefault_up,bfree_down,bfree_up,UNIX_TIMESTAMP(bfree_to),btop,UNIX_TIMESTAMP(btop_to),bclassic,breq,bnodownload,bseeders,bseeders6,bleechers,bleechers6,bcompleted,bcomments,bthanks,bshares,bsubs,bpost FROM allowed ORDER BY bid DESC" );
 				
 		vector<string> vecQuery;
 
-		vecQuery.reserve(32);
+		vecQuery.reserve(33);
 
 		vecQuery = pQuery->nextRow( );
 		
-		if( vecQuery.size( ) == 32 )
+		if( vecQuery.size( ) == 33 )
 		{
 			struct tm time_tm;
 			int64 year, month, day, hour, minute, second;
@@ -6915,7 +7238,7 @@ void CCache :: resetCache( bool bOffer )
 
 		unsigned long ulCount = 0;
 
-		while( vecQuery.size( ) == 32 )
+		while( vecQuery.size( ) == 33 )
 		{
 			pTorrents[ulCount].strTag = "101";
 			pTorrents[ulCount].strName = gmapLANG_CFG["unknown"];
@@ -7012,25 +7335,28 @@ void CCache :: resetCache( bool bOffer )
 				pTorrents[ulCount].ucTop = (unsigned char)atoi( vecQuery[18].c_str( ) );
 
 			if( !vecQuery[19].empty( ) )
-				pTorrents[ulCount].ucClassic = (unsigned char)atoi( vecQuery[19].c_str( ) );
-	
-			if( !vecQuery[20].empty( ) && vecQuery[20] == "1" )
-				pTorrents[ulCount].bReq = true;
+				pTorrents[ulCount].iTopTo = UTIL_StringTo64( vecQuery[19].c_str( ) );
+
+			if( !vecQuery[20].empty( ) )
+				pTorrents[ulCount].ucClassic = (unsigned char)atoi( vecQuery[20].c_str( ) );
 	
 			if( !vecQuery[21].empty( ) && vecQuery[21] == "1" )
+				pTorrents[ulCount].bReq = true;
+	
+			if( !vecQuery[22].empty( ) && vecQuery[22] == "1" )
 				pTorrents[ulCount].bAllow = false;
 
-			pTorrents[ulCount].uiSeeders = atoi( vecQuery[22].c_str( ) );
-			pTorrents[ulCount].uiSeeders6 = atoi( vecQuery[23].c_str( ) );
-			pTorrents[ulCount].uiLeechers = atoi( vecQuery[24].c_str( ) );
-			pTorrents[ulCount].uiLeechers6 = atoi( vecQuery[25].c_str( ) );
-			pTorrents[ulCount].ulCompleted = atoi( vecQuery[26].c_str( ) );
-			pTorrents[ulCount].uiComments = atoi( vecQuery[27].c_str( ) );
-			pTorrents[ulCount].uiThanks = atoi( vecQuery[28].c_str( ) );
-			pTorrents[ulCount].uiShares = atoi( vecQuery[29].c_str( ) );
-			pTorrents[ulCount].uiSubs = atoi( vecQuery[30].c_str( ) );
+			pTorrents[ulCount].uiSeeders = atoi( vecQuery[23].c_str( ) );
+			pTorrents[ulCount].uiSeeders6 = atoi( vecQuery[24].c_str( ) );
+			pTorrents[ulCount].uiLeechers = atoi( vecQuery[25].c_str( ) );
+			pTorrents[ulCount].uiLeechers6 = atoi( vecQuery[26].c_str( ) );
+			pTorrents[ulCount].ulCompleted = atoi( vecQuery[27].c_str( ) );
+			pTorrents[ulCount].uiComments = atoi( vecQuery[28].c_str( ) );
+			pTorrents[ulCount].uiThanks = atoi( vecQuery[29].c_str( ) );
+			pTorrents[ulCount].uiShares = atoi( vecQuery[30].c_str( ) );
+			pTorrents[ulCount].uiSubs = atoi( vecQuery[31].c_str( ) );
 
-			if( !vecQuery[31].empty( ) && vecQuery[31] == "1" )
+			if( !vecQuery[32].empty( ) && vecQuery[32] == "1" )
 				pTorrents[ulCount].bPost = true;
 
 			ulCount++;
@@ -7674,17 +8000,17 @@ void CCache :: setRow( const string &cstrID, bool bOffer )
 		{
 			if( pTorrents[ulKey].strID == cstrID )
 			{
-				CMySQLQuery *pQuery = new CMySQLQuery( "SELECT bid,bfilename,bname,badded,bsize,bfiles,btag,btitle,bip,buploader,buploaderid,bimdb,bimdbid,bdefault_down,bdefault_up,bfree_down,bfree_up,UNIX_TIMESTAMP(bfree_to),btop,bclassic,breq,bnodownload,bseeders,bseeders6,bleechers,bleechers6,bcompleted,bcomments,bthanks,bshares,bsubs,bpost FROM allowed WHERE bid=" + cstrID );
+				CMySQLQuery *pQuery = new CMySQLQuery( "SELECT bid,bfilename,bname,badded,bsize,bfiles,btag,btitle,bip,buploader,buploaderid,bimdb,bimdbid,bdefault_down,bdefault_up,bfree_down,bfree_up,UNIX_TIMESTAMP(bfree_to),btop,UNIX_TIMESTAMP(btop_to),bclassic,breq,bnodownload,bseeders,bseeders6,bleechers,bleechers6,bcompleted,bcomments,bthanks,bshares,bsubs,bpost FROM allowed WHERE bid=" + cstrID );
 				
 				vector<string> vecQuery;
 
-				vecQuery.reserve(32);
+				vecQuery.reserve(33);
 
 				vecQuery = pQuery->nextRow( );
 				
 				delete pQuery;
 
-				if( vecQuery.size( ) == 32 )
+				if( vecQuery.size( ) == 33 )
 				{
 					pTorrents[ulKey].strTag = "101";
 					pTorrents[ulKey].strName = gmapLANG_CFG["unknown"];
@@ -7781,25 +8107,28 @@ void CCache :: setRow( const string &cstrID, bool bOffer )
 						pTorrents[ulKey].ucTop = (unsigned char)atoi( vecQuery[18].c_str( ) );
 
 					if( !vecQuery[19].empty( ) )
-						pTorrents[ulKey].ucClassic = (unsigned char)atoi( vecQuery[19].c_str( ) );
+						pTorrents[ulKey].iTopTo = UTIL_StringTo64( vecQuery[19].c_str( ) );
 
-					if( !vecQuery[20].empty( ) && vecQuery[20] == "1" )
-						pTorrents[ulKey].bReq = true;
+					if( !vecQuery[20].empty( ) )
+						pTorrents[ulKey].ucClassic = (unsigned char)atoi( vecQuery[20].c_str( ) );
 
 					if( !vecQuery[21].empty( ) && vecQuery[21] == "1" )
+						pTorrents[ulKey].bReq = true;
+
+					if( !vecQuery[22].empty( ) && vecQuery[22] == "1" )
 						pTorrents[ulKey].bAllow = false;
 
-					pTorrents[ulKey].uiSeeders = atoi( vecQuery[22].c_str( ) );
-					pTorrents[ulKey].uiSeeders6 = atoi( vecQuery[23].c_str( ) );
-					pTorrents[ulKey].uiLeechers = atoi( vecQuery[24].c_str( ) );
-					pTorrents[ulKey].uiLeechers6 = atoi( vecQuery[25].c_str( ) );
-					pTorrents[ulKey].ulCompleted = atoi( vecQuery[26].c_str( ) );
-					pTorrents[ulKey].uiComments = atoi( vecQuery[27].c_str( ) );
-					pTorrents[ulKey].uiThanks = atoi( vecQuery[28].c_str( ) );
-					pTorrents[ulKey].uiShares = atoi( vecQuery[29].c_str( ) );
-					pTorrents[ulKey].uiSubs = atoi( vecQuery[30].c_str( ) );
+					pTorrents[ulKey].uiSeeders = atoi( vecQuery[23].c_str( ) );
+					pTorrents[ulKey].uiSeeders6 = atoi( vecQuery[24].c_str( ) );
+					pTorrents[ulKey].uiLeechers = atoi( vecQuery[25].c_str( ) );
+					pTorrents[ulKey].uiLeechers6 = atoi( vecQuery[26].c_str( ) );
+					pTorrents[ulKey].ulCompleted = atoi( vecQuery[27].c_str( ) );
+					pTorrents[ulKey].uiComments = atoi( vecQuery[28].c_str( ) );
+					pTorrents[ulKey].uiThanks = atoi( vecQuery[29].c_str( ) );
+					pTorrents[ulKey].uiShares = atoi( vecQuery[30].c_str( ) );
+					pTorrents[ulKey].uiSubs = atoi( vecQuery[31].c_str( ) );
 
-					if( !vecQuery[31].empty( ) && vecQuery[31] == "1" )
+					if( !vecQuery[32].empty( ) && vecQuery[32] == "1" )
 						pTorrents[ulKey].bPost = true;
 				}
 				break;
@@ -8140,6 +8469,7 @@ void CCache :: setSubs( const string &cstrID, const unsigned char cucOpt )
 		}
 	}
 }
+
 void CCache :: setFree( )
 {
 	resetCache( );
@@ -8170,6 +8500,22 @@ void CCache :: setFree( )
 				pTorrents[ulKey].iFreeDown = pTorrents[ulKey].iTimeDown;
 			if( pTorrents[ulKey].iTimeUp > pTorrents[ulKey].iFreeUp )
 				pTorrents[ulKey].iFreeUp = pTorrents[ulKey].iTimeUp;
+		}
+	}
+}
+
+void CCache :: setTop( )
+{
+	resetCache( );
+	
+	time_t now_t = time( 0 );
+
+	for( unsigned long ulKey = 0; ulKey < ulSize; ulKey++ )
+	{
+		if( pTorrents[ulKey].ucTop > 0 && pTorrents[ulKey].iTopTo > 0 && pTorrents[ulKey].iTopTo < now_t )
+		{
+			pTorrents[ulKey].ucTop = 0;
+			bResort = true;
 		}
 	}
 }

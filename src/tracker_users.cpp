@@ -44,7 +44,7 @@ void CTracker :: serverResponseUsersGET( struct request_t *pRequest, struct resp
 		
 	string cstrUID( pRequest->mapParams["uid"] );
 	
-	if( cstrUID.find( " " ) != string :: npos )
+	if( cstrUID.find_first_not_of( "1234567890" ) != string :: npos )
 		cstrUID.erase( );
 	
 	// Check that user is itself
@@ -1013,11 +1013,11 @@ void CTracker :: serverResponseUsersGET( struct request_t *pRequest, struct resp
 			{
 				string cstrUser = string( );
 				
-				CMySQLQuery *pQuery = new CMySQLQuery( "SELECT busername,bemail,baccess,bgroup,btitle,buploaded,bdownloaded,bbonus,UNIX_TIMESTAMP(bwarned),bnote FROM users WHERE buid=" + cstrUID );
+				CMySQLQuery *pQuery = new CMySQLQuery( "SELECT busername,bemail,baccess,bgroup,btitle,buploaded,bdownloaded,bbonus,UNIX_TIMESTAMP(bwarned),bnote,binvites,binvitable FROM users WHERE buid=" + cstrUID );
 					
 				vector<string> vecQuery;
 			
-				vecQuery.reserve(10);
+				vecQuery.reserve(12);
 
 				vecQuery = pQuery->nextRow( );
 				
@@ -1025,7 +1025,7 @@ void CTracker :: serverResponseUsersGET( struct request_t *pRequest, struct resp
 				
 				unsigned char ucAccess = 0;
 				
-				if( vecQuery.size( ) == 10 )
+				if( vecQuery.size( ) == 12 )
 				{
 					cstrUser = vecQuery[0];
 					ucAccess = atoi( vecQuery[2].c_str( ) );
@@ -1048,9 +1048,9 @@ void CTracker :: serverResponseUsersGET( struct request_t *pRequest, struct resp
 				if( cstrAction == "edit" && ( pRequest->user.ucAccess & m_ucAccessEditUsers ) )
 				{
 					// Output common HTML head
-					HTML_Common_Begin(  pRequest, pResponse, gmapLANG_CFG["users_page"], string( CSS_USERS ), string( ), NOT_INDEX, CODE_200 );
+					HTML_Common_Begin( pRequest, pResponse, gmapLANG_CFG["users_page"], string( CSS_USERS ), string( ), NOT_INDEX, CODE_200 );
 					// Does the user exist?
-					if( vecQuery.size( ) == 10 && !cstrUser.empty( ) )
+					if( vecQuery.size( ) == 12 && !cstrUser.empty( ) )
 					{
 						// Compose an edit users page view
 
@@ -1122,6 +1122,19 @@ void CTracker :: serverResponseUsersGET( struct request_t *pRequest, struct resp
 						pResponse->strContent += gmapLANG_CFG["user_warned_time"] + "<br>\n";
 						pResponse->strContent += "<input name=\"us_warned_reason\" id=\"id_warned_reason\" alt=\"[" + gmapLANG_CFG["user_warned_reason"] + "]\" type=text size=40 maxlength=" + CAtomInt( MAX_FILENAME_LEN ).toString( ) + " value=\"\">";
 						pResponse->strContent += gmapLANG_CFG["user_warned_reason"] + "</td>\n</tr>\n";
+						
+						pResponse->strContent += "<tr class=\"edit_users\">\n";
+						pResponse->strContent += "<th class=\"edit_users\">\n" + gmapLANG_CFG["user_invites"] + "</th>";
+						pResponse->strContent += "<td class=\"edit_users\">\n";
+						pResponse->strContent += "<input id=\"id_invitable\" name=\"us_invitable\" alt=\"[" + gmapLANG_CFG["user_invitable"] + "]\" type=checkbox";
+						if( !vecQuery[11].empty( ) && vecQuery[11] != "0" )
+							pResponse->strContent += " checked=\"checked\"";
+						pResponse->strContent += "><label for=\"id_invitable\">" + gmapLANG_CFG["user_invitable"] + "</label><br>\n";
+						pResponse->strContent += "<input id=\"id_invites\" name=\"us_invites\" alt=\"[" + gmapLANG_CFG["user_invites"] + "]\" type=text size=20";
+						if( !vecQuery[10].empty( ) )
+							pResponse->strContent += " value=\"" + vecQuery[10] + "\"";
+						pResponse->strContent += ">" + gmapLANG_CFG["user_invites"];
+						pResponse->strContent += "</td>\n</tr>\n";
 						
 						pResponse->strContent += "<tr class=\"edit_users\">\n";
 						pResponse->strContent += "<th class=\"edit_users\">\n" + gmapLANG_CFG["user_note"] + "</th>";
@@ -1413,6 +1426,8 @@ void CTracker :: serverResponseUsersPOST( struct request_t *pRequest, struct res
 	string cstrWarned = string( );
 	string cstrWarnedTime = string( );
 	string cstrWarnedReason = string( );
+	string cstrInvitable = string( );
+	string cstrInvites = string( );
 
 	string cstrNote = string( );
 	string cstrAccView = string( );
@@ -1496,6 +1511,10 @@ void CTracker :: serverResponseUsersPOST( struct request_t *pRequest, struct res
 							cstrWarnedTime = pData->toString( );
 						else if( strName == "us_warned_reason" )
 							cstrWarnedReason = pData->toString( );
+						else if( strName == "us_invitable" )
+							cstrInvitable = pData->toString( );
+						else if( strName == "us_invites" )
+							cstrInvites = pData->toString( );
 						else if( strName == "us_note" )
 							cstrNote = pData->toString( );
 						else if( strName == "us_access_view" )
@@ -1577,7 +1596,7 @@ void CTracker :: serverResponseUsersPOST( struct request_t *pRequest, struct res
 		return;
 	}
 	
-	if( cstrUID.find( " " ) != string :: npos )
+	if( cstrUID.find_first_not_of( "1234567890" ) != string :: npos )
 		cstrUID.erase( );
 	
 	if( !cstrUID.empty( ) && pRequest->user.strUID == cstrUID )
@@ -1890,17 +1909,17 @@ void CTracker :: serverResponseUsersPOST( struct request_t *pRequest, struct res
 		{
 			string cstrUser = string( );
 			
-			CMySQLQuery *pQuery = new CMySQLQuery( "SELECT busername,baccess,bgroup,buploaded,bdownloaded,bbonus,UNIX_TIMESTAMP(bwarned) FROM users WHERE buid=" + cstrUID );
+			CMySQLQuery *pQuery = new CMySQLQuery( "SELECT busername,baccess,bgroup,buploaded,bdownloaded,bbonus,UNIX_TIMESTAMP(bwarned),binvites FROM users WHERE buid=" + cstrUID );
 			
 			vector<string> vecQuery;
 
-			vecQuery.reserve(7);
+			vecQuery.reserve(8);
 
 			vecQuery = pQuery->nextRow( );
 
 			delete pQuery;
 			
-			if( vecQuery.size( ) == 7 && !vecQuery[0].empty( ) )
+			if( vecQuery.size( ) == 8 && !vecQuery[0].empty( ) )
 				cstrUser = vecQuery[0];
 
 			// Does the user exist?
@@ -1962,6 +1981,9 @@ void CTracker :: serverResponseUsersPOST( struct request_t *pRequest, struct res
 					for( int i = 0; i < cstrWarnedTime.length( ) && bNum ; i++ )
 						if( !isdigit( cstrWarnedTime[i] ) )
 							bNum  = false;
+					for( int i = 0; i < cstrInvites.length( ) && bNum ; i++ )
+						if( !isdigit( cstrInvites[i] ) )
+							bNum  = false;
 					if( bNum )
 					{
 						UTIL_LogFilePrint( "editUser: %s edit user %s start\n", pRequest->user.strLogin.c_str( ), cstrUser.c_str( ) );
@@ -1988,6 +2010,11 @@ void CTracker :: serverResponseUsersPOST( struct request_t *pRequest, struct res
 						}
 						else
 							UTIL_LogFilePrint( "editUser: Warned: No\n" );
+						if( cstrInvitable == "on" )
+							UTIL_LogFilePrint( "editUser: Invitable: Yes\n" );
+						else
+							UTIL_LogFilePrint( "editUser: Invitable: No\n" );
+						UTIL_LogFilePrint( "editUser: Invites: From %s To %s\n", vecQuery[7].c_str( ), cstrInvites.c_str( ) );
 						
 						strQuery += ",buploaded=" + cstrUploaded;
 						strQuery += ",bdownloaded=" + cstrDownloaded;
@@ -2002,6 +2029,11 @@ void CTracker :: serverResponseUsersPOST( struct request_t *pRequest, struct res
 								strQuery += ",bwarned=NOW()+INTERVAL " + cstrWarnedTime + " DAY";
 						else
 							strQuery += ",bwarned=0";
+						strQuery += ",binvites=" + cstrInvites;
+						if( cstrInvitable == "on" )
+							strQuery += ",binvitable=1";
+						else
+							strQuery += ",binvitable=0";
 					}
 
 					// Construct the users access level

@@ -76,7 +76,7 @@ void CTracker :: serverResponseCommentsGET( struct request_t *pRequest, struct r
 			bOffer = true;
 		}
 		
-		if( cstrID.find( " " ) != string :: npos )
+		if( cstrID.find_first_not_of( "1234567890" ) != string :: npos )
 			cstrID.erase( );
 		
 		vector< pair< string, string > > vecParams;
@@ -341,7 +341,7 @@ void CTracker :: serverResponseCommentsGET( struct request_t *pRequest, struct r
 				const string cstrDelAll( pRequest->mapParams["delall"] );
 				string cstrDel( pRequest->mapParams["del"] );
 				
-				if( cstrDel.find( " " ) != string :: npos )
+				if( cstrDel.find_first_not_of( "1234567890" ) != string :: npos )
 					cstrDel.erase( );
 
 				if( cstrDelAll == "1" )
@@ -409,7 +409,7 @@ void CTracker :: serverResponseCommentsGET( struct request_t *pRequest, struct r
 			if( pRequest->user.ucAccess & m_ucAccessEditComments )
 			{
 				string cstrEdit( pRequest->mapParams["edit"] );
-				if( cstrEdit.find( " " ) != string :: npos )
+				if( cstrEdit.find_first_not_of( "1234567890" ) != string :: npos )
 					cstrEdit.erase( );
 				if( !cstrEdit.empty( ) )
 				{
@@ -625,7 +625,7 @@ void CTracker :: serverResponseCommentsGET( struct request_t *pRequest, struct r
 //			}
 			
 			string strReply( pRequest->mapParams["reply"] );
-			if( strReply.find( " " ) != string :: npos )
+			if( strReply.find_first_not_of( "1234567890" ) != string :: npos )
 				strReply.erase( );
 			
 			bool bNoComment = false;
@@ -1026,9 +1026,9 @@ void CTracker :: serverResponseCommentsPOST( struct request_t *pRequest, struct 
 			strIDName = "id";
 		}
 		
-		if( cstrID.find( " " ) != string :: npos )
+		if( cstrID.find_first_not_of( "1234567890" ) != string :: npos )
 			cstrID.erase( );
-		if( cstrEdit.find( " " ) != string :: npos )
+		if( cstrEdit.find_first_not_of( "1234567890" ) != string :: npos )
 			cstrEdit.erase( );
 		
 		vector< pair< string, string > > vecParams;

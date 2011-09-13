@@ -468,7 +468,7 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 		
 		string strPageParameters = LOGIN_HTML;
 		
-		if( cstrUID.find( " " ) != string :: npos )
+		if( cstrUID.find_first_not_of( "1234567890" ) != string :: npos )
 			cstrUID.erase( );
 		
 		vector< pair< string, string > > vecParams;
@@ -493,7 +493,7 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 		
 		string strPageParameters = LOGIN_HTML;
 		
-		if( cstrUID.find( " " ) != string :: npos )
+		if( cstrUID.find_first_not_of( "1234567890" ) != string :: npos )
 			cstrUID.erase( );
 		
 		vector< pair< string, string > > vecParams;
@@ -540,7 +540,7 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 					cstrDelID = pRequest->mapParams["odel"];
 					bOffer = true;
 				}
-				if( cstrDelID.find( " " ) != string :: npos )
+				if( cstrDelID.find_first_not_of( "1234567890" ) != string :: npos )
 					cstrDelID.erase( );
 				// What did the user reuest?
 				string strDatabase = string( );
@@ -708,7 +708,7 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 
 		string cstrUID( pRequest->mapParams["uid"] );
 		
-		if( cstrUID.find( " " ) != string :: npos )
+		if( cstrUID.find_first_not_of( "1234567890" ) != string :: npos )
 			cstrUID.erase( );
 		
 		user_t user;
@@ -985,7 +985,10 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 			pResponse->strContent += "</td></tr>";
 		}
 		if( ( ( pRequest->user.ucAccess & m_ucAccessUserDetails ) || pRequest->user.strUID == user.strUID ) && !user.strInvites.empty( ) )
-			pResponse->strContent += "<tr class=\"user_table\"><th class=\"user_table\">" + gmapLANG_CFG["invites"] + "</th><td class=\"user_table\">" + user.strInvites + "</td></tr>";
+			pResponse->strContent += "<tr class=\"user_table\"><th class=\"user_table\">" + gmapLANG_CFG["invites"] + "</th><td class=\"user_table\">" + user.strInvites;
+		if( user.ucInvitable == 0 )
+			pResponse->strContent += "<span class=\"red\">" + gmapLANG_CFG["invite_function_invite_disable"] + "</span>";
+		pResponse->strContent += "</td></tr>";
 		if( user.tLast )
 		{
 			char pTime[256];
@@ -1071,42 +1074,66 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 		
 		pResponse->strContent += "</td>\n";
 		
+		const string cstrDetailShow( pRequest->mapParams["show"] );
+		
 		pResponse->strContent += "<td class=\"user_main_detail\">";
 		
 		pResponse->strContent += "<table class=\"user_detail\">\n<tr class=\"user_detail\">\n";
 //		pResponse->strContent += "<td class=\"user_detail\"><a class=\"user_detail\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?uid=" + user.strUID + "\">" + gmapLANG_CFG["user_detail_main"] + "</td>\n";
 		
-		pResponse->strContent += "<td class=\"user_detail\"><a class=\"user_detail\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?uid=" + user.strUID + "&amp;show=bookmarks\">";
+		pResponse->strContent += "<td class=\"user_detail\"><a class=\"user_detail";
+		if( cstrDetailShow == "bookmarks" || cstrDetailShow.empty( ) )
+			pResponse->strContent += "_selected";
+		pResponse->strContent += "\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?uid=" + user.strUID + "&amp;show=bookmarks\">";
 		if( pRequest->user.strUID == user.strUID )
 			pResponse->strContent += gmapLANG_CFG["user_detail_bookmarks"];
 		else
 			pResponse->strContent += gmapLANG_CFG["user_detail_shares"];
 		pResponse->strContent += "</td>\n";
 		
-		pResponse->strContent += "<td class=\"user_detail\"><a class=\"user_detail\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?uid=" + user.strUID + "&amp;show=comments\">" + gmapLANG_CFG["user_detail_comments"] + "</td>\n";
-		
-		pResponse->strContent += "<td class=\"user_detail\"><a class=\"user_detail\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?uid=" + user.strUID + "&amp;show=torrents\">" + gmapLANG_CFG["user_detail_torrents"] + "</td>\n";
+		pResponse->strContent += "<td class=\"user_detail\"><a class=\"user_detail";
+		if( cstrDetailShow == "torrents" )
+			pResponse->strContent += "_selected";
+		pResponse->strContent += "\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?uid=" + user.strUID + "&amp;show=torrents\">" + gmapLANG_CFG["user_detail_torrents"] + "</td>\n";
 		
 		if( ( pRequest->user.ucAccess & m_ucAccessUserDetails ) || pRequest->user.strUID == user.strUID )
 		{
-			pResponse->strContent += "<td class=\"user_detail\"><a class=\"user_detail\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?uid=" + user.strUID + "&amp;show=active\">" + gmapLANG_CFG["user_detail_active"] + "</td>\n";
-			pResponse->strContent += "<td class=\"user_detail\"><a class=\"user_detail\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?uid=" + user.strUID + "&amp;show=completed\">" + gmapLANG_CFG["user_detail_completed"] + "</td>\n";
+			pResponse->strContent += "<td class=\"user_detail\"><a class=\"user_detail";
+			if( cstrDetailShow == "active" )
+				pResponse->strContent += "_selected";
+			pResponse->strContent += "\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?uid=" + user.strUID + "&amp;show=active\">" + gmapLANG_CFG["user_detail_active"] + "</td>\n";
+			pResponse->strContent += "<td class=\"user_detail\"><a class=\"user_detail";
+			if( cstrDetailShow == "completed" )
+				pResponse->strContent += "_selected";
+			pResponse->strContent += "\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?uid=" + user.strUID + "&amp;show=completed\">" + gmapLANG_CFG["user_detail_completed"] + "</td>\n";
 		}
 		
 		if( pRequest->user.strUID == user.strUID )
 		{
-			pResponse->strContent += "<td class=\"user_detail\"><a class=\"user_detail\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?show=friends\">" + gmapLANG_CFG["user_detail_friends"] + "</td>\n";
-			pResponse->strContent += "<td class=\"user_detail\"><a class=\"user_detail\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?show=friendeds\">" + gmapLANG_CFG["user_detail_friendeds"] + "</td>\n";
+			pResponse->strContent += "<td class=\"user_detail\"><a class=\"user_detail";
+			if( cstrDetailShow == "friends" )
+				pResponse->strContent += "_selected";
+			pResponse->strContent += "\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?show=friends\">" + gmapLANG_CFG["user_detail_friends"] + "</td>\n";
+			pResponse->strContent += "<td class=\"user_detail\"><a class=\"user_detail";
+			if( cstrDetailShow == "friendeds" )
+				pResponse->strContent += "_selected";
+			pResponse->strContent += "\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?show=friendeds\">" + gmapLANG_CFG["user_detail_friendeds"] + "</td>\n";
 		}
 
 		if( ( pRequest->user.ucAccess & m_ucAccessAdmin ) || pRequest->user.strUID == user.strUID )
 		{
-			pResponse->strContent += "<td class=\"user_detail\"><a class=\"user_detail\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?uid=" + user.strUID + "&amp;show=invites\">" + gmapLANG_CFG["user_detail_invites"] + "</td>\n";
+			pResponse->strContent += "<td class=\"user_detail\"><a class=\"user_detail";
+			if( cstrDetailShow == "invites" )
+				pResponse->strContent += "_selected";
+			pResponse->strContent += "\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?uid=" + user.strUID + "&amp;show=invites\">" + gmapLANG_CFG["user_detail_invites"] + "</td>\n";
 		}
 		
-		pResponse->strContent += "</tr></table>\n<p>\n";
+		pResponse->strContent += "<td class=\"user_detail\"><a class=\"user_detail";
+		if( cstrDetailShow == "comments" )
+			pResponse->strContent += "_selected";
+		pResponse->strContent += "\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?uid=" + user.strUID + "&amp;show=comments\">" + gmapLANG_CFG["user_detail_comments"] + "</td>\n";
 		
-		const string cstrDetailShow( pRequest->mapParams["show"] );
+		pResponse->strContent += "</tr></table>\n<p>\n";
 		
 		if( cstrDetailShow == "preferences" )
 		{
@@ -1169,23 +1196,6 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 							pResponse->strContent += UTIL_RemoveHTML( strTag );
 
 							pResponse->strContent += "</td>\n\n";
-						}
-
-						// RSS ( Thanks labarks )
-						if( m_ucDumpRSSFileMode != 0 )
-						{
-							const string cstrRSSByTag( rssdump.strURL + rssdump.strName.substr( 0, rssdump.strName.length( ) - rssdump.strExt.length( ) ) + "-" + (*ulTagKey).first + rssdump.strExt );
-
-							if( !cstrRSSByTag.empty( ) )
-							{
-								if( !rssdump.strName.empty( ) )
-								{
-									if( !rssdump.strURL.empty( ) )
-										pResponse->strContent += "<span class=\"dash\">&nbsp;-&nbsp;</span><a rel=\"" + STR_TARGET_REL + "\" title=\"" + m_strTitle + ": " + gmapLANG_CFG["navbar_rss"] + " - " + (*ulTagKey).first + "\" class=\"rss\" href=\"" + cstrRSSByTag + "\">" + gmapLANG_CFG["navbar_rss"] + "</a>\n";
-									else if( m_bServeLocal )
-										pResponse->strContent += "<span class=\"dash\">&nbsp;-&nbsp;</span><a rel=\"" + STR_TARGET_REL + "\" title=\"" + m_strTitle + ": " + gmapLANG_CFG["navbar_rss"] + " - " + (*ulTagKey).first + "\" class=\"rss\" href=\"" + cstrRSSByTag + "\">" + gmapLANG_CFG["navbar_rss"] + "</a>\n";
-								}
-							}
 						}
 					}
 					pResponse->strContent += "</tr></table>\n\n";
@@ -1360,11 +1370,13 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 						pResponse->strContent += "<p class=\"invite\"><input name=\"show\" type=hidden value=\"" + cstrDetailShow + "\"></p>\n";
 						pResponse->strContent += "<p class=\"invite\"><span>" + UTIL_Xsprintf( gmapLANG_CFG["invite_function_invites_left"].c_str( ), string( "<span class=\"red\">" + user.strInvites + "</span>" ).c_str( ) );
 						pResponse->strContent += "<input name=\"invite\"alt=\"[" + gmapLANG_CFG["invite_function_create_invite"] + "]\" type=submit value=\"" + gmapLANG_CFG["invite_function_create_invite"] + "\"";
-						if( CFG_GetInt( "bnbt_invite_enable", 0 ) == 0 || !( user.ucAccess & m_ucAccessInvites ) || (unsigned int)atoi( user.strInvites.c_str( ) ) == 0 || ( m_bRatioRestrict && checkShareRatio( user.ulDownloaded, user.flShareRatio ) ) )
+						if( CFG_GetInt( "bnbt_invite_enable", 0 ) == 0 || !( user.ucAccess & m_ucAccessInvites ) || ( user.ucInvitable == 0 ) || (unsigned int)atoi( user.strInvites.c_str( ) ) == 0 || ( m_bRatioRestrict && checkShareRatio( user.ulDownloaded, user.flShareRatio ) ) )
 							pResponse->strContent += " disabled=\"yes\"";
 						pResponse->strContent += ">";
-						if( CFG_GetInt( "bnbt_invite_enable", 0 ) == 0 || !( user.ucAccess & m_ucAccessInvites ) )
+						if( CFG_GetInt( "bnbt_invite_enable", 0 ) == 0 )
 							pResponse->strContent += "<span class=\"red\">" + gmapLANG_CFG["invite_function_invite_close"] + "</span>";
+						else if( !( user.ucAccess & m_ucAccessInvites ) || ( user.ucInvitable == 0 ) || ( m_bRatioRestrict && checkShareRatio( user.ulDownloaded, user.flShareRatio ) ) )
+							pResponse->strContent += "<span class=\"red\">" + gmapLANG_CFG["invite_function_invite_disable"] + "</span>";
 						pResponse->strContent += "</span></p>";
 
 						pResponse->strContent += "</form>\n</div>\n";
@@ -1472,6 +1484,143 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 		{
 			if( pRequest->user.strUID == user.strUID && ( pRequest->user.ucAccess & m_ucAccessView ) )
 			{
+				const string cstrSearch( pRequest->mapParams["search"] );
+
+				// Top search
+				pResponse->strContent += "<form class=\"search_login_top\" name=\"topsearch\" method=\"get\" action=\"" + RESPONSE_STR_LOGIN_HTML + "\">\n";
+				
+				if( !cstrUID.empty( ) )
+					pResponse->strContent += "<p><input name=\"uid\" type=hidden value=\"" + cstrUID + "\"></p>\n";
+				
+				if( !cstrDetailShow.empty( ) )
+					pResponse->strContent += "<p><input name=\"show\" type=hidden value=\"" + cstrDetailShow + "\"></p>\n";
+				
+				pResponse->strContent += "<p><label for=\"topfriendsearch\">" + gmapLANG_CFG["user_search"] + "</label> <input name=\"search\" id=\"topfriendsearch\" alt=\"[" + gmapLANG_CFG["friend_search"] + "]\" type=text size=40";
+				
+				pResponse->strContent += " value=\"" + UTIL_RemoveHTML( cstrSearch ) + "\">\n";
+
+				pResponse->strContent += Button_Submit( "top_submit_search", gmapLANG_CFG["search"] );
+
+				pResponse->strContent += "</p>\n";
+
+				pResponse->strContent += "</form>\n\n";
+
+				vector<string> vecSearch;
+				vecSearch.reserve(64);
+				
+				vecSearch = UTIL_SplitToVector( cstrSearch, " " );
+
+				if( !vecSearch.empty() )
+				{
+					pResponse->strContent += "<p class=\"search_filter\">\n";
+					pResponse->strContent += "<span class=\"search_results_alt\">" + gmapLANG_CFG["result_search"] + ": \"</span><span class=\"filtered_by\">" + UTIL_RemoveHTML( cstrSearch ) + "</span>\"\n";
+					pResponse->strContent += UTIL_Xsprintf( gmapLANG_CFG["friend_search_limit"].c_str( ), CAtomInt( m_uiPerPage ).toString( ).c_str( ) );
+					pResponse->strContent += "</p>\n\n";
+
+					unsigned long culKeySize = 0;
+					
+					struct user_t *pUsersT = 0;
+					
+					if( m_pCache )
+					{
+		//				m_pCache->ResetUsers( );
+						pUsersT = m_pCache->getCacheUsers( );
+						culKeySize = m_pCache->getSizeUsers( );
+					}
+					m_pCache->sortUsers( SORTU_DCREATED );
+
+					pResponse->strContent += "<table class=\"user_detail_table\" id=\"user_friends_search\">\n";
+					pResponse->strContent += "<tr><th colspan=4>" + gmapLANG_CFG["user_detail_friends_search"] + "</th></tr>\n";
+
+					unsigned long ulFound = 0;
+
+					for( unsigned long ulKey = 0; ulKey < culKeySize; ulKey++ )
+					{
+						if( !UTIL_MatchVector( pUsersT[ulKey].strLogin, vecSearch, MATCH_METHOD_NONCASE_AND ) )
+							continue;
+						if( pUsersT[ulKey].strUID == user.strUID )
+							continue;
+
+						if( ulFound == 0 )
+						{
+							pResponse->strContent += "<tr>\n";
+							
+							pResponse->strContent += "<th class=\"uploader\">" + gmapLANG_CFG["user_name"];
+
+							pResponse->strContent += "</th>\n";
+							
+							pResponse->strContent += "<th class=\"date\">" + gmapLANG_CFG["user_last"];
+
+							pResponse->strContent += "</th>\n";
+							
+							pResponse->strContent += "<th class=\"admin\">" + gmapLANG_CFG["friend_do"];
+
+							pResponse->strContent += "</th>\n";
+							
+							pResponse->strContent += "<th class=\"admin\">" + gmapLANG_CFG["friend_admin"];
+
+							pResponse->strContent += "</th>\n";
+							
+							pResponse->strContent += "</tr>\n";
+						}
+
+						if( ++ulFound > m_uiPerPage )
+							break;
+
+						pResponse->strContent += "<tr>\n";
+						
+						pResponse->strContent += "<td class=\"uploader\">" +getUserLink( pUsersT[ulKey].strUID, pUsersT[ulKey].strLogin ); + "</td>\n";
+						if( pUsersT[ulKey].tLast )
+						{
+							char pTime[256];
+							memset( pTime, 0, sizeof( pTime ) / sizeof( char ) );
+							strftime( pTime, sizeof( pTime ) / sizeof( char ), "%Y-%m-%d %H:%M:%S", localtime( &pUsersT[ulKey].tLast ) );
+							pResponse->strContent += "<td class=\"date\">" + string( pTime ) + "</td>\n";
+						}
+						else
+							pResponse->strContent += "<td class=\"date\">" + gmapLANG_CFG["na"] + "</td>\n";
+						
+						pResponse->strContent += "<td class=\"admin\">";
+						if( pRequest->user.ucAccess & m_ucAccessMessages )
+						{
+							pResponse->strContent += "[<a class=\"black\" title=\"" + gmapLANG_CFG["talk_to"] + "\" href=\"" + RESPONSE_STR_TALK_HTML + "?talk=" + UTIL_StringToEscaped( "@" + pUsersT[ulKey].strLogin + " " ) + "\">" + gmapLANG_CFG["talk_to"] + "</a>]";
+						}
+		
+						if( pRequest->user.ucAccess & m_ucAccessComments )
+						{
+							pResponse->strContent += "[<a class=\"black\" title=\"" + gmapLANG_CFG["messages_send_message"] + "\" href=\"" + RESPONSE_STR_MESSAGES_HTML + "?sendto=" + pUsersT[ulKey].strUID + "\">" + gmapLANG_CFG["messages_send_message"] + "</a>]";
+						}
+						pResponse->strContent += "</td>\n";
+						pResponse->strContent += "<td class=\"admin\">";
+
+						CMySQLQuery *pQueryFriend = new CMySQLQuery( "SELECT bfriendid FROM friends WHERE buid=" + user.strUID + " AND bfriendid=" + pUsersT[ulKey].strUID );
+				
+						vector<string> vecQueryFriend;
+			
+						vecQueryFriend.reserve(1);
+
+						vecQueryFriend = pQueryFriend->nextRow( );
+						
+						delete pQueryFriend;
+
+						if( vecQueryFriend.size( ) == 0 )
+						{
+							pResponse->strContent += "[<a id=\"friend" + pUsersT[ulKey].strUID + "\" class=\"friend\" href=\"javascript: ;\" onclick=\"javascript: friend('" + pUsersT[ulKey].strUID + "','" + gmapLANG_CFG["friend_add"] + "','" + gmapLANG_CFG["friend_remove"] + "');\">";
+							pResponse->strContent += gmapLANG_CFG["friend_add"] + "</a>]";
+						}
+						else if( vecQueryFriend.size( ) == 1 )
+							pResponse->strContent += gmapLANG_CFG["friended_friended"];
+						pResponse->strContent += "</td>\n";
+						pResponse->strContent += "</tr>\n";
+					}
+
+					if( ulFound == 0 )
+						pResponse->strContent += "<tr><td>" + gmapLANG_CFG["result_none_found"] + "</td></tr>\n";
+				
+					pResponse->strContent += "</table>\n";
+				}
+
+				pResponse->strContent += "<hr>";
 				pResponse->strContent += "<table class=\"user_detail_table\" id=\"user_friends\">\n";
 				pResponse->strContent += "<tr><th colspan=4>" + gmapLANG_CFG["user_detail_friends"] + "</th></tr>\n";
 				

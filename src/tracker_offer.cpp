@@ -124,7 +124,7 @@ void CTracker :: serverResponseOfferGET( struct request_t *pRequest, struct resp
 				string strAllowID( pRequest->mapParams["allow"] );
 				const string strOK( pRequest->mapParams["ok"] );
 				
-				if( strAllowID.find( " " ) != string :: npos )
+				if( strAllowID.find_first_not_of( "1234567890" ) != string :: npos )
 					strAllowID.erase( );
 				
 				string strAllowHash = string( );
@@ -327,7 +327,7 @@ void CTracker :: serverResponseOfferGET( struct request_t *pRequest, struct resp
 											vecRule = UTIL_SplitToVectorStrict( strRule, "|" );
 										}
 										
-										modifyTag( strAllowedID, vecQueryOffer[7], vecQueryOffer[8], vecQueryOffer[9], vecQueryOffer[11], vecQueryOffer[12], vecQueryOffer[10], strDefaultDown, strDefaultUp, strFreeDown, strFreeUp, strFreeTime, vecQueryOffer[13], false, false );
+										modifyTag( strAllowedID, vecQueryOffer[7], vecQueryOffer[8], vecQueryOffer[9], vecQueryOffer[11], vecQueryOffer[12], vecQueryOffer[10], strDefaultDown, strDefaultUp, strFreeDown, strFreeUp, strFreeTime, false, string( ), false, vecQueryOffer[13], false );
 									
 										CMySQLQuery mq01( "UPDATE allowed SET bimdb=\'" + UTIL_StringToMySQL( vecQueryOffer[14] ) + "\',bimdbid=\'" + UTIL_StringToMySQL( vecQueryOffer[15] ) + "\',bimdbupdated=\'" + UTIL_StringToMySQL( vecQueryOffer[16] ) + "\' WHERE bid=" + strAllowedID );
 									
@@ -435,7 +435,7 @@ void CTracker :: serverResponseOfferGET( struct request_t *pRequest, struct resp
 				const string strDelReason( UTIL_RemoveHTML( pRequest->mapParams["reason"] ) );
 				const string strOK( pRequest->mapParams["ok"] );
 				
-				if( strDelID.find( " " ) != string :: npos )
+				if( strDelID.find_first_not_of( "1234567890" ) != string :: npos )
 					strDelID.erase( );
 				
 				CMySQLQuery *pQuery = new CMySQLQuery( "SELECT bid,bfilename,buploaderid FROM offer WHERE bid=" + strDelID );

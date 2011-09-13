@@ -319,7 +319,22 @@ void CTracker :: serverResponseInviteGET( struct request_t *pRequest, struct res
 	{
 #endif
 
-	if( pRequest->user.ucAccess & m_ucAccessSignup )
+	bool bNJU = false;
+
+	if( pRequest->strIP.find( ":" ) == string :: npos )
+		bNJU = true;
+	else
+	{
+		if( pRequest->strIP.find( "2001:da8:1007:" ) == 0 || pRequest->strIP.find( "2001:250:5002:" ) == 0 )
+			bNJU = true;
+	}
+
+	if( bNJU && !( pRequest->user.ucAccess & m_ucAccessSignupDirect ) )
+	{
+		HTML_Common_Begin(  pRequest, pResponse, gmapLANG_CFG["signup_page"], string( CSS_SIGNUP ), string( ), NOT_INDEX, CODE_200 );
+		pResponse->strContent += "<p class=\"signup_failed\">" + gmapLANG_CFG["invite_nju"] + "</p>";
+	}
+	else if( pRequest->user.ucAccess & m_ucAccessSignup )
 	{
 		const string cstrCode( pRequest->mapParams["code"] );
 		
@@ -518,6 +533,22 @@ void CTracker :: serverResponseInvitePOST( struct request_t *pRequest, struct re
 				HTML_Common_End( pRequest, pResponse, btv, NOT_INDEX, string( CSS_SIGNUP ) );
 
 				return;
+			}
+			unsigned char ucIndex = 1;
+			string strSchoolMail = gmapLANG_CFG["signup_mail"+CAtomInt( ucIndex ).toString( )];
+			while( !strSchoolMail.empty( ) )
+			{
+				if( cstrMail.substr( cstrMail.find( "@" ) ) == strSchoolMail )
+				{
+					// Unable to signup. Your e-mail address is invalid.
+					pResponse->strContent += "<p class=\"signup_failed\">" + UTIL_Xsprintf( gmapLANG_CFG["signup_email_error_invite_school"].c_str( ), string( "<a title=\"" + gmapLANG_CFG["navbar_sign_up_school"] + "\" href=\"" + RESPONSE_STR_SIGNUP_SCHOOL_HTML + "\">" ).c_str( ), "</a>" ) + "</p>\n\n";
+
+					// Output common HTML tail
+					HTML_Common_End( pRequest, pResponse, btv, NOT_INDEX, string( CSS_SIGNUP ) );
+
+					return;
+				}
+				strSchoolMail = gmapLANG_CFG["signup_mail"+CAtomInt( ++ucIndex ).toString( )];
 			}
 
 			if( !getUserLogin( cstrLogin ).empty( ) )
@@ -856,7 +887,7 @@ void CTracker :: serverResponseSignupSchoolPOST( struct request_t *pRequest, str
 
 				return;
 			}
-			if( cstrType == "1" && cstrLowerMail.find_first_of( "bdm" ) != 0 )
+			if( cstrType == "1" && cstrLowerMail.find( "b0" ) != 0 && cstrLowerMail.find( "b1" ) != 0 && cstrLowerMail.find( "mg" ) != 0 && cstrLowerMail.find( "mf" ) != 0 && cstrLowerMail.find( "dg" ) != 0 )
 			{
 				// Unable to signup. Your e-mail address is invalid.
 				pResponse->strContent += "<p class=\"signup_failed\">" + UTIL_Xsprintf( gmapLANG_CFG["signup_email_error_smail"].c_str( ), string( "<a title=\"" + gmapLANG_CFG["navbar_sign_up_school"] + "\" href=\"" + RESPONSE_STR_SIGNUP_SCHOOL_HTML + "\">" ).c_str( ), "</a>" ) + "</p>\n\n";

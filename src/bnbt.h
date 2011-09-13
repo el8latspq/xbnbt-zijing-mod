@@ -341,6 +341,7 @@ struct user_t
 	string strInvites;
 	string strInviter;
 	string strInviterID;
+	unsigned char ucInvitable;
 //	string strTalk;
 //	string strTalkRef;
 };

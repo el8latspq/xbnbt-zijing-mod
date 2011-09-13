@@ -229,7 +229,9 @@ void CTracker :: serverResponseInfoGET( struct request_t *pRequest, struct respo
 			
 			delete pQueryIP;
 			
-			int64 iGreatestUnique = UTIL_StringTo64( vecQueryIP[0].c_str( ) );
+			int64 iGreatestUnique = 0;
+			if( vecQueryIP.size( ) == 1 )
+				iGreatestUnique = UTIL_StringTo64( vecQueryIP[0].c_str( ) );
 				
 			if( iGreatestUnique > gtXStats.peer.iGreatestUnique )
 				gtXStats.peer.iGreatestUnique = iGreatestUnique;
@@ -240,23 +242,23 @@ void CTracker :: serverResponseInfoGET( struct request_t *pRequest, struct respo
 		}
 
 		// Registered users
-		CMySQLQuery *pQueryUser = new CMySQLQuery( "SELECT COUNT(*) FROM users" );
+//		CMySQLQuery *pQueryUser = new CMySQLQuery( "SELECT COUNT(*) FROM users" );
 		
-		vector<string> vecQueryUser;
+//		vector<string> vecQueryUser;
 	
-		vecQueryUser.reserve(1);
+//		vecQueryUser.reserve(1);
 		
-		vecQueryUser = pQueryUser->nextRow( );
+//		vecQueryUser = pQueryUser->nextRow( );
 	
-		delete pQueryUser;
+//		delete pQueryUser;
 		
-		if( vecQueryUser.size( ) == 1 )
-//		if( m_pCache )
+//		if( vecQueryUser.size( ) == 1 )
+		if( m_pCache )
 		{
 			pResponse->strContent += "<tr class=\"info_reg_users\">";
 			pResponse->strContent += "<th class=\"info_field\">" + gmapLANG_CFG["info_reg_users"] + "</th>\n";
-			pResponse->strContent += "<td class=\"info_field\">" + vecQueryUser[0] + "</td></tr>\n";
-//			pResponse->strContent += "<td class=\"info_field\">" + CAtomLong( m_pCache->getSizeUsers( ) ).toString( ) + "</td></tr>\n";
+//			pResponse->strContent += "<td class=\"info_field\">" + vecQueryUser[0] + "</td></tr>\n";
+			pResponse->strContent += "<td class=\"info_field\">" + CAtomLong( m_pCache->getSizeUsers( ) ).toString( ) + "</td></tr>\n";
 			pResponse->strContent += "<tr class=\"info_max_users\">";
 			pResponse->strContent += "<th class=\"info_field\">" + gmapLANG_CFG["info_max_users"] + "</th>\n";
 			pResponse->strContent += "<td class=\"info_field\">" + CFG_GetString( "bnbt_max_users", string( "1000" ) ) + "</td></tr>\n";
