@@ -223,6 +223,22 @@ void CTracker :: serverResponseAdmin( struct request_t *pRequest, struct respons
 			return JS_ReturnToPage( pRequest, pResponse, ADMIN_HTML + "?func=access" );
 		}
 		
+		if( pRequest->mapParams["submit_school_button"] == gmapLANG_CFG["Submit"] )
+		{
+			const string cstrSchoolMail = pRequest->mapParams["school_mail"];
+			const string cstrSchoolName = pRequest->mapParams["school_name"];
+			unsigned char ucIndex = 1;
+			string strSchoolMail = gmapLANG_CFG["signup_type"+CAtomInt( ucIndex ).toString( )];
+			while( !strSchoolMail.empty( ) )
+			{
+				strSchoolMail = gmapLANG_CFG["signup_type"+CAtomInt( ++ucIndex ).toString( )];
+			}
+			LANG_CFG_SetString( "signup_mail"+CAtomInt( ucIndex ).toString( ), cstrSchoolMail );
+			LANG_CFG_SetString( "signup_type"+CAtomInt( ucIndex ).toString( ), cstrSchoolName );
+			LANG_CFG_Close( LANG_CFG_FILE );
+			return JS_ReturnToPage( pRequest, pResponse, ADMIN_HTML + "?func=config" );
+		}
+
 		if( pRequest->mapParams["submit_invite_button"] == gmapLANG_CFG["Submit"] )
 		{
 			if( pRequest->mapParams.find( "invite" ) != pRequest->mapParams.end( ) && pRequest->mapParams["invite"] == "on" )
@@ -368,6 +384,9 @@ void CTracker :: serverResponseAdmin( struct request_t *pRequest, struct respons
 			UTIL_LogPrint( "Admin: Refresh Static Files\n" );
 
 			gpServer->getTracker( )->RefreshStatic( );
+
+                        gmapLANG_CFG.clear( );
+			LANG_CFG_Init( LANG_CFG_FILE );
 
 			return JS_ReturnToPage( pRequest, pResponse, ADMIN_HTML + "?func=stat" );
 		}
@@ -1237,6 +1256,17 @@ void CTracker :: serverResponseAdmin( struct request_t *pRequest, struct respons
 		else if( cstrAdminFunction == "config" )
 		{
 			pResponse->strContent += "<table class=\"admin_function\">\n";
+
+			pResponse->strContent += "<tr class=\"admin_function\">\n";
+			pResponse->strContent += "<td class=\"admin_function\">\n";
+			pResponse->strContent += "<div class=\"admin_invite\">\n";
+			pResponse->strContent += "<form method=\"get\" action=\"" + RESPONSE_STR_ADMIN_HTML + "\">\n";
+			pResponse->strContent += "<p>" + gmapLANG_CFG["admin_new_school"] + "</p>\n\n" ;
+			pResponse->strContent += "<p class=\"admin_school\">" + gmapLANG_CFG["admin_new_school_mail"] + "<input name=\"school_mail\" type=text size=15 value=\"\"></p>";
+			pResponse->strContent += "<p class=\"admin_school\">" + gmapLANG_CFG["admin_new_school_name"] + "<input name=\"school_name\" type=text size=15 value=\"\"></p>";
+			pResponse->strContent += Button_Submit( "submit_school", string( gmapLANG_CFG["Submit"] ) );
+			pResponse->strContent += "</form></div>\n";
+			pResponse->strContent += "</form></td></tr>\n";
 			
 			pResponse->strContent += "<tr class=\"admin_function\">\n";
 			pResponse->strContent += "<td class=\"admin_function\">\n";

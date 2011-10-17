@@ -129,6 +129,22 @@ void CTracker :: serverResponseSubUploadGET( struct request_t *pRequest, struct 
 		const string cstrID( pRequest->mapParams["id"] );
 		const string cstrFilename( pRequest->mapParams["filename"] );
 		const string cstrName( pRequest->mapParams["name"] );
+		const string cstrOffer( pRequest->mapParams["offer"] );
+		bool bOffer = false;
+		string strDatabase = string( );
+		string strIDKey = string( );
+
+		if( !cstrOffer.empty( ) && cstrOffer == "1" )
+		{
+			strDatabase = "offer";
+			strIDKey = "boid";
+			bOffer = true;
+		}
+		else
+		{
+			strDatabase = "allowed";
+			strIDKey = "btid";
+		}
 
 		// define doctype
 		if( !STR_DOC_TYPE.empty( ) )
@@ -174,7 +190,7 @@ void CTracker :: serverResponseSubUploadGET( struct request_t *pRequest, struct 
 		
 		if( !cstrID.empty( ) && !cstrSub.empty( ) && !cstrFilename.empty( ) )
 		{
-			CMySQLQuery *pQuery = new CMySQLQuery( "SELECT bid,bimdbid from allowed WHERE bid=" + cstrID );
+			CMySQLQuery *pQuery = new CMySQLQuery( "SELECT bid,bimdbid from " + strDatabase + " WHERE bid=" + cstrID );
 
 			vector<string> vecQuery;
 		
@@ -186,9 +202,12 @@ void CTracker :: serverResponseSubUploadGET( struct request_t *pRequest, struct 
 
 			if( vecQuery.size( ) == 2 )
 			{
-				CMySQLQuery mq01( "INSERT INTO subs (btid,buid,busername,bsub,bfilename,bname,bimdbid,buploadtime) VALUES(" + cstrID + "," + pRequest->user.strUID + ",\'" + UTIL_StringToMySQL( pRequest->user.strLogin ) + "\',\'" + UTIL_StringToMySQL( cstrSub ) + "\',\'" + UTIL_StringToMySQL( cstrFilename ) + "\',\'" + UTIL_StringToMySQL( cstrName ) + "\',\'" + UTIL_StringToMySQL( vecQuery[1] ) + "\',NOW())" );
-				CMySQLQuery mq02( "UPDATE allowed SET bsubs=bsubs+1 WHERE bid=" + cstrID );
-				m_pCache->setSubs( cstrID, SET_SUBS_ADD );
+				CMySQLQuery mq01( "INSERT INTO subs (" + strIDKey + ",buid,busername,bsub,bfilename,bname,bimdbid,buploadtime) VALUES(" + cstrID + "," + pRequest->user.strUID + ",\'" + UTIL_StringToMySQL( pRequest->user.strLogin ) + "\',\'" + UTIL_StringToMySQL( cstrSub ) + "\',\'" + UTIL_StringToMySQL( cstrFilename ) + "\',\'" + UTIL_StringToMySQL( cstrName ) + "\',\'" + UTIL_StringToMySQL( vecQuery[1] ) + "\',NOW())" );
+				if( !bOffer )
+				{
+					CMySQLQuery mq02( "UPDATE allowed SET bsubs=bsubs+1 WHERE bid=" + cstrID );
+					m_pCache->setSubs( cstrID, SET_SUBS_ADD );
+				}
 			}
 			
 			pResponse->strContent += "<script type=\"text/javascript\">parent.refresh(\'subs\')</script>\n\n";
@@ -196,6 +215,8 @@ void CTracker :: serverResponseSubUploadGET( struct request_t *pRequest, struct 
 		
 		pResponse->strContent += "<form name=\"subupload\" method=\"post\" action=\"http://nvidia.njuftp.org/upload2.aspx\" enctype=\"multipart/form-data\">\n";
 		pResponse->strContent += "<input name=\"id\" id=\"inputID\" type=hidden value=\"" + cstrID + "\">\n";
+		if( bOffer )
+			pResponse->strContent += "<input name=\"offer\" id=\"inputOffer\" type=hidden value=\"1\">\n";
 		pResponse->strContent += "<input name=\"inputFile\" id=\"inputFile\" type=file size=25>\n";
 		pResponse->strContent += "<span>" + gmapLANG_CFG["upload_sub_name"] + "</span>";
 		pResponse->strContent += "<input name=\"name\" id=\"inputName\" type=text size=25>\n";

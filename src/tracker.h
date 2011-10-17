@@ -538,6 +538,7 @@ struct torrent_t
 	string strIMDb;
 	string strIMDbID;
 	string strIP;
+	string strOrder;
 // 	string strIgnore;
 // 	string strIgnored;
 };
@@ -1057,6 +1058,7 @@ public:
 	void setFree( );
 	void setTop( );
 	void setLatest( const string &cstrAdded, bool bOffer = false );
+	void setOrder( const string &cstrID, const string &cstrOrder, const unsigned char cucOpt );
 	time_t getLatest( bool bOffer = false );
 	unsigned long getSize( bool bOffer = false );
 	struct torrent_t *getCache( bool bOffer = false );
@@ -1077,6 +1079,10 @@ private:
 	bool bResetOffers;
 	bool bResetUsers;
 	bool bResort;
+	bool bResort_Seeders;
+	bool bResort_Leechers;
+	bool bResort_Completed;
+	bool bResort_Order;
 	bool bResortOffers;
 	bool bResortUsers;
 	bool bSortNoTop;

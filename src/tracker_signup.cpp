@@ -698,7 +698,7 @@ void CTracker :: serverResponseSignupSchoolGET( struct request_t *pRequest, stru
 		ucIndex = 0;
 		if( CFG_GetInt( "bnbt_signup_lily_enable", 0 ) == 0 )
 			ucIndex = 1;
-		pResponse->strContent += "<span id=\"type_note\">" + gmapLANG_CFG["signup_type_note"+CAtomInt( ucIndex ).toString( )] + "</span>";
+		pResponse->strContent += "<span id=\"type_note\">" + UTIL_Xsprintf( gmapLANG_CFG["signup_type_note"].c_str( ), gmapLANG_CFG["signup_mail"+CAtomInt( ucIndex ).toString( )].c_str( ) ) + "</span>";
 		pResponse->strContent += "</td>\n</tr>\n";
 		pResponse->strContent += "<tr class=\"signup_form\">\n";
 		pResponse->strContent += "<th class=\"signup_form\">\n" + gmapLANG_CFG["signup_name"] + "</th>\n";
@@ -710,7 +710,7 @@ void CTracker :: serverResponseSignupSchoolGET( struct request_t *pRequest, stru
 		strSignupMail = gmapLANG_CFG["signup_type"+CAtomInt( ucIndex ).toString( )];
 		while( !strSignupMail.empty( ) )
 		{
-			pResponse->strContent += "<span id=\"type_sample" + CAtomInt( ucIndex ).toString( ) + "\" style=\"display: none\">" + gmapLANG_CFG["signup_type_note"+CAtomInt( ucIndex ).toString( )] + "</span>\n";
+			pResponse->strContent += "<span id=\"type_sample" + CAtomInt( ucIndex ).toString( ) + "\" style=\"display: none\">" + UTIL_Xsprintf( gmapLANG_CFG["signup_type_note"].c_str( ), gmapLANG_CFG["signup_mail"+CAtomInt( ucIndex ).toString( )].c_str( ) ) + "</span>\n";
 			strSignupMail = gmapLANG_CFG["signup_type"+CAtomInt( ++ucIndex ).toString( )];
 		}
 		pResponse->strContent += "<tr class=\"signup_form\">\n";

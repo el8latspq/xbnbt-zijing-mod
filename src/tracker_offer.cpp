@@ -332,12 +332,14 @@ void CTracker :: serverResponseOfferGET( struct request_t *pRequest, struct resp
 										CMySQLQuery mq01( "UPDATE allowed SET bimdb=\'" + UTIL_StringToMySQL( vecQueryOffer[14] ) + "\',bimdbid=\'" + UTIL_StringToMySQL( vecQueryOffer[15] ) + "\',bimdbupdated=\'" + UTIL_StringToMySQL( vecQueryOffer[16] ) + "\' WHERE bid=" + strAllowedID );
 									
 										CMySQLQuery mq02( "UPDATE comments SET comments.btid=" + strAllowedID + " WHERE comments.boid=" + strAllowID );
+										CMySQLQuery mq03( "UPDATE subs SET subs.btid=" + strAllowedID + " WHERE subs.boid=" + strAllowID );
+										CMySQLQuery mq04( "UPDATE allowed,(SELECT btid,COUNT(*) AS bcount FROM subs WHERE btid=" + strAllowedID + " GROUP BY btid) AS subcount SET allowed.bsubs=subcount.bcount WHERE allowed.bid=subcount.btid" );
 										
 										if( vecQueryAllowed.size( ) == 2 && !vecQueryAllowed[0].empty( ) )
 											m_pCache->setLatest( vecQueryAllowed[0] );
 										m_pCache->Reset( );
 										
-										CMySQLQuery mq03( "DELETE FROM offer WHERE bid=" + strAllowID );
+										CMySQLQuery mq05( "DELETE FROM offer WHERE bid=" + strAllowID );
 									
 										m_pCache->Reset( true );
 										

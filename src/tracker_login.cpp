@@ -948,20 +948,20 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 		}
 		pResponse->strContent += "</tr></table>\n";
 		
-		CMySQLQuery *pQueryTalk = new CMySQLQuery( "SELECT bid,busername,buid,bposted,btalk,btalkstore,breply,breply_real,breplyto,breplytoid,breplytimes,brt,brtto,brttoid FROM talk WHERE buid=" + user.strUID + " AND breply=0 ORDER BY bposted DESC LIMIT 1" );
+		CMySQLQuery *pQueryTalk = new CMySQLQuery( "SELECT bid,busername,buid,bposted,btalk,btalkstore,bchannel,breply,breply_real,breplyto,breplytoid,breplytimes,brt,brtto,brttoid FROM talk WHERE buid=" + user.strUID + " AND breply=0 ORDER BY bposted DESC LIMIT 1" );
 		
 		vector<string> vecQueryTalk;
 
-		vecQueryTalk.reserve(14);
+		vecQueryTalk.reserve(15);
 
 		vecQueryTalk = pQueryTalk->nextRow( );
 		
-		if( vecQueryTalk.size( ) == 14 )
+		if( vecQueryTalk.size( ) == 15 )
 		{
 			pResponse->strContent += "<div class=\"user_main_talk\">";
 			pResponse->strContent += "<table class=\"user_main_talk\" summary=\"talk\">\n";
 		
-			while( vecQueryTalk.size( ) == 14 )
+			while( vecQueryTalk.size( ) == 15 )
 			{
 				pResponse->strContent += GenerateTalk( vecQueryTalk, user.ucAccess, string( ), user.strUID, string( ), true, false );
 
@@ -989,12 +989,14 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 		if( user.ucInvitable == 0 )
 			pResponse->strContent += "<span class=\"red\">" + gmapLANG_CFG["invite_function_invite_disable"] + "</span>";
 		pResponse->strContent += "</td></tr>";
+		time_t now_t = time( 0 );
 		if( user.tLast )
 		{
 			char pTime[256];
 			memset( pTime, 0, sizeof( pTime ) / sizeof( char ) );
 			strftime( pTime, sizeof( pTime ) / sizeof( char ), "%Y-%m-%d %H:%M:%S", localtime( &user.tLast ) );
-			pResponse->strContent += "<tr class=\"user_table\"><th class=\"user_table\">" + gmapLANG_CFG["user_last"] + "</th><td class=\"user_table\">" + pTime + "</td></tr>";
+			pResponse->strContent += "<tr class=\"user_table\"><th class=\"user_table\">" + gmapLANG_CFG["user_last"] + "</th><td class=\"user_table\">" + pTime;
+			pResponse->strContent += "(" + UTIL_PassedToString( now_t, user.tLast, string( ) ) + gmapLANG_CFG["added_ago"] + ")</td></tr>\n";
 		}
 		else
 			pResponse->strContent += "<tr class=\"user_table\"><th class=\"user_table\">" + gmapLANG_CFG["user_last"] + "</th><td class=\"user_table\">" + gmapLANG_CFG["na"] + "</td></tr>";
@@ -1572,10 +1574,11 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 						pResponse->strContent += "<td class=\"uploader\">" +getUserLink( pUsersT[ulKey].strUID, pUsersT[ulKey].strLogin ); + "</td>\n";
 						if( pUsersT[ulKey].tLast )
 						{
-							char pTime[256];
-							memset( pTime, 0, sizeof( pTime ) / sizeof( char ) );
-							strftime( pTime, sizeof( pTime ) / sizeof( char ), "%Y-%m-%d %H:%M:%S", localtime( &pUsersT[ulKey].tLast ) );
-							pResponse->strContent += "<td class=\"date\">" + string( pTime ) + "</td>\n";
+//							char pTime[256];
+//							memset( pTime, 0, sizeof( pTime ) / sizeof( char ) );
+//							strftime( pTime, sizeof( pTime ) / sizeof( char ), "%Y-%m-%d %H:%M:%S", localtime( &pUsersT[ulKey].tLast ) );
+//							pResponse->strContent += "<td class=\"date\">" + string( pTime ) + "</td>\n";
+							pResponse->strContent += "<td class=\"date\">" + UTIL_PassedToString( now_t, pUsersT[ulKey].tLast, string( ) ) + gmapLANG_CFG["added_ago"] + "</td>\n";
 						}
 						else
 							pResponse->strContent += "<td class=\"date\">" + gmapLANG_CFG["na"] + "</td>\n";
@@ -1671,8 +1674,9 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 						
 						delete pQueryFriend;
 						
-						if( vecQueryFriend.size( ) == 1 && !vecQueryFriend.empty( ) )
-							pResponse->strContent += vecQueryFriend[0];
+						if( vecQueryFriend.size( ) == 1 && !vecQueryFriend[0].empty( ) )
+							pResponse->strContent +=  UTIL_PassedToString( now_t, 0, vecQueryFriend[0] ) + gmapLANG_CFG["added_ago"];
+//							pResponse->strContent += vecQueryFriend[0];
 						else
 							pResponse->strContent += gmapLANG_CFG["na"];
 						
@@ -1763,7 +1767,8 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 							pResponse->strContent += "<td class=\"date\">";
 						
 							if( !vecQueryFriended[1].empty( ) )
-								pResponse->strContent += vecQueryFriended[1];
+								pResponse->strContent +=  UTIL_PassedToString( now_t, 0, vecQueryFriended[1] ) + gmapLANG_CFG["added_ago"];
+//								pResponse->strContent += vecQueryFriended[1];
 							else
 								pResponse->strContent += gmapLANG_CFG["na"];
 						
@@ -1962,7 +1967,7 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 			
 			m_pCache->setFree( );
 
-			time_t now_t = time( 0 );
+//			time_t now_t = time( 0 );
 
 			bool bFreeGlobal = CFG_GetInt( "bnbt_free_global", 0 ) == 0 ? false : true;
 
@@ -2115,11 +2120,13 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 				unsigned long ulAdded = 0;
 				unsigned long ulSkipped = 0;
 				
+				int64 iTotalSize = 0;
+
 				// output table headers
 
 				pResponse->strContent += "<div class=\"login_table\">\n";
 				pResponse->strContent += "<table summary=\"ytinfo\">\n";
-				pResponse->strContent += "<tr><th colspan=4>" + gmapLANG_CFG["user_detail_torrents"] + "</th></tr>\n";
+				pResponse->strContent += "<tr><th colspan=7>" + gmapLANG_CFG["user_detail_torrents"] + "</th></tr>\n";
 
 				// for correct page numbers after searching
 
@@ -2166,8 +2173,6 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 
 							strJoined = UTIL_RemoveHTML( UTIL_HTMLJoin( vecParams, string( "&" ), string( "&" ), string( "=" ) ) );
 							
-							
-
 							pResponse->strContent += "<tr>\n";
 
 							// <th> tag
@@ -2181,21 +2186,33 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 							// Name
 							pResponse->strContent += "<th class=\"name\" id=\"nameheader\">" + gmapLANG_CFG["name"];
 
-							if( m_bSort )
-							{
-								pResponse->strContent += "<br><div><a class=\"sort\" title=\"" + gmapLANG_CFG["sort_name_ascending"] + "\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?sort=" + SORTSTR_ANAME;
-								
-								pResponse->strContent += strJoined;
-
-								pResponse->strContent += "\">" + gmapLANG_CFG["sort_ascending"] + "</a><span>-</span><a class=\"sort\" title=\"" + gmapLANG_CFG["sort_name_descending"] + "\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?sort=" + SORTSTR_DNAME;
-								
-								pResponse->strContent += strJoined;
-
-								pResponse->strContent += "\">" + gmapLANG_CFG["sort_descending"] + "</a></div>";
-							}
+//							if( m_bSort )
+//							{
+//								pResponse->strContent += "<br><div><a class=\"sort\" title=\"" + gmapLANG_CFG["sort_name_ascending"] + "\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?sort=" + SORTSTR_ANAME;
+//								
+//								pResponse->strContent += strJoined;
+//
+//								pResponse->strContent += "\">" + gmapLANG_CFG["sort_ascending"] + "</a><span>-</span><a class=\"sort\" title=\"" + gmapLANG_CFG["sort_name_descending"] + "\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?sort=" + SORTSTR_DNAME;
+//								
+//								pResponse->strContent += strJoined;
+//
+//								pResponse->strContent += "\">" + gmapLANG_CFG["sort_descending"] + "</a></div>";
+//							}
 
 							pResponse->strContent += "</th>\n";						
 
+							// <th> seeders
+
+							pResponse->strContent += "<th class=\"number\" id=\"seedersheader\">" + gmapLANG_CFG["seeders"];
+
+							pResponse->strContent += "</th>\n";
+
+							// <th> leechers
+
+							pResponse->strContent += "<th class=\"number\" id=\"leechersheader\">" + gmapLANG_CFG["leechers"];
+
+							pResponse->strContent += "</th>\n";
+							
 							// Added
 							pResponse->strContent += "<th class=\"date\" id=\"addedheader\">" + gmapLANG_CFG["added"];
 
@@ -2214,6 +2231,12 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 
 							pResponse->strContent += "</th>\n";
 
+							// <th> size
+
+							pResponse->strContent += "<th class=\"bytes\" id=\"sizeheader\">" + gmapLANG_CFG["size"];
+
+							pResponse->strContent += "</th>\n";
+							
 							// Admin
 							if( pRequest->user.strUID == user.strUID )
 								pResponse->strContent += "<th class=\"admin\" id=\"adminheader\">" + gmapLANG_CFG["admin"] + "</th>\n";
@@ -2335,8 +2358,20 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 							}
 							pResponse->strContent += "</td>\n";
 
-							if( m_bShowAdded )
-							{
+							// <td> seeders
+							
+							pResponse->strContent += "<td class=\"number\">";
+							pResponse->strContent += CAtomInt( pTorrents[ulKey].uiSeeders ).toString( );
+							pResponse->strContent += "</td>\n";
+							
+							// <td> leechers
+							
+							pResponse->strContent += "<td class=\"number\">";
+							pResponse->strContent += CAtomInt( pTorrents[ulKey].uiLeechers ).toString( );
+							pResponse->strContent += "</td>\n";
+									
+//							if( m_bShowAdded )
+//							{
 								pResponse->strContent += "<td class=\"date\">";
 
 								if( !pTorrents[ulKey].strAdded.empty( ) )
@@ -2349,7 +2384,15 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 								}
 
 								pResponse->strContent += "</td>\n";
-							}
+//							}
+
+							iTotalSize += pTorrents[ulKey].iSize;
+
+							const string :: size_type br = UTIL_BytesToString( pTorrents[ulKey].iSize ).find( ' ' );
+							pResponse->strContent += "<td class=\"bytes\">" + UTIL_BytesToString( pTorrents[ulKey].iSize ).substr( 0, br );
+							if( br != string :: npos )
+								pResponse->strContent += "<br>" + UTIL_BytesToString( pTorrents[ulKey].iSize ).substr( br + 1 );
+							pResponse->strContent += "</td>\n";
 
 							if( pRequest->user.strUID == user.strUID )
 							{
@@ -2396,6 +2439,8 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 				pResponse->strContent += "</div>\n\n";
 				
 				string strInsert = string( );
+
+				strInsert += "<p class=\"results\">" + gmapLANG_CFG["size"] + ": " + UTIL_BytesToString( iTotalSize ) + "</p>";
 				
 //				switch( ulFound )
 //				{
@@ -2620,8 +2665,8 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 								
 								// <td> added
 
-// 										if( m_bShowAdded )
-// 										{
+// 								if( m_bShowAdded )
+// 								{
 									pResponse->strContent += "<td class=\"date\">";
 
 									if( !pTorrents[ulKey].strAdded.empty( ) )
@@ -2634,18 +2679,18 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 									}
 
 									pResponse->strContent += "</td>\n";
-// 										}
+// 								}
 
 								// <td> size
 
-								if( m_bShowSize )
-								{
+//								if( m_bShowSize )
+//								{
 									const string :: size_type br = UTIL_BytesToString( pTorrents[ulKey].iSize ).find( ' ' );
 									pResponse->strContent += "<td class=\"bytes\">" + UTIL_BytesToString( pTorrents[ulKey].iSize ).substr( 0, br );
 									if( br != string :: npos )
 										pResponse->strContent += "<br>" + UTIL_BytesToString( pTorrents[ulKey].iSize ).substr( br + 1 );
 									pResponse->strContent += "</td>\n";
-								}
+//								}
 								
 								if( pRequest->user.strUID == user.strUID )
 								{
@@ -2757,7 +2802,7 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 
 						pResponse->strContent += "</th>\n";
 						
-						if( m_bShowShareRatios )
+//						if( m_bShowShareRatios )
 							pResponse->strContent += "<th class=\"number\">" + gmapLANG_CFG["share_ratio"] + "</th>\n</tr>\n";
 						
 						while( vecQuery.size( ) == 3 )
@@ -2898,14 +2943,14 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 
 									// <td> size
 
-									if( m_bShowSize )
-									{
+//									if( m_bShowSize )
+//									{
 										const string :: size_type br = UTIL_BytesToString( pTorrents[ulKey].iSize ).find( ' ' );
 										pResponse->strContent += "<td class=\"bytes\">" + UTIL_BytesToString( pTorrents[ulKey].iSize ).substr( 0, br );
 										if( br != string :: npos )
 											pResponse->strContent += "<br>" + UTIL_BytesToString( pTorrents[ulKey].iSize ).substr( br + 1 );
 										pResponse->strContent +="</td>\n";
-									}
+//									}
 									
 									// Uploaded
 									int64 iUpped = 0;
@@ -3163,14 +3208,14 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 
 									// <td> size
 
-									if( m_bShowSize )
-									{
+//									if( m_bShowSize )
+//									{
 										const string :: size_type br = UTIL_BytesToString( pTorrents[ulKey].iSize ).find( ' ' );
 										pResponse->strContent += "<td class=\"bytes\">" + UTIL_BytesToString( pTorrents[ulKey].iSize ).substr( 0, br );
 										if( br != string :: npos )
 											pResponse->strContent += "<br>" + UTIL_BytesToString( pTorrents[ulKey].iSize ).substr( br + 1 );
 										pResponse->strContent += "</td>\n";
-									}
+//									}
 									
 									// Uploaded
 									int64 iUpped = 0;
@@ -3464,14 +3509,14 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 
 									// <td> size
 
-									if( m_bShowSize )
-									{
+//									if( m_bShowSize )
+//									{
 										const string :: size_type br = UTIL_BytesToString( pTorrents[ulKey].iSize ).find( ' ' );
 										pResponse->strContent += "<td class=\"bytes\">" + UTIL_BytesToString( pTorrents[ulKey].iSize ).substr( 0, br );
 										if( br != string :: npos )
 											pResponse->strContent += "<br>" + UTIL_BytesToString( pTorrents[ulKey].iSize ).substr( br + 1 );
 										pResponse->strContent += "</td>\n";
-									}
+//									}
 									
 									// Uploaded
 									int64 iUpped = 0;

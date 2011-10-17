@@ -1674,7 +1674,7 @@ void CTracker :: parseTorrents( const char *szDir )
 							CMySQLQuery *pQuery = new CMySQLQuery( "SELECT bid FROM " + strDatabase + " WHERE bhash=\'" + UTIL_StringToMySQL( strHash ) + "\'" );
 							if( pQuery->nextRow( ).size( ) == 0 )
 							{
-								const string cstrQuery2( UTIL_Xsprintf( "INSERT INTO %s (bhash,bfilename,bname,badded,bsize,bfiles,bcomment) VALUES('%s','%s','%s','%s',%lld,1,'%s')", strDatabase.c_str( ), UTIL_StringToMySQL( strHash ).c_str( ), UTIL_StringToMySQL( UTIL_StripPath( szFile ).c_str( ) ).c_str( ), UTIL_StringToMySQL( pName->toString( ).c_str( ) ).c_str( ), pTime, CAtomLong( *dynamic_cast<CAtomLong *>( pLen ) ).getValue( ), UTIL_StringToMySQL( strComment.c_str( ) ).c_str( ) ) );
+								const string cstrQuery2( UTIL_Xsprintf( "INSERT INTO %s (bhash,bfilename,bname,badded,bsize,bfiles,bcomment,border) VALUES('%s','%s','%s','%s',%lld,1,'%s','%s')", strDatabase.c_str( ), UTIL_StringToMySQL( strHash ).c_str( ), UTIL_StringToMySQL( UTIL_StripPath( szFile ).c_str( ) ).c_str( ), UTIL_StringToMySQL( pName->toString( ).c_str( ) ).c_str( ), pTime, CAtomLong( *dynamic_cast<CAtomLong *>( pLen ) ).getValue( ), UTIL_StringToMySQL( strComment.c_str( ) ).c_str( ), pTime ) );
 								
 								CMySQLQuery mq01( cstrQuery2 );
 //								mysql_real_query( gpMySQL, cstrQuery2.c_str( ), ( unsigned long )cstrQuery2.size( ) );
@@ -1685,7 +1685,7 @@ void CTracker :: parseTorrents( const char *szDir )
 							}
 							else
 							{
-								const string cstrQuery2( UTIL_Xsprintf( "UPDATE %s SET bhash='%s',bfilename='%s',bname='%s',badded='%s',bsize=%lld,bfiles=1,bcomment='%s' WHERE bhash='%s'", strDatabase.c_str( ), UTIL_StringToMySQL( strHash ).c_str( ), UTIL_StringToMySQL( UTIL_StripPath( szFile ).c_str( ) ).c_str( ), UTIL_StringToMySQL( pName->toString( ).c_str( ) ).c_str( ), pTime, CAtomLong( *dynamic_cast<CAtomLong *>( pLen ) ).getValue( ), UTIL_StringToMySQL( strComment.c_str( ) ).c_str( ), UTIL_StringToMySQL( strHash ).c_str( ) ) );
+								const string cstrQuery2( UTIL_Xsprintf( "UPDATE %s SET bhash='%s',bfilename='%s',bname='%s',badded='%s',bsize=%lld,bfiles=1,bcomment='%s',border='%s' WHERE bhash='%s'", strDatabase.c_str( ), UTIL_StringToMySQL( strHash ).c_str( ), UTIL_StringToMySQL( UTIL_StripPath( szFile ).c_str( ) ).c_str( ), UTIL_StringToMySQL( pName->toString( ).c_str( ) ).c_str( ), pTime, CAtomLong( *dynamic_cast<CAtomLong *>( pLen ) ).getValue( ), UTIL_StringToMySQL( strComment.c_str( ) ).c_str( ), pTime, UTIL_StringToMySQL( strHash ).c_str( ) ) );
 								
 								CMySQLQuery mq01( cstrQuery2 );
 								
@@ -1702,7 +1702,7 @@ void CTracker :: parseTorrents( const char *szDir )
 							CMySQLQuery *pQuery = new CMySQLQuery( "SELECT bid FROM " + strDatabase + " WHERE bhash=\'" + UTIL_StringToMySQL( strHash ) + "\'" );
 							if( pQuery->nextRow( ).size( ) == 0 )
 							{
-								const string cstrQuery2( UTIL_Xsprintf( "INSERT INTO %s (bhash,bfilename,bname,badded,bsize,bfiles,bcomment) VALUES('%s','%s','%s','%s',%lld,%lu,'%s')", strDatabase.c_str( ), UTIL_StringToMySQL( strHash ).c_str( ), UTIL_StringToMySQL( strFileName.c_str( ) ).c_str( ), UTIL_StringToMySQL( pName->toString( ).c_str( ) ).c_str( ), pTime, iSize, (int)dynamic_cast<CAtomList *>( pFiles )->getValuePtr( )->size( ), UTIL_StringToMySQL( strComment.c_str( ) ).c_str( ) ) );
+								const string cstrQuery2( UTIL_Xsprintf( "INSERT INTO %s (bhash,bfilename,bname,badded,bsize,bfiles,bcomment,border) VALUES('%s','%s','%s','%s',%lld,%lu,'%s','%s')", strDatabase.c_str( ), UTIL_StringToMySQL( strHash ).c_str( ), UTIL_StringToMySQL( strFileName.c_str( ) ).c_str( ), UTIL_StringToMySQL( pName->toString( ).c_str( ) ).c_str( ), pTime, iSize, (int)dynamic_cast<CAtomList *>( pFiles )->getValuePtr( )->size( ), UTIL_StringToMySQL( strComment.c_str( ) ).c_str( ), pTime ) );
 								
 								CMySQLQuery mq01( cstrQuery2 );
 //								mysql_real_query( gpMySQL, cstrQuery2.c_str( ), ( unsigned long )cstrQuery2.size( ) );
@@ -1713,7 +1713,7 @@ void CTracker :: parseTorrents( const char *szDir )
 							}
 							else
 							{
-								const string cstrQuery2( UTIL_Xsprintf( "UPDATE %s SET bhash='%s',bfilename='%s',bname='%s',badded='%s',bsize=%lld,bfiles=%lu,bcomment='%s' WHERE bhash='%s'", strDatabase.c_str( ), UTIL_StringToMySQL( strHash ).c_str( ), UTIL_StringToMySQL( UTIL_StripPath( szFile ).c_str( ) ).c_str( ), UTIL_StringToMySQL( pName->toString( ).c_str( ) ).c_str( ), pTime, iSize, (int)dynamic_cast<CAtomList *>( pFiles )->getValuePtr( )->size( ), UTIL_StringToMySQL( strComment.c_str( ) ).c_str( ), UTIL_StringToMySQL( strHash ).c_str( ) ) );
+								const string cstrQuery2( UTIL_Xsprintf( "UPDATE %s SET bhash='%s',bfilename='%s',bname='%s',badded='%s',bsize=%lld,bfiles=%lu,bcomment='%s',border='%s' WHERE bhash='%s'", strDatabase.c_str( ), UTIL_StringToMySQL( strHash ).c_str( ), UTIL_StringToMySQL( UTIL_StripPath( szFile ).c_str( ) ).c_str( ), UTIL_StringToMySQL( pName->toString( ).c_str( ) ).c_str( ), pTime, iSize, (int)dynamic_cast<CAtomList *>( pFiles )->getValuePtr( )->size( ), UTIL_StringToMySQL( strComment.c_str( ) ).c_str( ), pTime, UTIL_StringToMySQL( strHash ).c_str( ) ) );
 								
 								CMySQLQuery mq01( cstrQuery2 );
 								
@@ -1927,11 +1927,11 @@ const string CTracker :: parseTorrent( const char *szFile )
 
 					if( pQuery->nextRow( ).size( ) == 0 )
 					{
-						strQuery = UTIL_Xsprintf( "INSERT INTO %s (bhash,bfilename,bname,badded,bsize,bfiles,bcomment) VALUES('%s','%s','%s','%s',%lld,1,'%s')", strDatabase.c_str( ), UTIL_StringToMySQL( cstrHash ).c_str( ), UTIL_StringToMySQL( UTIL_StripPath( szFile ).c_str( ) ).c_str( ), UTIL_StringToMySQL( pName->toString( ).c_str( ) ).c_str( ), pTime, CAtomLong( *dynamic_cast<CAtomLong *>( pLen ) ).getValue( ), UTIL_StringToMySQL( strComment.c_str( ) ).c_str( ) );
+						strQuery = UTIL_Xsprintf( "INSERT INTO %s (bhash,bfilename,bname,badded,bsize,bfiles,bcomment,border) VALUES('%s','%s','%s','%s',%lld,1,'%s','%s')", strDatabase.c_str( ), UTIL_StringToMySQL( cstrHash ).c_str( ), UTIL_StringToMySQL( UTIL_StripPath( szFile ).c_str( ) ).c_str( ), UTIL_StringToMySQL( pName->toString( ).c_str( ) ).c_str( ), pTime, CAtomLong( *dynamic_cast<CAtomLong *>( pLen ) ).getValue( ), UTIL_StringToMySQL( strComment.c_str( ) ).c_str( ), pTime );
 					}
 					else
 					{
-						strQuery = UTIL_Xsprintf( "UPDATE %s SET bhash='%s',bfilename='%s',bname='%s',badded='%s',bsize=%lld,bfiles=1,bcomment='%s' WHERE bhash='%s'", strDatabase.c_str( ), UTIL_StringToMySQL( cstrHash ).c_str( ), UTIL_StringToMySQL( UTIL_StripPath( szFile ).c_str( ) ).c_str( ), UTIL_StringToMySQL( pName->toString( ).c_str( ) ).c_str( ), pTime, CAtomLong( *dynamic_cast<CAtomLong *>( pLen ) ).getValue( ), UTIL_StringToMySQL( strComment.c_str( ) ).c_str( ), UTIL_StringToMySQL( cstrHash ).c_str( ) );
+						strQuery = UTIL_Xsprintf( "UPDATE %s SET bhash='%s',bfilename='%s',bname='%s',badded='%s',bsize=%lld,bfiles=1,bcomment='%s',border='%s' WHERE bhash='%s'", strDatabase.c_str( ), UTIL_StringToMySQL( cstrHash ).c_str( ), UTIL_StringToMySQL( UTIL_StripPath( szFile ).c_str( ) ).c_str( ), UTIL_StringToMySQL( pName->toString( ).c_str( ) ).c_str( ), pTime, CAtomLong( *dynamic_cast<CAtomLong *>( pLen ) ).getValue( ), UTIL_StringToMySQL( strComment.c_str( ) ).c_str( ), pTime, UTIL_StringToMySQL( cstrHash ).c_str( ) );
 					}
 					delete pQuery;
 				}
@@ -1940,11 +1940,11 @@ const string CTracker :: parseTorrent( const char *szFile )
 					CMySQLQuery *pQuery = new CMySQLQuery( "SELECT bid FROM " + strDatabase + " WHERE bhash=\'" + UTIL_StringToMySQL( cstrHash ) + "\'" );
 					if( pQuery->nextRow( ).size( ) == 0 )
 					{
-						strQuery = UTIL_Xsprintf( "INSERT INTO %s (bhash,bfilename,bname,badded,bsize,bfiles,bcomment) VALUES('%s','%s','%s','%s',%lld,%lu,'%s')", strDatabase.c_str( ), UTIL_StringToMySQL( cstrHash ).c_str( ), UTIL_StringToMySQL( UTIL_StripPath( szFile ).c_str( ) ).c_str( ), UTIL_StringToMySQL( pName->toString( ).c_str( ) ).c_str( ), pTime, iSize, (int)dynamic_cast<CAtomList *>( pFiles )->getValuePtr( )->size( ), UTIL_StringToMySQL( strComment.c_str( ) ).c_str( ) );
+						strQuery = UTIL_Xsprintf( "INSERT INTO %s (bhash,bfilename,bname,badded,bsize,bfiles,bcomment,border) VALUES('%s','%s','%s','%s',%lld,%lu,'%s','%s')", strDatabase.c_str( ), UTIL_StringToMySQL( cstrHash ).c_str( ), UTIL_StringToMySQL( UTIL_StripPath( szFile ).c_str( ) ).c_str( ), UTIL_StringToMySQL( pName->toString( ).c_str( ) ).c_str( ), pTime, iSize, (int)dynamic_cast<CAtomList *>( pFiles )->getValuePtr( )->size( ), UTIL_StringToMySQL( strComment.c_str( ) ).c_str( ), pTime );
 					}
 					else
 					{
-						strQuery = UTIL_Xsprintf( "UPDATE %s SET bhash='%s',bfilename='%s',bname='%s',badded='%s',bsize=%lld,bfiles=%lu,bcomment='%s' WHERE bhash='%s'", strDatabase.c_str( ), UTIL_StringToMySQL( cstrHash ).c_str( ), UTIL_StringToMySQL( UTIL_StripPath( szFile ).c_str( ) ).c_str( ), UTIL_StringToMySQL( pName->toString( ).c_str( ) ).c_str( ), pTime, iSize, (int)dynamic_cast<CAtomList *>( pFiles )->getValuePtr( )->size( ), UTIL_StringToMySQL( strComment.c_str( ) ).c_str( ), UTIL_StringToMySQL( cstrHash ).c_str( ) );
+						strQuery = UTIL_Xsprintf( "UPDATE %s SET bhash='%s',bfilename='%s',bname='%s',badded='%s',bsize=%lld,bfiles=%lu,bcomment='%s',border='%s' WHERE bhash='%s'", strDatabase.c_str( ), UTIL_StringToMySQL( cstrHash ).c_str( ), UTIL_StringToMySQL( UTIL_StripPath( szFile ).c_str( ) ).c_str( ), UTIL_StringToMySQL( pName->toString( ).c_str( ) ).c_str( ), pTime, iSize, (int)dynamic_cast<CAtomList *>( pFiles )->getValuePtr( )->size( ), UTIL_StringToMySQL( strComment.c_str( ) ).c_str( ), pTime, UTIL_StringToMySQL( cstrHash ).c_str( ) );
 					}
 					delete pQuery;
 				}
@@ -2392,14 +2392,16 @@ void CTracker :: deleteTag( const string &strID, const bool bOffer )
 	if( !bOffer )
 	{
 		CMySQLQuery mq02( "DELETE FROM dstate WHERE bid=" + strID );
-		CMySQLQuery mq03( "DELETE FROM peers WHERE bid=" + strID );
-		CMySQLQuery mq04( "DELETE FROM statistics WHERE bid=" + strID );
-		CMySQLQuery mq05( "DELETE FROM bookmarks WHERE bid=" + strID );
-		CMySQLQuery mq06( "DELETE FROM thanks WHERE bid=" + strID );
-		CMySQLQuery mq07( "DELETE FROM talktorrent WHERE btid=" + strID );
+		CMySQLQuery mq03( "DELETE FROM dstate_store WHERE bid=" + strID );
+		CMySQLQuery mq04( "DELETE FROM peers WHERE bid=" + strID );
+		CMySQLQuery mq05( "DELETE FROM statistics WHERE bid=" + strID );
+		CMySQLQuery mq06( "DELETE FROM bookmarks WHERE bid=" + strID );
+		CMySQLQuery mq07( "DELETE FROM thanks WHERE bid=" + strID );
+		CMySQLQuery mq08( "DELETE FROM talktorrent WHERE btid=" + strID );
+		CMySQLQuery mq09( "DELETE FROM talkrequest WHERE btid=" + strID );
 	}
 	
-	CMySQLQuery mq07( "DELETE FROM comments WHERE " + strIDKey + "=" + strID );
+	CMySQLQuery mq10( "DELETE FROM comments WHERE " + strIDKey + "=" + strID );
 	
 	if( gbDebug )
 		if( gucDebugLevel & DEBUG_TRACKER )
@@ -3221,7 +3223,8 @@ void CTracker :: AddUniquePeer( const string &strIP )
 		if( gucDebugLevel & DEBUG_TRACKER )
 			UTIL_LogPrint( "AddUniquePeer: started (%s)\n", strIP.c_str( ) );
 		
-	CMySQLQuery mq01( "INSERT INTO ips VALUES(\'" + UTIL_StringToMySQL( strIP ) + "\',1) ON DUPLICATE KEY UPDATE bcount=bcount+1" );
+	if( !strIP.empty( ) )
+		CMySQLQuery mq01( "INSERT INTO ips VALUES(\'" + UTIL_StringToMySQL( strIP ) + "\',1) ON DUPLICATE KEY UPDATE bcount=bcount+1" );
 
 	// increment unique count for this ip
 
@@ -3259,7 +3262,8 @@ void CTracker :: RemoveUniquePeer( const string &strIP )
 //			CMySQLQuery mq01( "DELETE FROM ips WHERE bip=\'" + UTIL_StringToMySQL( strIP ) + "\'" );
 //	}
 	
-	CMySQLQuery mq01( "UPDATE ips SET bcount=bcount-1 WHERE bip=\'" + UTIL_StringToMySQL( strIP ) + "\' AND bcount>0" );
+	if( !strIP.empty( ) )
+		CMySQLQuery mq01( "UPDATE ips SET bcount=bcount-1 WHERE bip=\'" + UTIL_StringToMySQL( strIP ) + "\' AND bcount>0" );
 
 	if( gbDebug )
 		if( gucDebugLevel & DEBUG_TRACKER )
@@ -3605,7 +3609,9 @@ void CTracker :: Announce( const struct announce_t &ann, bool &bRespond )
 	else if( ann.strEvent == EVENT_STR_STOPPED ) ucEvent = EVENT_STOPPED;
 
 	bool bPeerFound = false;
+	bool bPeerFoundStore = false;
 	bool bCompleted = false;
+	bool bIPv4 = false;
 	bool bIPv6 = false;
 	bool bIPv6Announce = false;
 
@@ -3664,11 +3670,15 @@ void CTracker :: Announce( const struct announce_t &ann, bool &bRespond )
 	else
 		strIPName = "bip";
 
-	// Do we have a list of peers?
+	time_t now_t = time( 0 );
+	char pTime[256];
+	memset( pTime, 0, sizeof( pTime ) / sizeof( char ) );
+	strftime( pTime, sizeof( pTime ) / sizeof( char ), "%Y-%m-%d %H:%M:%S", localtime( &now_t ) );
+	string strOrder = string( pTime );
 
-	if( gbDebug )
-		if( gucDebugLevel & DEBUG_TRACKER )
-			UTIL_LogPrint( "Announce: got list of peers\n" );
+	bool bReq = false;
+	bool bSeeders = true;
+	bool bSeedtime = false;
 
 	// Get the peer from the list
 
@@ -3682,6 +3692,17 @@ void CTracker :: Announce( const struct announce_t &ann, bool &bRespond )
 	
 	delete pQueryPeer;
 	
+	if( vecQueryPeer.size( ) == 0 )
+	{
+		pQueryPeer = new CMySQLQuery( "SELECT bip,bip6,bport,bkey,buploaded,bdownloaded,bleft,UNIX_TIMESTAMP(bupdated),bcompleted FROM dstate_store WHERE bid=" + ann.strID + " AND buid=" + ann.strUID + " AND bpeerid=\'" + UTIL_StringToMySQL( ann.strPeerID ) + "\'"  );
+		
+		vecQueryPeer = pQueryPeer->nextRow( );
+		
+		delete pQueryPeer;
+
+		bPeerFoundStore = true;
+	}
+
 	if( vecQueryPeer.size( ) == 9 )
 	{
 		if( gbDebug )
@@ -3691,9 +3712,16 @@ void CTracker :: Announce( const struct announce_t &ann, bool &bRespond )
 		// Signal we found the peer
 		bPeerFound = true;
 		string strIP = string( );
+		int64 iPeerLeft = 0;
 		
+		if( !vecQueryPeer[6].empty( ) )
+			iPeerLeft = UTIL_StringTo64( vecQueryPeer[6].c_str( ) );
+
 		if( vecQueryPeer[8] == "1" )
 			bCompleted = true;
+			
+		if( !vecQueryPeer[0].empty( ) )
+			bIPv4 = true;
 			
 		if( !vecQueryPeer[1].empty( ) )
 			bIPv6 = true;
@@ -3703,11 +3731,11 @@ void CTracker :: Announce( const struct announce_t &ann, bool &bRespond )
 		else
 			strIP = vecQueryPeer[0];
 		
-		string strQuery = "UPDATE dstate SET busername=\'" + UTIL_StringToMySQL( ann.strUsername ) + "\'";
+		string strQuery = "SET busername=\'" + UTIL_StringToMySQL( ann.strUsername ) + "\'";
 		string strQueryStatistics = string( );
 
 		// Announce key support
-		if( m_bAnnounceKeySupport )
+		if( m_bAnnounceKeySupport && !ann.strKey.empty( ) )
 		{
 			if( gbDebug )
 				if( gucDebugLevel & DEBUG_TRACKER )
@@ -3723,9 +3751,8 @@ void CTracker :: Announce( const struct announce_t &ann, bool &bRespond )
 
 				// Get the last IP supplied by the peer
 
-
-
-				if( !strIP.empty( ) )
+//				if( !strIP.empty( ) )
+				if( bIPv4 || bIPv6 )
 				{
 					if( gbDebug )
 						if( gucDebugLevel & DEBUG_TRACKER )
@@ -3758,8 +3785,6 @@ void CTracker :: Announce( const struct announce_t &ann, bool &bRespond )
 									if( gucDebugLevel & DEBUG_TRACKER )
 										UTIL_LogPrint( "Announce: remove unique peer (enabled)\n" );
 
-
-
 								RemoveUniquePeer( strIP );
 							}
 
@@ -3783,26 +3808,29 @@ void CTracker :: Announce( const struct announce_t &ann, bool &bRespond )
 							if( gucDebugLevel & DEBUG_TRACKER )
 								UTIL_LogPrint( "Announce: updating uploaded, downloaded & left\n" );
 
-						string strAdded = string( );
+//						string strAdded = string( );
+						int64 iAdded = 0;
 						int64 iFreeDown = 100, iFreeUp = 100, iDefaultDown = 100, iDefaultUp = 100, iFreeTo = 0;
 						int64 iFreeDownGlobal = CFG_GetInt( "bnbt_free_down_global", 100 );
 						int64 iFreeUpGlobal = CFG_GetInt( "bnbt_free_up_global", 100 );
+						int64 iSeeded = 0;
 						
-						CMySQLQuery *pQuery = new CMySQLQuery( "SELECT badded,bdefault_down,bdefault_up,bfree_down,bfree_up,UNIX_TIMESTAMP(bfree_to) FROM allowed WHERE bid=" + ann.strID );
+						CMySQLQuery *pQuery = new CMySQLQuery( "SELECT UNIX_TIMESTAMP(badded),bdefault_down,bdefault_up,bfree_down,bfree_up,UNIX_TIMESTAMP(bfree_to),breq,bseeders,UNIX_TIMESTAMP(bseeded) FROM allowed WHERE bid=" + ann.strID );
 								
 						vector<string> vecQuery;
 						
-						vecQuery.reserve(6);
+						vecQuery.reserve(9);
 
 						vecQuery = pQuery->nextRow( );
 						
 						delete pQuery;
 
-						if( vecQuery.size( ) == 6 )
+						if( vecQuery.size( ) == 9 )
 						{
 		// 					pSize = vecTorrent[3];
 							if( !vecQuery[0].empty( ) )
-								strAdded = vecQuery[0];
+								iAdded = UTIL_StringTo64( vecQuery[0].c_str( ) );
+//								strAdded = vecQuery[0];
 
 							if( !vecQuery[1].empty( ) )
 								iDefaultDown = UTIL_StringTo64( vecQuery[1].c_str( ) );
@@ -3816,14 +3844,23 @@ void CTracker :: Announce( const struct announce_t &ann, bool &bRespond )
 									iDefaultUp = iFreeUpGlobal;
 							}
 							
-							if( !vecQuery[5].empty( ) )
-								iFreeTo = UTIL_StringTo64( vecQuery[5].c_str( ) );
-							time_t now_t = time( 0 );
-
 							if( !vecQuery[3].empty( ) )
 								iFreeDown = UTIL_StringTo64( vecQuery[3].c_str( ) );
 							if( !vecQuery[4].empty( ) )
 								iFreeUp = UTIL_StringTo64( vecQuery[4].c_str( ) );
+							if( !vecQuery[5].empty( ) )
+								iFreeTo = UTIL_StringTo64( vecQuery[5].c_str( ) );
+							if( !vecQuery[6].empty( ) && vecQuery[6] == "1" )
+								bReq = true;
+							if( !vecQuery[7].empty( ) && vecQuery[7] == "0" )
+								bSeeders = false;
+							if( !vecQuery[8].empty( ) )
+								iSeeded = UTIL_StringTo64( vecQuery[8].c_str( ) );
+
+							if( iAdded > 0 && now_t - iAdded > 30*24*3600 && now_t - iSeeded > 30*24*3600 )
+								bSeedtime = true;
+//							time_t now_t = time( 0 );
+
 							if( iFreeTo > 0 && iFreeTo > now_t )
 							{
 								if( iDefaultDown < iFreeDown )
@@ -3838,14 +3875,15 @@ void CTracker :: Announce( const struct announce_t &ann, bool &bRespond )
 							}
 						}
 						
-						int64 iPeerUploaded = 0, iPeerDownloaded = 0, iPeerLeft = 0, iPeerUpdated = 0;
+//						int64 iPeerUploaded = 0, iPeerDownloaded = 0, iPeerLeft = 0, iPeerUpdated = 0;
+						int64 iPeerUploaded = 0, iPeerDownloaded = 0, iPeerUpdated = 0;
 						
 						if( !vecQueryPeer[4].empty( ) )
 							iPeerUploaded = UTIL_StringTo64( vecQueryPeer[4].c_str( ) );
 						if( !vecQueryPeer[5].empty( ) )
 							iPeerDownloaded = UTIL_StringTo64( vecQueryPeer[5].c_str( ) );
-						if( !vecQueryPeer[6].empty( ) )
-							iPeerLeft = UTIL_StringTo64( vecQueryPeer[6].c_str( ) );
+//						if( !vecQueryPeer[6].empty( ) )
+//							iPeerLeft = UTIL_StringTo64( vecQueryPeer[6].c_str( ) );
 						if( !vecQueryPeer[7].empty( ) )
 							iPeerUpdated = UTIL_StringTo64( vecQueryPeer[7].c_str( ) );
 							
@@ -3864,6 +3902,16 @@ void CTracker :: Announce( const struct announce_t &ann, bool &bRespond )
 							strQueryStatistics += CAtomLong( iUpdatedInterval ).toString( );
 						}
 						
+						if( ann.iLeft == iPeerLeft )
+						{
+							strQuery += ",bkeeptime=bkeeptime+";
+							strQuery += CAtomLong( iUpdatedInterval ).toString( );
+						}
+						else
+						{
+							strQuery += ",bkeeptime=0";
+						}
+
 						if( iPeerUploaded > ann.iUploaded || iPeerDownloaded > ann.iDownloaded || iUpdatedInterval == 0 )
 						{
 							strQuery += ",bupspeed=0,bdownspeed=0";
@@ -3914,110 +3962,187 @@ void CTracker :: Announce( const struct announce_t &ann, bool &bRespond )
 				if( gucDebugLevel & DEBUG_TRACKER )
 					UTIL_LogPrint( "Announce: key support (disabled)\n" );
 
-			// Updating peer information from the announce
+			// Get the last IP supplied by the peer
 
-			if( gbDebug )
-				if( gucDebugLevel & DEBUG_TRACKER )
-					UTIL_LogPrint( "Announce: updating uploaded, downloaded & left\n" );
-			
-			string strAdded = string( );
-			int64 iFreeDown = 100, iFreeUp = 100, iDefaultDown = 100, iDefaultUp = 100, iFreeTo = 0;
-			int64 iFreeDownGlobal = CFG_GetInt( "bnbt_free_down_global", 100 );
-			int64 iFreeUpGlobal = CFG_GetInt( "bnbt_free_up_global", 100 );
-				
-			CMySQLQuery *pQuery = new CMySQLQuery( "SELECT badded,bdefault_down,bdefault_up,bfree_down,bfree_up,UNIX_TIMESTAMP(bfree_to) FROM allowed WHERE bid=" + ann.strID );
-								
-			vector<string> vecQuery;
-			
-			vecQuery.reserve(6);
-
-			vecQuery = pQuery->nextRow( );
-			
-			delete pQuery;
-
-			if( vecQuery.size( ) == 6 )
+//			if( !strIP.empty( ) )
+			if( bIPv4 || bIPv6 )
 			{
-// 					pSize = vecTorrent[3];
-				if( !vecQuery[0].empty( ) )
-					strAdded = vecQuery[0];
+				if( gbDebug )
+					if( gucDebugLevel & DEBUG_TRACKER )
+						UTIL_LogPrint( "Announce: last IP (%s)\n", strIP.c_str( ) );
 
-				if( !vecQuery[1].empty( ) )
-					iDefaultDown = UTIL_StringTo64( vecQuery[1].c_str( ) );
-				if( !vecQuery[2].empty( ) )
-					iDefaultUp = UTIL_StringTo64( vecQuery[2].c_str( ) );
-				if( CFG_GetInt( "bnbt_free_global", 0 ) == 1 )
+				// Are the last IP and the current IP the same?
+				if( strIP == ann.strIP )
 				{
-					if( iFreeDownGlobal < iDefaultDown )
-						iDefaultDown = iFreeDownGlobal;
-					if( iFreeUpGlobal > iDefaultUp )
-						iDefaultUp = iFreeUpGlobal;
+					if( gbDebug )
+						if( gucDebugLevel & DEBUG_TRACKER )
+							UTIL_LogPrint( "Announce: IP (%s) has not changed\n", ann.strIP.c_str( ) );
 				}
-				
-				if( !vecQuery[5].empty( ) )
-					iFreeTo = UTIL_StringTo64( vecQuery[5].c_str( ) );
-				time_t now_t = time( NULL );
-
-				if( !vecQuery[3].empty( ) )
-					iFreeDown = UTIL_StringTo64( vecQuery[3].c_str( ) );
-				if( !vecQuery[4].empty( ) )
-					iFreeUp = UTIL_StringTo64( vecQuery[4].c_str( ) );
-				if( iFreeTo > 0 && iFreeTo > now_t )
+				else
 				{
-					if( iDefaultDown < iFreeDown )
+					if( gbDebug )
+						if( gucDebugLevel & DEBUG_TRACKER )
+							UTIL_LogPrint( "Announce: IP (%s) change to (%s)\n", strIP.c_str( ), ann.strIP.c_str( ) );
+
+					// Remove the old IP from the unique peers list
+					if( m_bCountUniquePeers )
+					{
+						if( gbDebug )
+							if( gucDebugLevel & DEBUG_TRACKER )
+								UTIL_LogPrint( "Announce: remove unique peer (enabled)\n" );
+
+						RemoveUniquePeer( strIP );
+					}
+
+					// Updating peer IP from the announce
+					strQuery += "," + strIPName + "=\'" + UTIL_StringToMySQL( ann.strIP ) + "\'";
+
+					// Add the new IP to the unique peers list
+					if( m_bCountUniquePeers )
+					{
+						if( gbDebug )
+							if( gucDebugLevel & DEBUG_TRACKER )
+								UTIL_LogPrint( "Announce: count unique peer (enabled)\n" );
+
+						AddUniquePeer( ann.strIP );
+					}
+				}
+
+				// Updating peer information from the announce
+
+				if( gbDebug )
+					if( gucDebugLevel & DEBUG_TRACKER )
+						UTIL_LogPrint( "Announce: updating uploaded, downloaded & left\n" );
+				
+	//			string strAdded = string( );
+				int64 iAdded = 0;
+				int64 iFreeDown = 100, iFreeUp = 100, iDefaultDown = 100, iDefaultUp = 100, iFreeTo = 0;
+				int64 iFreeDownGlobal = CFG_GetInt( "bnbt_free_down_global", 100 );
+				int64 iFreeUpGlobal = CFG_GetInt( "bnbt_free_up_global", 100 );
+				int64 iSeeded = 0;
+					
+				CMySQLQuery *pQuery = new CMySQLQuery( "SELECT UNIX_TIMESTAMP(badded),bdefault_down,bdefault_up,bfree_down,bfree_up,UNIX_TIMESTAMP(bfree_to),breq,bseeders,UNIX_TIMESTAMP(bseeded) FROM allowed WHERE bid=" + ann.strID );
+									
+				vector<string> vecQuery;
+				
+				vecQuery.reserve(9);
+
+				vecQuery = pQuery->nextRow( );
+				
+				delete pQuery;
+
+				if( vecQuery.size( ) == 9 )
+				{
+	// 					pSize = vecTorrent[3];
+					if( !vecQuery[0].empty( ) )
+						iAdded = UTIL_StringTo64( vecQuery[0].c_str( ) );
+	//					strAdded = vecQuery[0];
+
+					if( !vecQuery[1].empty( ) )
+						iDefaultDown = UTIL_StringTo64( vecQuery[1].c_str( ) );
+					if( !vecQuery[2].empty( ) )
+						iDefaultUp = UTIL_StringTo64( vecQuery[2].c_str( ) );
+					if( CFG_GetInt( "bnbt_free_global", 0 ) == 1 )
+					{
+						if( iFreeDownGlobal < iDefaultDown )
+							iDefaultDown = iFreeDownGlobal;
+						if( iFreeUpGlobal > iDefaultUp )
+							iDefaultUp = iFreeUpGlobal;
+					}
+					
+					if( !vecQuery[3].empty( ) )
+						iFreeDown = UTIL_StringTo64( vecQuery[3].c_str( ) );
+					if( !vecQuery[4].empty( ) )
+						iFreeUp = UTIL_StringTo64( vecQuery[4].c_str( ) );
+					if( !vecQuery[5].empty( ) )
+						iFreeTo = UTIL_StringTo64( vecQuery[5].c_str( ) );
+					if( !vecQuery[6].empty( ) && vecQuery[6] == "1" )
+						bReq = true;
+					if( !vecQuery[7].empty( ) && vecQuery[7] == "0" )
+						bSeeders = false;
+					if( !vecQuery[8].empty( ) )
+						iSeeded = UTIL_StringTo64( vecQuery[8].c_str( ) );
+					if( iAdded > 0 && now_t - iAdded > 30*24*3600 && now_t - iSeeded > 30*24*3600 )
+						bSeedtime = true;
+	//				time_t now_t = time( NULL );
+
+					if( iFreeTo > 0 && iFreeTo > now_t )
+					{
+						if( iDefaultDown < iFreeDown )
+							iFreeDown = iDefaultDown;
+						if( iDefaultUp > iFreeUp )
+							iFreeUp = iDefaultUp;
+					}
+					else
+					{
 						iFreeDown = iDefaultDown;
-					if( iDefaultUp > iFreeUp )
 						iFreeUp = iDefaultUp;
+					}
+				}
+					
+//				int64 iPeerUploaded = 0, iPeerDownloaded = 0, iPeerLeft = 0, iPeerUpdated = 0;
+				int64 iPeerUploaded = 0, iPeerDownloaded = 0, iPeerUpdated = 0;
+				
+				if( !vecQueryPeer[4].empty( ) )
+					iPeerUploaded = UTIL_StringTo64( vecQueryPeer[4].c_str( ) );
+				if( !vecQueryPeer[5].empty( ) )
+					iPeerDownloaded = UTIL_StringTo64( vecQueryPeer[5].c_str( ) );
+//				if( !vecQueryPeer[6].empty( ) )
+//					iPeerLeft = UTIL_StringTo64( vecQueryPeer[6].c_str( ) );
+				if( !vecQueryPeer[7].empty( ) )
+					iPeerUpdated = UTIL_StringTo64( vecQueryPeer[7].c_str( ) );
+				
+				int64 iUpdatedInterval = ( int64 )( GetTime( ) - iPeerUpdated );
+				
+				if( ann.iUploaded >= iPeerUploaded && ann.iDownloaded >= iPeerDownloaded )
+				{
+	//				m_pCache->setUserData( ann.strUID, iFreeUp * ( ann.iUploaded - iPeerUploaded ) / 100, iFreeDown * ( ann.iDownloaded - iPeerDownloaded ) / 100, 0 );
+					CMySQLQuery mq01( "UPDATE users SET buploaded=buploaded+" + CAtomLong( iFreeUp * ( ann.iUploaded - iPeerUploaded ) / 100 ).toString( ) + ",bdownloaded=bdownloaded+" + CAtomLong( iFreeDown * ( ann.iDownloaded - iPeerDownloaded ) / 100 ).toString( ) + " WHERE buid=" + ann.strUID );
+					
+					strQueryStatistics = "UPDATE statistics SET buploaded=buploaded+" + CAtomLong( ann.iUploaded - iPeerUploaded ).toString( ) + ",bdownloaded=bdownloaded+" + CAtomLong( ann.iDownloaded - iPeerDownloaded ).toString( );
+					if( ann.iLeft > 0 || iPeerLeft > 0 )
+						strQueryStatistics += ",bdowntime=bdowntime+";
+					else
+						strQueryStatistics += ",bseedtime=bseedtime+";
+					strQueryStatistics += CAtomLong( iUpdatedInterval ).toString( );
+				}
+				
+				if( ann.iLeft == iPeerLeft )
+				{
+					strQuery += ",bkeeptime=bkeeptime+";
+					strQuery += CAtomLong( iUpdatedInterval ).toString( );
 				}
 				else
 				{
-					iFreeDown = iDefaultDown;
-					iFreeUp = iDefaultUp;
+					strQuery += ",bkeeptime=0";
 				}
-			}
-				
-			int64 iPeerUploaded = 0, iPeerDownloaded = 0, iPeerLeft = 0, iPeerUpdated = 0;
-			
-			if( !vecQueryPeer[4].empty( ) )
-				iPeerUploaded = UTIL_StringTo64( vecQueryPeer[4].c_str( ) );
-			if( !vecQueryPeer[5].empty( ) )
-				iPeerDownloaded = UTIL_StringTo64( vecQueryPeer[5].c_str( ) );
-			if( !vecQueryPeer[6].empty( ) )
-				iPeerLeft = UTIL_StringTo64( vecQueryPeer[6].c_str( ) );
-			if( !vecQueryPeer[7].empty( ) )
-				iPeerUpdated = UTIL_StringTo64( vecQueryPeer[7].c_str( ) );
-			
-			int64 iUpdatedInterval = ( int64 )( GetTime( ) - iPeerUpdated );
-			
-			if( ann.iUploaded >= iPeerUploaded && ann.iDownloaded >= iPeerDownloaded )
-			{
-//				m_pCache->setUserData( ann.strUID, iFreeUp * ( ann.iUploaded - iPeerUploaded ) / 100, iFreeDown * ( ann.iDownloaded - iPeerDownloaded ) / 100, 0 );
-				CMySQLQuery mq01( "UPDATE users SET buploaded=buploaded+" + CAtomLong( iFreeUp * ( ann.iUploaded - iPeerUploaded ) / 100 ).toString( ) + ",bdownloaded=bdownloaded+" + CAtomLong( iFreeDown * ( ann.iDownloaded - iPeerDownloaded ) / 100 ).toString( ) + " WHERE buid=" + ann.strUID );
-				
-				strQueryStatistics = "UPDATE statistics SET buploaded=buploaded+" + CAtomLong( ann.iUploaded - iPeerUploaded ).toString( ) + ",bdownloaded=bdownloaded+" + CAtomLong( ann.iDownloaded - iPeerDownloaded ).toString( );
-				if( ann.iLeft > 0 || iPeerLeft > 0 )
-					strQueryStatistics += ",bdowntime=bdowntime+";
+
+				if( iPeerUploaded > ann.iUploaded || iPeerDownloaded > ann.iDownloaded || iUpdatedInterval == 0 )
+				{
+					strQuery += ",bupspeed=0,bdownspeed=0";
+				}
 				else
-					strQueryStatistics += ",bseedtime=bseedtime+";
-				strQueryStatistics += CAtomLong( iUpdatedInterval ).toString( );
-			}
-			
-			if( iPeerUploaded > ann.iUploaded || iPeerDownloaded > ann.iDownloaded || iUpdatedInterval == 0 )
-			{
-				strQuery += ",bupspeed=0,bdownspeed=0";
+				{
+					if( iUpdatedInterval > 30 )
+					{
+						strQuery += ",bupspeed=" + CAtomLong( ( ann.iUploaded - iPeerUploaded ) / iUpdatedInterval ).toString( );
+						strQuery += ",bdownspeed=" + CAtomLong( ( ann.iDownloaded - iPeerDownloaded ) / iUpdatedInterval ).toString( );
+					}
+				}
+
+				strQuery += ",buploaded=" + CAtomLong( ann.iUploaded ).toString( );
+				strQuery += ",bdownloaded=" + CAtomLong( ann.iDownloaded ).toString( );
+				strQuery += ",bleft=" + CAtomLong( ann.iLeft ).toString( );
+				strQuery += ",bupdated=NOW()";
 			}
 			else
 			{
-				if( iUpdatedInterval > 30 )
-				{
-					strQuery += ",bupspeed=" + CAtomLong( ( ann.iUploaded - iPeerUploaded ) / iUpdatedInterval ).toString( );
-					strQuery += ",bdownspeed=" + CAtomLong( ( ann.iDownloaded - iPeerDownloaded ) / iUpdatedInterval ).toString( );
-				}
+				if( gbDebug )
+					if( gucDebugLevel & DEBUG_TRACKER )
+						UTIL_LogPrint( "Announce: last IP not found\n" );
+				
+				strQuery += "," + strIPName + "=\'" + UTIL_StringToMySQL( ann.strIP ) + "\'";
 			}
-
-			strQuery += ",buploaded=" + CAtomLong( ann.iUploaded ).toString( );
-			strQuery += ",bdownloaded=" + CAtomLong( ann.iDownloaded ).toString( );
-			strQuery += ",bleft=" + CAtomLong( ann.iLeft ).toString( );
-			strQuery += ",bupdated=NOW()";
 		}
 		
 		// Peer information support
@@ -4040,11 +4165,47 @@ void CTracker :: Announce( const struct announce_t &ann, bool &bRespond )
 				strQueryStatistics = "UPDATE statistics SET bcompleted=NOW()";
 		}
 		strQuery += " WHERE bid=" + ann.strID + " AND buid=" + ann.strUID + " AND bpeerid=\'" + UTIL_StringToMySQL( ann.strPeerID ) + "\'";
-		CMySQLQuery mq01( strQuery );
+
+		CMySQLQuery mq01( "UPDATE dstate_store " + strQuery );
+		if( bPeerFoundStore )
+		{
+			CMySQLQuery mq02( "INSERT INTO dstate (SELECT * FROM dstate_store WHERE bid=" + ann.strID + " AND buid=" + ann.strUID + " AND bpeerid=\'" + UTIL_StringToMySQL( ann.strPeerID ) + "\')" );
+			if( iPeerLeft == 0 )
+			{
+				if( bIPv6 )
+				{
+					m_pCache->setOrder( ann.strID, string( ), SET_SEEDER_ADD_BOTH );
+					CMySQLQuery mq03( "UPDATE allowed SET breq=0,bseeders=bseeders+1,bseeders6=bseeders6+1,bupdated=NOW(),bseeded=NOW() WHERE bid=" + ann.strID );
+				}
+				else
+				{
+					m_pCache->setOrder( ann.strID, string( ), SET_SEEDER_ADD );
+					CMySQLQuery mq03( "UPDATE allowed SET breq=0,bseeders=bseeders+1,bupdated=NOW(),bseeded=NOW() WHERE bid=" + ann.strID );
+				}
+				CMySQLQuery mq05( "UPDATE users SET bseeding=bseeding+1 WHERE buid=" + ann.strUID );
+			}
+			else
+			{
+				if( bIPv6 )
+				{
+					m_pCache->setActive( ann.strID, SET_LEECHER_ADD_BOTH );
+					CMySQLQuery mq03( "UPDATE allowed SET bleechers=bleechers+1,bleechers6=bleechers6+1,bupdated=NOW() WHERE bid=" + ann.strID );
+				}
+				else
+				{
+					m_pCache->setActive( ann.strID, SET_LEECHER_ADD );
+					CMySQLQuery mq03( "UPDATE allowed SET bleechers=bleechers+1,bupdated=NOW() WHERE bid=" + ann.strID );
+				}
+				CMySQLQuery mq05( "UPDATE users SET bleeching=bleeching+1 WHERE buid=" + ann.strUID );
+			}
+		}
+		else
+			CMySQLQuery mq02( "UPDATE dstate " + strQuery );
+
 		if( !strQueryStatistics.empty( ) )
 		{
 			strQueryStatistics += " WHERE buid=" + ann.strUID + " AND bid=" + ann.strID;
-			CMySQLQuery mq02( strQueryStatistics );
+			CMySQLQuery mq04( strQueryStatistics );
 		}
 //		CMySQLQuery mq02( "UPDATE allowed SET bupdated=NOW() WHERE bid=" + ann.strID );
 	}
@@ -4053,26 +4214,53 @@ void CTracker :: Announce( const struct announce_t &ann, bool &bRespond )
 		if( gbDebug )
 			if( gucDebugLevel & DEBUG_TRACKER )
 				UTIL_LogPrint( "Announce: peer (%s) not found\n", ann.strPeerID.c_str( ) );
+
+		int64 iAdded = 0;
+		int64 iSeeded = 0;
+
+		CMySQLQuery *pQuery = new CMySQLQuery( "SELECT UNIX_TIMESTAMP(badded),breq,bseeders,UNIX_TIMESTAMP(bseeded) FROM allowed WHERE bid=" + ann.strID );
+							
+		vector<string> vecQuery;
+		
+		vecQuery.reserve(4);
+
+		vecQuery = pQuery->nextRow( );
+		
+		delete pQuery;
+
+		if( vecQuery.size( ) == 4 )
+		{
+			if( !vecQuery[0].empty( ) )
+				iAdded = UTIL_StringTo64( vecQuery[0].c_str( ) );
+			if( !vecQuery[1].empty( ) && vecQuery[1] == "1" )
+				bReq = true;
+			if( !vecQuery[2].empty( ) && vecQuery[2] == "0" )
+				bSeeders = false;
+			if( !vecQuery[3].empty( ) )
+				iSeeded = UTIL_StringTo64( vecQuery[3].c_str( ) );
+			if( iAdded > 0 && now_t - iAdded > 30*24*3600 && now_t - iSeeded > 30*24*3600 )
+				bSeedtime = true;
+		}
 	}
 
 	switch( ucEvent )
 	{
 	case EVENT_STARTED:
-		if( bPeerFound )
+		if( bPeerFound && bIPv4 && bIPv6 )
 		{
-			if( bIPv6Announce && !bIPv6 )
-			{
-				if( ann.iLeft == 0 )
-				{
-					m_pCache->setActive( ann.strID, SET_SEEDER_ADD_V6 );
-					CMySQLQuery mq03( "UPDATE allowed SET bseeders6=bseeders6+1,bupdated=NOW(),bseeded=NOW() WHERE bid=" + ann.strID );
-				}
-				else
-				{
-					m_pCache->setActive( ann.strID, SET_LEECHER_ADD_V6 );
-					CMySQLQuery mq03( "UPDATE allowed SET bleechers6=bleechers6+1,bupdated=NOW() WHERE bid=" + ann.strID );
-				}
-			}
+//			if( bIPv6Announce && !bIPv6 )
+//			{
+//				if( ann.iLeft == 0 )
+//				{
+//					m_pCache->setActive( ann.strID, SET_SEEDER_ADD_V6 );
+//					CMySQLQuery mq03( "UPDATE allowed SET bseeders6=bseeders6+1,bupdated=NOW(),bseeded=NOW() WHERE bid=" + ann.strID );
+//				}
+//				else
+//				{
+//					m_pCache->setActive( ann.strID, SET_LEECHER_ADD_V6 );
+//					CMySQLQuery mq03( "UPDATE allowed SET bleechers6=bleechers6+1,bupdated=NOW() WHERE bid=" + ann.strID );
+//				}
+//			}
 			
 			if( gbDebug )
 				if( gucDebugLevel & DEBUG_TRACKER )
@@ -4093,7 +4281,7 @@ void CTracker :: Announce( const struct announce_t &ann, bool &bRespond )
 
 			// Set the new peer details
 //			string strQuery = "INSERT INTO dstate (bhash,bid,bpeerid,busername,buid," + strIPName + ",bport,buploaded,bdownloaded,bleft,bconnected,bupdated,bupspeed,bdownspeed";
-			string strQuery = "INSERT INTO dstate (bid,bpeerid,busername,buid," + strIPName + ",bport,buploaded,bdownloaded,bleft,bconnected,bupdated,bcompleted,bupspeed,bdownspeed";
+			string strQuery = "(bid,bpeerid,busername,buid," + strIPName + ",bport,buploaded,bdownloaded,bleft,bconnected,bupdated,bcompleted,bupspeed,bdownspeed";
 			string strQueryValues = " VALUES(";
 //			strQueryValues += "\'" + UTIL_StringToMySQL( ann.strInfoHash );
 //			strQueryValues += "\'," + ann.strID;
@@ -4136,22 +4324,66 @@ void CTracker :: Announce( const struct announce_t &ann, bool &bRespond )
 			}
 			strQuery += ")";
 			strQueryValues += ")";
-			CMySQLQuery mq01( strQuery + strQueryValues );
+			CMySQLQuery mq01( "INSERT INTO dstate_store " + strQuery + strQueryValues );
+			CMySQLQuery mq02( "INSERT INTO dstate " + strQuery + strQueryValues );
 //			CMySQLQuery mq02( "UPDATE allowed SET bupdated=NOW() WHERE bid=" + ann.strID );
 			if( ann.iLeft == 0 )
 			{
 				if( bIPv6Announce )
 				{
-					m_pCache->setActive( ann.strID, SET_SEEDER_ADD_BOTH );
-					CMySQLQuery mq03( "UPDATE allowed SET bseeders=bseeders+1,bseeders6=bseeders6+1,bupdated=NOW(),bseeded=NOW() WHERE bid=" + ann.strID );
+					if( !bSeeders && bSeedtime )
+					{
+//						if( bSeedtime )
+//						{
+							m_pCache->setOrder( ann.strID, strOrder, SET_SEEDER_ADD_BOTH );
+							CMySQLQuery mq03( "UPDATE allowed SET breq=0,border=\'" + strOrder + "\',bseeders=bseeders+1,bseeders6=bseeders6+1,bupdated=NOW(),bseeded=NOW() WHERE bid=" + ann.strID );
+//						}
+//						else
+//						{
+//							m_pCache->setOrder( ann.strID, string( ), SET_SEEDER_ADD_BOTH );
+//							CMySQLQuery mq03( "UPDATE allowed SET breq=0,bseeders=bseeders+1,bseeders6=bseeders6+1,bupdated=NOW(),bseeded=NOW() WHERE bid=" + ann.strID );
+//							CMySQLQuery mq04( "DELETE FROM talkrequest WHERE btid=" + ann.strID );
+//						}
+					}
+					else
+					{
+//						m_pCache->setActive( ann.strID, SET_SEEDER_ADD_BOTH );
+//						CMySQLQuery mq03( "UPDATE allowed SET bseeders=bseeders+1,bseeders6=bseeders6+1,bupdated=NOW(),bseeded=NOW() WHERE bid=" + ann.strID );
+						m_pCache->setOrder( ann.strID, string( ), SET_SEEDER_ADD_BOTH );
+						CMySQLQuery mq03( "UPDATE allowed SET breq=0,bseeders=bseeders+1,bseeders6=bseeders6+1,bupdated=NOW(),bseeded=NOW() WHERE bid=" + ann.strID );
+					}
+					if( bReq )
+						CMySQLQuery mq04( "DELETE FROM talkrequest WHERE btid=" + ann.strID );
 				}
 				else
 				{
-					m_pCache->setActive( ann.strID, SET_SEEDER_ADD );
-					CMySQLQuery mq03( "UPDATE allowed SET bseeders=bseeders+1,bupdated=NOW(),bseeded=NOW() WHERE bid=" + ann.strID );
+					if( !bSeeders && bSeedtime )
+					{
+//						if( bSeedtime )
+//						{
+							m_pCache->setOrder( ann.strID, strOrder, SET_SEEDER_ADD );
+							CMySQLQuery mq03( "UPDATE allowed SET breq=0,border=\'" + strOrder + "\',bseeders=bseeders+1,bupdated=NOW(),bseeded=NOW() WHERE bid=" + ann.strID );
+//							CMySQLQuery mq04( "DELETE FROM talkrequest WHERE btid=" + ann.strID );
+//						}
+//						else
+//						{
+//							m_pCache->setOrder( ann.strID, string( ), SET_SEEDER_ADD );
+//							CMySQLQuery mq03( "UPDATE allowed SET breq=0,bseeders=bseeders+1,bupdated=NOW(),bseeded=NOW() WHERE bid=" + ann.strID );
+//							CMySQLQuery mq04( "DELETE FROM talkrequest WHERE btid=" + ann.strID );
+//						}
+					}
+					else
+					{
+//						m_pCache->setActive( ann.strID, SET_SEEDER_ADD );
+//						CMySQLQuery mq03( "UPDATE allowed SET bseeders=bseeders+1,bupdated=NOW(),bseeded=NOW() WHERE bid=" + ann.strID );
+						m_pCache->setOrder( ann.strID, string( ), SET_SEEDER_ADD );
+						CMySQLQuery mq03( "UPDATE allowed SET breq=0,bseeders=bseeders+1,bupdated=NOW(),bseeded=NOW() WHERE bid=" + ann.strID );
+					}
+					if( bReq )
+						CMySQLQuery mq04( "DELETE FROM talkrequest WHERE btid=" + ann.strID );
 				}
 //				m_pCache->setUserStatus( ann.strUID, SET_USER_SEEDING_ADD );
-				CMySQLQuery mq04( "UPDATE users SET bseeding=bseeding+1 WHERE buid=" + ann.strUID );
+				CMySQLQuery mq05( "UPDATE users SET bseeding=bseeding+1 WHERE buid=" + ann.strUID );
 			}
 			else
 			{
@@ -4159,8 +4391,6 @@ void CTracker :: Announce( const struct announce_t &ann, bool &bRespond )
 				{
 					m_pCache->setActive( ann.strID, SET_LEECHER_ADD_BOTH );
 					CMySQLQuery mq03( "UPDATE allowed SET bleechers=bleechers+1,bleechers6=bleechers6+1,bupdated=NOW() WHERE bid=" + ann.strID );
-
-
 				}
 				else
 				{
@@ -4225,23 +4455,67 @@ void CTracker :: Announce( const struct announce_t &ann, bool &bRespond )
 				CMySQLQuery mq02( "INSERT INTO peers (bid,busername,buid,bip,buploaded,bdownloaded,bcompleted) VALUES (" + ann.strID + ",\'" + UTIL_StringToMySQL( ann.strUsername ) + "\'," + ann.strUID + ",\'" + UTIL_StringToMySQL( ann.strIP ) + "\'," + CAtomLong( ann.iUploaded ).toString( ) + "," + CAtomLong( ann.iDownloaded ).toString( ) + ",NOW())" );
 //				CMySQLQuery mq03( "UPDATE statistics SET bcompleted=NOW() WHERE buid=" + ann.strUID + " AND bid=" + ann.strID );
 				
-				m_pCache->setCompleted( ann.strID, SET_COMPLETED_ADD );
+//				m_pCache->setCompleted( ann.strID, SET_COMPLETED_ADD );
 //				CMySQLQuery mq04( "UPDATE allowed SET bcompleted=bcompleted+1,bupdated=NOW() WHERE bid=" + ann.strID );
 //				addBonus( ann.strID, ann.strUID );
 				if( ann.iLeft == 0 )
 				{
 					if( bIPv6 )
 					{
-						m_pCache->setActive( ann.strID, SET_SEEDER_A_LEECHER_M_BOTH );
-						CMySQLQuery mq02( "UPDATE allowed SET bseeders=bseeders+1,bseeders6=bseeders6+1,bleechers=bleechers-1,bleechers6=bleechers6-1,bcompleted=bcompleted+1,bupdated=NOW(),bseeded=NOW() WHERE bid=" + ann.strID + " AND bleechers>0" );
+						if( !bSeeders && bSeedtime )
+						{
+//							if( bSeedtime )
+//							{
+								m_pCache->setOrder( ann.strID, strOrder, SET_SEEDER_A_LEECHER_M_BOTH );
+								CMySQLQuery mq02( "UPDATE allowed SET breq=0,border=\'" + strOrder + "\',bseeders=bseeders+1,bseeders6=bseeders6+1,bleechers=bleechers-1,bleechers6=bleechers6-1,bcompleted=bcompleted+1,bupdated=NOW(),bseeded=NOW() WHERE bid=" + ann.strID + " AND bleechers>0" );
+//								CMySQLQuery mq03( "DELETE FROM talkrequest WHERE btid=" + ann.strID );
+//							}
+//							else
+//							{
+//								m_pCache->setOrder( ann.strID, string( ), SET_SEEDER_A_LEECHER_M_BOTH );
+//								CMySQLQuery mq02( "UPDATE allowed SET breq=0,bseeders=bseeders+1,bseeders6=bseeders6+1,bleechers=bleechers-1,bleechers6=bleechers6-1,bcompleted=bcompleted+1,bupdated=NOW(),bseeded=NOW() WHERE bid=" + ann.strID + " AND bleechers>0" );
+//								CMySQLQuery mq03( "DELETE FROM talkrequest WHERE btid=" + ann.strID );
+//							}
+						}
+						else
+						{
+//							m_pCache->setActive( ann.strID, SET_SEEDER_A_LEECHER_M_BOTH );
+//							CMySQLQuery mq02( "UPDATE allowed SET bseeders=bseeders+1,bseeders6=bseeders6+1,bleechers=bleechers-1,bleechers6=bleechers6-1,bcompleted=bcompleted+1,bupdated=NOW(),bseeded=NOW() WHERE bid=" + ann.strID + " AND bleechers>0" );
+							m_pCache->setOrder( ann.strID, string( ), SET_SEEDER_A_LEECHER_M_BOTH );
+							CMySQLQuery mq02( "UPDATE allowed SET breq=0,bseeders=bseeders+1,bseeders6=bseeders6+1,bleechers=bleechers-1,bleechers6=bleechers6-1,bcompleted=bcompleted+1,bupdated=NOW(),bseeded=NOW() WHERE bid=" + ann.strID + " AND bleechers>0" );
+						}
+						if( bReq )
+							CMySQLQuery mq03( "DELETE FROM talkrequest WHERE btid=" + ann.strID );
 					}
 					else
 					{
-						m_pCache->setActive( ann.strID, SET_SEEDER_A_LEECHER_M );
-						CMySQLQuery mq02( "UPDATE allowed SET bseeders=bseeders+1,bleechers=bleechers-1,bcompleted=bcompleted+1,bupdated=NOW(),bseeded=NOW() WHERE bid=" + ann.strID + " AND bleechers>0" );
+						if( !bSeeders && bSeedtime )
+						{
+//							if( bSeedtime )
+//							{
+								m_pCache->setOrder( ann.strID, strOrder, SET_SEEDER_A_LEECHER_M );
+								CMySQLQuery mq02( "UPDATE allowed SET breq=0,border=\'" + strOrder + "\',bseeders=bseeders+1,bleechers=bleechers-1,bcompleted=bcompleted+1,bupdated=NOW(),bseeded=NOW() WHERE bid=" + ann.strID + " AND bleechers>0" );
+//								CMySQLQuery mq03( "DELETE FROM talkrequest WHERE btid=" + ann.strID );
+//							}
+//							else
+//							{
+//								m_pCache->setOrder( ann.strID, string( ), SET_SEEDER_A_LEECHER_M );
+//								CMySQLQuery mq02( "UPDATE allowed SET breq=0,bseeders=bseeders+1,bleechers=bleechers-1,bcompleted=bcompleted+1,bupdated=NOW(),bseeded=NOW() WHERE bid=" + ann.strID + " AND bleechers>0" );
+//								CMySQLQuery mq03( "DELETE FROM talkrequest WHERE btid=" + ann.strID );
+//							}
+						}
+						else
+						{
+//							m_pCache->setActive( ann.strID, SET_SEEDER_A_LEECHER_M );
+//							CMySQLQuery mq02( "UPDATE allowed SET bseeders=bseeders+1,bleechers=bleechers-1,bcompleted=bcompleted+1,bupdated=NOW(),bseeded=NOW() WHERE bid=" + ann.strID + " AND bleechers>0" );
+							m_pCache->setOrder( ann.strID, string( ), SET_SEEDER_A_LEECHER_M );
+							CMySQLQuery mq02( "UPDATE allowed SET breq=0,bseeders=bseeders+1,bleechers=bleechers-1,bcompleted=bcompleted+1,bupdated=NOW(),bseeded=NOW() WHERE bid=" + ann.strID + " AND bleechers>0" );
+						}
+						if( bReq )
+							CMySQLQuery mq03( "DELETE FROM talkrequest WHERE btid=" + ann.strID );
 					}
 //					m_pCache->setUserStatus( ann.strUID, SET_USER_SEEDING_A_LEECHING_M );
-					CMySQLQuery mq03( "UPDATE users SET bseeding=bseeding+1,bleeching=bleeching-1 WHERE buid=" + ann.strUID + " AND bleeching>0" );
+					CMySQLQuery mq04( "UPDATE users SET bseeding=bseeding+1,bleeching=bleeching-1 WHERE buid=" + ann.strUID + " AND bleeching>0" );
 				}
 			}
 
@@ -5953,13 +6227,14 @@ void CTracker :: HTML_Common_Begin( struct request_t *pRequest, struct response_
 	pResponse->strContent += "  var tool = document.getElementById( idTool );\n";
 	pResponse->strContent += "  var trigger = document.getElementById( idTrigger );\n";
 	pResponse->strContent += "  if( tool ) {\n";
-	pResponse->strContent += "    if( event.relatedTarget && event.relatedTarget.id != idTool && event.relatedTarget.id != idTrigger )\n";
+	pResponse->strContent += "    if( event.relatedTarget && event.relatedTarget.id != idTool && event.relatedTarget.id != idTrigger ) {\n";
 	pResponse->strContent += "      tool.style.display=\"none\";\n";
+	pResponse->strContent += "      hideTrigger( idTrigger ); }\n";
 	pResponse->strContent += "    else\n";
-	pResponse->strContent += "      if( !event.relatedTarget )\n";
+	pResponse->strContent += "      if( !event.relatedTarget ) {\n";
 	pResponse->strContent += "        tool.style.display=\"none\";\n";
+	pResponse->strContent += "        hideTrigger( idTrigger ); }\n";
 	pResponse->strContent += "  }\n";
-//	pResponse->strContent += "  hideTrigger( idTrigger );\n";
 	pResponse->strContent += "}\n";
 	
 	// showToolLeft
@@ -5971,9 +6246,9 @@ void CTracker :: HTML_Common_Begin( struct request_t *pRequest, struct response_
 	pResponse->strContent += "  var triggerHeight = parseInt(trigger.offsetHeight);\n";
 	pResponse->strContent += "  if( tool && tool.style.display==\"none\" ) {\n";
 	pResponse->strContent += "    tool.style.display=\"\";\n";
-	pResponse->strContent += "    tool.style.top=(triggerTop+triggerHeight).toString()+'px';\n";
+	pResponse->strContent += "    tool.style.top=(triggerTop+triggerHeight-1).toString()+'px';\n";
 	pResponse->strContent += "    tool.style.left=triggerLeft.toString()+'px';\n";
-//	pResponse->strContent += "    showTrigger( idTrigger );\n";
+	pResponse->strContent += "    showTrigger( idTrigger );\n";
 	pResponse->strContent += "  }\n";
 	pResponse->strContent += "}\n";
 
@@ -5988,25 +6263,25 @@ void CTracker :: HTML_Common_Begin( struct request_t *pRequest, struct response_
 	pResponse->strContent += "  if( tool && tool.style.display==\"none\" ) {\n";
 	pResponse->strContent += "    tool.style.display=\"\";\n";
 	pResponse->strContent += "    var toolWidth = parseInt(tool.offsetWidth);\n";
-	pResponse->strContent += "    tool.style.top=(triggerTop+triggerHeight).toString()+'px';\n";
+	pResponse->strContent += "    tool.style.top=(triggerTop+triggerHeight-1).toString()+'px';\n";
 	pResponse->strContent += "    if( triggerLeft+triggerWidth > document.documentElement.clientWidth )\n";
 	pResponse->strContent += "      tool.style.left=(document.documentElement.clientWidth-toolWidth).toString()+'px';\n";
 	pResponse->strContent += "    else\n";
 	pResponse->strContent += "      tool.style.left=(triggerLeft+triggerWidth-toolWidth).toString()+'px';\n";
-//	pResponse->strContent += "    showTrigger( idTrigger );\n";
+	pResponse->strContent += "    showTrigger( idTrigger );\n";
 	pResponse->strContent += "  }\n";
 	pResponse->strContent += "}\n";
 
 	// hideTrigger
 	pResponse->strContent += "function hideTrigger( idTrigger ) {\n";
 	pResponse->strContent += "  var trigger = document.getElementById( idTrigger );\n";
-	pResponse->strContent += "  trigger.style.borderBottomColor=\"\";\n";
+	pResponse->strContent += "  trigger.style.borderColor=\"transparent\";\n";
 	pResponse->strContent += "}\n";
 
 	// showTrigger
 	pResponse->strContent += "function showTrigger( idTrigger ) {\n";
 	pResponse->strContent += "  var trigger = document.getElementById( idTrigger );\n";
-	pResponse->strContent += "  trigger.style.borderBottomColor=\"transparent\";\n";
+	pResponse->strContent += "  trigger.style.borderColor=\"purple\";\n";
 	pResponse->strContent += "}\n";
 
 	pResponse->strContent += "//-->\n";
@@ -6020,11 +6295,11 @@ void CTracker :: HTML_Common_Begin( struct request_t *pRequest, struct response_
 	
 	vector<string> vecQueryUser;
 	
-	vecQueryUser.reserve(12);
+	vecQueryUser.reserve(13);
 	
 	if( !pRequest->user.strUID.empty( ) )
 	{
-		pQueryUser = new CMySQLQuery( "SELECT buploaded,bdownloaded,bbonus,bseeding,bleeching,UNIX_TIMESTAMP(blast_index),UNIX_TIMESTAMP(blast_index_2),UNIX_TIMESTAMP(blast_offer),binvites,btalk,btalkref,btalktorrent FROM users WHERE buid=" + pRequest->user.strUID );
+		pQueryUser = new CMySQLQuery( "SELECT buploaded,bdownloaded,bbonus,bseeding,bleeching,UNIX_TIMESTAMP(blast_index),UNIX_TIMESTAMP(blast_index_2),UNIX_TIMESTAMP(blast_offer),binvites,btalk,btalkref,btalktorrent,btalkrequest FROM users WHERE buid=" + pRequest->user.strUID );
 		
 		vecQueryUser = pQueryUser->nextRow( );
 	}
@@ -6036,7 +6311,7 @@ void CTracker :: HTML_Common_Begin( struct request_t *pRequest, struct response_
 		pResponse->strContent += UTIL_Xsprintf( gmapLANG_CFG["login1"].c_str( ), string( "<a class=\"red\" title=\"" + gmapLANG_CFG["login"] + "\" href=\"" + RESPONSE_STR_LOGIN_HTML + "\">" ).c_str( ), "</a>" );
 		pResponse->strContent += "</td>\n";
 	}
-	else if( vecQueryUser.size( ) == 12 )
+	else if( vecQueryUser.size( ) == 13 )
 	{
 		CMySQLQuery mq01( "UPDATE users SET bip=\'" + UTIL_StringToMySQL( pRequest->strIP ) + "\' WHERE buid=" + pRequest->user.strUID );
 		
@@ -6091,10 +6366,10 @@ void CTracker :: HTML_Common_Begin( struct request_t *pRequest, struct response_
 		pResponse->strContent += "<span class=\"top_state\">";
 		pResponse->strContent += UTIL_Xsprintf( gmapLANG_CFG["login2_state_active"].c_str( ), string( "<span class=\"blue\">" + vecQueryUser[3] + "</span>" ).c_str( ), string( "<span class=\"green\">" + vecQueryUser[4] + "</span>" ).c_str( ) );
 		pResponse->strContent += "<span class=\"top_pipe\">|</span>";
-		pResponse->strContent += UTIL_Xsprintf( gmapLANG_CFG["login2_state_buffer"].c_str( ), string( "<span class=\"purple\">" + strShareRatio + "</span>" ).c_str( ), string( "<span class=\"blue\">" + UTIL_BytesToString( ulUploaded ) + "</span>" ).c_str( ), string( "<span class=\"green\">" + UTIL_BytesToString( ulDownloaded ) + "</span>" ).c_str( ), string( "<a class=\"red\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?show=bonus\">" + CAtomLong( ulBonus / 100 ).toString( ) + "." + CAtomInt( ( ulBonus % 100 ) / 10 ).toString( ) + CAtomInt( ulBonus % 10 ).toString( ) + "</a>" ).c_str( ) );
+		pResponse->strContent += UTIL_Xsprintf( gmapLANG_CFG["login2_state_buffer"].c_str( ), string( "<span class=\"purple\" title=\"" + gmapLANG_CFG["top_note_shareratio"] + "\">" + strShareRatio + "</span>" ).c_str( ), string( "<span class=\"blue\" title=\"" + gmapLANG_CFG["top_note_uploaded"] + "\">" + UTIL_BytesToString( ulUploaded ) + "</span>" ).c_str( ), string( "<span class=\"green\" title=\"" + gmapLANG_CFG["top_note_downloaded"] + "\">" + UTIL_BytesToString( ulDownloaded ) + "</span>" ).c_str( ), string( "<a class=\"red\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?show=bonus\">" + CAtomLong( ulBonus / 100 ).toString( ) + "." + CAtomInt( ( ulBonus % 100 ) / 10 ).toString( ) + CAtomInt( ulBonus % 10 ).toString( ) + "</a>" ).c_str( ) );
 		pResponse->strContent += "</span>";
 		pResponse->strContent += "</td>\n<td class=\"top_tool\">";
-		pResponse->strContent += "<a href=\"javascript: scroll(0,0);\">" + gmapLANG_CFG["login2_gotop_icon"] + "</a>";
+		pResponse->strContent += "<a href=\"javascript: ;\" onclick=\"javascript: scroll(0,0);\">" + gmapLANG_CFG["login2_gotop_icon"] + "</a>";
 
 		unsigned long ulCount = 0;
 		unsigned long ulRead = 0;
@@ -6141,11 +6416,13 @@ void CTracker :: HTML_Common_Begin( struct request_t *pRequest, struct response_
 		unsigned long ulHome = 0;
 		unsigned long ulMentions = 0;
 		unsigned long ulTorrents = 0;
+		unsigned long ulRequests = 0;
 
 		ulHome = atoi( vecQueryUser[9].c_str( ) );
 		ulMentions = atoi( vecQueryUser[10].c_str( ) );
 		ulTorrents = atoi( vecQueryUser[11].c_str( ) );
-		ulTalk = ulHome + ulMentions + ulTorrents;
+		ulRequests = atoi( vecQueryUser[12].c_str( ) );
+		ulTalk = ulHome + ulMentions + ulTorrents + ulRequests;
 
 		pResponse->strContent += "</td>\n<td class=\"top_trigger\" id=\"tdTalkTrigger\" onMouseOver=\"javascript: showToolLeft('tdTalk','tdTalkTrigger');\" onMouseOut=\"javascript: hideTool(event,'tdTalk','tdTalkTrigger');\">";
 		pResponse->strContent += "<a class=\"top_talk\" href=\"" + RESPONSE_STR_TALK_HTML + "\">" + gmapLANG_CFG["login2_talk"] + "</a>";
@@ -6154,7 +6431,7 @@ void CTracker :: HTML_Common_Begin( struct request_t *pRequest, struct response_
 		if( ulTalk > 0 )
 			pResponse->strContent += "<span class=\"hot\">(" + CAtomLong( ulTalk ).toString( ) + ")</span>";
 		pResponse->strContent += "<span class=\"top_pipe\">|</span>";
-		pResponse->strContent += "<a class=\"top_talk\" href=\"" + RESPONSE_STR_TALK_HTML + "?show=all\">" + gmapLANG_CFG["talk_show_all"] + "</a>";
+		pResponse->strContent += "<a class=\"top_talk\" href=\"" + RESPONSE_STR_TALK_HTML + "?channel=" + UTIL_StringToEscaped( gmapLANG_CFG["talk_channel_default"] ) + "\">" + gmapLANG_CFG["talk_channel_default"] + "</a>";
 //		pResponse->strContent += "<a class=\"top_talk\" href=\"" + RESPONSE_STR_TALK_HTML + "\">" + gmapLANG_CFG["talk_show_home"] + "</a>";
 //		if( ulHome > 0 )
 //			pResponse->strContent += "<span class=\"hot\">(" + vecQueryUser[9] + ")</span>";
@@ -6243,51 +6520,67 @@ void CTracker :: HTML_Common_Begin( struct request_t *pRequest, struct response_
 		pResponse->strContent += "<br>" + gmapLANG_CFG["info_server_time"] + ": " + string( szTime );
 		pResponse->strContent += "</div>";
 
-		pResponse->strContent += "<div class=\"top_tool_left\" style=\"display:none\" id=\"tdTool\" onMouseOver=\"javascript: showToolLeft('tdTool','tdToolTrigger');\" onMouseOut=\"javascript: hideTool(event,'tdTool','tdToolTrigger');\">\n";
+		pResponse->strContent += "<div class=\"top_menu_left\" style=\"display:none\" id=\"tdTool\" onMouseOver=\"javascript: showToolLeft('tdTool','tdToolTrigger');\" onMouseOut=\"javascript: hideTool(event,'tdTool','tdToolTrigger');\">\n";
 
 //		pResponse->strContent += "<a class=\"black\" href=\"" + RESPONSE_STR_LOGIN_HTML + "\">" + gmapLANG_CFG["login2_profile"] + "</a>";
 //		pResponse->strContent += "[ <a class=\"bookmark\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?show=bookmarks\">" + gmapLANG_CFG["login2_bookmarks"] + "</a> ]";
 //		pResponse->strContent += " [ <a class=\"friend\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?show=friends\">" + gmapLANG_CFG["login2_friends"] + "</a> ]";
 //		pResponse->strContent += " [ <a class=\"blue\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?show=invites\">" + UTIL_Xsprintf( gmapLANG_CFG["login2_invites"].c_str( ), vecQueryUser[8].c_str( ) ) + "</a> ]";
 
-		pResponse->strContent += "<a class=\"black\" href=\"" + RESPONSE_STR_USERS_HTML + "?uid=" + pRequest->user.strUID + "&amp;action=edit\">" + gmapLANG_CFG["user_detail_edit"] + "</a><br>";
-		pResponse->strContent += "<a class=\"black\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?show=bonus\">" + gmapLANG_CFG["user_detail_bonus"] + "</a><br>";
-		pResponse->strContent += "<a class=\"black\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?show=preferences\">" + gmapLANG_CFG["user_detail_preferences"] + "</a>";
-		pResponse->strContent += "<hr class=\"top_tool\" onMouseOver=\"javascript: showToolLeft('tdTool','tdToolTrigger');\"></hr>";
+		pResponse->strContent += "<a class=\"top_menu\" href=\"" + RESPONSE_STR_USERS_HTML + "?uid=" + pRequest->user.strUID + "&amp;action=edit\">" + gmapLANG_CFG["user_detail_edit"] + "</a>";
+		pResponse->strContent += "<a class=\"top_menu\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?show=bonus\">" + gmapLANG_CFG["user_detail_bonus"] + "</a>";
+		pResponse->strContent += "<a class=\"top_menu\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?show=preferences\">" + gmapLANG_CFG["user_detail_preferences"] + "</a>";
+		pResponse->strContent += "<hr class=\"top_menu\" onMouseOver=\"javascript: showToolLeft('tdTool','tdToolTrigger');\"></hr>";
 
-		pResponse->strContent += "<a class=\"bookmark\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?show=bookmarks\">" + gmapLANG_CFG["user_detail_bookmarks"] + "</a><br>";
-		pResponse->strContent += "<a class=\"black\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?show=torrents\">" + gmapLANG_CFG["user_detail_torrents"] + "</a><br>";
-		pResponse->strContent += "<a class=\"black\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?show=active\">" + gmapLANG_CFG["user_detail_active"] + "</a><br>";
-		pResponse->strContent += "<a class=\"black\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?show=completed\">" + gmapLANG_CFG["user_detail_completed"] + "</a><br>";
-		pResponse->strContent += "<a class=\"friend\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?show=friends\">" + gmapLANG_CFG["user_detail_friends"] + "</a><br>";
-		pResponse->strContent += "<a class=\"friend\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?show=friendeds\">" + gmapLANG_CFG["user_detail_friendeds"] + "</a><br>";
-		pResponse->strContent += "<a class=\"blue\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?show=invites\">" + gmapLANG_CFG["user_detail_invites"] + "</a><br>";
-		pResponse->strContent += "<a class=\"black\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?show=comments\">" + gmapLANG_CFG["user_detail_comments"] + "</a>";
+		pResponse->strContent += "<a class=\"top_menu\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?show=bookmarks\">" + gmapLANG_CFG["user_detail_bookmarks"] + "</a>";
+		pResponse->strContent += "<a class=\"top_menu\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?show=torrents\">" + gmapLANG_CFG["user_detail_torrents"] + "</a>";
+		pResponse->strContent += "<a class=\"top_menu\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?show=active\">" + gmapLANG_CFG["user_detail_active"] + "</a>";
+		pResponse->strContent += "<a class=\"top_menu\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?show=completed\">" + gmapLANG_CFG["user_detail_completed"] + "</a>";
+		pResponse->strContent += "<a class=\"top_menu\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?show=friends\">" + gmapLANG_CFG["user_detail_friends"] + "</a>";
+		pResponse->strContent += "<a class=\"top_menu\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?show=friendeds\">" + gmapLANG_CFG["user_detail_friendeds"] + "</a>";
+		pResponse->strContent += "<a class=\"top_menu\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?show=invites\">" + gmapLANG_CFG["user_detail_invites"] + "<span class=\"hot\">(" + pRequest->user.strInvites + ")</span></a>";
+		pResponse->strContent += "<a class=\"top_menu\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?show=comments\">" + gmapLANG_CFG["user_detail_comments"] + "</a>";
 		pResponse->strContent += "</div>";
 		
-		pResponse->strContent += "<div class=\"top_tool_left\" style=\"display:none\" id=\"tdTalk\" onMouseOver=\"javascript: showToolLeft('tdTalk','tdTalkTrigger');\" onMouseOut=\"javascript: hideTool(event,'tdTalk','tdTalkTrigger');\">\n";
+		pResponse->strContent += "<div class=\"top_menu_left\" style=\"display:none\" id=\"tdTalk\" onMouseOver=\"javascript: showToolLeft('tdTalk','tdTalkTrigger');\" onMouseOut=\"javascript: hideTool(event,'tdTalk','tdTalkTrigger');\">\n";
 
 //		pResponse->strContent += "<span class=\"top_tool\">" + gmapLANG_CFG["talk_page"] + ": ";
-		pResponse->strContent += "<a class=\"top_talk\" href=\"" + RESPONSE_STR_TALK_HTML + "\">" + gmapLANG_CFG["talk_show_home"] + "</a>";
+		pResponse->strContent += "<a class=\"top_menu\" href=\"" + RESPONSE_STR_TALK_HTML + "\">" + gmapLANG_CFG["talk_show_home"];
 		if( ulHome > 0 )
 			pResponse->strContent += "<span class=\"hot\">(" + vecQueryUser[9] + ")</span>";
 
-		pResponse->strContent += "<br>";
-		pResponse->strContent += "<a class=\"top_talk\" href=\"" + RESPONSE_STR_TALK_HTML + "?show=mentions\">" + gmapLANG_CFG["talk_show_mentions"] + "</a>";
+		pResponse->strContent += "</a>";
+		pResponse->strContent += "<a class=\"top_menu\" href=\"" + RESPONSE_STR_TALK_HTML + "?show=mentions\">" + gmapLANG_CFG["talk_show_mentions"];
 		if( ulMentions > 0 )
 			pResponse->strContent += "<span class=\"hot\">(" + vecQueryUser[10] + ")</span>";
 
-		pResponse->strContent += "<br>";
-		pResponse->strContent += "<a class=\"top_talk\" href=\"" + RESPONSE_STR_TALK_HTML + "?show=tofriend\">" + gmapLANG_CFG["talk_show_tofriend"] + "</a>";
+		pResponse->strContent += "</a>";
+		pResponse->strContent += "<a class=\"top_menu\" href=\"" + RESPONSE_STR_TALK_HTML + "?show=tofriend\">" + gmapLANG_CFG["talk_show_tofriend"] + "</a>";
 
-		pResponse->strContent += "<br>";
-		pResponse->strContent += "<a class=\"top_talk\" href=\"" + RESPONSE_STR_TALK_HTML + "?show=torrents\">" + gmapLANG_CFG["talk_show_torrents"] + "</a>";
+		pResponse->strContent += "<a class=\"top_menu\" href=\"" + RESPONSE_STR_TALK_HTML + "?show=torrents\">" + gmapLANG_CFG["talk_show_torrents"];
 		if( ulTorrents > 0 )
 			pResponse->strContent += "<span class=\"hot\">(" + vecQueryUser[11] + ")</span>";
 
-//		pResponse->strContent += "<br>";
-//		pResponse->strContent += "<a class=\"top_talk\" href=\"" + RESPONSE_STR_TALK_HTML + "?show=all\">" + gmapLANG_CFG["talk_show_all"] + "</a>";
-//		pResponse->strContent += "</span>";
+		pResponse->strContent += "</a>";
+
+		pResponse->strContent += "<a class=\"top_menu\" href=\"" + RESPONSE_STR_TALK_HTML + "?show=requests\">" + gmapLANG_CFG["talk_show_requests"];
+		if( ulRequests > 0 )
+			pResponse->strContent += "<span class=\"hot\">(" + vecQueryUser[12] + ")</span>";
+
+		pResponse->strContent += "</a>";
+
+		pResponse->strContent += "<hr class=\"top_menu\" onMouseOver=\"javascript: showToolLeft('tdTalk','tdTalkTrigger');\"></hr>";
+
+		vector<string> vecChannel;
+		vecChannel.reserve(64);
+		
+		vecChannel = UTIL_SplitToVector( gmapLANG_CFG["talk_channels"], "|" );
+
+		for( vector<string> :: iterator ulKey = vecChannel.begin( ); ulKey != vecChannel.end( ); ulKey++ )
+		{
+			pResponse->strContent += "<a class=\"top_menu\" href=\"" + RESPONSE_STR_TALK_HTML + "?channel=" + UTIL_StringToEscaped( (*ulKey) ) + "\">" + UTIL_RemoveHTML( (*ulKey) ) + "</a>";
+//			pResponse->strContent += "<a href=\"javascript: ;\" onClick=\"javascrip: load('div','divTalk','" + RESPONSE_STR_TALK_HTML + "?show=all');\">" + gmapLANG_CFG["talk_show_all"] + "</a>";
+		}
 
 		pResponse->strContent += "</div>\n";
 
@@ -6298,6 +6591,9 @@ void CTracker :: HTML_Common_Begin( struct request_t *pRequest, struct response_
 			pResponse->strContent += "</div>\n";
 			pResponse->strContent += "<script type=\"text/javascript\">showToolRight('tdMessage','tdMessageTrigger');</script>";
 		}
+
+		if( ulTalk > 0 )
+			pResponse->strContent += "<script type=\"text/javascript\">showToolLeft('tdTalk','tdTalkTrigger');</script>";
 	}
 //	pResponse->strContent += "</td>\n<td class=\"top_info\">";
 	pResponse->strContent += "</tr></table>\n";
@@ -6339,7 +6635,7 @@ void CTracker :: HTML_Common_Begin( struct request_t *pRequest, struct response_
 	
 	time_t now_t = time( 0 );
 
-	if( vecQueryUser.size( ) == 12 )
+	if( vecQueryUser.size( ) == 13 )
 	{
 		last_time_index = UTIL_StringTo64( vecQueryUser[5].c_str( ) );
 		last_time_index_2 = UTIL_StringTo64( vecQueryUser[6].c_str( ) );
@@ -6553,32 +6849,45 @@ void CTracker :: HTML_Common_End( struct request_t *pRequest, struct response_t 
 
 	// Final responses
 	// XML Reset Alert
-	if( m_bFlagXMLAlert )
-	{
-		pResponse->strContent += "<script type=\"text/javascript\">alert(\"" + gmapLANG_CFG["admin_dumping_xml"] + "\")</script>\n\n";
-		m_bFlagXMLAlert = false;
-	}
+//	if( m_bFlagXMLAlert )
+//	{
+//		pResponse->strContent += "<script type=\"text/javascript\">alert(\"" + gmapLANG_CFG["admin_dumping_xml"] + "\")</script>\n\n";
+//		m_bFlagXMLAlert = false;
+//	}
+//
+//	// RSS Reset Alert
+//	if( m_bFlagRSSAlert )
+//	{
+//		pResponse->strContent += "<script type=\"text/javascript\">alert(\"" + gmapLANG_CFG["admin_rss_message"] + "\")</script>\n\n";
+//		m_bFlagRSSAlert = false;
+//	}
+//
+//	// Link Reset Alert
+//	if( m_bFlagNotOwnLinkAlert )
+//	{
+//		pResponse->strContent += "<script type=\"text/javascript\">alert(\"" + gmapLANG_CFG["admin_not_owner"] + "\")</script>\n\n";
+//		m_bFlagNotOwnLinkAlert = false;
+//	}
+//
+//	// HUB Link Reset Alert
+//	if( m_bFlagNotOwnHUBLinkAlert )
+//	{
+//		pResponse->strContent += "<script type=\"text/javascript\">alert(\"" + gmapLANG_CFG["admin_not_owner"] + "\")</script>\n\n";
+//		m_bFlagNotOwnHUBLinkAlert = false;
+//	}
 
-	// RSS Reset Alert
-	if( m_bFlagRSSAlert )
-	{
-		pResponse->strContent += "<script type=\"text/javascript\">alert(\"" + gmapLANG_CFG["admin_rss_message"] + "\")</script>\n\n";
-		m_bFlagRSSAlert = false;
-	}
-
-	// Link Reset Alert
-	if( m_bFlagNotOwnLinkAlert )
-	{
-		pResponse->strContent += "<script type=\"text/javascript\">alert(\"" + gmapLANG_CFG["admin_not_owner"] + "\")</script>\n\n";
-		m_bFlagNotOwnLinkAlert = false;
-	}
-
-	// HUB Link Reset Alert
-	if( m_bFlagNotOwnHUBLinkAlert )
-	{
-		pResponse->strContent += "<script type=\"text/javascript\">alert(\"" + gmapLANG_CFG["admin_not_owner"] + "\")</script>\n\n";
-		m_bFlagNotOwnHUBLinkAlert = false;
-	}
+	pResponse->strContent += "<script type=\"text/javascript\">\n";
+	pResponse->strContent += "<!--\n";
+	pResponse->strContent += "var toolMessage = document.getElementById( 'tdMessage' );\n";
+	pResponse->strContent += "var toolTalk = document.getElementById( 'tdTalk' );\n";
+	pResponse->strContent += "if( toolMessage && toolMessage.style.display==\"\" ) {\n";
+	pResponse->strContent += "  toolMessage.style.display=\"none\";\n";
+	pResponse->strContent += "  showToolRight('tdMessage','tdMessageTrigger'); }\n";
+	pResponse->strContent += "if( toolTalk && toolTalk.style.display==\"\" ) {\n";
+	pResponse->strContent += "  toolTalk.style.display=\"none\";\n";
+	pResponse->strContent += "  showToolLeft('tdTalk','tdTalkTrigger'); }";
+	pResponse->strContent += "//-->\n";
+	pResponse->strContent += "</script>\n\n";
 
 	// Standard page generation time
 	if( m_bGen && ( pRequest->user.ucAccess & m_ucAccessView ) )
@@ -7162,6 +7471,11 @@ CCache :: CCache( )
 	bResetOffers = true;
 	bResetUsers = true;
 	bResort = true;
+	bResort_Seeders = true;
+	bResort_Leechers = true;
+	bResort_Completed = true;
+	bResort_Order = true;
+	bSortNoTop = false;
 	bResortOffers = true;
 	bResortUsers = true;
 	ulSize = 0;
@@ -7194,6 +7508,11 @@ void CCache :: Reset( bool bOffer )
 	{
 		bReset = true;
 		bResort = true;
+		bResort_Seeders = true;
+		bResort_Leechers = true;
+		bResort_Completed = true;
+		bResort_Order = true;
+		bSortNoTop = false;
 	}
 }
 
@@ -7206,15 +7525,15 @@ void CCache :: resetCache( bool bOffer )
 		
 		ulSize = 0;
 	
-		CMySQLQuery *pQuery = new CMySQLQuery( "SELECT bid,bfilename,bname,badded,bsize,bfiles,btag,btitle,bip,buploader,buploaderid,bimdb,bimdbid,bdefault_down,bdefault_up,bfree_down,bfree_up,UNIX_TIMESTAMP(bfree_to),btop,UNIX_TIMESTAMP(btop_to),bclassic,breq,bnodownload,bseeders,bseeders6,bleechers,bleechers6,bcompleted,bcomments,bthanks,bshares,bsubs,bpost FROM allowed ORDER BY bid DESC" );
+		CMySQLQuery *pQuery = new CMySQLQuery( "SELECT bid,bfilename,bname,badded,bsize,bfiles,btag,btitle,bip,buploader,buploaderid,bimdb,bimdbid,bdefault_down,bdefault_up,bfree_down,bfree_up,UNIX_TIMESTAMP(bfree_to),btop,UNIX_TIMESTAMP(btop_to),bclassic,breq,bnodownload,border,bseeders,bseeders6,bleechers,bleechers6,bcompleted,bcomments,bthanks,bshares,bsubs,bpost FROM allowed ORDER BY bid DESC" );
 				
 		vector<string> vecQuery;
 
-		vecQuery.reserve(33);
+		vecQuery.reserve(34);
 
 		vecQuery = pQuery->nextRow( );
 		
-		if( vecQuery.size( ) == 33 )
+		if( vecQuery.size( ) == 34 )
 		{
 			struct tm time_tm;
 			int64 year, month, day, hour, minute, second;
@@ -7238,7 +7557,7 @@ void CCache :: resetCache( bool bOffer )
 
 		unsigned long ulCount = 0;
 
-		while( vecQuery.size( ) == 33 )
+		while( vecQuery.size( ) == 34 )
 		{
 			pTorrents[ulCount].strTag = "101";
 			pTorrents[ulCount].strName = gmapLANG_CFG["unknown"];
@@ -7346,17 +7665,20 @@ void CCache :: resetCache( bool bOffer )
 			if( !vecQuery[22].empty( ) && vecQuery[22] == "1" )
 				pTorrents[ulCount].bAllow = false;
 
-			pTorrents[ulCount].uiSeeders = atoi( vecQuery[23].c_str( ) );
-			pTorrents[ulCount].uiSeeders6 = atoi( vecQuery[24].c_str( ) );
-			pTorrents[ulCount].uiLeechers = atoi( vecQuery[25].c_str( ) );
-			pTorrents[ulCount].uiLeechers6 = atoi( vecQuery[26].c_str( ) );
-			pTorrents[ulCount].ulCompleted = atoi( vecQuery[27].c_str( ) );
-			pTorrents[ulCount].uiComments = atoi( vecQuery[28].c_str( ) );
-			pTorrents[ulCount].uiThanks = atoi( vecQuery[29].c_str( ) );
-			pTorrents[ulCount].uiShares = atoi( vecQuery[30].c_str( ) );
-			pTorrents[ulCount].uiSubs = atoi( vecQuery[31].c_str( ) );
+			if( !vecQuery[23].empty( ) )
+				pTorrents[ulCount].strOrder = vecQuery[23];
 
-			if( !vecQuery[32].empty( ) && vecQuery[32] == "1" )
+			pTorrents[ulCount].uiSeeders = atoi( vecQuery[24].c_str( ) );
+			pTorrents[ulCount].uiSeeders6 = atoi( vecQuery[25].c_str( ) );
+			pTorrents[ulCount].uiLeechers = atoi( vecQuery[26].c_str( ) );
+			pTorrents[ulCount].uiLeechers6 = atoi( vecQuery[27].c_str( ) );
+			pTorrents[ulCount].ulCompleted = atoi( vecQuery[28].c_str( ) );
+			pTorrents[ulCount].uiComments = atoi( vecQuery[29].c_str( ) );
+			pTorrents[ulCount].uiThanks = atoi( vecQuery[30].c_str( ) );
+			pTorrents[ulCount].uiShares = atoi( vecQuery[31].c_str( ) );
+			pTorrents[ulCount].uiSubs = atoi( vecQuery[32].c_str( ) );
+
+			if( !vecQuery[33].empty( ) && vecQuery[33] == "1" )
 				pTorrents[ulCount].bPost = true;
 
 			ulCount++;
@@ -7367,6 +7689,13 @@ void CCache :: resetCache( bool bOffer )
 		delete pQuery;
 	
 		bReset = false;
+		
+		bResort = false;
+		bResort_Seeders = false;
+		bResort_Leechers = false;
+		bResort_Completed = false;
+		bResort_Order = false;
+		bSortNoTop = true;
 		
 		ucSort = SORT_DADDED;
 	}
@@ -7479,6 +7808,8 @@ void CCache :: resetCache( bool bOffer )
 		delete pQuery;
 		
 		bResetOffers = false;
+
+		bResortOffers = false;
 		
 		ucSortOffers = SORT_DADDED;
 	}
@@ -7789,9 +8120,35 @@ time_t CCache :: getLatest( bool bOffer )
 
 void CCache :: sort( const unsigned char cucSort, bool bNoTop, bool bOffer )
 {
-	if( !bOffer && ( cucSort == ucSort ) && ( bNoTop == bSortNoTop ) && !bResort )
-		return;
-	if( bOffer && ( cucSort == ucSortOffers ) && !bResortOffers )
+	if( !bOffer && !bResort && ( cucSort == ucSort ) && ( bNoTop == bSortNoTop ) )
+	{
+		switch( cucSort )
+		{
+		case SORT_ACOMPLETE:
+		case SORT_DCOMPLETE:
+			if( !bResort_Seeders )
+				return;
+			break;
+		case SORT_AINCOMPLETE:
+		case SORT_DINCOMPLETE:
+			if( !bResort_Leechers )
+				return;
+			break;
+		case SORT_ACOMPLETED:
+		case SORT_DCOMPLETED:
+			if( !bResort_Completed )
+				return;
+			break;
+		case SORT_ADEFAULT:
+		case SORT_DDEFAULT:
+			if( !bResort_Order )
+				return;
+			break;
+		default:
+			return;
+		}
+	}
+	if( bOffer && !bResortOffers && ( cucSort == ucSortOffers ) )
 		return;
 	
 	resetCache( bOffer );
@@ -7813,6 +8170,10 @@ void CCache :: sort( const unsigned char cucSort, bool bNoTop, bool bOffer )
 		ucSort = cucSort;
 		bSortNoTop = bNoTop;
 		bResort = false;
+		bResort_Seeders = false;
+		bResort_Leechers = false;
+		bResort_Completed = false;
+		bResort_Order = false;
 	}
 	
 	if( !bNoTop )
@@ -7830,6 +8191,9 @@ void CCache :: sort( const unsigned char cucSort, bool bNoTop, bool bOffer )
 			break;
 		case SORT_AADDED:
 			qsort( pSort, ulKeySize, sizeof( struct torrent_t ), asortByAdded );
+			break;
+		case SORT_ADEFAULT:
+			qsort( pSort, ulKeySize, sizeof( struct torrent_t ), asortByDefault );
 			break;
 		case SORT_ASIZE:
 			qsort( pSort, ulKeySize, sizeof( struct torrent_t ), asortBySize );
@@ -7856,9 +8220,9 @@ void CCache :: sort( const unsigned char cucSort, bool bNoTop, bool bOffer )
 //					if( m_bShowTransferred )
 //						qsort( pSort, ulKeySize, sizeof( struct torrent_t ), asortByTransferred );
 //					break;
-		case SORT_ATAG:
-			qsort( pSort, ulKeySize, sizeof( struct torrent_t ), asortByTag );
-			break;
+//		case SORT_ATAG:
+//			qsort( pSort, ulKeySize, sizeof( struct torrent_t ), asortByTag );
+//			break;
 		case SORT_AUPLOADER:
 			qsort( pSort, ulKeySize, sizeof( struct torrent_t ), asortByUploader );
 			break;
@@ -7877,6 +8241,9 @@ void CCache :: sort( const unsigned char cucSort, bool bNoTop, bool bOffer )
 			break;
 		case SORT_DADDED:
 			qsort( pSort, ulKeySize, sizeof( struct torrent_t ), dsortByAdded );
+			break;
+		case SORT_DDEFAULT:
+			qsort( pSort, ulKeySize, sizeof( struct torrent_t ), dsortByDefault );
 			break;
 		case SORT_DSIZE:
 			qsort( pSort, ulKeySize, sizeof( struct torrent_t ), dsortBySize );
@@ -7903,9 +8270,9 @@ void CCache :: sort( const unsigned char cucSort, bool bNoTop, bool bOffer )
 //					if( m_bShowTransferred )
 //						qsort( pSort, ulKeySize, sizeof( struct torrent_t ), dsortByTransferred );
 //					break;
-		case SORT_DTAG:
-			qsort( pSort, ulKeySize, sizeof( struct torrent_t ), dsortByTag );
-			break;
+//		case SORT_DTAG:
+//			qsort( pSort, ulKeySize, sizeof( struct torrent_t ), dsortByTag );
+//			break;
 		case SORT_DUPLOADER:
 			qsort( pSort, ulKeySize, sizeof( struct torrent_t ), dsortByUploader );
 			break;
@@ -7915,7 +8282,8 @@ void CCache :: sort( const unsigned char cucSort, bool bNoTop, bool bOffer )
 //					break;
 		default:
 			// default action is to sort by added if we can
-			qsort( pSort, ulKeySize, sizeof( struct torrent_t ), dsortByAdded );
+//			qsort( pSort, ulKeySize, sizeof( struct torrent_t ), dsortByAdded );
+			qsort( pSort, ulKeySize, sizeof( struct torrent_t ), dsortByDefault );
 		}
 	}
 	else
@@ -7935,6 +8303,9 @@ void CCache :: sort( const unsigned char cucSort, bool bNoTop, bool bOffer )
 		case SORT_AADDED:
 			qsort( pSort, ulKeySize, sizeof( struct torrent_t ), asortByAddedNoTop );
 			break;
+		case SORT_ADEFAULT:
+			qsort( pSort, ulKeySize, sizeof( struct torrent_t ), asortByDefaultNoTop );
+			break;
 		case SORT_ASIZE:
 			qsort( pSort, ulKeySize, sizeof( struct torrent_t ), asortBySizeNoTop );
 			break;
@@ -7947,9 +8318,9 @@ void CCache :: sort( const unsigned char cucSort, bool bNoTop, bool bOffer )
 		case SORT_ACOMPLETED:
 			qsort( pSort, ulKeySize, sizeof( struct torrent_t ), asortByCompletedNoTop );
 			break;
-		case SORT_ATAG:
-			qsort( pSort, ulKeySize, sizeof( struct torrent_t ), asortByTagNoTop );
-			break;
+//		case SORT_ATAG:
+//			qsort( pSort, ulKeySize, sizeof( struct torrent_t ), asortByTagNoTop );
+//			break;
 		case SORT_AUPLOADER:
 			qsort( pSort, ulKeySize, sizeof( struct torrent_t ), asortByUploaderNoTop );
 			break;
@@ -7965,6 +8336,9 @@ void CCache :: sort( const unsigned char cucSort, bool bNoTop, bool bOffer )
 		case SORT_DADDED:
 			qsort( pSort, ulKeySize, sizeof( struct torrent_t ), dsortByAddedNoTop );
 			break;
+		case SORT_DDEFAULT:
+			qsort( pSort, ulKeySize, sizeof( struct torrent_t ), dsortByDefaultNoTop );
+			break;
 		case SORT_DSIZE:
 			qsort( pSort, ulKeySize, sizeof( struct torrent_t ), dsortBySizeNoTop );
 			break;
@@ -7977,15 +8351,16 @@ void CCache :: sort( const unsigned char cucSort, bool bNoTop, bool bOffer )
 		case SORT_DCOMPLETED:
 			qsort( pSort, ulKeySize, sizeof( struct torrent_t ), dsortByCompletedNoTop );
 			break;
-		case SORT_DTAG:
-			qsort( pSort, ulKeySize, sizeof( struct torrent_t ), dsortByTagNoTop );
-			break;
+//		case SORT_DTAG:
+//			qsort( pSort, ulKeySize, sizeof( struct torrent_t ), dsortByTagNoTop );
+//			break;
 		case SORT_DUPLOADER:
 			qsort( pSort, ulKeySize, sizeof( struct torrent_t ), dsortByUploaderNoTop );
 			break;
 		default:
 			// default action is to sort by added if we can
-			qsort( pSort, ulKeySize, sizeof( struct torrent_t ), dsortByAddedNoTop );
+//			qsort( pSort, ulKeySize, sizeof( struct torrent_t ), dsortByAddedNoTop );
+			qsort( pSort, ulKeySize, sizeof( struct torrent_t ), dsortByDefaultNoTop );
 		}
 	}
 }
@@ -8000,17 +8375,17 @@ void CCache :: setRow( const string &cstrID, bool bOffer )
 		{
 			if( pTorrents[ulKey].strID == cstrID )
 			{
-				CMySQLQuery *pQuery = new CMySQLQuery( "SELECT bid,bfilename,bname,badded,bsize,bfiles,btag,btitle,bip,buploader,buploaderid,bimdb,bimdbid,bdefault_down,bdefault_up,bfree_down,bfree_up,UNIX_TIMESTAMP(bfree_to),btop,UNIX_TIMESTAMP(btop_to),bclassic,breq,bnodownload,bseeders,bseeders6,bleechers,bleechers6,bcompleted,bcomments,bthanks,bshares,bsubs,bpost FROM allowed WHERE bid=" + cstrID );
+				CMySQLQuery *pQuery = new CMySQLQuery( "SELECT bid,bfilename,bname,badded,bsize,bfiles,btag,btitle,bip,buploader,buploaderid,bimdb,bimdbid,bdefault_down,bdefault_up,bfree_down,bfree_up,UNIX_TIMESTAMP(bfree_to),btop,UNIX_TIMESTAMP(btop_to),bclassic,breq,bnodownload,border,bseeders,bseeders6,bleechers,bleechers6,bcompleted,bcomments,bthanks,bshares,bsubs,bpost FROM allowed WHERE bid=" + cstrID );
 				
 				vector<string> vecQuery;
 
-				vecQuery.reserve(33);
+				vecQuery.reserve(34);
 
 				vecQuery = pQuery->nextRow( );
 				
 				delete pQuery;
 
-				if( vecQuery.size( ) == 33 )
+				if( vecQuery.size( ) == 34 )
 				{
 					pTorrents[ulKey].strTag = "101";
 					pTorrents[ulKey].strName = gmapLANG_CFG["unknown"];
@@ -8118,17 +8493,20 @@ void CCache :: setRow( const string &cstrID, bool bOffer )
 					if( !vecQuery[22].empty( ) && vecQuery[22] == "1" )
 						pTorrents[ulKey].bAllow = false;
 
-					pTorrents[ulKey].uiSeeders = atoi( vecQuery[23].c_str( ) );
-					pTorrents[ulKey].uiSeeders6 = atoi( vecQuery[24].c_str( ) );
-					pTorrents[ulKey].uiLeechers = atoi( vecQuery[25].c_str( ) );
-					pTorrents[ulKey].uiLeechers6 = atoi( vecQuery[26].c_str( ) );
-					pTorrents[ulKey].ulCompleted = atoi( vecQuery[27].c_str( ) );
-					pTorrents[ulKey].uiComments = atoi( vecQuery[28].c_str( ) );
-					pTorrents[ulKey].uiThanks = atoi( vecQuery[29].c_str( ) );
-					pTorrents[ulKey].uiShares = atoi( vecQuery[30].c_str( ) );
-					pTorrents[ulKey].uiSubs = atoi( vecQuery[31].c_str( ) );
+					if( !vecQuery[23].empty( ) )
+						pTorrents[ulKey].strOrder = vecQuery[23];
+					
+					pTorrents[ulKey].uiSeeders = atoi( vecQuery[24].c_str( ) );
+					pTorrents[ulKey].uiSeeders6 = atoi( vecQuery[25].c_str( ) );
+					pTorrents[ulKey].uiLeechers = atoi( vecQuery[26].c_str( ) );
+					pTorrents[ulKey].uiLeechers6 = atoi( vecQuery[27].c_str( ) );
+					pTorrents[ulKey].ulCompleted = atoi( vecQuery[28].c_str( ) );
+					pTorrents[ulKey].uiComments = atoi( vecQuery[29].c_str( ) );
+					pTorrents[ulKey].uiThanks = atoi( vecQuery[30].c_str( ) );
+					pTorrents[ulKey].uiShares = atoi( vecQuery[31].c_str( ) );
+					pTorrents[ulKey].uiSubs = atoi( vecQuery[32].c_str( ) );
 
-					if( !vecQuery[32].empty( ) && vecQuery[32] == "1" )
+					if( !vecQuery[33].empty( ) && vecQuery[33] == "1" )
 						pTorrents[ulKey].bPost = true;
 				}
 				break;
@@ -8236,44 +8614,58 @@ void CCache :: setActive( const string &cstrID, const unsigned char cucOpt )
 			{
 			case SET_SEEDER_ADD:
 				pTorrents[ulKey].uiSeeders++;
+				bResort_Seeders = true;
 				break;
 			case SET_SEEDER_ADD_V6:
 				pTorrents[ulKey].uiSeeders6++;
+//				bResort_Seeders = true;
 				break;
 			case SET_SEEDER_ADD_BOTH:
 				pTorrents[ulKey].uiSeeders++;
 				pTorrents[ulKey].uiSeeders6++;
+				bResort_Seeders = true;
 				break;
 			case SET_SEEDER_MINUS:
 				if( pTorrents[ulKey].uiSeeders > 0 )
+				{
 					pTorrents[ulKey].uiSeeders--;
+					bResort_Seeders = true;
+				}
 				break;
 			case SET_SEEDER_MINUS_BOTH:
 				if( pTorrents[ulKey].uiSeeders > 0 )
 				{
 					pTorrents[ulKey].uiSeeders--;
 					pTorrents[ulKey].uiSeeders6--;
+					bResort_Seeders = true;
 				}
 				break;
 			case SET_LEECHER_ADD:
 				pTorrents[ulKey].uiLeechers++;
+				bResort_Leechers = true;
 				break;
 			case SET_LEECHER_ADD_V6:
 				pTorrents[ulKey].uiLeechers6++;
+//				bResort_Leechers = true;
 				break;
 			case SET_LEECHER_ADD_BOTH:
 				pTorrents[ulKey].uiLeechers++;
 				pTorrents[ulKey].uiLeechers6++;
+				bResort_Leechers = true;
 				break;
 			case SET_LEECHER_MINUS:
 				if( pTorrents[ulKey].uiLeechers > 0 )
+				{
 					pTorrents[ulKey].uiLeechers--;
+					bResort_Leechers = true;
+				}
 				break;
 			case SET_LEECHER_MINUS_BOTH:
 				if( pTorrents[ulKey].uiLeechers > 0 )
 				{
 					pTorrents[ulKey].uiLeechers--;
 					pTorrents[ulKey].uiLeechers6--;
+					bResort_Leechers = true;
 				}
 				break;
 			case SET_SEEDER_A_LEECHER_M:
@@ -8281,6 +8673,10 @@ void CCache :: setActive( const string &cstrID, const unsigned char cucOpt )
 				{
 					pTorrents[ulKey].uiSeeders++;
 					pTorrents[ulKey].uiLeechers--;
+					pTorrents[ulKey].ulCompleted++;
+					bResort_Seeders = true;
+					bResort_Leechers = true;
+					bResort_Completed = true;
 				}
 				break;
 			case SET_SEEDER_A_LEECHER_M_BOTH:
@@ -8290,12 +8686,16 @@ void CCache :: setActive( const string &cstrID, const unsigned char cucOpt )
 					pTorrents[ulKey].uiSeeders6++;
 					pTorrents[ulKey].uiLeechers--;
 					pTorrents[ulKey].uiLeechers6--;
+					pTorrents[ulKey].ulCompleted++;
+					bResort_Seeders = true;
+					bResort_Leechers = true;
+					bResort_Completed = true;
 				}
 			}
 			break;
 		}
 	}
-	bResort = true;
+//	bResort = true;
 }
 
 void CCache :: setCompleted( const string &cstrID, const unsigned char cucOpt )
@@ -8310,15 +8710,19 @@ void CCache :: setCompleted( const string &cstrID, const unsigned char cucOpt )
 			{
 			case SET_COMPLETED_ADD:
 				pTorrents[ulKey].ulCompleted++;
+				bResort_Completed = true;
 				break;
 			case SET_COMPLETED_MINUS:
 				if( pTorrents[ulKey].ulCompleted > 0 )
+				{
 					pTorrents[ulKey].ulCompleted--;
+					bResort_Completed = true;
+				}
 			}
 			break;
 		}
 	}
-	bResort = true;
+//	bResort = true;
 }
 
 void CCache :: setStatus( const string &cstrID, const unsigned char cucOpt )
@@ -8537,6 +8941,79 @@ void CCache :: setLatest( const string &cstrAdded, bool bOffer )
 		tLatest = mktime(&time_tm);
 }
 
+void CCache :: setOrder( const string &cstrID, const string &cstrOrder, const unsigned char cucOpt )
+{
+	resetCache( );
+	
+	for( unsigned long ulKey = 0; ulKey < ulSize; ulKey++ )
+	{
+		if( pTorrents[ulKey].strID == cstrID )
+		{
+			switch( cucOpt )
+			{
+			case SET_SEEDER_ADD:
+				pTorrents[ulKey].uiSeeders++;
+				bResort_Seeders = true;
+				pTorrents[ulKey].bReq = false;
+				if( !cstrOrder.empty( ) )
+				{
+					pTorrents[ulKey].strOrder = cstrOrder;
+					bResort_Order = true;
+				}
+				break;
+			case SET_SEEDER_ADD_BOTH:
+				pTorrents[ulKey].uiSeeders++;
+				pTorrents[ulKey].uiSeeders6++;
+				bResort_Seeders = true;
+				pTorrents[ulKey].bReq = false;
+				if( !cstrOrder.empty( ) )
+				{
+					pTorrents[ulKey].strOrder = cstrOrder;
+					bResort_Order = true;
+				}
+				break;
+			case SET_SEEDER_A_LEECHER_M:
+				if( pTorrents[ulKey].uiLeechers > 0 )
+				{
+					pTorrents[ulKey].uiSeeders++;
+					pTorrents[ulKey].uiLeechers--;
+					pTorrents[ulKey].ulCompleted++;
+					bResort_Seeders = true;
+					bResort_Leechers = true;
+					bResort_Completed = true;
+					pTorrents[ulKey].bReq = false;
+					if( !cstrOrder.empty( ) )
+					{
+						pTorrents[ulKey].strOrder = cstrOrder;
+						bResort_Order = true;
+					}
+				}
+				break;
+			case SET_SEEDER_A_LEECHER_M_BOTH:
+				if( pTorrents[ulKey].uiLeechers > 0 )
+				{
+					pTorrents[ulKey].uiSeeders++;
+					pTorrents[ulKey].uiSeeders6++;
+					pTorrents[ulKey].uiLeechers--;
+					pTorrents[ulKey].uiLeechers6--;
+					pTorrents[ulKey].ulCompleted++;
+					bResort_Seeders = true;
+					bResort_Leechers = true;
+					bResort_Completed = true;
+					pTorrents[ulKey].bReq = false;
+					if( !cstrOrder.empty( ) )
+					{
+						pTorrents[ulKey].strOrder = cstrOrder;
+						bResort_Order = true;
+					}
+				}
+			}
+			break;
+		}
+	}
+//	bResort = true;
+}
+
 void CCache :: resetCacheUsers( )
 {
 	if( bResetUsers )
@@ -8630,6 +9107,8 @@ void CCache :: resetCacheUsers( )
 		
 		bResetUsers = false;
 		
+		bResortUsers = false;
+
 		ucSortUsers = SORTU_DCREATED;
 	}
 }

@@ -807,7 +807,8 @@ void CTracker :: serverResponseAnnounce( struct request_t *pRequest,struct respo
 					pAdd->setItem( "peer id", new CAtomString( vecQuery[0] ) );
 					pAdd->setItem( "ip", new CAtomString( vecQuery[1] ) );
 					pAdd->setItem( "port", new CAtomLong( (long)atoi( vecQuery[3].c_str( ) ) ) );
-					pAdd->setItem( "key", new CAtomLong( (long)atoi( vecQuery[4].c_str( ) ) ) );
+//					pAdd->setItem( "key", new CAtomLong( (long)atoi( vecQuery[4].c_str( ) ) ) );
+					pAdd->setItem( "key", new CAtomString( vecQuery[4] ) );
 
 					pCacheList->addItem( pAdd );
 				}
@@ -819,7 +820,8 @@ void CTracker :: serverResponseAnnounce( struct request_t *pRequest,struct respo
 					pAdd->setItem( "peer id", new CAtomString( vecQuery[0] ) );
 					pAdd->setItem( "ip", new CAtomString( vecQuery[2] ) );
 					pAdd->setItem( "port", new CAtomLong( (long)atoi( vecQuery[3].c_str( ) ) ) );
-					pAdd->setItem( "key", new CAtomLong( (long)atoi( vecQuery[4].c_str( ) ) ) );
+//					pAdd->setItem( "key", new CAtomLong( (long)atoi( vecQuery[4].c_str( ) ) ) );
+					pAdd->setItem( "key", new CAtomString( vecQuery[4] ) );
 
 					pCacheList->addItem( pAdd );
 				}
@@ -841,123 +843,128 @@ void CTracker :: serverResponseAnnounce( struct request_t *pRequest,struct respo
 
 			CAtom *pPeers = 0;
 
-			if( cstrCompact == "1" && !CFG_GetInt( "bnbt_ipv6_enable", 1 ) )
-			{
-				// compact announce
-
-				string strPeers = string( );
-
-				vector<CAtom *> *pvecList = pCacheList->getValuePtr( );
-
-				CAtom *pIP = 0;
-				CAtom *pPort = 0;
-
-				bool bOK = false;
-
-				char pCompact[6];
-// 				char szIP[16];
-				char szIP[INET6_ADDRSTRLEN];
-				char *szCur = 0;
-				char *pSplit = 0;
-
-				unsigned int uiPort = 0;
-
-				for( vector<CAtom *> :: iterator it = pvecList->begin( ); it != pvecList->end( ); )
-				{
-					if( (*it)->isDicti( ) )
-					{
-						if( strPeers.size( ) / 6 >= uiRSize )
-							break;
-
-						pIP = ( (CAtomDicti *)(*it) )->getItem( "ip" );
-						pPort = ( (CAtomDicti *)(*it) )->getItem( "port" );
-
-						if( pIP && pPort && dynamic_cast<CAtomLong *>( pPort ) )
-						{
-							// tphogan - this is a much more efficient version of UTIL_Compact
-
-							bOK = true;
-
-							memset( pCompact, 0, sizeof( pCompact ) / sizeof( char ) );
-
-							memset( szIP, 0, sizeof( szIP ) / sizeof( char ) );
-
-							szCur = szIP;
-
-							strncpy( szIP, pIP->toString( ).c_str( ), sizeof( szIP ) / sizeof( char ) );
-
-							// first three octets
-							for( unsigned char ucCount = 0; ucCount < 3; ucCount++ )
-							{
-								pSplit = (char *)strstr( szCur, "." );
-
-								if( pSplit )
-								{
-									*pSplit = TERM_CHAR;
-									pCompact[ucCount] = (char)atoi( szCur );
-									szCur = pSplit + 1;
-								}
-								else
-								{
-									bOK = false;
-
-									break;
-								}
-							}
-
-							if( bOK )
-							{
-								// fourth octet
-								pCompact[3] = (char)atoi( szCur );
-
-								// port
-								uiPort = (unsigned int)dynamic_cast<CAtomLong *>( pPort )->getValue( );
-
-#ifdef BNBT_BIG_ENDIAN
-								pCompact[5] = (char)( ( uiPort & 0xFF00 ) >> 8 );
-								pCompact[4] = (char)( uiPort & 0xFF );
-#else
-								pCompact[4] = (char)( ( uiPort & 0xFF00 ) >> 8 );
-								pCompact[5] = (char)( uiPort & 0xFF );
-#endif
-
-								strPeers += string( pCompact, 6 );
-							}
-						}
-
-						delete *it;
-
-						it = pvecList->erase( it );
-					}
-					else
-						it++;
-				}
-
-				pPeers = new CAtomString( strPeers );
-
-				// don't compress
-				pResponse->bCompressOK = false;
-
-				gtXStats.announce.iCompact++;
-			}
-			else
-			{
+//			if( cstrCompact == "1" && !CFG_GetInt( "bnbt_ipv6_enable", 1 ) )
+//			{
+//				// compact announce
+//
+//				string strPeers = string( );
+//
+//				vector<CAtom *> *pvecList = pCacheList->getValuePtr( );
+//
+//				CAtom *pIP = 0;
+//				CAtom *pPort = 0;
+//
+//				bool bOK = false;
+//
+//				char pCompact[6];
+//// 				char szIP[16];
+//				char szIP[INET6_ADDRSTRLEN];
+//				char *szCur = 0;
+//				char *pSplit = 0;
+//
+//				unsigned int uiPort = 0;
+//
+//				for( vector<CAtom *> :: iterator it = pvecList->begin( ); it != pvecList->end( ); )
+//				{
+//					if( (*it)->isDicti( ) )
+//					{
+//						if( strPeers.size( ) / 6 >= uiRSize )
+//							break;
+//
+//						pIP = ( (CAtomDicti *)(*it) )->getItem( "ip" );
+//						pPort = ( (CAtomDicti *)(*it) )->getItem( "port" );
+//
+//						if( pIP && pPort && dynamic_cast<CAtomLong *>( pPort ) )
+//						{
+//							// tphogan - this is a much more efficient version of UTIL_Compact
+//
+//							bOK = true;
+//
+//							memset( pCompact, 0, sizeof( pCompact ) / sizeof( char ) );
+//
+//							memset( szIP, 0, sizeof( szIP ) / sizeof( char ) );
+//
+//							szCur = szIP;
+//
+//							strncpy( szIP, pIP->toString( ).c_str( ), sizeof( szIP ) / sizeof( char ) );
+//
+//							// first three octets
+//							for( unsigned char ucCount = 0; ucCount < 3; ucCount++ )
+//							{
+//								pSplit = (char *)strstr( szCur, "." );
+//
+//								if( pSplit )
+//								{
+//									*pSplit = TERM_CHAR;
+//									pCompact[ucCount] = (char)atoi( szCur );
+//									szCur = pSplit + 1;
+//								}
+//								else
+//								{
+//									bOK = false;
+//
+//									break;
+//								}
+//							}
+//
+//							if( bOK )
+//							{
+//								// fourth octet
+//								pCompact[3] = (char)atoi( szCur );
+//
+//								// port
+//								uiPort = (unsigned int)dynamic_cast<CAtomLong *>( pPort )->getValue( );
+//
+//#ifdef BNBT_BIG_ENDIAN
+//								pCompact[5] = (char)( ( uiPort & 0xFF00 ) >> 8 );
+//								pCompact[4] = (char)( uiPort & 0xFF );
+//#else
+//								pCompact[4] = (char)( ( uiPort & 0xFF00 ) >> 8 );
+//								pCompact[5] = (char)( uiPort & 0xFF );
+//#endif
+//
+//								strPeers += string( pCompact, 6 );
+//							}
+//						}
+//
+//						delete *it;
+//
+//						it = pvecList->erase( it );
+//					}
+//					else
+//						it++;
+//				}
+//
+//				pPeers = new CAtomString( strPeers );
+//
+//				// don't compress
+//				pResponse->bCompressOK = false;
+//
+//				gtXStats.announce.iCompact++;
+//			}
+//			else
+//			{
 				// regular announce
 
 				CAtomList *pPeersList = new CAtomList( );
 
 				vector<CAtom *> *pvecList = pCacheList->getValuePtr( );
 
+				unsigned int uiAdded = 0;
+
 				for( vector<CAtom *> :: iterator it = pvecList->begin( ); it != pvecList->end( ); )
 				{
 					if( (*it)->isDicti( ) )
 					{
-						if( pPeersList->getValuePtr( )->size( ) < uiRSize )
+//						if( pPeersList->getValuePtr( )->size( ) < uiRSize )
+						if( uiAdded < uiRSize )
 						{
 							if( cstrNoPeerID == "1" )
 								( (CAtomDicti *)(*it) )->delItem( "peer id" );
 
 							pPeersList->addItem( new CAtomDicti( *(CAtomDicti *)(*it) ) );
+
+							uiAdded++;
 						}
 
 						delete *it;
@@ -974,7 +981,7 @@ void CTracker :: serverResponseAnnounce( struct request_t *pRequest,struct respo
 					gtXStats.announce.iNopeerid++;
 				else
 					gtXStats.announce.iRegular++;
-			}
+//			}
 			
 			delete pCacheList;
 

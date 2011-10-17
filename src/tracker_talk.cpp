@@ -499,6 +499,14 @@ void CTracker :: serverResponseTalkGET( struct request_t *pRequest, struct respo
 //		pResponse->strContent += "  xmlhttp.send();\n";
 //		pResponse->strContent += "}\n\n";
 		
+		// reply
+//		pResponse->strContent += "function reply(talkId,replyId,replytoId,formId,textareaId,inputId) {\n";
+		pResponse->strContent += "function reply_main(content,textareaId) {\n";
+		pResponse->strContent += "  var textarea = document.getElementById( textareaId );\n";
+		pResponse->strContent += "  textarea.focus();\n";
+		pResponse->strContent += "  textarea.value = content;\n";
+		pResponse->strContent += "}\n\n";
+
 		// load
 		pResponse->strContent += "function load(tag,id,url,timeoutId) {\n";
 		pResponse->strContent += "  var loadElement = document.getElementById( id );\n";
@@ -802,6 +810,7 @@ void CTracker :: serverResponseTalkGET( struct request_t *pRequest, struct respo
 		string strUID( pRequest->mapParams["uid"] );
 		string strTalkID( pRequest->mapParams["id"] );
 		string strTorrentID( pRequest->mapParams["tid"] );
+		string strChannel( pRequest->mapParams["channel"] );
 		const string cstrTag( pRequest->mapParams["tag"] );
 		const string cstrTalk( pRequest->mapParams["talk"] );
 		const string cstrShow( pRequest->mapParams["show"] );
@@ -820,6 +829,9 @@ void CTracker :: serverResponseTalkGET( struct request_t *pRequest, struct respo
 		if( strTorrentID.find_first_not_of( "1234567890" ) != string :: npos )
 			strTorrentID.erase( );
 		
+//		if( strChannel.empty( ) )
+//			strChannel = gmapLANG_CFG["talk_channel_default"];
+
 //		string strReply( pRequest->mapParams["reply"] );
 //		string strRT( pRequest->mapParams["rt"] );
 //		
@@ -849,6 +861,10 @@ void CTracker :: serverResponseTalkGET( struct request_t *pRequest, struct respo
 	//			if( !strRT.empty( ) )
 					pResponse->strContent += "<input id=\"inputRT\" type=\"hidden\" name=\"rt\" value=\"\">\n";
 					pResponse->strContent += "<input id=\"inputRTTo\" type=\"hidden\" name=\"rtto\" value=\"\">\n";
+//				if( !strChannel.empty( ) )
+//					pResponse->strContent += "<input type=\"hidden\" name=\"channel\" value=\"" + strChannel + "\">\n";
+//				else if( cstrShow == "requests" )
+//					pResponse->strContent += "<input type=\"hidden\" name=\"channel\" value=\"" + gmapLANG_CFG["talk_channel_requests"] + "\">\n";
 				if( !strUID.empty( ) )
 					pResponse->strContent += "<input type=\"hidden\" name=\"uid\" value=\"" + strUID + "\">\n";
 				if( !cstrShow.empty( ) )
@@ -863,6 +879,21 @@ void CTracker :: serverResponseTalkGET( struct request_t *pRequest, struct respo
 				pResponse->strContent += "<tr class=\"talk_table_post\">\n";
 				pResponse->strContent += "<td class=\"talk_table_header\">\n";
 				pResponse->strContent += "<span class=\"talk_table_header\">" + gmapLANG_CFG["talk"] + ":</span>";
+				vector<string> vecChannel;
+				vecChannel.reserve(64);
+				
+				vecChannel = UTIL_SplitToVector( gmapLANG_CFG["talk_channels"], "|" );
+
+				pResponse->strContent += "<span class=\"talk_table_channel\">" + gmapLANG_CFG["talk_channel"] + "</span>";
+				pResponse->strContent += "<select name=\"channel\">";
+				for( vector<string> :: iterator ulKey = vecChannel.begin( ); ulKey != vecChannel.end( ); ulKey++ )
+				{
+					pResponse->strContent += "<option value=\"" + (*ulKey) + "\"";
+					if( strChannel == (*ulKey) || ( cstrShow == "requests" && (*ulKey) == gmapLANG_CFG["talk_channel_requests"] ) )
+						pResponse->strContent += " selected";
+					pResponse->strContent += ">" + UTIL_RemoveHTML( (*ulKey) ) + "\n";
+				}
+				pResponse->strContent += "</select>\n";
 				pResponse->strContent += "</td>\n";
 				pResponse->strContent += "<td class=\"talk_table_count\">\n";
 				pResponse->strContent += "<input name=\"clear_talk_button\" id=\"clear_talk\" alt=\"[" + gmapLANG_CFG["talk_clear"] + "]\" type=button value=\"" + gmapLANG_CFG["talk_clear"] + "\" onClick=\"javascript: clearAll();\">\n";
@@ -911,7 +942,8 @@ void CTracker :: serverResponseTalkGET( struct request_t *pRequest, struct respo
 				
 				pResponse->strContent += "<tr class=\"talk_table_post\">\n";
 				pResponse->strContent += "<td class=\"talk_table_tag\">\n";
-				pResponse->strContent += "<a class=\"talk_tag\" href=\"javascript: ;\" onclick=\"javascript: insert_tag('talkarea');\">" + gmapLANG_CFG["talk_tag_add"] + "</a></td>";
+				pResponse->strContent += "<a class=\"talk_tag\" href=\"javascript: ;\" onClick=\"javascript: insert_tag('talkarea');\">" + gmapLANG_CFG["talk_tag_add"] + "</a></td>\n";
+					
 				pResponse->strContent += "<td class=\"talk_table_post\">\n";
 				pResponse->strContent += "<div class=\"talk_table_post_button\">\n";
 				pResponse->strContent += "<span id=\"talk_hint\" class=\"talk_table_hint\"></span>\n";
@@ -936,7 +968,7 @@ void CTracker :: serverResponseTalkGET( struct request_t *pRequest, struct respo
 			pResponse->strContent += "<p class=\"denied\">" + gmapLANG_CFG["talk_post_disallowed"] + "</p>\n";
 		
 		pResponse->strContent += "</td>\n";
-		pResponse->strContent += "<td class=\"talk_table_right\" rowspan=2>\n";
+		pResponse->strContent += "<td class=\"talk_table_right\" rowspan=3>\n";
 		pResponse->strContent += "<table class=\"talk_table_right\">\n";
 		pResponse->strContent += "<tr class=\"talk_table_user\">\n";
 		pResponse->strContent += "<td class=\"talk_table_user\">\n";
@@ -996,13 +1028,13 @@ void CTracker :: serverResponseTalkGET( struct request_t *pRequest, struct respo
 		pResponse->strContent += "</td>\n";
 		pResponse->strContent += "</tr>\n";
 		pResponse->strContent += "<tr class=\"talk_table_cat\">\n";
-		pResponse->strContent += "<td class=\"talk_table_cat\">\n";
+		pResponse->strContent += "<td class=\"talk_table_cat\" id=\"tdTalkCat\">\n";
 
-		CMySQLQuery *pQueryUser = new CMySQLQuery( "SELECT btalk,btalkref,btalktorrent FROM users WHERE buid=" + pRequest->user.strUID );
+		CMySQLQuery *pQueryUser = new CMySQLQuery( "SELECT btalk,btalkref,btalktorrent,btalkrequest FROM users WHERE buid=" + pRequest->user.strUID );
 				
 		vector<string> vecQueryUser;
 	
-		vecQueryUser.reserve(3);
+		vecQueryUser.reserve(4);
 		
 		vecQueryUser = pQueryUser->nextRow( );
 		
@@ -1010,13 +1042,14 @@ void CTracker :: serverResponseTalkGET( struct request_t *pRequest, struct respo
 
 		string strTalkCat = string( );
 		
-		if( vecQueryUser.size( ) == 3 )
+		if( vecQueryUser.size( ) == 4 )
 		{
-		
 			pResponse->strContent += "<a id=\"talk_home\" class=\"talk_cat";
-			if( cstrShow.empty( ) && cstrTag.empty( ) && strUID.empty( ) && strTalkID.empty( ) && strTorrentID.empty( ) )
+			if( cstrShow.empty( ) && strChannel.empty( ) && cstrTag.empty( ) && strUID.empty( ) && strTalkID.empty( ) && strTorrentID.empty( ) )
+			{
 				strTalkCat = "talk_home";
-//				pResponse->strContent += "_selected";
+				pResponse->strContent += "_selected";
+			}
 			pResponse->strContent += "\" href=\"" + RESPONSE_STR_TALK_HTML + "\">" + gmapLANG_CFG["talk_show_home"];
 	//				pResponse->strContent += "<a href=\"javascript: ;\" onClick=\"javascrip: load('div','divTalk','" + RESPONSE_STR_TALK_HTML + "');\">" + gmapLANG_CFG["talk_show_home"] + "</a>";
 			if( vecQueryUser[0] != "0" )
@@ -1025,8 +1058,10 @@ void CTracker :: serverResponseTalkGET( struct request_t *pRequest, struct respo
 		
 			pResponse->strContent += "<a id=\"talk_mentions\" class=\"talk_cat";
 			if( cstrShow == "mentions" )
+			{
 				strTalkCat = "talk_mentions";
-//				pResponse->strContent += "_selected";
+				pResponse->strContent += "_selected";
+			}
 			pResponse->strContent += "\" href=\"" + RESPONSE_STR_TALK_HTML + "?show=mentions\">" + gmapLANG_CFG["talk_show_mentions"];
 	//				pResponse->strContent += "<a href=\"javascript: ;\" onClick=\"javascrip: load('div','divTalk','" + RESPONSE_STR_TALK_HTML + "?show=mentions');\">" + gmapLANG_CFG["talk_show_mentions"] + "</a>";
 			if( vecQueryUser[1] != "0" )
@@ -1035,30 +1070,62 @@ void CTracker :: serverResponseTalkGET( struct request_t *pRequest, struct respo
 			
 			pResponse->strContent += "<a id=\"talk_tofriend\" class=\"talk_cat";
 			if( cstrShow == "tofriend" )
+			{
 				strTalkCat = "talk_tofriend";
-//				pResponse->strContent += "_selected";
+				pResponse->strContent += "_selected";
+			}
 			pResponse->strContent += "\" href=\"" + RESPONSE_STR_TALK_HTML + "?show=tofriend\">" + gmapLANG_CFG["talk_show_tofriend"];
 	//				pResponse->strContent += "<a href=\"javascript: ;\" onClick=\"javascrip: load('div','divTalk','" + RESPONSE_STR_TALK_HTML + "?show=tofriend');\">" + gmapLANG_CFG["talk_show_tofriend"] + "</a>";
 			pResponse->strContent += "</a>";
 
 			pResponse->strContent += "<a id=\"talk_torrents\" class=\"talk_cat";
 			if( cstrShow == "torrents" )
+			{
 				strTalkCat = "talk_torrents";
-//				pResponse->strContent += "_selected";
+				pResponse->strContent += "_selected";
+			}
 			pResponse->strContent += "\" href=\"" + RESPONSE_STR_TALK_HTML + "?show=torrents\">" + gmapLANG_CFG["talk_show_torrents"];
 	//				pResponse->strContent += "<a href=\"javascript: ;\" onClick=\"javascrip: load('div','divTalk','" + RESPONSE_STR_TALK_HTML + "?show=mentions');\">" + gmapLANG_CFG["talk_show_mentions"] + "</a>";
 			if( vecQueryUser[2] != "0" )
 				pResponse->strContent += "<span class=\"hot\">(" + vecQueryUser[2] + ")</span>";
 			pResponse->strContent += "</a>";
 			
-			pResponse->strContent += "<a id=\"talk_all\" class=\"talk_cat";
-			if( cstrShow == "all" )
-				strTalkCat = "talk_all";
-//				pResponse->strContent += "_selected";
-			pResponse->strContent += "\" href=\"" + RESPONSE_STR_TALK_HTML + "?show=all\">" + gmapLANG_CFG["talk_show_all"] + "</a>";
-	//				pResponse->strContent += "<a href=\"javascript: ;\" onClick=\"javascrip: load('div','divTalk','" + RESPONSE_STR_TALK_HTML + "?show=all');\">" + gmapLANG_CFG["talk_show_all"] + "</a>";
-
+			pResponse->strContent += "<a id=\"talk_requests\" class=\"talk_cat";
+			if( cstrShow == "requests" )
+			{
+				strTalkCat = "talk_requests";
+				pResponse->strContent += "_selected";
+			}
+			pResponse->strContent += "\" href=\"" + RESPONSE_STR_TALK_HTML + "?show=requests\">" + gmapLANG_CFG["talk_show_requests"];
+	//				pResponse->strContent += "<a href=\"javascript: ;\" onClick=\"javascrip: load('div','divTalk','" + RESPONSE_STR_TALK_HTML + "?show=mentions');\">" + gmapLANG_CFG["talk_show_mentions"] + "</a>";
+			if( vecQueryUser[3] != "0" )
+				pResponse->strContent += "<span class=\"hot\">(" + vecQueryUser[3] + ")</span>";
+			pResponse->strContent += "</a>";
 		}
+		pResponse->strContent += "</td>\n";
+		pResponse->strContent += "</tr>\n";
+
+		vector<string> vecChannel;
+		vecChannel.reserve(64);
+		
+		vecChannel = UTIL_SplitToVector( gmapLANG_CFG["talk_channels"], "|" );
+
+		pResponse->strContent += "<tr class=\"talk_table_channel\">\n";
+		pResponse->strContent += "<td class=\"talk_table_channel\">\n";
+		pResponse->strContent += "<p class=\"talk_table_channel\">" + gmapLANG_CFG["talk_channel"] + "</p>";
+		for( vector<string> :: iterator ulKey = vecChannel.begin( ); ulKey != vecChannel.end( ); ulKey++ )
+		{
+			pResponse->strContent += "<a class=\"talk_channel";
+			if( strChannel == (*ulKey) )
+				pResponse->strContent += "_selected";
+			pResponse->strContent += "\" href=\"" + RESPONSE_STR_TALK_HTML + "?channel=" + UTIL_StringToEscaped( (*ulKey) ) + "\">" + UTIL_RemoveHTML( (*ulKey) ) + "</a>";
+//			pResponse->strContent += "<a href=\"javascript: ;\" onClick=\"javascrip: load('div','divTalk','" + RESPONSE_STR_TALK_HTML + "?show=all');\">" + gmapLANG_CFG["talk_show_all"] + "</a>";
+		}
+		pResponse->strContent += "<a class=\"talk_channel";
+		if( strChannel == gmapLANG_CFG["talk_channel_all"] )
+			pResponse->strContent += "_selected";
+		pResponse->strContent += "\" href=\"" + RESPONSE_STR_TALK_HTML + "?channel=" + UTIL_StringToEscaped( gmapLANG_CFG["talk_channel_all"] ) + "\">" + UTIL_RemoveHTML( gmapLANG_CFG["talk_channel_all"] ) + "</a>";
+
 		pResponse->strContent += "</td>\n";
 		pResponse->strContent += "</tr>\n";
 		pResponse->strContent += "</table>\n";
@@ -1068,11 +1135,33 @@ void CTracker :: serverResponseTalkGET( struct request_t *pRequest, struct respo
 		pResponse->strContent += "<tr class=\"talk_table\">\n";
 		pResponse->strContent += "<td class=\"talk_table_left_bottom\">\n";
 
+		pResponse->strContent += "<div class=\"talk_tag_hot\">";
+		pResponse->strContent += "<p class=\"talk_tag_hot\">" + gmapLANG_CFG["talk_tag_hot"] + "</p>";
+		CMySQLQuery *pQueryTag = new CMySQLQuery( "SELECT btag,COUNT(*) AS bcount FROM talktag WHERE bposted>NOW()-INTERVAL " + CAtomInt( CFG_GetInt( "bnbt_hot_day", 3 ) ).toString( ) + " DAY GROUP BY btag ORDER BY bcount DESC LIMIT 5");
+	
+		vector<string> vecQueryTag;
+	
+		vecQueryTag.reserve(2);
+
+		vecQueryTag = pQueryTag->nextRow( );
+
+		while( vecQueryTag.size( ) == 2 )
+		{
+			pResponse->strContent += "<span class=\"talk_tag_hot\"><a class=\"talk_tag\" href=\"" + RESPONSE_STR_TALK_HTML + "?tag=" + UTIL_StringToEscaped( vecQueryTag[0] ) + "\">" + UTIL_RemoveHTML( "#" + vecQueryTag[0] + "#" ) + "</a></span>";
+			
+			vecQueryTag = pQueryTag->nextRow( );
+		}
+		
+		delete pQueryTag;
+
+		pResponse->strContent += "</div>";
+
 		vector< pair< string, string > > vecParams;
 		vecParams.reserve(64);
 		string strJoined = string( );
 
 		vecParams.push_back( pair<string, string>( string( "uid" ), strUID ) );
+		vecParams.push_back( pair<string, string>( string( "channel" ), strChannel ) );
 		vecParams.push_back( pair<string, string>( string( "show" ), cstrShow ) );
 		vecParams.push_back( pair<string, string>( string( "page" ), cstrPage ) );
 		vecParams.push_back( pair<string, string>( string( "per_page" ), cstrPerPage ) );
@@ -1234,40 +1323,40 @@ void CTracker :: serverResponseTalkGET( struct request_t *pRequest, struct respo
 			string strHistory = string( );
 			bool bHistory = false;
 
-			CMySQLQuery *pQueryOne = new CMySQLQuery( "SELECT bid,busername,buid,bposted,btalk,btalkstore,breply,breply_real,breplyto,breplytoid,breplytimes,brt,brtto,brttoid FROM talk WHERE bid=" + strTalkID );
+			CMySQLQuery *pQueryOne = new CMySQLQuery( "SELECT bid,busername,buid,bposted,btalk,btalkstore,bchannel,breply,breply_real,breplyto,breplytoid,breplytimes,brt,brtto,brttoid FROM talk WHERE bid=" + strTalkID );
 			
 			vector<string> vecQueryOne;
 
-			vecQueryOne.reserve(14);
+			vecQueryOne.reserve(15);
 
 			vecQueryOne = pQueryOne->nextRow( );
 			
 			delete pQueryOne;
 			
-			if( vecQueryOne.size( ) == 14 )
+			if( vecQueryOne.size( ) == 15 )
 			{
 				strTalker = vecQueryOne[1];
 				strTalkerID = vecQueryOne[2];
-				strReplyID = vecQueryOne[6];
-				strReplyTo = vecQueryOne[8];
-				strReplyToID = vecQueryOne[9];
+				strReplyID = vecQueryOne[7];
+				strReplyTo = vecQueryOne[9];
+				strReplyToID = vecQueryOne[10];
 
 				pResponse->strContent += "<table class=\"talk_table_posted\" summary=\"talk\">\n";
 				pResponse->strContent += GenerateTalk( vecQueryOne, pRequest->user.ucAccess, pRequest->user.strUID, strTalkID, strJoined, true, true, true, true );
 				ulCount++;
 
-				while( vecQueryOne.size( ) == 14 && !vecQueryOne[8].empty( ) )
+				while( vecQueryOne.size( ) == 15 && !vecQueryOne[9].empty( ) )
 				{
 					if( !bHistory )
 						bHistory = true;
 
-					pQueryOne = new CMySQLQuery( "SELECT bid,busername,buid,bposted,btalk,btalkstore,breply,breply_real,breplyto,breplytoid,breplytimes,brt,brtto,brttoid FROM talk WHERE bid=" + vecQueryOne[7] );
+					pQueryOne = new CMySQLQuery( "SELECT bid,busername,buid,bposted,btalk,btalkstore,bchannel,breply,breply_real,breplyto,breplytoid,breplytimes,brt,brtto,brttoid FROM talk WHERE bid=" + vecQueryOne[8] );
 
 					vecQueryOne = pQueryOne->nextRow( );
 
 					delete pQueryOne;
 
-					if( vecQueryOne.size( ) == 14 )
+					if( vecQueryOne.size( ) == 15 )
 					{
 						strHistory += GenerateTalk( vecQueryOne, pRequest->user.ucAccess, pRequest->user.strUID, strTalkID, strJoined, true, true, true );
 						ulCount++;
@@ -1302,13 +1391,13 @@ void CTracker :: serverResponseTalkGET( struct request_t *pRequest, struct respo
 				CMySQLQuery *pQueryReply = 0;
 
 //				if( strReplyTo.empty( ) )
-					pQueryReply = new CMySQLQuery( "SELECT bid,busername,buid,bposted,btalk,btalkstore,breply,breply_real,breplyto,breplytoid,breplytimes,brt,brtto,brttoid FROM talk WHERE breply=" + strTalkID + " ORDER by bposted DESC" );
+					pQueryReply = new CMySQLQuery( "SELECT bid,busername,buid,bposted,btalk,btalkstore,bchannel,breply,breply_real,breplyto,breplytoid,breplytimes,brt,brtto,brttoid FROM talk WHERE breply=" + strTalkID + " ORDER by bposted DESC" );
 //				else
 //					pQueryReply = new CMySQLQuery( "SELECT bid,busername,buid,bposted,btalk,btalkstore,breply,breply_real,breplyto,breplytoid,breplytimes,brt,brtto,brttoid FROM talk WHERE breply_real=" + strTalkID + " ORDER by bposted DESC" );
 				
 				vector<string> vecQueryReply;
 
-				vecQueryReply.reserve(14);
+				vecQueryReply.reserve(15);
 
 				vecQueryReply = pQueryReply->nextRow( );
 				
@@ -1328,10 +1417,10 @@ void CTracker :: serverResponseTalkGET( struct request_t *pRequest, struct respo
 					pResponse->strContent += "</div>\n";
 				}
 
-				if( vecQueryReply.size( ) == 14 )
+				if( vecQueryReply.size( ) == 15 )
 				{
 					pResponse->strContent += "<table class=\"talk_table_posted\" summary=\"talk\">\n";
-					while( vecQueryReply.size( ) == 14 )
+					while( vecQueryReply.size( ) == 15 )
 					{
 						pResponse->strContent += GenerateTalk( vecQueryReply, pRequest->user.ucAccess, pRequest->user.strUID, strTalkID, strJoined, true, true, false, true );
 
@@ -1418,17 +1507,17 @@ void CTracker :: serverResponseTalkGET( struct request_t *pRequest, struct respo
 			
 				while( vecQueryTalk.size( ) == 1 && ulCount < ulLimit )
 				{
-					CMySQLQuery *pQueryRef = new CMySQLQuery( "SELECT bid,busername,buid,bposted,btalk,btalkstore,breply,breply_real,breplyto,breplytoid,breplytimes,brt,brtto,brttoid FROM talk WHERE bid=" + vecQueryTalk[0] );
+					CMySQLQuery *pQueryRef = new CMySQLQuery( "SELECT bid,busername,buid,bposted,btalk,btalkstore,bchannel,breply,breply_real,breplyto,breplytoid,breplytimes,brt,brtto,brttoid FROM talk WHERE bid=" + vecQueryTalk[0] );
 					
 					vector<string> vecQueryRef;
 	
-					vecQueryRef.reserve(14);
+					vecQueryRef.reserve(15);
 
 					vecQueryRef = pQueryRef->nextRow( );
 					
 					delete pQueryRef;
 					
-					if( vecQueryRef.size( ) == 14 )
+					if( vecQueryRef.size( ) == 15 )
 					{
 						pResponse->strContent += GenerateTalk( vecQueryRef, pRequest->user.ucAccess, pRequest->user.strUID, vecQueryTalk[0], strJoined );
 						ulCount++;
@@ -1466,17 +1555,17 @@ void CTracker :: serverResponseTalkGET( struct request_t *pRequest, struct respo
 		
 				while( vecQueryTalk.size( ) == 1 && ulCount < ulLimit )
 				{
-					CMySQLQuery *pQueryHome = new CMySQLQuery( "SELECT bid,busername,buid,bposted,btalk,btalkstore,breply,breply_real,breplyto,breplytoid,breplytimes,brt,brtto,brttoid FROM talk WHERE bid=" + vecQueryTalk[0] );
+					CMySQLQuery *pQueryHome = new CMySQLQuery( "SELECT bid,busername,buid,bposted,btalk,btalkstore,bchannel,breply,breply_real,breplyto,breplytoid,breplytimes,brt,brtto,brttoid FROM talk WHERE bid=" + vecQueryTalk[0] );
 				
 					vector<string> vecQueryHome;
 
-					vecQueryHome.reserve(14);
+					vecQueryHome.reserve(15);
 
 					vecQueryHome = pQueryHome->nextRow( );
 				
 					delete pQueryHome;
 				
-					if( vecQueryHome.size( ) == 14 )
+					if( vecQueryHome.size( ) == 15 )
 					{
 						pResponse->strContent += GenerateTalk( vecQueryHome, pRequest->user.ucAccess, pRequest->user.strUID, vecQueryTalk[0], strJoined );
 						ulCount++;
@@ -1517,17 +1606,17 @@ void CTracker :: serverResponseTalkGET( struct request_t *pRequest, struct respo
 			
 				while( vecQueryTalk.size( ) == 1 && ulCount < ulLimit )
 				{
-					CMySQLQuery *pQueryRef = new CMySQLQuery( "SELECT bid,busername,buid,bposted,btalk,btalkstore,breply,breply_real,breplyto,breplytoid,breplytimes,brt,brtto,brttoid FROM talk WHERE bid=" + vecQueryTalk[0] );
+					CMySQLQuery *pQueryRef = new CMySQLQuery( "SELECT bid,busername,buid,bposted,btalk,btalkstore,bchannel,breply,breply_real,breplyto,breplytoid,breplytimes,brt,brtto,brttoid FROM talk WHERE bid=" + vecQueryTalk[0] );
 					
 					vector<string> vecQueryRef;
 	
-					vecQueryRef.reserve(14);
+					vecQueryRef.reserve(15);
 
 					vecQueryRef = pQueryRef->nextRow( );
 					
 					delete pQueryRef;
 					
-					if( vecQueryRef.size( ) == 14 )
+					if( vecQueryRef.size( ) == 15 )
 					{
 						pResponse->strContent += GenerateTalk( vecQueryRef, pRequest->user.ucAccess, pRequest->user.strUID, vecQueryTalk[0], strJoined );
 						ulCount++;
@@ -1627,7 +1716,90 @@ void CTracker :: serverResponseTalkGET( struct request_t *pRequest, struct respo
 				pResponse->strContent += "</table>\n";
 			}
 		}
-		else if( cstrShow.empty( ) && strUID.empty( ) )
+		else if( cstrShow == "requests" )
+		{
+			pQueryTalk = new CMySQLQuery( "SELECT breqerid,breqer,btid FROM talkrequest WHERE buid=" + pRequest->user.strUID + " ORDER BY bposted DESC LIMIT " + CAtomLong( ulStart ).toString( ) + "," + CAtomLong( uiOverridePerPage ).toString( ) );
+			
+			if( cstrAutoload.empty( ) )
+				CMySQLQuery mq01( "UPDATE users SET btalkrequest=0 WHERE buid=" + pRequest->user.strUID );
+				
+			vector<string> vecQueryTalk;
+	
+			vecQueryTalk.reserve(3);
+
+			vecQueryTalk = pQueryTalk->nextRow( );
+		
+			if( vecQueryTalk.size( ) == 3 && !vecQueryTalk[2].empty( ) )
+			{
+				pResponse->strContent += "<table class=\"talk_table_posted\" summary=\"talk\">\n";
+			
+				while( vecQueryTalk.size( ) == 3 && ulCount < ulLimit )
+				{
+					CMySQLQuery *pQueryTorrent = new CMySQLQuery( "SELECT bname,badded,bsize,btitle,buploader,buploaderid,bseeders,bleechers,bcompleted FROM allowed WHERE bid=" + vecQueryTalk[2] );
+
+					vector<string> vecQueryTorrent;
+
+					vecQueryTorrent.reserve(9);
+
+					vecQueryTorrent = pQueryTorrent->nextRow( );
+			
+					delete pQueryTorrent;
+			
+					if( vecQueryTorrent.size( ) == 9 )
+					{
+						string strUserLink = getUserLink( vecQueryTorrent[5], vecQueryTorrent[4] );
+						string strName = string( );
+						int64 iSize = 0;
+						string strEngName = string( );
+						string strChiName = string( );
+				
+						if( !vecQueryTorrent[0].empty( ) )
+							strName = vecQueryTorrent[0];
+						if( !vecQueryTorrent[2].empty( ) )
+							iSize = UTIL_StringTo64( vecQueryTorrent[2].c_str( ) );
+						if( !vecQueryTorrent[3].empty( ) )
+							strName = vecQueryTorrent[3];
+					
+						pResponse->strContent += "<tr class=\"talk_body\">";
+						pResponse->strContent += "<td class=\"talk_body\">\n<div id=\"torrent" + vecQueryTalk[2] + "\" class=\"talk\">";
+						UTIL_StripName( strName.c_str( ), strEngName, strChiName );
+						pResponse->strContent += "<a class=\"talk_torrent\" target=\"_blank\" title=\"" + UTIL_RemoveHTML( strName ) + "\" href=\"" + RESPONSE_STR_STATS_HTML + "?id=" + vecQueryTalk[2] + "\">" + UTIL_RemoveHTML( strEngName );
+						if( !strChiName.empty( ) )
+							pResponse->strContent += "<br><span class=\"stats\">" + UTIL_RemoveHTML( strChiName ) + "</span>";
+						pResponse->strContent += "</a>";
+						pResponse->strContent += "<br><span class=\"talk_torrent\">" + UTIL_Xsprintf( gmapLANG_CFG["talk_torrent_size"].c_str( ), UTIL_BytesToString( iSize ).c_str( ) );
+						pResponse->strContent += "<br>" + UTIL_Xsprintf( gmapLANG_CFG["talk_torrent_status"].c_str( ), vecQueryTorrent[6].c_str( ), vecQueryTorrent[7].c_str( ), vecQueryTorrent[8].c_str( ) ) + "</span>";
+						
+						pResponse->strContent += "<br>" + UTIL_Xsprintf( gmapLANG_CFG["talk_torrent_added"].c_str( ), strUserLink.c_str( ), vecQueryTorrent[1].c_str( ) );
+
+						pResponse->strContent += "<div class=\"talk_function\">\n";
+						pResponse->strContent += "<span class=\"talk_request\">" + UTIL_Xsprintf( gmapLANG_CFG["talk_request_by"].c_str( ), getUserLinkTalk( vecQueryTalk[0], vecQueryTalk[1] ).c_str( ) ) + "</span>";
+						pResponse->strContent += "<a class=\"talk_reply\" href=\"javascript: ;\" onClick=\"reply_main('@" + vecQueryTalk[1] + " #" + gmapLANG_CFG["torrent"] + vecQueryTalk[2] + "#','talkarea');\">" + gmapLANG_CFG["talk_reply"] + "</a>";
+						pResponse->strContent += "</div>\n";
+						pResponse->strContent += "</div>\n</td>\n";
+	//					pResponse->strContent += "<td class=\"talk_function\"></td>\n";
+						pResponse->strContent += "</tr>\n";
+
+						ulCount++;
+					}
+					
+					vecQueryTalk = pQueryTalk->nextRow( );
+
+					if( vecQueryTalk.size( ) == 0 && ulCount < ulLimit )
+					{
+						ulStart += uiOverridePerPage;
+
+						delete pQueryTalk;
+
+						pQueryTalk = new CMySQLQuery( "SELECT breqerid,breqer,btid FROM talkrequest WHERE buid=" + pRequest->user.strUID + " ORDER BY bposted DESC LIMIT " + CAtomLong( ulStart ).toString( ) + "," + CAtomLong( uiOverridePerPage ).toString( ) );
+
+						vecQueryTalk = pQueryTalk->nextRow( );
+					}
+				}
+				pResponse->strContent += "</table>\n";
+			}
+		}
+		else if( cstrShow.empty( ) && strUID.empty( ) && strChannel.empty( ) )
 		{
 			pQueryTalk = new CMySQLQuery( "SELECT btalkid FROM talkhome WHERE buid=" + pRequest->user.strUID + " ORDER BY bposted DESC LIMIT " + CAtomLong( ulStart ).toString( ) + "," + CAtomLong( uiOverridePerPage ).toString( ) );
 		
@@ -1646,17 +1818,17 @@ void CTracker :: serverResponseTalkGET( struct request_t *pRequest, struct respo
 		
 				while( vecQueryTalk.size( ) == 1 && ulCount < ulLimit )
 				{
-					CMySQLQuery *pQueryHome = new CMySQLQuery( "SELECT bid,busername,buid,bposted,btalk,btalkstore,breply,breply_real,breplyto,breplytoid,breplytimes,brt,brtto,brttoid FROM talk WHERE bid=" + vecQueryTalk[0] );
+					CMySQLQuery *pQueryHome = new CMySQLQuery( "SELECT bid,busername,buid,bposted,btalk,btalkstore,bchannel,breply,breply_real,breplyto,breplytoid,breplytimes,brt,brtto,brttoid FROM talk WHERE bid=" + vecQueryTalk[0] );
 				
 					vector<string> vecQueryHome;
 
-					vecQueryHome.reserve(14);
+					vecQueryHome.reserve(15);
 
 					vecQueryHome = pQueryHome->nextRow( );
 				
 					delete pQueryHome;
 				
-					if( vecQueryHome.size( ) == 14 )
+					if( vecQueryHome.size( ) == 15 )
 					{
 						pResponse->strContent += GenerateTalk( vecQueryHome, pRequest->user.ucAccess, pRequest->user.strUID, vecQueryTalk[0], strJoined );
 						ulCount++;
@@ -1680,14 +1852,22 @@ void CTracker :: serverResponseTalkGET( struct request_t *pRequest, struct respo
 		}
 		else
 		{
+			if( strChannel.empty( ) )
+				strChannel = gmapLANG_CFG["talk_channel_default"];
+
 			if( !strUID.empty( ) )
-				pQueryTalk = new CMySQLQuery( "SELECT bid,busername,buid,bposted,btalk,btalkstore,breply,breply_real,breplyto,breplytoid,breplytimes,brt,brtto,brttoid FROM talk WHERE buid=" + strUID + " AND breply=0 ORDER BY bposted DESC LIMIT " + CAtomLong( ulStart ).toString( ) + "," + CAtomLong( uiOverridePerPage ).toString( ) );
-			else
-				pQueryTalk = new CMySQLQuery( "SELECT bid,busername,buid,bposted,btalk,btalkstore,breply,breply_real,breplyto,breplytoid,breplytimes,brt,brtto,brttoid FROM talk WHERE breply=0 ORDER BY bposted DESC LIMIT " + CAtomLong( ulStart ).toString( ) + "," + CAtomLong( uiOverridePerPage ).toString( ) );
+				pQueryTalk = new CMySQLQuery( "SELECT bid,busername,buid,bposted,btalk,btalkstore,bchannel,breply,breply_real,breplyto,breplytoid,breplytimes,brt,brtto,brttoid FROM talk WHERE buid=" + strUID + " AND breply=0 ORDER BY bposted DESC LIMIT " + CAtomLong( ulStart ).toString( ) + "," + CAtomLong( uiOverridePerPage ).toString( ) );
+			else if( !strChannel.empty( ) )
+			{
+				if( strChannel == gmapLANG_CFG["talk_channel_all"] )
+					pQueryTalk = new CMySQLQuery( "SELECT bid,busername,buid,bposted,btalk,btalkstore,bchannel,breply,breply_real,breplyto,breplytoid,breplytimes,brt,brtto,brttoid FROM talk WHERE breply=0 ORDER BY bposted DESC LIMIT " + CAtomLong( ulStart ).toString( ) + "," + CAtomLong( uiOverridePerPage ).toString( ) );
+				else
+					pQueryTalk = new CMySQLQuery( "SELECT bid,busername,buid,bposted,btalk,btalkstore,bchannel,breply,breply_real,breplyto,breplytoid,breplytimes,brt,brtto,brttoid FROM talk WHERE bchannel=\'" + UTIL_StringToMySQL( strChannel ) + "\' AND breply=0 ORDER BY bposted DESC LIMIT " + CAtomLong( ulStart ).toString( ) + "," + CAtomLong( uiOverridePerPage ).toString( ) );
+			}
 			
 			vector<string> vecQueryTalk;
 	
-			vecQueryTalk.reserve(14);
+			vecQueryTalk.reserve(15);
 
 			vecQueryTalk = pQueryTalk->nextRow( );
 			
@@ -1711,7 +1891,7 @@ void CTracker :: serverResponseTalkGET( struct request_t *pRequest, struct respo
 			
 					if( pRequest->user.strUID != strUID )
 					{
-						pResponse->strContent += "<span class=\"user_friend\">[<a class=\"friend\" id=\"friend" + strUID + "\" class=\"red\" href=\"javascript: ;\" onclick=\"javascript: friend('" + strUID + "','" + gmapLANG_CFG["friend_add"] + "','" + gmapLANG_CFG["friend_remove"] + "');\">";
+						pResponse->strContent += "<span class=\"user_friend\">[<a class=\"friend\" id=\"friend" + strUID + "\" class=\"red\" href=\"javascript: ;\" onClick=\"javascript: friend('" + strUID + "','" + gmapLANG_CFG["friend_add"] + "','" + gmapLANG_CFG["friend_remove"] + "');\">";
 			
 						CMySQLQuery *pQueryFriend = new CMySQLQuery( "SELECT buid,bfriendid FROM friends WHERE buid=" + pRequest->user.strUID + " AND bfriendid=" + strUID );
 
@@ -1732,7 +1912,7 @@ void CTracker :: serverResponseTalkGET( struct request_t *pRequest, struct respo
 
 						if( pRequest->user.ucAccess & m_ucAccessComments )
 						{
-							pResponse->strContent += "<span class=\"user_talk\">[<a class=\"black\" title=\"" + gmapLANG_CFG["talk_to"] + "\" href=\"" + RESPONSE_STR_TALK_HTML + "?talk=" + UTIL_StringToEscaped( "@" + vecQueryUser[0] + " " ) + "\">" + gmapLANG_CFG["talk_to"] + "</a>]</span>";
+							pResponse->strContent += "<span class=\"user_talk\">[<a class=\"black\" title=\"" + gmapLANG_CFG["talk_to"] + "\" href=\"javascript: ;\" onClick=\"javascript: reply_main(\'@" + vecQueryUser[0] + " \','talkarea');\">" + gmapLANG_CFG["talk_to"] + "</a>]</span>";
 						}
 					
 						if( pRequest->user.ucAccess & m_ucAccessMessages )
@@ -1749,11 +1929,11 @@ void CTracker :: serverResponseTalkGET( struct request_t *pRequest, struct respo
 			
 //			ulCount = pQueryTalk->numRows( );
 			
-			if( vecQueryTalk.size( ) == 14 )
+			if( vecQueryTalk.size( ) == 15 )
 			{
 				pResponse->strContent += "<table class=\"talk_table_posted\" summary=\"talk\">\n";
 			
-				while( vecQueryTalk.size( ) == 14 && ulCount < ulLimit )
+				while( vecQueryTalk.size( ) == 15 && ulCount < ulLimit )
 				{
 					pResponse->strContent += GenerateTalk( vecQueryTalk, pRequest->user.ucAccess, pRequest->user.strUID, string( ), strJoined, bTalker );
 
@@ -1768,9 +1948,9 @@ void CTracker :: serverResponseTalkGET( struct request_t *pRequest, struct respo
 						delete pQueryTalk;
 
 						if( !strUID.empty( ) )
-							pQueryTalk = new CMySQLQuery( "SELECT bid,busername,buid,bposted,btalk,btalkstore,breply,breply_real,breplyto,breplytoid,breplytimes,brt,brtto,brttoid FROM talk WHERE buid=" + strUID + " AND breply=0 ORDER BY bposted DESC LIMIT " + CAtomLong( ulStart ).toString( ) + "," + CAtomLong( uiOverridePerPage ).toString( ) );
-						else
-							pQueryTalk = new CMySQLQuery( "SELECT bid,busername,buid,bposted,btalk,btalkstore,breply,breply_real,breplyto,breplytoid,breplytimes,brt,brtto,brttoid FROM talk WHERE breply=0 ORDER BY bposted DESC LIMIT " + CAtomLong( ulStart ).toString( ) + "," + CAtomLong( uiOverridePerPage ).toString( ) );
+							pQueryTalk = new CMySQLQuery( "SELECT bid,busername,buid,bposted,btalk,btalkstore,bchannel,breply,breply_real,breplyto,breplytoid,breplytimes,brt,brtto,brttoid FROM talk WHERE buid=" + strUID + " AND breply=0 ORDER BY bposted DESC LIMIT " + CAtomLong( ulStart ).toString( ) + "," + CAtomLong( uiOverridePerPage ).toString( ) );
+						else if( !strChannel.empty( ) )
+							pQueryTalk = new CMySQLQuery( "SELECT bid,busername,buid,bposted,btalk,btalkstore,bchannel,breply,breply_real,breplyto,breplytoid,breplytimes,brt,brtto,brttoid FROM talk WHERE bchannel=\'" + UTIL_StringToMySQL( strChannel ) + "\' AND breply=0 ORDER BY bposted DESC LIMIT " + CAtomLong( ulStart ).toString( ) + "," + CAtomLong( uiOverridePerPage ).toString( ) );
 
 						vecQueryTalk = pQueryTalk->nextRow( );
 					}
@@ -1788,6 +1968,7 @@ void CTracker :: serverResponseTalkGET( struct request_t *pRequest, struct respo
 		
 		vecParams.push_back( pair<string, string>( string( "id" ), strTalkID ) );
 		vecParams.push_back( pair<string, string>( string( "uid" ), strUID ) );
+		vecParams.push_back( pair<string, string>( string( "channel" ), strChannel ) );
 		vecParams.push_back( pair<string, string>( string( "show" ), cstrShow ) );
 		vecParams.push_back( pair<string, string>( string( "tag" ), cstrTag ) );
 		vecParams.push_back( pair<string, string>( string( "per_page" ), cstrPerPage ) );
@@ -1809,7 +1990,7 @@ void CTracker :: serverResponseTalkGET( struct request_t *pRequest, struct respo
 		pResponse->strContent += "<!--\n";
 		pResponse->strContent += "setInterval( autoLoad, 300000 );\n";
 		pResponse->strContent += "function autoLoad() {\n";
-		pResponse->strContent += "  load('div','divTalk','" + RESPONSE_STR_TALK_HTML + strJoined + "');\n";
+		pResponse->strContent += "  load('td','tdTalkCat','" + RESPONSE_STR_TALK_HTML + strJoined + "');\n";
 		pResponse->strContent += "}\n";
 		pResponse->strContent += "//-->\n";
 		pResponse->strContent += "</script>\n\n";
@@ -1819,7 +2000,7 @@ void CTracker :: serverResponseTalkGET( struct request_t *pRequest, struct respo
 		pResponse->strContent += "<script type=\"text/javascript\">\n";
 		pResponse->strContent += "<!--\n";
 //		if( strTalkID.empty( ) && strTorrentID.empty( ) )
-		{
+//		{
 			pResponse->strContent += "document.postatalk.talk.focus();\n";
 			if( !cstrTag.empty( ) )
 			{
@@ -1827,14 +2008,14 @@ void CTracker :: serverResponseTalkGET( struct request_t *pRequest, struct respo
 				pResponse->strContent += "document.postatalk.talk.value = tagData.stripX( );\n";
 			}
 			pResponse->strContent += "charleft(document.postatalk,'talk_left','submit_talk');\n";
-		}
+//		}
 		if( !strTalkCat.empty( ) )
 		{
 			pResponse->strContent += "document.getElementById('talk_home').className='talk_cat';\n";
 			pResponse->strContent += "document.getElementById('talk_mentions').className='talk_cat';\n";
 			pResponse->strContent += "document.getElementById('talk_tofriend').className='talk_cat';\n";
 			pResponse->strContent += "document.getElementById('talk_torrents').className='talk_cat';\n";
-			pResponse->strContent += "document.getElementById('talk_all').className='talk_cat';\n";
+			pResponse->strContent += "document.getElementById('talk_requests').className='talk_cat';\n";
 			pResponse->strContent += "document.getElementById('" + strTalkCat + "').className='talk_cat_selected';\n";
 		}
 		pResponse->strContent += "//-->\n";
@@ -1885,6 +2066,7 @@ void CTracker :: serverResponseTalkPOST( struct request_t *pRequest, struct resp
 	if( pRequest->user.ucAccess & m_ucAccessComments )
 	{
 		string strTalk = string( );
+		string strChannel = string( );
 		string strReply = string( );
 		string strReplyReal = string( );
 		string strReplyTo = string( );
@@ -1935,6 +2117,8 @@ void CTracker :: serverResponseTalkPOST( struct request_t *pRequest, struct resp
 							
 							if( strName == "talk" )
 								strTalk = pData->toString( );
+							else if( strName == "channel" )
+								strChannel = pData->toString( );
 							else if( strName == "reply" )
 								strReply = pData->toString( );
 							else if( strName == "reply_real" )
@@ -1999,6 +2183,7 @@ void CTracker :: serverResponseTalkPOST( struct request_t *pRequest, struct resp
 		string strJoinedHTML = string( );
 
 //		vecParams.push_back( pair<string, string>( string( "uid" ), strUID ) );
+		vecParams.push_back( pair<string, string>( string( "channel" ), strChannel ) );
 		vecParams.push_back( pair<string, string>( string( "show" ), cstrShow ) );
 //		vecParams.push_back( pair<string, string>( string( "page" ), cstrPage ) );
 		vecParams.push_back( pair<string, string>( string( "per_page" ), cstrPerPage ) );
@@ -2167,8 +2352,11 @@ void CTracker :: serverResponseTalkPOST( struct request_t *pRequest, struct resp
 				}
 			}
 
+			if( strChannel.empty( ) && strReplyTo.empty( ) )
+				strChannel = gmapLANG_CFG["talk_channel_default"];
+
 			string strQuery = "INSERT INTO talk (";
-			strQuery += "busername,buid,bip,bposted,btalk,btalkstore";
+			strQuery += "busername,buid,bip,bposted,btalk,btalkstore,bchannel";
 			if( !strReplyTo.empty( ) )
 				strQuery += ",breply,breply_real,breplyto,breplytoid";
 			if( !strRTTo.empty( ) )
@@ -2180,6 +2368,7 @@ void CTracker :: serverResponseTalkPOST( struct request_t *pRequest, struct resp
 			strQuery += "\',NOW()";
 			strQuery += ",\'" + UTIL_StringToMySQL( strTalk ) + "\'";
 			strQuery += ",\'" + UTIL_StringToMySQL( strTalkStore ) + "\'";
+			strQuery += ",\'" + UTIL_StringToMySQL( strChannel ) + "\'";
 			if( !strReplyTo.empty( ) )
 				strQuery += "," + strReply + "," + strReplyReal + ",'" + UTIL_StringToMySQL( strReplyTo ) + "'," + strReplyToID;
 			if( !strRTTo.empty( ) )
@@ -2595,6 +2784,7 @@ const string CTracker :: GenerateTalk( const vector<string> &vecQuery, const uns
 	string strNameID = string( );
 	string strTime = string( );
 	string strComText = string( );
+	string strChannel = string( );
 	string strReplyCom = string( );
 	string strReplyID = string( );
 	string strReplyRealID = string( );
@@ -2605,7 +2795,7 @@ const string CTracker :: GenerateTalk( const vector<string> &vecQuery, const uns
 	string strRTTo = string( );
 	string strRTToID = string( );
 
-	if( vecQuery.size( ) == 14 )
+	if( vecQuery.size( ) == 15 )
 	{
 		strID = vecQuery[0];
 		strName = vecQuery[1];
@@ -2613,14 +2803,15 @@ const string CTracker :: GenerateTalk( const vector<string> &vecQuery, const uns
 		strTime = vecQuery[3];
 		strComText = vecQuery[4];
 		strReplyCom = vecQuery[5];
-		strReplyID = vecQuery[6];
-		strReplyRealID = vecQuery[7];
-		strReplyTo = vecQuery[8];
-		strReplyToID = vecQuery[9];
-		strReplyTimes = vecQuery[10];
-		strRTID = vecQuery[11];
-		strRTTo = vecQuery[12];
-		strRTToID = vecQuery[13];
+		strChannel = vecQuery[6];
+		strReplyID = vecQuery[7];
+		strReplyRealID = vecQuery[8];
+		strReplyTo = vecQuery[9];
+		strReplyToID = vecQuery[10];
+		strReplyTimes = vecQuery[11];
+		strRTID = vecQuery[12];
+		strRTTo = vecQuery[13];
+		strRTToID = vecQuery[14];
 	}
 
 	if( strTime.empty( ) )
@@ -2724,7 +2915,7 @@ const string CTracker :: GenerateTalk( const vector<string> &vecQuery, const uns
 						}
 					}
 
-					strReturn += "<a class=\"talk_rt\" title=\"" + gmapLANG_CFG["talk_rt"] + "\" href=\"javascript:;\" onclick=\"javascript: rt( '" + strID + "','";
+					strReturn += "<a class=\"talk_rt\" title=\"" + gmapLANG_CFG["talk_rt"] + "\" href=\"javascript:;\" onClick=\"javascript: rt( '" + strID + "','";
 					if( !strRTTo.empty( ) )
 						strReturn += strRTID + "','" + strRTToID;
 					else
@@ -2747,8 +2938,11 @@ const string CTracker :: GenerateTalk( const vector<string> &vecQuery, const uns
 		strReturn += "</div>";
 	}
 
-	strReturn += "<div class=\"class_footer\">\n";
+	strReturn += "<div class=\"talk_footer\">\n";
 	strReturn += "<a class=\"talk_time\" href=\"" + RESPONSE_STR_TALK_HTML + "?id=" + strID + "\">" + strTime + "</a>";
+	if( !strChannel.empty( ) )
+		strReturn += "<span class=\"talk_channel\">" + UTIL_Xsprintf( gmapLANG_CFG["talk_channel_in"].c_str( ), UTIL_RemoveHTML( strChannel ).c_str( ) ) + "</span>";
+
 	if( !strReplyTo.empty( ) && !bHistory && !bReplys )
 	{
 		if( bFunc )
@@ -2774,17 +2968,17 @@ const string CTracker :: GenerateTalk( const vector<string> &vecQuery, const uns
 				strReturn += "_history";
 			strReturn += "\" class=\"talk_rt\">";
 
-			CMySQLQuery *pQueryOne = new CMySQLQuery( "SELECT bid,busername,buid,bposted,btalk,btalkstore,breply,breplyto,breplytoid,breplytimes,brt,brtto,brttoid,brttimes FROM talk WHERE bid=" + strRTID );
+			CMySQLQuery *pQueryOne = new CMySQLQuery( "SELECT bid,busername,buid,bposted,btalk,btalkstore,bchannel,breply,breplyto,breplytoid,breplytimes,brt,brtto,brttoid,brttimes FROM talk WHERE bid=" + strRTID );
 			
 			vector<string> vecQueryOne;
 
-			vecQueryOne.reserve(14);
+			vecQueryOne.reserve(15);
 
 			vecQueryOne = pQueryOne->nextRow( );
 			
 			delete pQueryOne;
 			
-			if( vecQueryOne.size( ) == 14 )
+			if( vecQueryOne.size( ) == 15 )
 			{
 				string strUserLinkRT = getUserLinkTalk( vecQueryOne[2], vecQueryOne[1] );
 
@@ -2801,15 +2995,15 @@ const string CTracker :: GenerateTalk( const vector<string> &vecQuery, const uns
 
 				strReturn += "<br><a class=\"talk_time\" href=\"" + RESPONSE_STR_TALK_HTML + "?id=" + vecQueryOne[0] + "\">" + vecQueryOne[3] + "</a>";
 
-				if( !vecQueryOne[7].empty( ) )
-					strReturn += "<a class=\"talk_reply_link\" href=\"" + RESPONSE_STR_TALK_HTML + "?id=" + vecQueryOne[6] + "\">" + UTIL_Xsprintf( gmapLANG_CFG["talk_reply_to"].c_str( ), UTIL_RemoveHTML( vecQueryOne[7] ).c_str( ) ) + "</a>";
+				if( !vecQueryOne[8].empty( ) )
+					strReturn += "<a class=\"talk_reply_link\" href=\"" + RESPONSE_STR_TALK_HTML + "?id=" + vecQueryOne[7] + "\">" + UTIL_Xsprintf( gmapLANG_CFG["talk_reply_to"].c_str( ), UTIL_RemoveHTML( vecQueryOne[8] ).c_str( ) ) + "</a>";
 				
-				if( !vecQueryOne[11].empty( ) )
-					strReturn += "<a class=\"talk_rt_link\" href=\"" + RESPONSE_STR_TALK_HTML + "?id=" + vecQueryOne[10] + "\">" + UTIL_Xsprintf( gmapLANG_CFG["talk_rt_to"].c_str( ), UTIL_RemoveHTML( vecQueryOne[11] ).c_str( ) ) + "</a>";
+				if( !vecQueryOne[12].empty( ) )
+					strReturn += "<a class=\"talk_rt_link\" href=\"" + RESPONSE_STR_TALK_HTML + "?id=" + vecQueryOne[11] + "\">" + UTIL_Xsprintf( gmapLANG_CFG["talk_rt_to"].c_str( ), UTIL_RemoveHTML( vecQueryOne[12] ).c_str( ) ) + "</a>";
 
-				strReturn += "<span class=\"talk_rt_times\">" + UTIL_Xsprintf( gmapLANG_CFG["talk_rt_times"].c_str( ), vecQueryOne[13].c_str( ) ) + "</span>";
-				if( vecQueryOne[9] != "0" )
-					strReturn += "<span class=\"talk_reply_times\">" + UTIL_Xsprintf( gmapLANG_CFG["talk_reply_times"].c_str( ), vecQueryOne[9].c_str( ) ) + "</span>";
+				strReturn += "<span class=\"talk_rt_times\">" + UTIL_Xsprintf( gmapLANG_CFG["talk_rt_times"].c_str( ), vecQueryOne[14].c_str( ) ) + "</span>";
+				if( vecQueryOne[10] != "0" )
+					strReturn += "<span class=\"talk_reply_times\">" + UTIL_Xsprintf( gmapLANG_CFG["talk_reply_times"].c_str( ), vecQueryOne[10].c_str( ) ) + "</span>";
 			}
 			else
 				strReturn += UTIL_Xsprintf( gmapLANG_CFG["talk_not_exist"].c_str( ), strRTID.c_str( ) );

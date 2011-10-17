@@ -537,17 +537,21 @@ const string UTIL_PassedToString( time_t tNow, time_t tAdded, const string &cstr
 	
 	time_t tTimePassed = difftime( tNow, tAdded );
 	
-	if( tTimePassed > 0 )
+	if( tTimePassed >= 0 )
 	{
-		int64 day_passed = -1, hour_passed = -1, minute_passed = -1, second_passed = -1;
+		int64 year_passed = -1, day_passed = -1, hour_passed = -1, minute_passed = -1, second_passed = -1;
 		second_passed =  tTimePassed % 60;
 		tTimePassed /= 60;
 		minute_passed =  tTimePassed % 60;
 		tTimePassed /= 60;
 		hour_passed =  tTimePassed % 24;
 		tTimePassed /= 24;
-		day_passed =  tTimePassed;
-		if( day_passed > 0 )
+		day_passed =  tTimePassed % 365;
+		tTimePassed /= 365;
+		year_passed =  tTimePassed;
+		if( year_passed > 0 )
+			strPassed = UTIL_Xsprintf( gmapLANG_CFG["added_year_passed"].c_str( ), CAtomInt( year_passed ).toString( ).c_str( ), CAtomInt( day_passed ).toString( ).c_str( ) );
+		else if( day_passed > 0 )
 			strPassed = UTIL_Xsprintf( gmapLANG_CFG["added_day_passed"].c_str( ), CAtomInt( day_passed ).toString( ).c_str( ), CAtomInt( hour_passed ).toString( ).c_str( ) );
 		else if( hour_passed > 0 )
 			strPassed = UTIL_Xsprintf( gmapLANG_CFG["added_hour_passed"].c_str( ), CAtomInt( hour_passed ).toString( ).c_str( ), CAtomInt( minute_passed ).toString( ).c_str( ) );
@@ -1158,8 +1162,8 @@ const string UTIL_BBCode( const string &cstrHTML )
 		iURL = UTIL_ToLower( strHTML ).find( "]", iStart );
 		if( iURL < iEnd && strHTML[ iStart - 1 ] != '[' && strHTML[ iEnd + 8 ] != ']' && iEnd != string :: npos )
 		{
-			strHTML.replace( iEnd, 8, "</fieldset>" );
-			strHTML.replace( iURL, 1, "</b></legend>" );
+			strHTML.replace( iEnd, 8, "</div></fieldset>" );
+			strHTML.replace( iURL, 1, "</b></legend><div class=\"quote\">" );
 			strHTML.replace( iStart, 7, "<fieldset class=\"quote\"><legend><b>" + gmapLANG_CFG["quote"] );
 			iStart = UTIL_ToLower( strHTML ).find( "[quote=" );
 		}
@@ -1319,24 +1323,26 @@ void UTIL_StripName( const string &cstrCompName, string &strReturnName1, string 
 			if( uiCount - uiStart - 1 > 0 )
 			{
 				if( isascii( strCompName[ uiStart + 1 ] ) && isascii( strCompName[ uiCount - 1 ] ) && ( uiCount - uiStart - 1 >= 5 ) && !bNoReturnName1 )
-					if( !( isdigit( strCompName[ uiStart + 1 ] ) && isdigit( strCompName[ uiCount - 1 ] ) ) )
-					{
+				{
+//					if( !( isdigit( strCompName[ uiStart + 1 ] ) && isdigit( strCompName[ uiCount - 1 ] ) ) )
+//					{
 						if( strReturnName1.empty( ) )
 							strReturnName1 += strCompName.substr( uiStart + 1, uiCount - uiStart - 1 );
 						else
 							strReturnName2 += " [" + strCompName.substr( uiStart + 1, uiCount - uiStart - 1 ) + "]";
-					}
-					else
-					{
-						if( !strReturnName2.empty( ) )
-							strReturnName2 += " ";
-						if( !strReturnName1.empty( ) )
-							strReturnName2 += "[";
-						strReturnName2 += strCompName.substr( uiStart + 1, uiCount - uiStart - 1 );
-						if( !strReturnName1.empty( ) )
-							strReturnName2 += "]";
-						
-					}
+//					}
+//					else
+//					{
+//						if( !strReturnName2.empty( ) )
+//							strReturnName2 += " ";
+//						if( !strReturnName1.empty( ) )
+//							strReturnName2 += "[";
+//						strReturnName2 += strCompName.substr( uiStart + 1, uiCount - uiStart - 1 );
+//						if( !strReturnName1.empty( ) )
+//							strReturnName2 += "]";
+//						
+//					}
+				}
 				else
 				{
 					if( !strReturnName2.empty( ) )
@@ -1355,24 +1361,26 @@ void UTIL_StripName( const string &cstrCompName, string &strReturnName1, string 
 	if( iZero != 1 && uiCount - uiStart - 1 > 0 )
 	{
 		if( isascii( strCompName[ uiStart + 1 ] ) && isascii( strCompName[ uiCount - 1 ] ) && ( uiCount - uiStart - 1 >= 5 ) && !bNoReturnName1 )
-			if( !( isdigit( strCompName[ uiStart + 1 ] ) && isdigit( strCompName[ uiCount - 1 ] ) ) )
-			{
+		{
+//			if( !( isdigit( strCompName[ uiStart + 1 ] ) && isdigit( strCompName[ uiCount - 1 ] ) ) )
+//			{
 				if( strReturnName1.empty( ) )
 					strReturnName1 += strCompName.substr( uiStart + 1, uiCount - uiStart - 1 );
 				else
 					strReturnName2 += " [" + strCompName.substr( uiStart + 1, uiCount - uiStart - 1 ) + "]";
-			}
-			else
-			{
-				if( !strReturnName2.empty( ) )
-					strReturnName2 += " ";
-				if( !strReturnName1.empty( ) )
-					strReturnName2 += "[";
-				strReturnName2 += strCompName.substr( uiStart + 1, uiCount - uiStart - 1 );
-				if( !strReturnName1.empty( ) )
-					strReturnName2 += "]";
-				
-			}
+//			}
+//			else
+//			{
+//				if( !strReturnName2.empty( ) )
+//					strReturnName2 += " ";
+//				if( !strReturnName1.empty( ) )
+//					strReturnName2 += "[";
+//				strReturnName2 += strCompName.substr( uiStart + 1, uiCount - uiStart - 1 );
+//				if( !strReturnName1.empty( ) )
+//					strReturnName2 += "]";
+//				
+//			}
+		}
 		else
 		{
 			if( !strReturnName2.empty( ) )

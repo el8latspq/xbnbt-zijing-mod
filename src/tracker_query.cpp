@@ -313,29 +313,76 @@ void CTracker :: serverResponseQuery( struct request_t *pRequest, struct respons
 						pResponse->strContent += "<status>" + gmapLANG_CFG["query_request_successful"] + "</status>\n";
 						pResponse->strContent += "<code>1</code>\n";
 
-						string cstrName = vecQuery[1];
-						string cstrUploaderID = vecQuery[2];
+						vector<string> vecCompleted;
 
-						CMySQLQuery *pQueryUsers = new CMySQLQuery( "SELECT buid FROM users WHERE buid=" + cstrUploaderID );
+						vecCompleted.push_back( vecQuery[2] );
 
-						vector<string> vecQueryUsers;
-					
-						vecQueryUsers.reserve(1);
+						CMySQLQuery *pQueryCompleted = new CMySQLQuery( "SELECT buid FROM peers WHERE bid=" +  cstrID + " AND bcompleted!=0 ORDER BY bcompleted DESC LIMIT " + CAtomInt( m_uiMaxPeersDisplay ).toString( ) );
 
-						vecQueryUsers = pQueryUsers->nextRow( );
+						vector<string> vecQueryCompleted;
 						
-						delete pQueryUsers;
+						vecQueryCompleted.reserve(1);
 
-						if( vecQueryUsers.size( ) == 1 && !vecQueryUsers[0].empty( ) )
+						vecQueryCompleted = pQueryCompleted->nextRow( );
+						
+						while( vecQueryCompleted.size( ) == 1 )
 						{
-							if( !pRequest->user.strUID.empty( ) )
-							{
-								string strTitle = gmapLANG_CFG["section_reqseeders"];
-								string strMessage = UTIL_Xsprintf( gmapLANG_CFG["req_seeders_message"].c_str( ), pRequest->user.strLogin.c_str( ), string( RESPONSE_STR_STATS_HTML + "?id=" + cstrID ).c_str( ), cstrName.c_str( ) );
-								
-								sendMessage( pRequest->user.strLogin, pRequest->user.strUID, cstrUploaderID, pRequest->strIP, strTitle, strMessage );
-							}
+							if( vecQueryCompleted[0] != pRequest->user.strUID )
+								vecCompleted.push_back( vecQueryCompleted[0] );
+
+							vecQueryCompleted = pQueryCompleted->nextRow( );
 						}
+
+						delete pQueryCompleted;
+
+						random_shuffle( vecCompleted.begin( ), vecCompleted.end( ) );
+
+						string strQuery = string( );
+						string strQueryValue = string( );
+
+						unsigned int uiAdded = 0;
+
+						strQuery = "INSERT IGNORE INTO talkrequest (buid,breqerid,breqer,btid,bposted) VALUES";
+
+						for ( vector<string> :: iterator it = vecCompleted.begin( ); it != vecCompleted.end( ); it++ )
+						{
+							if( uiAdded > m_uiResponseSize )
+								break;
+
+							if( !strQueryValue.empty( ) )
+								strQueryValue += ",";
+							strQueryValue += "(" + (*it) + "," + pRequest->user.strUID + ",\'" + UTIL_StringToMySQL( pRequest->user.strLogin ) + "\'," + cstrID + ",NOW())";
+
+							CMySQLQuery mq02( "UPDATE users SET btalkrequest=btalkrequest+1 WHERE buid=" + (*it) );
+
+							uiAdded++;
+						}
+
+						if( !strQueryValue.empty( ) )
+							CMySQLQuery mq01( strQuery + strQueryValue );
+//						string cstrName = vecQuery[1];
+//						string cstrUploaderID = vecQuery[2];
+//
+//						CMySQLQuery *pQueryUsers = new CMySQLQuery( "SELECT buid FROM users WHERE buid=" + cstrUploaderID );
+//
+//						vector<string> vecQueryUsers;
+//					
+//						vecQueryUsers.reserve(1);
+//
+//						vecQueryUsers = pQueryUsers->nextRow( );
+//						
+//						delete pQueryUsers;
+//
+//						if( vecQueryUsers.size( ) == 1 && !vecQueryUsers[0].empty( ) )
+//						{
+//							if( !pRequest->user.strUID.empty( ) )
+//							{
+//								string strTitle = gmapLANG_CFG["section_reqseeders"];
+//								string strMessage = UTIL_Xsprintf( gmapLANG_CFG["req_seeders_message"].c_str( ), pRequest->user.strLogin.c_str( ), string( RESPONSE_STR_STATS_HTML + "?id=" + cstrID ).c_str( ), cstrName.c_str( ) );
+//								
+//								sendMessage( pRequest->user.strLogin, pRequest->user.strUID, cstrUploaderID, pRequest->strIP, strTitle, strMessage );
+//							}
+//						}
 					}
 					else if( vecQuery[3] == "1" )
 					{
@@ -370,6 +417,8 @@ void CTracker :: serverResponseQuery( struct request_t *pRequest, struct respons
 						CMySQLQuery mq01( "UPDATE allowed SET breq=0 WHERE bid=" + cstrID );
 						pResponse->strContent += "<status>" + gmapLANG_CFG["query_request_successful"] + "</status>\n";
 						pResponse->strContent += "<code>1</code>\n";
+
+						CMySQLQuery mq02( "DELETE FROM talkrequest WHERE btid=" + cstrID );
 					}
 					else if( vecQuery[1] == "0" )
 					{

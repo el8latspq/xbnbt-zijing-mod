@@ -56,6 +56,7 @@ void CTracker :: serverResponseIndex( struct request_t *pRequest, struct respons
 		if( pRequest->mapParams["top_submit_search_button"] == gmapLANG_CFG["search"] )
 		{
 			string cstrSearch( pRequest->mapParams["search"] );
+			string cstrNote = string( );
 			string cstrUploader = string( );
 			string cstrIMDbID = string( );
 			string cstrFilter( pRequest->mapParams["tag"] );
@@ -67,6 +68,12 @@ void CTracker :: serverResponseIndex( struct request_t *pRequest, struct respons
 			const string cstrSearchMode( pRequest->mapParams["smode"] );
 			const string cstrMatch( pRequest->mapParams["match"] );
 			
+//			if( cstrSearchMode == "note" )
+//			{
+//				cstrNote = cstrSearch;
+//				cstrSearch.erase( );
+//			}
+//			else if( cstrSearchMode == "uploader" )
 			if( cstrSearchMode == "uploader" )
 			{
 				cstrUploader = cstrSearch;
@@ -120,6 +127,7 @@ void CTracker :: serverResponseIndex( struct request_t *pRequest, struct respons
 			vecParams.push_back( pair<string, string>( string( "medium" ), cstrMedium ) );
 			vecParams.push_back( pair<string, string>( string( "quality" ), cstrQuality ) );
 			vecParams.push_back( pair<string, string>( string( "encode" ), cstrEncode ) );
+//			vecParams.push_back( pair<string, string>( string( "note" ), cstrNote ) );
 			vecParams.push_back( pair<string, string>( string( "uploader" ), cstrUploader ) );
 			vecParams.push_back( pair<string, string>( string( "imdb" ), cstrIMDbID ) );
 			vecParams.push_back( pair<string, string>( string( "per_page" ), cstrPerPage ) );
@@ -218,8 +226,8 @@ void CTracker :: serverResponseIndex( struct request_t *pRequest, struct respons
 						
 						while( vecQueryUsers.size( ) == 1 && !vecQueryUsers[0].empty( ) )
 						{
-							if( !pRequest->user.strUID.empty( ) )
-							{
+//							if( !pRequest->user.strUID.empty( ) )
+//							{
 								string strTitle = gmapLANG_CFG["admin_delete_torrent_title"];
 								string strMessage = string( );
 								if( vecQuery[2] == vecQueryUsers[0] )
@@ -232,7 +240,7 @@ void CTracker :: serverResponseIndex( struct request_t *pRequest, struct respons
 									strMessage = UTIL_Xsprintf( gmapLANG_CFG["admin_delete_torrent_bookmarked"].c_str( ), UTIL_AccessToString( pRequest->user.ucAccess ).c_str( ), pRequest->user.strLogin.c_str( ), strFileName.c_str( ), strDelReason.c_str( ) );
 									sendMessage( "", "0", vecQueryUsers[0], "127.0.0.1", strTitle, strMessage );
 								}
-							}
+//							}
 
 							vecQueryUsers = pQueryUsers->nextRow( );
 						}
@@ -379,12 +387,14 @@ void CTracker :: serverResponseIndex( struct request_t *pRequest, struct respons
 			if( !strSort.empty( ) )
 				m_pCache->sort( cucSort, bNoTop );
 			else
-				if( m_bShowAdded )
-					m_pCache->sort( SORT_DADDED, bNoTop );
+//				if( m_bShowAdded )
+//					m_pCache->sort( SORT_DADDED, bNoTop );
+					m_pCache->sort( SORT_DDEFAULT, bNoTop );
 		}
 		else
-			if( m_bShowAdded )
-				m_pCache->sort( SORT_DADDED, bNoTop );
+//			if( m_bShowAdded )
+//				m_pCache->sort( SORT_DADDED, bNoTop );
+				m_pCache->sort( SORT_DDEFAULT, bNoTop );
 		
 //		if( m_bSort )
 //		{
@@ -817,8 +827,8 @@ void CTracker :: serverResponseIndex( struct request_t *pRequest, struct respons
 		int64 last_time_info = 0;
 		int64 warned = 0;
 
-		if( !pRequest->user.strUID.empty( ) )
-		{
+//		if( !pRequest->user.strUID.empty( ) )
+//		{
 			CMySQLQuery *pQueryUser = new CMySQLQuery( "SELECT buploaded,bdownloaded,bbonus,UNIX_TIMESTAMP(blast_index),UNIX_TIMESTAMP(blast_info),UNIX_TIMESTAMP(bwarned) FROM users WHERE buid=" + pRequest->user.strUID );
 	
 			vector<string> vecQueryUser;
@@ -849,12 +859,12 @@ void CTracker :: serverResponseIndex( struct request_t *pRequest, struct respons
 				last_time_info = UTIL_StringTo64( vecQueryUser[4].c_str( ) );
 				warned = UTIL_StringTo64( vecQueryUser[5].c_str( ) );
 			}
-		}
+//		}
 		
 		bool bAnnounce = false;
 		
-		if( !pRequest->user.strUID.empty( ) )
-		{
+//		if( !pRequest->user.strUID.empty( ) )
+//		{
 			CMySQLQuery *pQueryAnn = new CMySQLQuery( "SELECT UNIX_TIMESTAMP(bposted),baccess FROM announcements ORDER BY bposted DESC" );
 		
 			vector<string> vecQueryAnn;
@@ -875,10 +885,10 @@ void CTracker :: serverResponseIndex( struct request_t *pRequest, struct respons
 				vecQueryAnn = pQueryAnn->nextRow( );
 			}
 			delete pQueryAnn;
-		}
+//		}
 
-		if( !pRequest->user.strUID.empty( ) )
-		{
+//		if( !pRequest->user.strUID.empty( ) )
+//		{
 			if( warned > 0 )
 			{
 				pResponse->strContent += "<table class=\"index_warned\">\n";
@@ -937,7 +947,7 @@ void CTracker :: serverResponseIndex( struct request_t *pRequest, struct respons
 				pResponse->strContent += "<a class=\"index_messages_unread\" href=\"" + RESPONSE_STR_MESSAGES_HTML + "\">" + gmapLANG_CFG["messages_unread_notice"] + "</a>";
 				pResponse->strContent += "</td></tr></table>\n";
 			}
-		}
+//		}
 
 		// some preliminary search crap
 
@@ -951,6 +961,7 @@ void CTracker :: serverResponseIndex( struct request_t *pRequest, struct respons
 		string strMatch( pRequest->mapParams["match"] );
 		// filters
 
+//		const string strNote( strSearch );
 		string strFilter( pRequest->mapParams["tag"] );
 		const string strMedium( pRequest->mapParams["medium"] );
 		const string strQuality( pRequest->mapParams["quality"] );
@@ -971,8 +982,8 @@ void CTracker :: serverResponseIndex( struct request_t *pRequest, struct respons
 		bool bDefaultTag = false;
 		bool bAddedPassed = false;
 		
-		if( !pRequest->user.strUID.empty( ) )
-		{
+//		if( !pRequest->user.strUID.empty( ) )
+//		{
 			CMySQLQuery *pQueryPrefs = new CMySQLQuery( "SELECT bdefaulttag,baddedpassed FROM users_prefs WHERE buid=" + pRequest->user.strUID );
 	
 			map<string, string> mapPrefs;
@@ -989,14 +1000,16 @@ void CTracker :: serverResponseIndex( struct request_t *pRequest, struct respons
 				
 			if( !mapPrefs["baddedpassed"].empty( ) && mapPrefs["baddedpassed"] == "1" )
 				bAddedPassed = true;
-		}
+//		}
 
 		vector<string> vecBookmark;
 		vecBookmark.reserve(64);
 		vector<string> vecFriend;
 		vecFriend.reserve(64);
+		vector<string> vecNote;
+		vecNote.reserve(64);
 
-		if( !pRequest->user.strUID.empty( ) && ( pRequest->user.ucAccess & m_ucAccessBookmark ) )
+		if( pRequest->user.ucAccess & m_ucAccessBookmark )
 		{
 			CMySQLQuery *pQuery = new CMySQLQuery( "SELECT bid FROM bookmarks WHERE buid=" + pRequest->user.strUID );
 		
@@ -1016,7 +1029,7 @@ void CTracker :: serverResponseIndex( struct request_t *pRequest, struct respons
 			delete pQuery;
 		}
 		
-		if( !pRequest->user.strUID.empty( ) && cstrMode == "MyFriends" )
+		if( cstrMode == "MyFriends" )
 		{
 			CMySQLQuery *pQuery = new CMySQLQuery( "SELECT bfriendid FROM friends WHERE buid=" + pRequest->user.strUID );
 		
@@ -1035,7 +1048,6 @@ void CTracker :: serverResponseIndex( struct request_t *pRequest, struct respons
 			
 			delete pQuery;
 		}
-
 //		vector<string> vecThank;
 //		vecThank.reserve(64);
 //
@@ -1081,6 +1093,45 @@ void CTracker :: serverResponseIndex( struct request_t *pRequest, struct respons
 		vecMedium = UTIL_SplitToVector( strMedium, " " );
 		vecQuality = UTIL_SplitToVector( strQuality, " " );
 		vecEncode = UTIL_SplitToVector( strEncode, " " );
+
+//		vector<string> vecNotes;
+//		vecNotes.reserve(64);
+//		vecNotes = UTIL_SplitToVector( strNote, " " );
+
+		if( !vecSearch.empty( ) )
+		{
+			string strQuery = string( );
+			if( strMatch == "eor" )
+				strQuery += "SELECT bid FROM notes WHERE bnote=\'" + UTIL_StringToMySQL( vecSearch[0] ) + "\'";
+			else
+				strQuery += "SELECT bid FROM notes WHERE bnote LIKE \'%" + UTIL_StringToMySQL( vecSearch[0] ) + "%\'";
+
+			for( vector<string> :: iterator ulKey = vecSearch.begin( ) + 1; ulKey != vecSearch.end( ); ulKey++ )
+			{
+				if( strMatch == "eor" )
+					strQuery += " OR bnote=\'" + UTIL_StringToMySQL( *ulKey ) + "\'";
+				else if( strMatch == "or" )
+					strQuery += " OR bnote LIKE \'%" + UTIL_StringToMySQL( *ulKey ) + "%\'";
+				else
+					strQuery += " AND bnote LIKE \'%" + UTIL_StringToMySQL( *ulKey ) + "%\'";
+			}
+			CMySQLQuery *pQuery = new CMySQLQuery( strQuery );
+		
+			vector<string> vecQuery;
+		
+			vecQuery.reserve(1);
+
+			vecQuery = pQuery->nextRow( );
+
+			while( vecQuery.size( ) == 1 )
+			{
+				vecNote.push_back( vecQuery[0] );
+
+				vecQuery = pQuery->nextRow( );
+			}
+			
+			delete pQuery;
+		}
 
 		// Top search
 		if( m_bSearch )
@@ -1273,11 +1324,14 @@ void CTracker :: serverResponseIndex( struct request_t *pRequest, struct respons
 //			{
 				pResponse->strContent += "<p><label for=\"toptorrentsearch\">" + gmapLANG_CFG["torrent_search"] + "</label> <input name=\"search\" id=\"toptorrentsearch\" alt=\"[" + gmapLANG_CFG["torrent_search"] + "]\" type=text size=40";
 				
+//				if( !strSearch.empty( ) || !strNote.empty( ) || !strUploader.empty( ) || !strIMDbID.empty( ) )
 				if( !strSearch.empty( ) || !strUploader.empty( ) || !strIMDbID.empty( ) )
 				{
 					pResponse->strContent += " value=\"";
 					if( !strSearch.empty( ) )
 						pResponse->strContent += UTIL_RemoveHTML( strSearch );
+//					else if( !strNote.empty( ) )
+//						pResponse->strContent += UTIL_RemoveHTML( strNote );
 					else if( !strUploader.empty( ) )
 						pResponse->strContent += UTIL_RemoveHTML( strUploader );
 					else if( !strIMDbID.empty( ) )
@@ -1286,7 +1340,11 @@ void CTracker :: serverResponseIndex( struct request_t *pRequest, struct respons
 				}
 				pResponse->strContent += ">\n";
 				pResponse->strContent += "<select id=\"smode\" name=\"smode\">";
-				pResponse->strContent += "\n<option value=\"name\">" + gmapLANG_CFG["name"];
+				pResponse->strContent += "\n<option value=\"name\">" + gmapLANG_CFG["name_note"];
+//				pResponse->strContent += "\n<option value=\"note\"";
+//				if( !strNote.empty( ) )
+//					pResponse->strContent += " selected";
+//				pResponse->strContent += ">" + gmapLANG_CFG["notes"];
 				pResponse->strContent += "\n<option value=\"uploader\"";
 				if( !strUploader.empty( ) )
 					pResponse->strContent += " selected";
@@ -1300,11 +1358,11 @@ void CTracker :: serverResponseIndex( struct request_t *pRequest, struct respons
 				pResponse->strContent += "<select id=\"match\" name=\"match\">";
 				pResponse->strContent += "\n<option value=\"and\">" + gmapLANG_CFG["match_and"];
 				pResponse->strContent += "\n<option value=\"or\"";
-				if( !strMatch.empty( ) && strMatch == "or" )
+				if( strMatch == "or" )
 					pResponse->strContent += " selected";
 				pResponse->strContent += ">" + gmapLANG_CFG["match_or"];
 				pResponse->strContent += "\n<option value=\"eor\"";
-				if( !strMatch.empty( ) && strMatch == "eor" )
+				if( strMatch == "eor" )
 					pResponse->strContent += " selected";
 				pResponse->strContent += ">" + gmapLANG_CFG["match_eor"];
 				pResponse->strContent += "\n</select>\n";
@@ -1457,7 +1515,7 @@ void CTracker :: serverResponseIndex( struct request_t *pRequest, struct respons
 		unsigned int uiHotDay = CFG_GetInt( "bnbt_hot_day", 3 );
 		
 		// Hot Rank
-		pResponse->strContent += "* <a class=\"hot\" title=\"" + gmapLANG_CFG["section_hot_rank"] + "\" href=\"" + RESPONSE_STR_INDEX_HTML + "?sort=19&amp;notop=1&amp;day=";
+		pResponse->strContent += "* <a class=\"hot\" title=\"" + gmapLANG_CFG["section_hot_rank"] + "\" href=\"" + RESPONSE_STR_INDEX_HTML + "?sort=" + SORTSTR_DCOMPLETED + "&amp;notop=1&amp;day=";
 		
 		pResponse->strContent += CAtomInt( uiHotDay ).toString( );
 		
@@ -1725,6 +1783,14 @@ void CTracker :: serverResponseIndex( struct request_t *pRequest, struct respons
 			strResult += "</span>\n";
 		}
 		
+//		if( !strNote.empty() )
+//		{
+//			strResult += "<span class=\"search_results_alt\">" + gmapLANG_CFG["result_note"] + ": </span>";
+//			strResult += "<span class=\"filtered_by_search\">";
+//		 	strResult += UTIL_RemoveHTML( strNote );
+//			strResult += "</span>\n";
+//		}
+
 		if( !vecUploader.empty() )
 		{
 			if( !strResult.empty( ) )
@@ -1915,7 +1981,7 @@ void CTracker :: serverResponseIndex( struct request_t *pRequest, struct respons
 
 		for( unsigned long ulKey = ulKeyStart; ulKey < ulKeySize; ulKey++ )
 		{
-			if( !vecSearch.empty( ) && !UTIL_MatchVector( pTorrents[ulKey].strName, vecSearch, ucMatchMethod ) )
+			if( !vecSearch.empty( ) && !UTIL_MatchVector( pTorrents[ulKey].strName, vecSearch, ucMatchMethod ) && !UTIL_MatchVector( pTorrents[ulKey].strID, vecNote, MATCH_METHOD_NONCASE_EQ ) )
 				continue;
 			if( !vecUploader.empty( ) && !UTIL_MatchVector( pTorrents[ulKey].strUploader, vecUploader, ucMatchMethod ) )
 				continue;
@@ -2173,7 +2239,7 @@ void CTracker :: serverResponseIndex( struct request_t *pRequest, struct respons
 
 					if( m_bSort )
 					{
-						pResponse->strContent += "<a class=\"table_header\" href=\"" + RESPONSE_STR_INDEX_HTML + "?sort=";
+						pResponse->strContent += "<a class=\"table_header_icon\" href=\"" + RESPONSE_STR_INDEX_HTML + "?sort=";
 
 						if( strSort == SORTSTR_DCOMPLETE )
 							pResponse->strContent += SORTSTR_ACOMPLETE;
@@ -2191,7 +2257,14 @@ void CTracker :: serverResponseIndex( struct request_t *pRequest, struct respons
 						pResponse->strContent += gmapLANG_CFG["seeders"];
 					
 					if( m_bSort )
+					{
+						if( strSort == SORTSTR_DCOMPLETE )
+							pResponse->strContent += gmapLANG_CFG["sort_descending_arrow"];
+						else if( strSort == SORTSTR_ACOMPLETE )
+							pResponse->strContent += gmapLANG_CFG["sort_ascending_arrow"];
+
 						pResponse->strContent += "</a>";
+					}
 					pResponse->strContent += "</th>\n";
 
 					// <th> leechers
@@ -2200,7 +2273,7 @@ void CTracker :: serverResponseIndex( struct request_t *pRequest, struct respons
 
 					if( m_bSort )
 					{
-						pResponse->strContent += "<a class=\"table_header\" href=\"" + RESPONSE_STR_INDEX_HTML + "?sort=";
+						pResponse->strContent += "<a class=\"table_header_icon\" href=\"" + RESPONSE_STR_INDEX_HTML + "?sort=";
 
 						if( strSort == SORTSTR_DINCOMPLETE )
 							pResponse->strContent += SORTSTR_AINCOMPLETE;
@@ -2218,7 +2291,14 @@ void CTracker :: serverResponseIndex( struct request_t *pRequest, struct respons
 						pResponse->strContent += gmapLANG_CFG["leechers"];
 					
 					if( m_bSort )
+					{
+						if( strSort == SORTSTR_DINCOMPLETE )
+							pResponse->strContent += gmapLANG_CFG["sort_descending_arrow"];
+						else if( strSort == SORTSTR_AINCOMPLETE )
+							pResponse->strContent += gmapLANG_CFG["sort_ascending_arrow"];
+
 						pResponse->strContent += "</a>";
+					}
 					pResponse->strContent += "</th>\n";
 
 					// <th> completed
@@ -2229,7 +2309,7 @@ void CTracker :: serverResponseIndex( struct request_t *pRequest, struct respons
 
 						if( m_bSort )
 						{
-							pResponse->strContent += "<a class=\"table_header\" href=\"" + RESPONSE_STR_INDEX_HTML + "?sort=";
+							pResponse->strContent += "<a class=\"table_header_icon\" href=\"" + RESPONSE_STR_INDEX_HTML + "?sort=";
 
 							if( strSort == SORTSTR_DCOMPLETED )
 								pResponse->strContent += SORTSTR_ACOMPLETED;
@@ -2247,7 +2327,14 @@ void CTracker :: serverResponseIndex( struct request_t *pRequest, struct respons
 							pResponse->strContent += gmapLANG_CFG["completed"];
 					
 						if( m_bSort )
+						{
+							if( strSort == SORTSTR_DCOMPLETED )
+								pResponse->strContent += gmapLANG_CFG["sort_descending_arrow"];
+							else if( strSort == SORTSTR_ACOMPLETED )
+								pResponse->strContent += gmapLANG_CFG["sort_ascending_arrow"];
+
 							pResponse->strContent += "</a>";
+						}
 
 						pResponse->strContent += "</th>\n";
 					}
@@ -2273,7 +2360,14 @@ void CTracker :: serverResponseIndex( struct request_t *pRequest, struct respons
 					pResponse->strContent += gmapLANG_CFG["name"];
 				
 					if( m_bSort )
+					{
+						if( strSort == SORTSTR_ANAME )
+							pResponse->strContent += gmapLANG_CFG["sort_ascending_arrow"];
+						else if( strSort == SORTSTR_DNAME )
+							pResponse->strContent += gmapLANG_CFG["sort_descending_arrow"];
+
 						pResponse->strContent += "</a>";
+					}
 
 					pResponse->strContent += "</th>\n";
 
@@ -2315,7 +2409,14 @@ void CTracker :: serverResponseIndex( struct request_t *pRequest, struct respons
 						pResponse->strContent += gmapLANG_CFG["size"];
 					
 						if( m_bSort )
+						{
+							if( strSort == SORTSTR_DSIZE )
+								pResponse->strContent += gmapLANG_CFG["sort_descending_arrow"];
+							else if( strSort == SORTSTR_ASIZE )
+								pResponse->strContent += gmapLANG_CFG["sort_ascending_arrow"];
+
 							pResponse->strContent += "</a>";
+						}
 
 						pResponse->strContent += "</th>\n";
 					}
@@ -2475,15 +2576,19 @@ void CTracker :: serverResponseIndex( struct request_t *pRequest, struct respons
 
 					// <th> added
 
-					if( m_bShowAdded_Index )
-					{
+//					if( m_bShowAdded_Index )
+//					{
 						pResponse->strContent += "<th class=\"date\" id=\"addedheader\">";
 
 						if( m_bSort )
 						{
 							pResponse->strContent += "<a class=\"table_header\" href=\"" + RESPONSE_STR_INDEX_HTML + "?sort=";
 
-							if( strSort == SORTSTR_DADDED || strSort.empty( ) )
+//							if( strSort == SORTSTR_DADDED || strSort.empty( ) )
+//								pResponse->strContent += SORTSTR_AADDED;
+//							else
+//								pResponse->strContent += SORTSTR_DADDED;
+							if( strSort == SORTSTR_DADDED )
 								pResponse->strContent += SORTSTR_AADDED;
 							else
 								pResponse->strContent += SORTSTR_DADDED;
@@ -2496,10 +2601,17 @@ void CTracker :: serverResponseIndex( struct request_t *pRequest, struct respons
 						pResponse->strContent += gmapLANG_CFG["added"];
 					
 						if( m_bSort )
+						{
+							if( strSort == SORTSTR_DADDED )
+								pResponse->strContent += gmapLANG_CFG["sort_descending_arrow"];
+							else if( strSort == SORTSTR_AADDED )
+								pResponse->strContent += gmapLANG_CFG["sort_ascending_arrow"];
+
 							pResponse->strContent += "</a>";
+						}
 
 						pResponse->strContent += "</th>\n";
-					}
+//					}
 
 
 
@@ -2526,7 +2638,14 @@ void CTracker :: serverResponseIndex( struct request_t *pRequest, struct respons
 						pResponse->strContent += gmapLANG_CFG["uploader"];
 					
 						if( m_bSort )
+						{
+							if( strSort == SORTSTR_AUPLOADER )
+								pResponse->strContent += gmapLANG_CFG["sort_ascending_arrow"];
+							else if( strSort == SORTSTR_DUPLOADER )
+								pResponse->strContent += gmapLANG_CFG["sort_descending_arrow"];
+
 							pResponse->strContent += "</a>";
+						}
 
 						pResponse->strContent += "</th>\n";
 					}
@@ -2831,6 +2950,15 @@ void CTracker :: serverResponseIndex( struct request_t *pRequest, struct respons
 					time_t tTimeFree = pTorrents[ulKey].iFreeTo - now_t;
 					time_t tTimeAdded = mktime(&time_tm);
 
+					sscanf( pTorrents[ulKey].strOrder.c_str( ), "%d-%d-%d %d:%d:%d",&year,&month,&day,&hour,&minute,&second );
+					time_tm.tm_year = year-1900;
+					time_tm.tm_mon = month-1;
+					time_tm.tm_mday = day;
+					time_tm.tm_hour = hour;
+					time_tm.tm_min = minute;
+					time_tm.tm_sec = second;
+					time_t tTimeOrder = mktime(&time_tm);
+
 					time_t tTimeTop = pTorrents[ulKey].iTopTo - now_t;
 					
 //					if( pTorrents[ulKey].iFreeTo > now_t )
@@ -2887,8 +3015,21 @@ void CTracker :: serverResponseIndex( struct request_t *pRequest, struct respons
 					}
 					if( strChiName.empty( ) )
 						pResponse->strContent += "<br>";
-					if( !pRequest->user.strUID.empty( ) && ( int64 )tTimeAdded > last_time )
-						pResponse->strContent += "<span class=\"new\">(" + gmapLANG_CFG["new"] + ")</span>";
+					if( ( int64 )tTimeOrder > last_time )
+					{
+						if( tTimeOrder > tTimeAdded )
+							pResponse->strContent += "<span class=\"pop\">(" + gmapLANG_CFG["pop"] + ")</span>";
+						else
+							pResponse->strContent += "<span class=\"new\">(" + gmapLANG_CFG["new"] + ")</span>";
+					}
+					else
+					{
+						if( tTimeOrder > tTimeAdded )
+							pResponse->strContent += "<span class=\"pop_live\">[" + gmapLANG_CFG["pop_live"] + "]</span>";
+					}
+
+//					if( pTorrents[ulKey].strAdded != pTorrents[ulKey].strOrder )
+//						pResponse->strContent += "<span class=\"pop\">(" + gmapLANG_CFG["pop"] + ")</span>";
 //					if( m_bShowStats )
 //					{
 						if( pTorrents[ulKey].iFreeDown == 0 )
@@ -3026,10 +3167,10 @@ void CTracker :: serverResponseIndex( struct request_t *pRequest, struct respons
 //							pResponse->strContent += "<br>" + UTIL_BytesToString( pTorrents[ulKey].iSize ).substr( br + 1 );
 						pResponse->strContent += "<td class=\"index_bytes\" rowspan=2>" + UTIL_BytesToString( pTorrents[ulKey].iSize );
 						pResponse->strContent += "<br><span class=\"file\">";
-						if( m_bShowFileContents && !pRequest->user.strUID.empty( ) && pTorrents[ulKey].uiFiles > 0 )
+						if( m_bShowFileContents && pTorrents[ulKey].uiFiles > 0 )
 							pResponse->strContent += "<a class=\"file\" href=\"" + RESPONSE_STR_STATS_HTML + "?id=" + pTorrents[ulKey].strID + "&amp;show=contents#contents\">";
 						pResponse->strContent += CAtomInt( pTorrents[ulKey].uiFiles ).toString( );
-						if( m_bShowFileContents && !pRequest->user.strUID.empty( ) )
+						if( m_bShowFileContents )
 							pResponse->strContent += "</a>";
 						pResponse->strContent += " " + gmapLANG_CFG["file"] + "</span>";
 						pResponse->strContent += "</td>\n";

@@ -84,6 +84,10 @@
 		a.top_logout:hover{text-decoration:underline}
 		a.top_talk{color:black; text-decoration:none}
 		a.top_talk:hover{text-decoration:underline}
+		a.top_menu{color:black; text-decoration:none}
+		a.top_menu{display:block}
+		a.top_menu{padding:5px 10px 5px 10px}
+		a.top_menu:hover{background-color:#dee3e7}
 		a.sort{font-size:8pt; color:red}
 		a.sort:hover{color:white}
 		a.hot{color:red; text-decoration:none}
@@ -134,6 +138,35 @@
 		a.file{font-size:8pt}
 		/*a.file:hover{text-decoration:underline}*/
 	/* ----- specific div elements ----- */
+		div.top_tool_left,div.top_tool_right
+		{
+			position:fixed;
+			z-index:3;
+			border-style:solid;
+			border-width:1px;
+			border-color:transparent purple purple purple;
+			padding:10px 10px 10px 10px;
+			line-height:1.5em;
+			font-size:9pt;
+			background-color:#efefef;
+		}
+		div.top_tool_left{text-align:left}
+		div.top_tool_right{text-align:right}
+		div.top_menu_left,div.top_menu_right
+		{
+			position:fixed;
+			z-index:3;
+			border-style:solid;
+			border-width:1px;
+			border-color:transparent purple purple purple;
+			padding:5px 0px 5px 0px;
+			line-height:1.5em;
+			font-size:9pt;
+			background-color:#efefef;
+		}
+		div.top_menu_left{text-align:left}
+		div.top_menu_right{text-align:right}
+		div.quote{max-width:770px}
 	/* ----- specific table elements ----- */
 		table.quote{margin:5px 0px 5px 0px}
 		table.top_header{width:80%}
@@ -176,40 +209,38 @@
 		td.static_header{white-space:normal}
 		td.quote{background-color:#efefef}
 		td.quote{border:1px black dotted}
+		td.quote{max-width:770px}
 		td.quote{white-space:normal}
 		td.even{background-color:#dee3e7}
 		td.odd{background-color:#efefef}
+		table.top_bar{
+			padding:0px 0px 0px 0px;
+			border-collapse:separate;
+			border-spacing:0px;
+			border-bottom:1px solid black;
+		}
 		td.top_login{text-align:left}
 		td.top_login{padding:5px 8px 5px 8px}
-		td.top_login{border-color:transparent #ccccff black #ccccff}
-		td.top_login:hover{background-color:#dee3e7}
+		td.top_login{border-bottom-style:none}
+		td.top_login{border-color:transparent}
+	/*	td.top_login:hover{background-color:#dee3e7}*/
+		td.top_login:hover{border-color:purple}
 		td.top_state{text-align:left}
 		td.top_state{padding:5px 8px 5px 8px}
 		td.top_state{width:100%}
-		td.top_state{border-color:transparent transparent black #ccccff}
+		td.top_state{border-bottom-style:none}
+		td.top_state{border-color:transparent #ccccff transparent #ccccff}
 		td.top_trigger{text-align:center}
 		td.top_trigger{padding:5px 8px 5px 8px}
-		td.top_trigger{border-color:transparent #ccccff black #ccccff}
+		td.top_trigger{border-bottom-style:none}
+		td.top_trigger{border-color:transparent}
 	/*	td.top_trigger:hover{color:purple}*/
-		td.top_trigger:hover{background-color:#dee3e7}
+	/*	td.top_trigger:hover{background-color:#dee3e7}*/
+		td.top_trigger:hover{border-color:purple}
 		td.top_tool{text-align:center}
 		td.top_tool{padding:5px 8px 5px 8px}
-		td.top_tool{border-color:transparent #ccccff black #ccccff}
-		div.top_tool_left,div.top_tool_right
-		{
-			position:fixed;
-			z-index:1;
-			border-style:solid;
-			border-width:1px;
-			border-color:transparent purple purple purple;
-			padding:10px 10px 10px 10px;
-			text-align:right;
-			line-height:1.5em;
-			font-size:9pt;
-			background-color:#efefef;
-		}
-		div.top_tool_left{text-align:left}
-		div.top_tool_right{text-align:right}
+		td.top_tool{border-bottom-style:none}
+		td.top_tool{border-color:transparent}
 		td.tag{text-align:center}
 		td.tag{padding:0px 0px 0px 0px}
 		td.tag{border-width:1px 0px 1px 0px}
@@ -272,11 +303,11 @@
 		fieldset.quote{margin:5px 0px 5px 0px}
 		fieldset.quote{background-color:#efefef}
 		fieldset.quote{border:1px black dotted}
-		fieldset.quote{white-space:normal}
+		fieldset.quote{white-space:normal; word-wrap:break-word}
 		legend{background-color:#efefef}
 		legend{border:1px black dotted}
 	/* ----- specific hr elements ----- */	
-		hr.top_tool{}
+		hr.top_menu{}
 
 /* ----- header  ----- */
 		div.static_header{}
@@ -428,6 +459,7 @@
 		td.index_bytes{text-align:center}
 		td.index_bytes{padding:5px 5px 5px 5px}
 		td.index_bytes{border-width:1px 0px 1px 0px}
+		a.table_header_icon{text-decoration:none}
 		a.classic_level_1{color:#9400d3; text-decoration:none}
 		a.classic_level_1:hover{text-decoration:underline}
 		a.classic_level_2{color:#820084; text-decoration:none}
@@ -521,6 +553,10 @@
 		span.index_hot{margin-left:0.5em}
 		span.new{color:red; font-weight:bold}
 		span.new{margin-right:0.5em}
+		span.pop{color:red; font-weight:bold}
+		span.pop{margin-right:0.5em}
+		span.pop_live{color:purple}
+		span.pop_live{margin-right:0.5em}
 		span.req{color:red}
 		span.req{margin-right:0.5em}
 		span.classic_level_1{color:#9400d3; font-weight:bold}
@@ -723,6 +759,7 @@
 		tr.com_body{background-color:#dee3e7}
 		tr.com_header{background-color:#f5f4eb}
 		td.com_body{text-align:left; white-space:normal; word-wrap:break-word}
+		td.com_body{max-width:800px}
 		td.com_header{width:100%}
 		td.com_header{text-align:left}
 		td.com_header{border:0px}
@@ -785,8 +822,17 @@
 		td.talk_table_cat{background-color:transparent}
 		td.talk_table_cat{border:0px}
 		td.talk_table_cat{padding:5px 0px 5px 0px}
+		td.talk_table_channel{background-color:transparent}
+		td.talk_table_channel{border:0px}
+		td.talk_table_channel{padding:5px 0px 5px 0px}
 		table.talk_table_right{width:100%}
 		table.talk_table_right{background-color:transparent}
+		div.talk_tag_hot{padding:10px 10px 10px 10px}
+		div.talk_tag_hot{border-top:1px dotted purple}
+		p.talk_tag_hot{text-align:center}
+		p.talk_tag_hot{color:red; font-weight:bold}
+		p.talk_tag_hot{margin-top:0px}
+		span.talk_tag_hot{margin-left:0.5em; margin-right:0.5em}
 		div.talk_table_posted
 		{
 			text-align:center;
@@ -841,13 +887,14 @@
 		div.talk_table_rt{white-space:normal; word-wrap:break-word}
 		div.talk_table_post_button{text-align:right}
 		td.talk_function{padding:5px 5px 5px 5px}
-		span.talk_table_header{font-weight:bold}
-		span.talk_table_header{color:purple}
+		span.talk_table_header{font-weight:bold; color:purple}
+		span.talk_table_header{margin-right:1em}
 		span.talk_table_count{font-weight:bold}
 		span.talk_table_hint{font-style:italic}
 		span.talk_reply_hint{font-style:italic}
 		span.talk_reply_hint{margin-left:1em}
 		p.talk_user{font-size:10pt}
+		p.talk_table_channel{font-size:10pt; text-align:center}
 		a.talk_user{font-size:10pt; text-decoration:none}
 		a.talk_cat,a.talk_cat_selected{
 			display:block;
@@ -860,6 +907,16 @@
 		a.talk_cat:hover,a.talk_cat_selected:hover{text-decoration:underline}
 		a.talk_cat_selected{background-color:#eeeeff}
 		a.talk_cat_selected{color:blue}
+		a.talk_channel,a.talk_channel_selected{
+			display:block;
+			border-bottom:1px dotted purple;
+			padding:10px 10px 10px 10px;
+			font-size:10pt;
+			text-decoration:none;
+		}
+		a.talk_channel:hover,a.talk_channel_selected:hover{text-decoration:underline}
+		a.talk_channel_selected{background-color:#eeeeff}
+		a.talk_channel_selected{color:blue}
 		a.talk_time
 		{
 			font-size:8pt;
@@ -963,6 +1020,10 @@
 		}
 		span.talk_tag{font-weight:bold; color:purple}
 		span.talk_torrent{font-size:8pt}
+		span.talk_request{color:grey}
+		span.talk_channel{color:grey}
+		span.talk_channel{font-size:8pt}
+		span.talk_channel{margin-left:0.5em}
 		span.talk_reply,span.talk_reply_times,span.talk_rt_times
 		{
 			font-size:8pt;
@@ -975,6 +1036,7 @@
 		tr.messages_read{background-color:#dee3e7}
 		tr.messages_body{background-color:#dee3e7}
 		td.messages_body{white-space:normal; word-wrap:break-word}
+		td.messages_body{max-width:800px}
 		td.messages_title{width:100%}
 		td.messages_delete{text-align:right}
 		p.messages_table_post{text-align:center}
@@ -1152,7 +1214,7 @@
 		p.gen_stats{text-align:center}
 		p.html_valid_stats{text-align:center}
 		div.changed_stats{text-align:center}
-		li.changed_stats{text-align:left}
+		li.changed_stats{text-align:left; white-space:normal; word-wrap:break-word}
 		p.changed_stats{text-align:center}
 		div.change_info{text-align:center}
 		div.change_info_button{text-align:center}
@@ -1166,6 +1228,17 @@
 		a.req:hover{text-decoration:underline}
 		a.noreq{color:blue; text-decoration:none}
 		a.noreq:hover{text-decoration:underline}
+		span.note{margin-left:0.5em; margin-right:0.5em}
+		a.note{padding-left:0.5em; padding-right:0.5em}
+		a.note{background-color:#faffe0; color:purple}
+		a.note{font-weight:normal; text-decoration:none}
+		a.note:hover{background-color:purple; color:white}
+		span.addnote{padding-left:2px; padding-right:2px}
+		span.addnote{background-color:#faffe0; color:blue}
+		a.addnote{padding-left:2px; padding-right:2px}
+		a.addnote{background-color:blue; color:white}
+		a.addnote{font-weight:normal; text-decoration:none}
+		a.addnote:hover{background-color:#faffe0; color:blue}
 		td.path{text-align:left}
 		td.ip,td.client,td.percent,td.updated,td.connected
 		{
