@@ -603,12 +603,14 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 							if( !vecQuery[1].empty( ) )
 							{
 								// If the archive directory is set and exists, move the torrent there, otherwise delete it
-								if( !m_strArchiveDir.empty( ) && UTIL_CheckDir( m_strArchiveDir.c_str( ) ) )
+//								if( !m_strArchiveDir.empty( ) && UTIL_CheckDir( m_strArchiveDir.c_str( ) ) )
+								if( !m_strArchiveDir.empty( ) && UTIL_CheckDir( m_strArchiveDir.c_str( ) ) && !bOffer )
 								{
-									if( bOffer )
-										UTIL_MoveFile( string( m_strOfferDir + vecQuery[1] ).c_str( ), string( m_strArchiveDir + vecQuery[1] ).c_str( ) );
-									else
-										UTIL_MoveFile( string( m_strAllowedDir + vecQuery[1] ).c_str( ), string( m_strArchiveDir + vecQuery[1] ).c_str( ) );
+//									if( bOffer )
+//										UTIL_MoveFile( string( m_strOfferDir + vecQuery[1] ).c_str( ), string( m_strArchiveDir + vecQuery[1] ).c_str( ) );
+//									else
+//										UTIL_MoveFile( string( m_strAllowedDir + vecQuery[1] ).c_str( ), string( m_strArchiveDir + vecQuery[1] ).c_str( ) );
+									UTIL_MoveFile( string( m_strAllowedDir + vecQuery[1] ).c_str( ), string( m_strArchiveDir + cstrDelID + ".torrent" ).c_str( ) );
 								}
 								else
 								{
@@ -650,7 +652,10 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 								UTIL_LogFilePrint( "deleteTorrent: %s deleted torrent %s\n", pRequest->user.strLogin.c_str( ), vecQuery[1].c_str( ) );
 							// Delete the torrent entry from the databases
 
-							deleteTag( cstrDelID, bOffer );
+							if( !m_strArchiveDir.empty( ) && UTIL_CheckDir( m_strArchiveDir.c_str( ) ) )
+								deleteTag( cstrDelID, bOffer, true );
+							else
+								deleteTag( cstrDelID, bOffer, false );
 
 							// The torrent has been deleted
 							if( bOffer )
@@ -822,6 +827,52 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 		pResponse->strContent += "    xmlhttp.send(); }\n";
 		pResponse->strContent += "}\n";
 		
+		// add note
+		pResponse->strContent += "function note(object,id,note,note_link,nonote_link) {\n";
+		pResponse->strContent += "  xmlhttp.onreadystatechange=function() {\n";
+		pResponse->strContent += "    if (xmlhttp.readyState==4 && xmlhttp.status==200) {\n";
+		pResponse->strContent += "      var xmldoc = xmlparser(xmlhttp.responseText);\n";
+		pResponse->strContent += "      var queryCode = xmldoc.getElementsByTagName('code')[0].childNodes[0].nodeValue;\n";
+		pResponse->strContent += "      if( queryCode=='1' || queryCode=='4' ) {\n";
+		pResponse->strContent += "        if (object.innerHTML == note_link) {\n";
+		pResponse->strContent += "          object.innerHTML = nonote_link; }\n";
+		pResponse->strContent += "        else {\n";
+		pResponse->strContent += "          object.innerHTML = note_link; }\n";
+		pResponse->strContent += "      }\n";
+		pResponse->strContent += "    }\n";
+		pResponse->strContent += "  }\n";
+		pResponse->strContent += "  if (object.innerHTML == note_link) {\n";
+		pResponse->strContent += "    xmlhttp.open(\"GET\",\"" + RESPONSE_STR_QUERY_HTML + "?type=note&action=add&id=\"+id+\"&note=\"+encodeURIComponent(note),true);\n";
+		pResponse->strContent += "    xmlhttp.send(); }\n";
+		pResponse->strContent += "  else {\n";
+		pResponse->strContent += "    xmlhttp.open(\"GET\",\"" + RESPONSE_STR_QUERY_HTML + "?type=note&action=remove&id=\"+id+\"&note=\"+encodeURIComponent(note),true);\n";
+		pResponse->strContent += "    xmlhttp.send(); }\n";
+		pResponse->strContent += "}\n";
+		
+		// add index
+		pResponse->strContent += "function index(object,id,note,index_link,noindex_link) {\n";
+		pResponse->strContent += "  xmlhttp.onreadystatechange=function() {\n";
+		pResponse->strContent += "    if (xmlhttp.readyState==4 && xmlhttp.status==200) {\n";
+		pResponse->strContent += "      var xmldoc = xmlparser(xmlhttp.responseText);\n";
+		pResponse->strContent += "      var queryCode = xmldoc.getElementsByTagName('code')[0].childNodes[0].nodeValue;\n";
+		pResponse->strContent += "      if( queryCode=='1' || queryCode=='4' ) {\n";
+		pResponse->strContent += "        if (object.innerHTML == index_link) {\n";
+		pResponse->strContent += "          object.innerHTML = noindex_link;\n";
+		pResponse->strContent += "          object.className = \"note_noindex\"; }\n";
+		pResponse->strContent += "        else {\n";
+		pResponse->strContent += "          object.innerHTML = index_link;\n";
+		pResponse->strContent += "          object.className = \"note_index\"; }\n";
+		pResponse->strContent += "      }\n";
+		pResponse->strContent += "    }\n";
+		pResponse->strContent += "  }\n";
+		pResponse->strContent += "  if (object.innerHTML == index_link) {\n";
+		pResponse->strContent += "    xmlhttp.open(\"GET\",\"" + RESPONSE_STR_QUERY_HTML + "?type=note&action=index&set=1&id=\"+id+\"&note=\"+encodeURIComponent(note),true);\n";
+		pResponse->strContent += "    xmlhttp.send(); }\n";
+		pResponse->strContent += "  else {\n";
+		pResponse->strContent += "    xmlhttp.open(\"GET\",\"" + RESPONSE_STR_QUERY_HTML + "?type=note&action=index&set=0&id=\"+id+\"&note=\"+encodeURIComponent(note),true);\n";
+		pResponse->strContent += "    xmlhttp.send(); }\n";
+		pResponse->strContent += "}\n";
+		
 		// friend
 		pResponse->strContent += "function friend(id,friend_link,nofriend_link) {\n";
 		pResponse->strContent += "  var friendLink = document.getElementById( 'friend'+id );\n";
@@ -846,7 +897,7 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 		pResponse->strContent += "}\n";
 		
 		// get torrent
-		pResponse->strContent += "function get_torrent(talkID,torrentID) {\n";
+		pResponse->strContent += "function get_torrent(talkID,torrentID,object) {\n";
 		pResponse->strContent += "  var divTalk = document.getElementById( talkID );\n";
 		pResponse->strContent += "  var divTorrent = document.getElementById( talkID+'_torrent'+torrentID );\n";
 		pResponse->strContent += "  var exist = false;\n";
@@ -863,19 +914,26 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 		pResponse->strContent += "          exist = true;\n";
 		pResponse->strContent += "          break; }\n";
 		pResponse->strContent += "      }\n";
-		pResponse->strContent += "      if(!exist)\n";
-		pResponse->strContent += "          divTalk.innerHTML = divTalk.innerHTML + '<div id=\"' + talkID + '_torrent' + torrentID + '\" class=\"talk_torrent\">" + UTIL_Xsprintf( gmapLANG_CFG["torrent_not_exist"].c_str( ), "' + torrentID + '" ) + "</div>';\n";
+		pResponse->strContent += "      if(!exist) {\n";
+		pResponse->strContent += "          divTalk.innerHTML = divTalk.innerHTML + '<div id=\"' + talkID + '_torrent' + torrentID + '\" class=\"talk_torrent\">" + UTIL_Xsprintf( gmapLANG_CFG["torrent_not_exist"].c_str( ), "' + torrentID + '" ) + "</div>'; }\n";
 		pResponse->strContent += "    }\n";
 		pResponse->strContent += "  }\n";
+		pResponse->strContent += "  object.style.color = \"white\";\n";
+		pResponse->strContent += "  object.style.backgroundColor = \"purple\";\n";
 		pResponse->strContent += "  if(!divTorrent) {\n";
 		pResponse->strContent += "    xmlhttp.open(\"GET\",'" + RESPONSE_STR_TALK_HTML + "?tid=' + torrentID,true);\n";
 //		pResponse->strContent += "    xmlhttp.open(\"GET\",'" + RESPONSE_STR_TALK_HTML + "?tid=' + torrentID + '&from=' + talkID,true);\n";
 		pResponse->strContent += "    xmlhttp.send(); }\n";
 		pResponse->strContent += "  else {\n";
-		pResponse->strContent += "    if( divTorrent.style.display == \"none\" )\n";
+		pResponse->strContent += "    if( divTorrent.style.display == \"none\" ) {\n";
 		pResponse->strContent += "      divTorrent.style.display = \"\";\n";
-		pResponse->strContent += "    else\n";
-		pResponse->strContent += "      divTorrent.style.display = \"none\"; }\n";
+		pResponse->strContent += "      object.style.color = \"white\";\n";
+		pResponse->strContent += "      object.style.backgroundColor = \"purple\"; }\n";
+		pResponse->strContent += "    else {\n";
+		pResponse->strContent += "      divTorrent.style.display = \"none\";\n";
+		pResponse->strContent += "      object.style.color = \"\";\n";
+		pResponse->strContent += "      object.style.backgroundColor = \"\"; }\n";
+		pResponse->strContent += "  }\n";
 		pResponse->strContent += "}\n\n";
 
 //			pResponse->strContent += "function clear_search_and_filters( ) {\n";
@@ -1092,6 +1150,14 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 		else
 			pResponse->strContent += gmapLANG_CFG["user_detail_shares"];
 		pResponse->strContent += "</td>\n";
+		
+		if( pRequest->user.strUID == user.strUID )
+		{
+			pResponse->strContent += "<td class=\"user_detail\"><a class=\"user_detail";
+			if( cstrDetailShow == "notes" )
+				pResponse->strContent += "_selected";
+			pResponse->strContent += "\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?uid=" + user.strUID + "&amp;show=notes\">" + gmapLANG_CFG["user_detail_notes"] + "</td>\n";
+		}
 		
 		pResponse->strContent += "<td class=\"user_detail\"><a class=\"user_detail";
 		if( cstrDetailShow == "torrents" )
@@ -1482,6 +1548,81 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 				pResponse->strContent += "</table>\n";
 			}
 		}
+		else if( cstrDetailShow == "notes" )
+		{
+			if( pRequest->user.strUID == user.strUID && ( pRequest->user.ucAccess & m_ucAccessView ) )
+			{
+				pResponse->strContent += "<table class=\"user_detail_table\" id=\"user_notes\">\n";
+				pResponse->strContent += "<tr><th colspan=4>" + gmapLANG_CFG["user_detail_notes"] + "</th></tr>\n";
+				
+				CMySQLQuery *pQuery = new CMySQLQuery( "SELECT bid,bnote,bindex FROM notes WHERE buid=" + user.strUID + " ORDER BY bnote" );
+				
+				vector<string> vecQuery;
+			
+				vecQuery.reserve(3);
+
+				vecQuery = pQuery->nextRow( );
+				
+				if( vecQuery.size( ) == 3 )
+				{
+					pResponse->strContent += "<tr>\n";
+
+					pResponse->strContent += "<th class=\"name\">" + gmapLANG_CFG["notes"];
+
+					pResponse->strContent += "</th>\n";
+					
+					pResponse->strContent += "<th class=\"name\">" + gmapLANG_CFG["note_torrent"];
+
+					pResponse->strContent += "</th>\n";
+					
+					pResponse->strContent += "<th class=\"admin\">" + gmapLANG_CFG["note_show"];
+
+					pResponse->strContent += "</th>\n";
+					
+					pResponse->strContent += "<th class=\"admin\">" + gmapLANG_CFG["note_admin"];
+
+					pResponse->strContent += "</th>\n";
+
+					pResponse->strContent += "</tr>\n";
+
+					while( vecQuery.size( ) == 3 )
+					{
+							pResponse->strContent += "<tr>\n";
+						
+							pResponse->strContent += "<td class=\"admin\"><a class=\"note\" href=\"" + RESPONSE_STR_INDEX_HTML + "?search=" + UTIL_StringToEscaped( vecQuery[1] ) + "\">" + UTIL_RemoveHTML( vecQuery[1] ) + "</a></td>\n";
+
+							pResponse->strContent += "<td class=\"admin\">";
+							pResponse->strContent += "<a href=\"" + RESPONSE_STR_STATS_HTML + "?id=" + vecQuery[0] + "\">" + gmapLANG_CFG["torrent"] + "</a>";
+							pResponse->strContent += "</td>\n";
+							
+							pResponse->strContent += "<td class=\"admin\">";
+							pResponse->strContent += "[<a id=\"index" + vecQuery[0] + "\" href=\"javascript: ;\" onclick=\"javascript: index(this,'" + vecQuery[0] + "','" + vecQuery[1] + "','" + gmapLANG_CFG["note_index_add"] + "','" + gmapLANG_CFG["note_index_remove"] + "');\"";
+							if( vecQuery[2] == "1" )
+								pResponse->strContent += " class=\"note_noindex\">" + gmapLANG_CFG["note_index_remove"] + "</a>]";
+							else
+								pResponse->strContent += " class=\"note_index\">" + gmapLANG_CFG["note_index_add"] + "</a>]";
+							pResponse->strContent += "</td>\n";
+						
+							pResponse->strContent += "<td class=\"admin\">";
+
+							pResponse->strContent += "[<a id=\"note" + vecQuery[0] + "\" class=\"note_remove\" href=\"javascript: ;\" onclick=\"javascript: note(this,'" + vecQuery[0] + "','" + vecQuery[1] + "','" + gmapLANG_CFG["note_add"] + "','" + gmapLANG_CFG["note_remove"] + "');\">";
+							pResponse->strContent += gmapLANG_CFG["note_remove"] + "</a>]";
+
+							pResponse->strContent += "</td>\n";
+
+							pResponse->strContent += "</tr>\n";
+						
+						vecQuery = pQuery->nextRow( );
+					}
+				}
+				else
+					pResponse->strContent += "<tr><td>" + gmapLANG_CFG["result_none_found"] + "</td></tr>\n";
+				
+				delete pQuery;
+				
+				pResponse->strContent += "</table>\n";
+			}
+		}
 		else if( cstrDetailShow == "friends" )
 		{
 			if( pRequest->user.strUID == user.strUID && ( pRequest->user.ucAccess & m_ucAccessView ) )
@@ -1571,7 +1712,7 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 
 						pResponse->strContent += "<tr>\n";
 						
-						pResponse->strContent += "<td class=\"uploader\">" +getUserLink( pUsersT[ulKey].strUID, pUsersT[ulKey].strLogin ); + "</td>\n";
+						pResponse->strContent += "<td class=\"uploader\">" + getUserLink( pUsersT[ulKey].strUID, pUsersT[ulKey].strLogin ) + "</td>\n";
 						if( pUsersT[ulKey].tLast )
 						{
 //							char pTime[256];
@@ -1661,7 +1802,7 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 					{
 						pResponse->strContent += "<tr>\n";
 						
-						pResponse->strContent += "<td class=\"uploader\">" +getUserLink( vecQuery[1], vecQuery[2] ); + "</td>\n";
+						pResponse->strContent += "<td class=\"uploader\">" + getUserLink( vecQuery[1], vecQuery[2] ) + "</td>\n";
 						pResponse->strContent += "<td class=\"date\">";
 						
 						CMySQLQuery *pQueryFriend = new CMySQLQuery( "SELECT blast FROM users WHERE buid=" + vecQuery[1] );
@@ -1763,7 +1904,7 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 						{
 							pResponse->strContent += "<tr>\n";
 						
-							pResponse->strContent += "<td class=\"uploader\">" + getUserLink( vecQuery[0], vecQueryFriended[0] ); + "</td>\n";
+							pResponse->strContent += "<td class=\"uploader\">" + getUserLink( vecQuery[0], vecQueryFriended[0] ) + "</td>\n";
 							pResponse->strContent += "<td class=\"date\">";
 						
 							if( !vecQueryFriended[1].empty( ) )

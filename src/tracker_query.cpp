@@ -113,19 +113,19 @@ void CTracker :: serverResponseQuery( struct request_t *pRequest, struct respons
 						CMySQLQuery mq03( "UPDATE users SET bbonus=bbonus+" + CAtomInt( uiThanksBonus * 100 ).toString( ) + " WHERE buid=" + vecQuery[0] );
 						m_pCache->setThanks( cstrID, SET_THANKS_ADD );
 
-						pResponse->strContent += "<status>" + gmapLANG_CFG["query_thanks_successful"] + "</status>\n";
+						pResponse->strContent += "<status>" + gmapLANG_CFG["query_"+cstrType+"_successful"] + "</status>\n";
 						pResponse->strContent += "<code>1</code>\n";
 					}
 					else if( vecQueryThanks.size( ) == 2 )
 					{
-						pResponse->strContent += "<status>" + gmapLANG_CFG["query_thanks_again"] + "</status>\n";
+						pResponse->strContent += "<status>" + gmapLANG_CFG["query_"+cstrType+"_again"] + "</status>\n";
 						pResponse->strContent += "<code>2</code>\n";
 					}
 					pResponse->strContent += "<value>" + vecQuery[1] + "</value>\n";
 				}
 				else
 				{
-					pResponse->strContent += "<status>" + gmapLANG_CFG["query_thanks_failed"] + "</status>\n";
+					pResponse->strContent += "<status>" + gmapLANG_CFG["query_"+cstrType+"_failed"] + "</status>\n";
 					pResponse->strContent += "<code>0</code>\n";
 				}
 			}
@@ -169,18 +169,18 @@ void CTracker :: serverResponseQuery( struct request_t *pRequest, struct respons
 					if( vecQueryBookmark.size( ) == 0 )
 					{
 						CMySQLQuery mq01( "INSERT INTO bookmarks (buid,bid) VALUES(" + pRequest->user.strUID + "," + cstrID + ")" );
-						pResponse->strContent += "<status>" + gmapLANG_CFG["query_bookmark_successful"] + "</status>\n";
+						pResponse->strContent += "<status>" + gmapLANG_CFG["query_"+cstrType+"_successful"] + "</status>\n";
 						pResponse->strContent += "<code>1</code>\n";
 					}
 					else if( vecQueryBookmark.size( ) == 2 )
 					{
-						pResponse->strContent += "<status>" + gmapLANG_CFG["query_bookmark_exist"] + "</status>\n";
+						pResponse->strContent += "<status>" + gmapLANG_CFG["query_"+cstrType+"_exist"] + "</status>\n";
 						pResponse->strContent += "<code>2</code>\n";
 					}
 				}
 				else
 				{
-					pResponse->strContent += "<status>" + gmapLANG_CFG["query_bookmark_failed"] + "</status>\n";
+					pResponse->strContent += "<status>" + gmapLANG_CFG["query_"+cstrType+"_failed"] + "</status>\n";
 					pResponse->strContent += "<code>0</code>\n";
 				}
 			}
@@ -211,18 +211,18 @@ void CTracker :: serverResponseQuery( struct request_t *pRequest, struct respons
 					if( vecQueryBookmark.size( ) == 2 )
 					{
 						CMySQLQuery mq01( "DELETE FROM bookmarks WHERE buid=" + pRequest->user.strUID + " AND bid=" + cstrID );
-						pResponse->strContent += "<status>" + gmapLANG_CFG["query_bookmark_successful"] + "</status>\n";
+						pResponse->strContent += "<status>" + gmapLANG_CFG["query_"+cstrType+"_successful"] + "</status>\n";
 						pResponse->strContent += "<code>1</code>\n";
 					}
 					else if( vecQueryBookmark.size( ) == 0 )
 					{
-						pResponse->strContent += "<status>" + gmapLANG_CFG["query_bookmark_nonexist"] + "</status>\n";
+						pResponse->strContent += "<status>" + gmapLANG_CFG["query_"+cstrType+"_nonexist"] + "</status>\n";
 						pResponse->strContent += "<code>3</code>\n";
 					}
 				}
 				else
 				{
-					pResponse->strContent += "<status>" + gmapLANG_CFG["query_bookmark_failed"] + "</status>\n";
+					pResponse->strContent += "<status>" + gmapLANG_CFG["query_"+cstrType+"_failed"] + "</status>\n";
 					pResponse->strContent += "<code>0</code>\n";
 				}
 			}
@@ -257,26 +257,176 @@ void CTracker :: serverResponseQuery( struct request_t *pRequest, struct respons
 						if( ( cstrSet == "0" || cstrSet == "1" ) && cstrSet != vecQueryBookmark[2] )
 						{
 							CMySQLQuery mq01( "UPDATE bookmarks SET bshare=" + cstrSet + " WHERE buid=" + pRequest->user.strUID + " AND bid=" + cstrID );
-							pResponse->strContent += "<status>" + gmapLANG_CFG["query_bookmark_successful"] + "</status>\n";
+							pResponse->strContent += "<status>" + gmapLANG_CFG["query_"+cstrType+"_successful"] + "</status>\n";
 							pResponse->strContent += "<code>1</code>\n";
 						}
 						else
 						{
-							pResponse->strContent += "<status>" + gmapLANG_CFG["query_bookmark_sameshare"] + "</status>\n";
+							pResponse->strContent += "<status>" + gmapLANG_CFG["query_"+cstrType+"_sameshare"] + "</status>\n";
 							pResponse->strContent += "<code>4</code>\n";
 						}
 					}
 					else if( vecQueryBookmark.size( ) == 0 )
 					{
-						pResponse->strContent += "<status>" + gmapLANG_CFG["query_bookmark_nonexist"] + "</status>\n";
+						pResponse->strContent += "<status>" + gmapLANG_CFG["query_"+cstrType+"_nonexist"] + "</status>\n";
 						pResponse->strContent += "<code>3</code>\n";
 					}
 				}
 				else
 				{
-					pResponse->strContent += "<status>" + gmapLANG_CFG["query_bookmark_failed"] + "</status>\n";
+					pResponse->strContent += "<status>" + gmapLANG_CFG["query_"+cstrType+"_failed"] + "</status>\n";
 					pResponse->strContent += "<code>0</code>\n";
 				}
+			}
+		}
+		else
+		{
+			pResponse->strContent += "<status>" + gmapLANG_CFG["query_failed"] + "</status>\n";
+			pResponse->strContent += "<code>-1</code>\n";
+		}
+	}
+	else if( cstrType == "note" )
+	{
+		const string cstrNote( pRequest->mapParams["note"] );
+		if( !pRequest->user.strUID.empty( ) && ( pRequest->user.ucAccess & m_ucAccessComments ) && !cstrID.empty( ) && !cstrAction.empty( ) )
+		{
+			pResponse->strContent += "<action>" + gmapLANG_CFG["query_"+cstrType+"_"+cstrAction] + "</action>\n";
+
+			if( cstrAction == "add" )
+			{
+//				CMySQLQuery *pQuery = new CMySQLQuery( "SELECT bid FROM allowed WHERE bid=" + cstrID );
+//		
+//				vector<string> vecQuery;
+//		
+//				vecQuery.reserve(1);
+//
+//				vecQuery = pQuery->nextRow( );
+//			
+//				delete pQuery;
+//			
+//				if( vecQuery.size( ) == 1 && !vecQuery[0].empty( ) )
+//				{
+					CMySQLQuery *pQueryNote = new CMySQLQuery( "SELECT bid,buid,bnote FROM notes WHERE bid=" + cstrID + " AND buid=" + pRequest->user.strUID + " AND bnote=\'" + UTIL_StringToMySQL( cstrNote ) + "\'" );
+		
+					vector<string> vecQueryNote;
+		
+					vecQueryNote.reserve(3);
+
+					vecQueryNote = pQueryNote->nextRow( );
+				
+					delete pQueryNote;
+				
+					if( vecQueryNote.size( ) == 0 )
+					{
+						CMySQLQuery mq01( "INSERT INTO notes (bid,buid,bnote,badded) VALUES(" + cstrID + "," + pRequest->user.strUID + ",'" + UTIL_StringToMySQL( cstrNote ) + "'),NOW()" );
+						pResponse->strContent += "<status>" + gmapLANG_CFG["query_"+cstrType+"_successful"] + "</status>\n";
+						pResponse->strContent += "<code>1</code>\n";
+					}
+					else if( vecQueryNote.size( ) == 3 )
+					{
+						pResponse->strContent += "<status>" + gmapLANG_CFG["query_"+cstrType+"_exist"] + "</status>\n";
+						pResponse->strContent += "<code>2</code>\n";
+					}
+//				}
+//				else
+//				{
+//					pResponse->strContent += "<status>" + gmapLANG_CFG["query_bookmark_failed"] + "</status>\n";
+//					pResponse->strContent += "<code>0</code>\n";
+//				}
+			}
+			else if( cstrAction == "remove" )
+			{
+//				CMySQLQuery *pQuery = new CMySQLQuery( "SELECT bid FROM allowed WHERE bid=" + cstrID );
+//		
+//				vector<string> vecQuery;
+//		
+//				vecQuery.reserve(1);
+//
+//				vecQuery = pQuery->nextRow( );
+//			
+//				delete pQuery;
+//			
+//				if( vecQuery.size( ) == 1 && !vecQuery[0].empty( ) )
+//				{
+					CMySQLQuery *pQueryNote = new CMySQLQuery( "SELECT bid,buid,bnote FROM notes WHERE bid=" + cstrID + " AND buid=" + pRequest->user.strUID + " AND bnote=\'" + UTIL_StringToMySQL( cstrNote ) + "\'" );
+		
+					vector<string> vecQueryNote;
+		
+					vecQueryNote.reserve(3);
+
+					vecQueryNote = pQueryNote->nextRow( );
+				
+					delete pQueryNote;
+				
+					if( vecQueryNote.size( ) == 3 )
+					{
+						CMySQLQuery mq01( "DELETE FROM notes WHERE bid=" + cstrID + " AND buid=" + pRequest->user.strUID + " AND bnote=\'" + UTIL_StringToMySQL( cstrNote ) + "\'" );
+						pResponse->strContent += "<status>" + gmapLANG_CFG["query_"+cstrType+"_successful"] + "</status>\n";
+						pResponse->strContent += "<code>1</code>\n";
+					}
+					else if( vecQueryNote.size( ) == 0 )
+					{
+						pResponse->strContent += "<status>" + gmapLANG_CFG["query_"+cstrType+"_nonexist"] + "</status>\n";
+						pResponse->strContent += "<code>3</code>\n";
+					}
+//				}
+//				else
+//				{
+//					pResponse->strContent += "<status>" + gmapLANG_CFG["query_bookmark_failed"] + "</status>\n";
+//					pResponse->strContent += "<code>0</code>\n";
+//				}
+			}
+			else if( cstrAction == "index" )
+			{
+				const string cstrSet( pRequest->mapParams["set"] );
+
+//				CMySQLQuery *pQuery = new CMySQLQuery( "SELECT bid FROM allowed WHERE bid=" + cstrID );
+//		
+//				vector<string> vecQuery;
+//		
+//				vecQuery.reserve(1);
+//
+//				vecQuery = pQuery->nextRow( );
+//			
+//				delete pQuery;
+//			
+//				if( vecQuery.size( ) == 1 && !vecQuery[0].empty( ) )
+//				{
+					CMySQLQuery *pQueryNote = new CMySQLQuery( "SELECT bindex FROM notes WHERE bid=" + cstrID + " AND buid=" + pRequest->user.strUID + " AND bnote=\'" + UTIL_StringToMySQL( cstrNote ) + "\'" );
+		
+					vector<string> vecQueryNote;
+		
+					vecQueryNote.reserve(1);
+
+					vecQueryNote = pQueryNote->nextRow( );
+				
+					delete pQueryNote;
+				
+					if( vecQueryNote.size( ) == 1 )
+					{
+						if( ( cstrSet == "0" || cstrSet == "1" ) && cstrSet != vecQueryNote[0] )
+						{
+							CMySQLQuery mq01( "UPDATE notes SET bindex=" + cstrSet + " WHERE bid=" + cstrID + " AND buid=" + pRequest->user.strUID + " AND bnote=\'" + UTIL_StringToMySQL( cstrNote ) + "\'" );
+							pResponse->strContent += "<status>" + gmapLANG_CFG["query_"+cstrType+"_successful"] + "</status>\n";
+							pResponse->strContent += "<code>1</code>\n";
+						}
+						else
+						{
+							pResponse->strContent += "<status>" + gmapLANG_CFG["query_"+cstrType+"_sameindex"] + "</status>\n";
+							pResponse->strContent += "<code>4</code>\n";
+						}
+					}
+					else if( vecQueryNote.size( ) == 0 )
+					{
+						pResponse->strContent += "<status>" + gmapLANG_CFG["query_"+cstrType+"_nonexist"] + "</status>\n";
+						pResponse->strContent += "<code>3</code>\n";
+					}
+//				}
+//				else
+//				{
+//					pResponse->strContent += "<status>" + gmapLANG_CFG["query_note_failed"] + "</status>\n";
+//					pResponse->strContent += "<code>0</code>\n";
+//				}
 			}
 		}
 		else
@@ -310,7 +460,7 @@ void CTracker :: serverResponseQuery( struct request_t *pRequest, struct respons
 						m_pCache->setStatus( cstrID, SET_STATUS_REQ );
 						
 						CMySQLQuery mq01( "UPDATE allowed SET breq=1 WHERE bid=" + cstrID );
-						pResponse->strContent += "<status>" + gmapLANG_CFG["query_request_successful"] + "</status>\n";
+						pResponse->strContent += "<status>" + gmapLANG_CFG["query_"+cstrType+"_successful"] + "</status>\n";
 						pResponse->strContent += "<code>1</code>\n";
 
 						vector<string> vecCompleted;
@@ -386,13 +536,13 @@ void CTracker :: serverResponseQuery( struct request_t *pRequest, struct respons
 					}
 					else if( vecQuery[3] == "1" )
 					{
-						pResponse->strContent += "<status>" + gmapLANG_CFG["query_request_again"] + "</status>\n";
+						pResponse->strContent += "<status>" + gmapLANG_CFG["query_"+cstrType+"_again"] + "</status>\n";
 						pResponse->strContent += "<code>2</code>\n";
 					}
 				}
 				else
 				{
-					pResponse->strContent += "<status>" + gmapLANG_CFG["query_request_failed"] + "</status>\n";
+					pResponse->strContent += "<status>" + gmapLANG_CFG["query_"+cstrType+"_failed"] + "</status>\n";
 					pResponse->strContent += "<code>0</code>\n";
 				}
 			}
@@ -415,20 +565,20 @@ void CTracker :: serverResponseQuery( struct request_t *pRequest, struct respons
 						m_pCache->setStatus( cstrID, SET_STATUS_NOREQ );
 					
 						CMySQLQuery mq01( "UPDATE allowed SET breq=0 WHERE bid=" + cstrID );
-						pResponse->strContent += "<status>" + gmapLANG_CFG["query_request_successful"] + "</status>\n";
+						pResponse->strContent += "<status>" + gmapLANG_CFG["query_"+cstrType+"_successful"] + "</status>\n";
 						pResponse->strContent += "<code>1</code>\n";
 
 						CMySQLQuery mq02( "DELETE FROM talkrequest WHERE btid=" + cstrID );
 					}
 					else if( vecQuery[1] == "0" )
 					{
-						pResponse->strContent += "<status>" + gmapLANG_CFG["query_request_again"] + "</status>\n";
+						pResponse->strContent += "<status>" + gmapLANG_CFG["query_"+cstrType+"_again"] + "</status>\n";
 						pResponse->strContent += "<code>2</code>\n";
 					}
 				}
 				else
 				{
-					pResponse->strContent += "<status>" + gmapLANG_CFG["query_request_failed"] + "</status>\n";
+					pResponse->strContent += "<status>" + gmapLANG_CFG["query_"+cstrType+"_failed"] + "</status>\n";
 					pResponse->strContent += "<code>0</code>\n";
 				}
 			}
@@ -472,7 +622,7 @@ void CTracker :: serverResponseQuery( struct request_t *pRequest, struct respons
 					if( vecQueryFriend.size( ) == 0 )
 					{
 						CMySQLQuery mq01( "INSERT INTO friends (buid,bfriendid,bfriendname) VALUES(" + pRequest->user.strUID + "," + cstrUID + ",\'" + UTIL_StringToMySQL( vecQuery[1] ) + "\')" );
-						pResponse->strContent += "<status>" + gmapLANG_CFG["query_friend_successful"] + "</status>\n";
+						pResponse->strContent += "<status>" + gmapLANG_CFG["query_"+cstrType+"_successful"] + "</status>\n";
 						pResponse->strContent += "<code>1</code>\n";
 
 						string strQuery = string( );
@@ -559,13 +709,13 @@ void CTracker :: serverResponseQuery( struct request_t *pRequest, struct respons
 					}
 					else if( vecQueryFriend.size( ) == 2 )
 					{
-						pResponse->strContent += "<status>" + gmapLANG_CFG["query_friend_exist"] + "</status>\n";
+						pResponse->strContent += "<status>" + gmapLANG_CFG["query_"+cstrType+"_exist"] + "</status>\n";
 						pResponse->strContent += "<code>2</code>\n";
 					}
 				}
 				else
 				{
-					pResponse->strContent += "<status>" + gmapLANG_CFG["query_friend_failed"] + "</status>\n";
+					pResponse->strContent += "<status>" + gmapLANG_CFG["query_"+cstrType+"_failed"] + "</status>\n";
 					pResponse->strContent += "<code>0</code>\n";
 				}
 			}
@@ -598,19 +748,83 @@ void CTracker :: serverResponseQuery( struct request_t *pRequest, struct respons
 						CMySQLQuery mq01( "DELETE FROM friends WHERE buid=" + pRequest->user.strUID + " AND bfriendid=" + cstrUID );
 						CMySQLQuery mq02( "DELETE FROM talkhome WHERE buid=" + pRequest->user.strUID + " AND bfriendid=" + cstrUID );
 						CMySQLQuery mq03( "DELETE FROM talktofriend WHERE buid=" + cstrUID + " AND btofriendid=" + pRequest->user.strUID );
-						pResponse->strContent += "<status>" + gmapLANG_CFG["query_friend_successful"] + "</status>\n";
+						pResponse->strContent += "<status>" + gmapLANG_CFG["query_"+cstrType+"_successful"] + "</status>\n";
 						pResponse->strContent += "<code>1</code>\n";
 					}
 					else if( vecQueryFriend.size( ) == 0 )
 					{
-						pResponse->strContent += "<status>" + gmapLANG_CFG["query_friend_nonexist"] + "</status>\n";
+						pResponse->strContent += "<status>" + gmapLANG_CFG["query_"+cstrType+"_nonexist"] + "</status>\n";
 						pResponse->strContent += "<code>3</code>\n";
 					}
 				}
 				else
 				{
-					pResponse->strContent += "<status>" + gmapLANG_CFG["query_friend_failed"] + "</status>\n";
+					pResponse->strContent += "<status>" + gmapLANG_CFG["query_"+cstrType+"_failed"] + "</status>\n";
 					pResponse->strContent += "<code>0</code>\n";
+				}
+			}
+		}
+		else
+		{
+			pResponse->strContent += "<status>" + gmapLANG_CFG["query_failed"] + "</status>\n";
+			pResponse->strContent += "<code>-1</code>\n";
+		}
+	}
+	else if( cstrType == "channel" )
+	{
+		const string cstrChannel( pRequest->mapParams["channel"] );
+
+		if( !pRequest->user.strUID.empty( ) && ( pRequest->user.ucAccess & m_ucAccessView ) && !cstrChannel.empty( ) && !cstrAction.empty( ) )
+		{
+			pResponse->strContent += "<action>" + gmapLANG_CFG["query_"+cstrType+"_"+cstrAction] + "</action>\n";
+
+			if( cstrAction == "add" )
+			{
+				CMySQLQuery *pQueryListen = new CMySQLQuery( "SELECT buid,bchannel FROM listen WHERE buid=" + pRequest->user.strUID + " AND bchannel=\'" + UTIL_StringToMySQL( cstrChannel ) + "\'" );
+	
+				vector<string> vecQueryListen;
+	
+				vecQueryListen.reserve(2);
+
+				vecQueryListen = pQueryListen->nextRow( );
+			
+				delete pQueryListen;
+
+				if( vecQueryListen.size( ) == 0 )
+				{
+					CMySQLQuery mq01( "INSERT INTO listen (buid,bchannel) VALUES(" + pRequest->user.strUID + ",\'" + UTIL_StringToMySQL( cstrChannel ) + "\')" );
+					pResponse->strContent += "<status>" + gmapLANG_CFG["query_"+cstrType+"_successful"] + "</status>\n";
+					pResponse->strContent += "<code>1</code>\n";
+
+				}
+				else if( vecQueryListen.size( ) == 2 )
+				{
+					pResponse->strContent += "<status>" + gmapLANG_CFG["query_"+cstrType+"_exist"] + "</status>\n";
+					pResponse->strContent += "<code>2</code>\n";
+				}
+			}
+			else if( cstrAction == "remove" )
+			{
+				CMySQLQuery *pQueryListen = new CMySQLQuery( "SELECT buid,bchannel FROM listen WHERE buid=" + pRequest->user.strUID + " AND bchannel=\'" + UTIL_StringToMySQL( cstrChannel ) + "\'" );
+	
+				vector<string> vecQueryListen;
+	
+				vecQueryListen.reserve(2);
+
+				vecQueryListen = pQueryListen->nextRow( );
+			
+				delete pQueryListen;
+
+				if( vecQueryListen.size( ) == 2 )
+				{
+					CMySQLQuery mq01( "DELETE FROM listen WHERE buid=" + pRequest->user.strUID + " AND bchannel=\'" + UTIL_StringToMySQL( cstrChannel ) + "\'" );
+					pResponse->strContent += "<status>" + gmapLANG_CFG["query_"+cstrType+"_successful"] + "</status>\n";
+					pResponse->strContent += "<code>1</code>\n";
+				}
+				else if( vecQueryListen.size( ) == 0 )
+				{
+					pResponse->strContent += "<status>" + gmapLANG_CFG["query_"+cstrType+"_nonexist"] + "</status>\n";
+					pResponse->strContent += "<code>3</code>\n";
 				}
 			}
 		}
