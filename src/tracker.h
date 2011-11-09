@@ -22,6 +22,7 @@
 #define CSS_SIGNUP "signup"
 #define CSS_USERS "users"
 #define CSS_INFO "info"
+#define CSS_BET "bet"
 #define CSS_RULES "rules"
 #define CSS_FAQ "faq"
 #define CSS_STAFF "staff"
@@ -90,9 +91,11 @@
 #define RESPONSE_RECOVER	39
 #define RESPONSE_ANNOUNCEMENTS	40
 #define RESPONSE_VOTES		41
-#define RESPONSE_USERBAR	42
-#define RESPONSE_RANK		43
-#define RESPONSE_QUERY		44
+#define RESPONSE_BET		42
+#define RESPONSE_BETS		43
+#define RESPONSE_USERBAR	44
+#define RESPONSE_RANK		45
+#define RESPONSE_QUERY		46
 
 
 // Common strings
@@ -130,6 +133,8 @@
 #define SIGNUP_SCHOOL_HTML string( "signupschool.html" )
 #define ANNOUNCEMENTS_HTML string( "announcements.html" )
 #define VOTES_HTML string( "votes.html" )
+#define BET_HTML string( "bet.html" )
+#define BETS_HTML string( "bets.html" )
 #define ROBOTS_TXT string( "robots.txt" )
 #define FAVICON_ICO string( "favicon.ico" )
 #define BENCODE_INFO string( "info.bencode" )
@@ -173,6 +178,8 @@
 #define RESPONSE_STR_SIGNUP_SCHOOL_HTML RESPONSE_STR_SEPERATOR + SIGNUP_SCHOOL_HTML
 #define RESPONSE_STR_ANNOUNCEMENTS_HTML RESPONSE_STR_SEPERATOR + ANNOUNCEMENTS_HTML
 #define RESPONSE_STR_VOTES_HTML RESPONSE_STR_SEPERATOR + VOTES_HTML
+#define RESPONSE_STR_BET_HTML RESPONSE_STR_SEPERATOR + BET_HTML
+#define RESPONSE_STR_BETS_HTML RESPONSE_STR_SEPERATOR + BETS_HTML
 #define RESPONSE_STR_ROBOTS_TXT RESPONSE_STR_SEPERATOR + ROBOTS_TXT
 #define RESPONSE_STR_FAVICON_ICO RESPONSE_STR_SEPERATOR + FAVICON_ICO
 #define RESPONSE_STR_BENCODE_INFO RESPONSE_STR_SEPERATOR + BENCODE_INFO
@@ -606,7 +613,7 @@ public:
 	const bool checkTag( const string &strTag );
 	const string addTag( const string &strInfoHash, const string &strTag, const string &strName, const string &strIntr, const string &strUploader, const string &strUploaderID, const string &strIP, const string &strDefaultDown, const string &strDefaultUp, const string &strFreeDown, const string &strFreeUp, const string &strFreeTime, const string &strComments, const bool bFromNow, const bool bOffer );
 	void modifyTag( const string &strID, const string &strTag, const string &strName, const string &strIntr, const string &strUploader, const string &strUploaderID, const string &strIP, const string &strDefaultDown, const string &strDefaultUp, const string &strFreeDown, const string &strFreeUp, const string &strFreeTime, const bool bFromNow, const string &strTopTime, const bool bTopFromNow, const string &strComments, const bool bOffer );
-	void deleteTag( const string &strInfoHash, const bool bOffer );
+	void deleteTag( const string &strInfoHash, const bool bOffer,const bool bArchive );
 	void addBonus( const string &strID, const string &strUID );
 	const string checkUserMD5( const string &strUID, const string &cstrMD5 );
 	user_t checkUser( const string &strLogin, const string &cstrMD5 );
@@ -636,7 +643,8 @@ public:
 
 	void serverResponseGET( struct request_t *pRequest, struct response_t *pResponse );
 	void serverResponsePOST( struct request_t *pRequest, struct response_t *pResponse, CAtomList *pPost );
-	void serverResponseIndex( struct request_t *pRequest, struct response_t *pResponse );
+	void serverResponseIndexGET( struct request_t *pRequest, struct response_t *pResponse );
+	void serverResponseIndexPOST( struct request_t *pRequest, struct response_t *pResponse, CAtomList *pPost );
 	void serverResponseAnnounce( struct request_t *pRequest, struct response_t *pResponse );
 	void serverResponseScrape( struct request_t *pRequest, struct response_t *pResponse );
 	void serverResponseStatsGET( struct request_t *pRequest, struct response_t *pResponse );
@@ -685,6 +693,9 @@ public:
 	void serverResponseAnnouncementsPOST( struct request_t *pRequest, struct response_t *pResponse, CAtomList *pPost );
 	void serverResponseVotesGET( struct request_t *pRequest, struct response_t *pResponse );
 	void serverResponseVotesPOST( struct request_t *pRequest, struct response_t *pResponse, CAtomList *pPost );
+	void serverResponseBetGET( struct request_t *pRequest, struct response_t *pResponse );
+	void serverResponseBetsGET( struct request_t *pRequest, struct response_t *pResponse );
+	void serverResponseBetsPOST( struct request_t *pRequest, struct response_t *pResponse, CAtomList *pPost );
 	void serverResponseXML( struct request_t *pRequest, struct response_t *pResponse );
 	void serverResponseQuery( struct request_t *pRequest, struct response_t *pResponse );
 	void serverResponseRSS( struct request_t *pRequest, struct response_t *pResponse );
@@ -896,6 +907,9 @@ private:
 	vector< string > m_vecMediums;
 	vector< string > m_vecEncodes;
 	
+	vector< pair< string, string > > m_vecNotes;
+	vector< pair< string, string > > m_vecTalkTags;
+
 	int RequiredDown[6];
 	float RequiredRatio[6];
 
@@ -1043,9 +1057,9 @@ public:
 	virtual ~CCache( );
 
 	void Reset( bool bOffer = false );
-//	void addRow( const string strID, bool bOffer );
+	void addRow( const string &cstrID, bool bOffer );
+	void deleteRow( const string &cstrID, bool bOffer );
 	void sort( const unsigned char cucSort, bool bNoTop, bool bOffer = false );
-	void sortUsers( const unsigned char cucSort );
 	void setRow( const string &cstrID, bool bOffer );
 	void setActive( const string &cstrID, const unsigned char cucOpt );
 	void setCompleted( const string &cstrID, const unsigned char cucOpt );
@@ -1064,6 +1078,9 @@ public:
 	struct torrent_t *getCache( bool bOffer = false );
 	
 	void ResetUsers( );
+	void addRowUsers( const string &cstrUID );
+	void deleteRowUsers( const string &cstrUID );
+	void sortUsers( const unsigned char cucSort );
 	void setRowUsers( const string &cstrUID );
 	void setUserData( const string &cstrUID, int64 iUploaded, int64 iDownloaded, int64 iBonus );
 //	void setUserStatus( const string &cstrUID, const unsigned char cucOpt );

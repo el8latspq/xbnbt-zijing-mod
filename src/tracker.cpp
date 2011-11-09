@@ -1493,6 +1493,44 @@ void CTracker :: expireDownloaders( )
 	
 	UpdateUserState( );
 	
+	m_vecNotes.clear( );
+
+	CMySQLQuery *pQueryNotes = new CMySQLQuery( "SELECT bnote,COUNT(*) AS bcount FROM notes WHERE badded>NOW()-INTERVAL 1 WEEK GROUP by bnote ORDER BY bcount DESC LIMIT 8" );
+
+	vector<string> vecQueryNotes;
+
+	vecQueryNotes.reserve(2);
+
+	vecQueryNotes = pQueryNotes->nextRow( );
+
+	while( vecQueryNotes.size( ) == 2 )
+	{
+		m_vecNotes.push_back( pair<string, string>( vecQueryNotes[0], vecQueryNotes[1] ) );
+
+		vecQueryNotes = pQueryNotes->nextRow( );
+	}
+
+	delete pQueryNotes;
+
+	m_vecTalkTags.clear( );
+
+	CMySQLQuery *pQueryTag = new CMySQLQuery( "SELECT btag,COUNT(*) AS bcount FROM talktag WHERE bposted>NOW()-INTERVAL " + CAtomInt( CFG_GetInt( "bnbt_hot_day", 3 ) ).toString( ) + " DAY GROUP BY btag ORDER BY bcount DESC LIMIT 5");
+
+	vector<string> vecQueryTag;
+
+	vecQueryTag.reserve(2);
+
+	vecQueryTag = pQueryTag->nextRow( );
+
+	while( vecQueryTag.size( ) == 2 )
+	{
+		m_vecTalkTags.push_back( pair<string, string>( vecQueryTag[0], vecQueryTag[1] ) );
+		
+		vecQueryTag = pQueryTag->nextRow( );
+	}
+	
+	delete pQueryTag;
+
 	if( m_bCountUniquePeers )
 	{
 		if( gbDebug )
@@ -2366,7 +2404,7 @@ void CTracker :: modifyTag( const string &strID, const string &strTag, const str
 }
 
 // Delete other torrent associated entry
-void CTracker :: deleteTag( const string &strID, const bool bOffer )
+void CTracker :: deleteTag( const string &strID, const bool bOffer, const bool bArchive )
 {
 	if( gbDebug )
 		if( gucDebugLevel & DEBUG_TRACKER )
@@ -2385,23 +2423,35 @@ void CTracker :: deleteTag( const string &strID, const bool bOffer )
 		strIDKey = "btid";
 	}
 		
+	if( bArchive && !bOffer )
+		CMySQLQuery mq00( "INSERT INTO " + strDatabase + "_archive (SELECT * FROM " + strDatabase + " WHERE bid=" + strID + ")" );
+
 	CMySQLQuery mq01( "DELETE FROM " + strDatabase + " WHERE bid=" + strID );
 	
-	m_pCache->Reset( bOffer );
+//	m_pCache->Reset( bOffer );
+	m_pCache->deleteRow( strID, bOffer );
 	
-	if( !bOffer )
+	if( !bArchive )
 	{
-		CMySQLQuery mq02( "DELETE FROM dstate WHERE bid=" + strID );
-		CMySQLQuery mq03( "DELETE FROM dstate_store WHERE bid=" + strID );
-		CMySQLQuery mq04( "DELETE FROM peers WHERE bid=" + strID );
-		CMySQLQuery mq05( "DELETE FROM statistics WHERE bid=" + strID );
-		CMySQLQuery mq06( "DELETE FROM bookmarks WHERE bid=" + strID );
-		CMySQLQuery mq07( "DELETE FROM thanks WHERE bid=" + strID );
-		CMySQLQuery mq08( "DELETE FROM talktorrent WHERE btid=" + strID );
-		CMySQLQuery mq09( "DELETE FROM talkrequest WHERE btid=" + strID );
+		if( !bOffer )
+		{
+			CMySQLQuery mq02( "DELETE FROM dstate WHERE bid=" + strID );
+			CMySQLQuery mq03( "DELETE FROM dstate_store WHERE bid=" + strID );
+			CMySQLQuery mq04( "DELETE FROM peers WHERE bid=" + strID );
+			CMySQLQuery mq05( "DELETE FROM statistics WHERE bid=" + strID );
+			CMySQLQuery mq06( "DELETE FROM bookmarks WHERE bid=" + strID );
+			CMySQLQuery mq07( "DELETE FROM thanks WHERE bid=" + strID );
+			CMySQLQuery mq08( "DELETE FROM talktorrent WHERE btid=" + strID );
+			CMySQLQuery mq09( "DELETE FROM talkrequest WHERE btid=" + strID );
+		}
+		
+		CMySQLQuery mq10( "DELETE FROM comments WHERE " + strIDKey + "=" + strID );
 	}
-	
-	CMySQLQuery mq10( "DELETE FROM comments WHERE " + strIDKey + "=" + strID );
+	else
+	{
+		if( bOffer )
+			CMySQLQuery mq10( "DELETE FROM comments WHERE " + strIDKey + "=" + strID );
+	}
 	
 	if( gbDebug )
 		if( gucDebugLevel & DEBUG_TRACKER )
@@ -2804,25 +2854,30 @@ const string CTracker :: getUserLink( const string &strUID, const string &strUse
 	
 	string strUserLink = string( );
 
-	CMySQLQuery *pQuery = new CMySQLQuery( "SELECT busername,baccess,bgroup,buploaded,bdownloaded,UNIX_TIMESTAMP(bwarned) FROM users WHERE buid=" + strUID );
+	CMySQLQuery *pQuery = 0;
+	
+	if( !strUID.empty( ) )
+		pQuery = new CMySQLQuery( "SELECT buid,busername,baccess,bgroup,buploaded,bdownloaded,UNIX_TIMESTAMP(bwarned) FROM users WHERE buid=" + strUID );
+	else if( !strUsername.empty( ) )
+		pQuery = new CMySQLQuery( "SELECT buid,busername,baccess,bgroup,buploaded,bdownloaded,UNIX_TIMESTAMP(bwarned) FROM users WHERE busername=\'" + UTIL_StringToMySQL( strUsername ) + "\'" );
 
 	vector<string> vecQuery;
 	
-	vecQuery.reserve(6);
+	vecQuery.reserve(7);
 
 	vecQuery = pQuery->nextRow( );
 	
 	delete pQuery;
 	
-	if( vecQuery.size( ) == 6 )
+	if( vecQuery.size( ) == 7 )
 	{
-		unsigned char ucAccess = (unsigned char)atoi( vecQuery[1].c_str( ) );
-		unsigned char ucGroup = (unsigned char)atoi( vecQuery[2].c_str( ) );
+		unsigned char ucAccess = (unsigned char)atoi( vecQuery[2].c_str( ) );
+		unsigned char ucGroup = (unsigned char)atoi( vecQuery[3].c_str( ) );
 		int64 iUploaded = 0, iDownloaded = 0;
 		float flShareRatio = 0;
 		
-		iUploaded = UTIL_StringTo64( vecQuery[3].c_str( ) );
-		iDownloaded = UTIL_StringTo64( vecQuery[4].c_str( ) );
+		iUploaded = UTIL_StringTo64( vecQuery[4].c_str( ) );
+		iDownloaded = UTIL_StringTo64( vecQuery[5].c_str( ) );
 
 		if( iDownloaded == 0 )
 		{
@@ -2844,25 +2899,35 @@ const string CTracker :: getUserLink( const string &strUID, const string &strUse
 		else
 			strUserLink += strClass;
 		
-		strUserLink += "\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?uid=" + strUID + "\">";
+		strUserLink += "\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?uid=";
+		if( !strUID.empty( ) )
+			strUserLink += strUID;
+		else
+			strUserLink += vecQuery[0];
+		strUserLink += "\">";
 		
 		if( !strUsername.empty( ) )
 			strUserLink += UTIL_RemoveHTML( strUsername );
 		else
-			strUserLink += vecQuery[0];
+			strUserLink += vecQuery[1];
 		strUserLink += "</a>";
 
 		if( !( ucAccess & ACCESS_VIEW ) )
 			strUserLink += "<img title=\"" + gmapLANG_CFG["user_banned"] + "\" src=\"files/warned1.gif\">";
 		if( m_bRatioRestrict && bShareRatioWarned )
 			strUserLink += "<img title=\"" + gmapLANG_CFG["user_shareratio_warned"] + "\" src=\"files/warned3.gif\">";
-		if( vecQuery[5] != "0" )
+		if( vecQuery[6] != "0" )
 			strUserLink += "<img title=\"" + gmapLANG_CFG["user_warned"] + "\" src=\"files/warned.gif\">";
 	}
 	else
 	{
 		if( !strUsername.empty( ) )
-			strUserLink += "<a class=\"member\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?uid=" + strUID + "\">" + UTIL_RemoveHTML( strUsername ) + "</a>";
+		{
+			if( !strUID.empty( ) )
+				strUserLink += "<a class=\"member\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?uid=" + strUID + "\">" + UTIL_RemoveHTML( strUsername ) + "</a>";
+			else
+				strUserLink += UTIL_RemoveHTML( strUsername );
+		}
 	}
 	
 	return strUserLink;
@@ -3156,6 +3221,7 @@ void CTracker :: deleteUser( const string &strUID )
 	CMySQLQuery mq07( "DELETE FROM friends WHERE buid=" + strUID );
 	CMySQLQuery mq08( "DELETE FROM friends WHERE bfriendid=" + strUID );
 	CMySQLQuery mq09( "DELETE FROM invites WHERE bownerid=" + strUID );
+	CMySQLQuery mq10( "DELETE FROM listen WHERE buid=" + strUID );
 
 	if( gbDebug )
 		if( gucDebugLevel & DEBUG_TRACKER )
@@ -4170,7 +4236,7 @@ void CTracker :: Announce( const struct announce_t &ann, bool &bRespond )
 		if( bPeerFoundStore )
 		{
 			CMySQLQuery mq02( "INSERT INTO dstate (SELECT * FROM dstate_store WHERE bid=" + ann.strID + " AND buid=" + ann.strUID + " AND bpeerid=\'" + UTIL_StringToMySQL( ann.strPeerID ) + "\')" );
-			if( iPeerLeft == 0 )
+			if( iPeerLeft == 0 || ( iPeerLeft > 0 && ann.iLeft == 0 && ucEvent != EVENT_COMPLETED ) )
 			{
 				if( bIPv6 )
 				{
@@ -4246,7 +4312,7 @@ void CTracker :: Announce( const struct announce_t &ann, bool &bRespond )
 	switch( ucEvent )
 	{
 	case EVENT_STARTED:
-		if( bPeerFound && bIPv4 && bIPv6 )
+		if( bPeerFound && !bPeerFoundStore && ( ( bIPv4 && !bIPv6Announce ) || ( bIPv6 && bIPv6Announce ) ) )
 		{
 //			if( bIPv6Announce && !bIPv6 )
 //			{
@@ -4324,6 +4390,7 @@ void CTracker :: Announce( const struct announce_t &ann, bool &bRespond )
 			}
 			strQuery += ")";
 			strQueryValues += ")";
+			CMySQLQuery mq00( "DELETE FROM dstate_store WHERE bid=" + ann.strID + " AND buid=" + ann.strUID + " AND bupdated<NOW()-INTERVAL 1 WEEK" );
 			CMySQLQuery mq01( "INSERT INTO dstate_store " + strQuery + strQueryValues );
 			CMySQLQuery mq02( "INSERT INTO dstate " + strQuery + strQueryValues );
 //			CMySQLQuery mq02( "UPDATE allowed SET bupdated=NOW() WHERE bid=" + ann.strID );
@@ -4440,7 +4507,7 @@ void CTracker :: Announce( const struct announce_t &ann, bool &bRespond )
 					CMySQLQuery mq03( "UPDATE allowed SET bleechers6=bleechers6+1,bupdated=NOW() WHERE bid=" + ann.strID );
 				}
 			}
-		}		
+		}
 		break;
 	case EVENT_COMPLETED:
 		if( bPeerFound )
@@ -4545,7 +4612,6 @@ void CTracker :: Announce( const struct announce_t &ann, bool &bRespond )
 
 			return;
 		}
-
 		break;
 	case EVENT_STOPPED:
 		if( bPeerFound )
@@ -4747,6 +4813,8 @@ void CTracker :: serverResponseGET( struct request_t *pRequest, struct response_
 	else if( pRequest->strURL == RESPONSE_STR_SIGNUP_SCHOOL_HTML ) ucResponse = RESPONSE_SIGNUP_SCHOOL;
 	else if( pRequest->strURL == RESPONSE_STR_ANNOUNCEMENTS_HTML ) ucResponse = RESPONSE_ANNOUNCEMENTS;
 	else if( pRequest->strURL == RESPONSE_STR_VOTES_HTML ) ucResponse = RESPONSE_VOTES;
+	else if( pRequest->strURL == RESPONSE_STR_BET_HTML ) ucResponse = RESPONSE_BET;
+	else if( pRequest->strURL == RESPONSE_STR_BETS_HTML ) ucResponse = RESPONSE_BETS;
 	else if( pRequest->strURL == RESPONSE_STR_ROBOTS_TXT ) ucResponse = RESPONSE_ROBOTS;
 	else if( pRequest->strURL == RESPONSE_STR_FAVICON_ICO ) ucResponse = RESPONSE_FAVICON;
 //	else if( pRequest->strURL == RESPONSE_STR_BENCODE_INFO ) ucResponse = RESPONSE_BENCODE;
@@ -4865,7 +4933,7 @@ void CTracker :: serverResponseGET( struct request_t *pRequest, struct response_
 
 		break;
 	case RESPONSE_INDEX:
-		serverResponseIndex( pRequest, pResponse );
+		serverResponseIndexGET( pRequest, pResponse );
 		gtXStats.page.iIndex++;
 
 		break;
@@ -4992,6 +5060,14 @@ void CTracker :: serverResponseGET( struct request_t *pRequest, struct response_
 		serverResponseVotesGET( pRequest, pResponse );
 
 		break;
+	case RESPONSE_BET:
+		serverResponseBetGET( pRequest, pResponse );
+
+		break;
+	case RESPONSE_BETS:
+		serverResponseBetsGET( pRequest, pResponse );
+
+		break;
 	case RESPONSE_TAGS:
 		serverResponseTags( pRequest, pResponse );
 		gtXStats.page.iTags++;
@@ -5074,6 +5150,8 @@ void CTracker :: serverResponsePOST( struct request_t *pRequest, struct response
 
 	if( pPost )
 	{
+		if( pRequest->strURL == RESPONSE_STR_INDEX_HTML )
+			serverResponseIndexPOST( pRequest, pResponse, pPost );
 		if( pRequest->strURL == RESPONSE_STR_UPLOAD_HTML )
 			serverResponseUploadPOST( pRequest, pResponse, pPost );
 		else if( pRequest->strURL == RESPONSE_STR_STATS_HTML )
@@ -5106,6 +5184,8 @@ void CTracker :: serverResponsePOST( struct request_t *pRequest, struct response
 			serverResponseAnnouncementsPOST( pRequest, pResponse, pPost );
 		else if( pRequest->strURL == RESPONSE_STR_VOTES_HTML )
 			serverResponseVotesPOST( pRequest, pResponse, pPost );
+		else if( pRequest->strURL == RESPONSE_STR_BETS_HTML )
+			serverResponseBetsPOST( pRequest, pResponse, pPost );
 		else
 			pResponse->strCode = "404 " + gmapLANG_CFG["server_response_404"];
 	}
@@ -6246,7 +6326,7 @@ void CTracker :: HTML_Common_Begin( struct request_t *pRequest, struct response_
 	pResponse->strContent += "  var triggerHeight = parseInt(trigger.offsetHeight);\n";
 	pResponse->strContent += "  if( tool && tool.style.display==\"none\" ) {\n";
 	pResponse->strContent += "    tool.style.display=\"\";\n";
-	pResponse->strContent += "    tool.style.top=(triggerTop+triggerHeight-1).toString()+'px';\n";
+	pResponse->strContent += "    tool.style.top=(triggerTop+triggerHeight).toString()+'px';\n";
 	pResponse->strContent += "    tool.style.left=triggerLeft.toString()+'px';\n";
 	pResponse->strContent += "    showTrigger( idTrigger );\n";
 	pResponse->strContent += "  }\n";
@@ -6263,7 +6343,7 @@ void CTracker :: HTML_Common_Begin( struct request_t *pRequest, struct response_
 	pResponse->strContent += "  if( tool && tool.style.display==\"none\" ) {\n";
 	pResponse->strContent += "    tool.style.display=\"\";\n";
 	pResponse->strContent += "    var toolWidth = parseInt(tool.offsetWidth);\n";
-	pResponse->strContent += "    tool.style.top=(triggerTop+triggerHeight-1).toString()+'px';\n";
+	pResponse->strContent += "    tool.style.top=(triggerTop+triggerHeight).toString()+'px';\n";
 	pResponse->strContent += "    if( triggerLeft+triggerWidth > document.documentElement.clientWidth )\n";
 	pResponse->strContent += "      tool.style.left=(document.documentElement.clientWidth-toolWidth).toString()+'px';\n";
 	pResponse->strContent += "    else\n";
@@ -6275,13 +6355,15 @@ void CTracker :: HTML_Common_Begin( struct request_t *pRequest, struct response_
 	// hideTrigger
 	pResponse->strContent += "function hideTrigger( idTrigger ) {\n";
 	pResponse->strContent += "  var trigger = document.getElementById( idTrigger );\n";
-	pResponse->strContent += "  trigger.style.borderColor=\"transparent\";\n";
+//	pResponse->strContent += "  trigger.style.borderColor=\"transparent\";\n";
+	pResponse->strContent += "  trigger.style.backgroundColor=\"transparent\";\n";
 	pResponse->strContent += "}\n";
 
 	// showTrigger
 	pResponse->strContent += "function showTrigger( idTrigger ) {\n";
 	pResponse->strContent += "  var trigger = document.getElementById( idTrigger );\n";
-	pResponse->strContent += "  trigger.style.borderColor=\"purple\";\n";
+//	pResponse->strContent += "  trigger.style.borderColor=\"purple\";\n";
+	pResponse->strContent += "  trigger.style.backgroundColor=\"#dee3e7\";\n";
 	pResponse->strContent += "}\n";
 
 	pResponse->strContent += "//-->\n";
@@ -6368,8 +6450,6 @@ void CTracker :: HTML_Common_Begin( struct request_t *pRequest, struct response_
 		pResponse->strContent += "<span class=\"top_pipe\">|</span>";
 		pResponse->strContent += UTIL_Xsprintf( gmapLANG_CFG["login2_state_buffer"].c_str( ), string( "<span class=\"purple\" title=\"" + gmapLANG_CFG["top_note_shareratio"] + "\">" + strShareRatio + "</span>" ).c_str( ), string( "<span class=\"blue\" title=\"" + gmapLANG_CFG["top_note_uploaded"] + "\">" + UTIL_BytesToString( ulUploaded ) + "</span>" ).c_str( ), string( "<span class=\"green\" title=\"" + gmapLANG_CFG["top_note_downloaded"] + "\">" + UTIL_BytesToString( ulDownloaded ) + "</span>" ).c_str( ), string( "<a class=\"red\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?show=bonus\">" + CAtomLong( ulBonus / 100 ).toString( ) + "." + CAtomInt( ( ulBonus % 100 ) / 10 ).toString( ) + CAtomInt( ulBonus % 10 ).toString( ) + "</a>" ).c_str( ) );
 		pResponse->strContent += "</span>";
-		pResponse->strContent += "</td>\n<td class=\"top_tool\">";
-		pResponse->strContent += "<a href=\"javascript: ;\" onclick=\"javascript: scroll(0,0);\">" + gmapLANG_CFG["login2_gotop_icon"] + "</a>";
 
 		unsigned long ulCount = 0;
 		unsigned long ulRead = 0;
@@ -6430,8 +6510,8 @@ void CTracker :: HTML_Common_Begin( struct request_t *pRequest, struct response_
 //		if( ulTalk > ulHome )
 		if( ulTalk > 0 )
 			pResponse->strContent += "<span class=\"hot\">(" + CAtomLong( ulTalk ).toString( ) + ")</span>";
-		pResponse->strContent += "<span class=\"top_pipe\">|</span>";
-		pResponse->strContent += "<a class=\"top_talk\" href=\"" + RESPONSE_STR_TALK_HTML + "?channel=" + UTIL_StringToEscaped( gmapLANG_CFG["talk_channel_default"] ) + "\">" + gmapLANG_CFG["talk_channel_default"] + "</a>";
+//		pResponse->strContent += "<span class=\"top_pipe\">|</span>";
+//		pResponse->strContent += "<a class=\"top_talk\" href=\"" + RESPONSE_STR_TALK_HTML + "?channel=" + UTIL_StringToEscaped( gmapLANG_CFG["talk_channel_default"] ) + "\">" + gmapLANG_CFG["talk_channel_default"] + "</a>";
 //		pResponse->strContent += "<a class=\"top_talk\" href=\"" + RESPONSE_STR_TALK_HTML + "\">" + gmapLANG_CFG["talk_show_home"] + "</a>";
 //		if( ulHome > 0 )
 //			pResponse->strContent += "<span class=\"hot\">(" + vecQueryUser[9] + ")</span>";
@@ -6533,6 +6613,7 @@ void CTracker :: HTML_Common_Begin( struct request_t *pRequest, struct response_
 		pResponse->strContent += "<hr class=\"top_menu\" onMouseOver=\"javascript: showToolLeft('tdTool','tdToolTrigger');\"></hr>";
 
 		pResponse->strContent += "<a class=\"top_menu\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?show=bookmarks\">" + gmapLANG_CFG["user_detail_bookmarks"] + "</a>";
+		pResponse->strContent += "<a class=\"top_menu\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?show=notes\">" + gmapLANG_CFG["user_detail_notes"] + "</a>";
 		pResponse->strContent += "<a class=\"top_menu\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?show=torrents\">" + gmapLANG_CFG["user_detail_torrents"] + "</a>";
 		pResponse->strContent += "<a class=\"top_menu\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?show=active\">" + gmapLANG_CFG["user_detail_active"] + "</a>";
 		pResponse->strContent += "<a class=\"top_menu\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?show=completed\">" + gmapLANG_CFG["user_detail_completed"] + "</a>";
@@ -6578,7 +6659,25 @@ void CTracker :: HTML_Common_Begin( struct request_t *pRequest, struct response_
 
 		for( vector<string> :: iterator ulKey = vecChannel.begin( ); ulKey != vecChannel.end( ); ulKey++ )
 		{
-			pResponse->strContent += "<a class=\"top_menu\" href=\"" + RESPONSE_STR_TALK_HTML + "?channel=" + UTIL_StringToEscaped( (*ulKey) ) + "\">" + UTIL_RemoveHTML( (*ulKey) ) + "</a>";
+			pResponse->strContent += "<a class=\"top_menu\" href=\"" + RESPONSE_STR_TALK_HTML + "?channel=" + UTIL_StringToEscaped( (*ulKey) ) + "\">" + UTIL_RemoveHTML( (*ulKey) );
+
+			CMySQLQuery *pQueryListen = new CMySQLQuery( "SELECT btalk FROM listen WHERE buid=" + pRequest->user.strUID + " AND bchannel=\'" + UTIL_StringToMySQL( (*ulKey) ) + "\'" );
+
+			vector<string> vecQueryListen;
+
+			vecQueryListen.reserve(1);
+
+			vecQueryListen = pQueryListen->nextRow( );
+		
+			delete pQueryListen;
+
+			if( vecQueryListen.size( ) == 1 && vecQueryListen[0] != "0" )
+			{
+				pResponse->strContent += "<span class=\"hot\">(" + vecQueryListen[0] + ")</span>";
+				ulTalk += atoi( vecQueryListen[0].c_str( ) );
+			}
+
+			pResponse->strContent += "</a>";
 //			pResponse->strContent += "<a href=\"javascript: ;\" onClick=\"javascrip: load('div','divTalk','" + RESPONSE_STR_TALK_HTML + "?show=all');\">" + gmapLANG_CFG["talk_show_all"] + "</a>";
 		}
 
@@ -6591,16 +6690,19 @@ void CTracker :: HTML_Common_Begin( struct request_t *pRequest, struct response_
 			pResponse->strContent += "</div>\n";
 			pResponse->strContent += "<script type=\"text/javascript\">showToolRight('tdMessage','tdMessageTrigger');</script>";
 		}
+		pResponse->strContent += "\n<div class=\"go_top\">";
+		pResponse->strContent += "<a href=\"javascript: ;\" onclick=\"javascript: scroll(0,0);\">" + gmapLANG_CFG["login2_gotop_icon"] + "</a>";
+		pResponse->strContent += "</div>\n";
 
-		if( ulTalk > 0 )
-			pResponse->strContent += "<script type=\"text/javascript\">showToolLeft('tdTalk','tdTalkTrigger');</script>";
+//		if( ulTalk > 0 )
+//			pResponse->strContent += "<script type=\"text/javascript\">showToolLeft('tdTalk','tdTalkTrigger');</script>";
 	}
 //	pResponse->strContent += "</td>\n<td class=\"top_info\">";
 	pResponse->strContent += "</tr></table>\n";
 	
-	pResponse->strContent += "<table class=\"top_bar_hidden\">\n";
-	pResponse->strContent += "<tr class=\"top_bar_hidden\"><td class=\"top_bar_hidden\">\n";
-	pResponse->strContent += "</td></tr></table>\n";
+//	pResponse->strContent += "<table class=\"top_bar_hidden\">\n";
+//	pResponse->strContent += "<tr class=\"top_bar_hidden\"><td class=\"top_bar_hidden\">\n";
+//	pResponse->strContent += "</td></tr></table>\n";
 
 	// display login status (login1=not logged in) (login2=logged in)
 //	pResponse->strContent += "<table class=\"main_table\">\n";
@@ -7535,16 +7637,17 @@ void CCache :: resetCache( bool bOffer )
 		
 		if( vecQuery.size( ) == 34 )
 		{
-			struct tm time_tm;
-			int64 year, month, day, hour, minute, second;
-			sscanf( vecQuery[3].c_str( ), "%d-%d-%d %d:%d:%d",&year,&month,&day,&hour,&minute,&second );
-			time_tm.tm_year = year-1900;
-			time_tm.tm_mon = month-1;
-			time_tm.tm_mday = day;
-			time_tm.tm_hour = hour;
-			time_tm.tm_min = minute;
-			time_tm.tm_sec = second;
-			tLatest = mktime(&time_tm);
+			setLatest( vecQuery[3], bOffer );
+//			struct tm time_tm;
+//			int64 year, month, day, hour, minute, second;
+//			sscanf( vecQuery[3].c_str( ), "%d-%d-%d %d:%d:%d",&year,&month,&day,&hour,&minute,&second );
+//			time_tm.tm_year = year-1900;
+//			time_tm.tm_mon = month-1;
+//			time_tm.tm_mday = day;
+//			time_tm.tm_hour = hour;
+//			time_tm.tm_min = minute;
+//			time_tm.tm_sec = second;
+//			tLatest = mktime(&time_tm);
 		}
 
 		// Populate the torrents structure for display
@@ -7717,16 +7820,17 @@ void CCache :: resetCache( bool bOffer )
 		
 		if( vecQuery.size( ) == 13 )
 		{
-			struct tm time_tm;
-			int64 year, month, day, hour, minute, second;
-			sscanf( vecQuery[4].c_str( ), "%d-%d-%d %d:%d:%d",&year,&month,&day,&hour,&minute,&second );
-			time_tm.tm_year = year-1900;
-			time_tm.tm_mon = month-1;
-			time_tm.tm_mday = day;
-			time_tm.tm_hour = hour;
-			time_tm.tm_min = minute;
-			time_tm.tm_sec = second;
-			tLatestOffer = mktime(&time_tm);
+			setLatest( vecQuery[4], bOffer );
+//			struct tm time_tm;
+//			int64 year, month, day, hour, minute, second;
+//			sscanf( vecQuery[4].c_str( ), "%d-%d-%d %d:%d:%d",&year,&month,&day,&hour,&minute,&second );
+//			time_tm.tm_year = year-1900;
+//			time_tm.tm_mon = month-1;
+//			time_tm.tm_mday = day;
+//			time_tm.tm_hour = hour;
+//			time_tm.tm_min = minute;
+//			time_tm.tm_sec = second;
+//			tLatestOffer = mktime(&time_tm);
 		}
 		
 		// Populate the torrents structure for display
@@ -7851,272 +7955,141 @@ time_t CCache :: getLatest( bool bOffer )
 }
 
 
-//void CCache :: addRow( const string cstrID, bool bOffer )
-//{
-//	if( !bOffer )
-//	{
-//		struct torrent_t *pNew = new struct torrent_t[ulSize+1];
-//		
-//		for( unsigned long ulKey = 0; ulKey < ulSize; ulKey++ )
-//		{
-//			pNew[ulKey+1].strID = pTorrents[ulKey].strID;
-//			pNew[ulKey+1].strFileName = pTorrents[ulKey].strFileName;
-//			pNew[ulKey+1].strName = pTorrents[ulKey].strName;
-//			pNew[ulKey+1].strLowerName = pTorrents[ulKey].strLowerName;
-//			pNew[ulKey+1].strAdded = pTorrents[ulKey].strAdded;
-//			pNew[ulKey+1].iSize = pTorrents[ulKey].iSize;
-//			pNew[ulKey+1].uiFiles = pTorrents[ulKey].uiFiles;
-//			pNew[ulKey+1].strTag = pTorrents[ulKey].strTag;
-//			pNew[ulKey+1].strIP = pTorrents[ulKey].strIP;
-//			pNew[ulKey+1].strUploader = pTorrents[ulKey].strUploader;
-//			pNew[ulKey+1].strUploaderID = pTorrents[ulKey].strUploaderID;
-//			pNew[ulKey+1].strIMDb = pTorrents[ulKey].strIMDb;
-//			pNew[ulKey+1].strIMDbID = pTorrents[ulKey].strIMDbID;
-//			pNew[ulKey+1].iDefaultDown = pTorrents[ulKey].iDefaultDown;
-//			pNew[ulKey+1].iDefaultUp = pTorrents[ulKey].iDefaultUp;
-//			pNew[ulKey+1].iTimeDown = pTorrents[ulKey].iTimeDown;
-//			pNew[ulKey+1].iTimeUp = pTorrents[ulKey].iTimeUp;
-//			pNew[ulKey+1].iFreeTo = pTorrents[ulKey].iFreeTo;
-//			pNew[ulKey+1].bTop = pTorrents[ulKey].bTop;
-//			pNew[ulKey+1].bHL = pTorrents[ulKey].bHL;
-//			pNew[ulKey+1].bClassic = pTorrents[ulKey].bClassic;
-//			pNew[ulKey+1].bReq = pTorrents[ulKey].bReq;
-//			pNew[ulKey+1].bAllow = pTorrents[ulKey].bAllow;
-//			pNew[ulKey+1].uiSeeders = pTorrents[ulKey].uiSeeders;
-//			pNew[ulKey+1].uiLeechers = pTorrents[ulKey].uiLeechers;
-//			pNew[ulKey+1].ulCompleted = pTorrents[ulKey].ulCompleted;
-//			pNew[ulKey+1].uiComments = pTorrents[ulKey].uiComments;
-//		}
-//		
-//		ulSize++;
-//		
-//		delete [] pTorrents;
-//		
-//		pTorrents = pNew;
+void CCache :: addRow( const string &cstrID, bool bOffer )
+{
+	resetCache( bOffer );
 
-//		CMySQLQuery *pQuery = new CMySQLQuery( "SELECT bid,bfilename,bname,badded,bsize,bfiles,btag,btitle,bip,buploader,buploaderid,bimdb,bimdbid,bdefault_down,bdefault_up,bfree_down,bfree_up,UNIX_TIMESTAMP(bfree_to),btop,bhl,bclassic,breq,bnodownload,bseeders,bleechers,bcompleted,bcomments FROM allowed WHERE bid=" + cstrID );
-//				
-//		vector<string> vecQuery;
+	if( !bOffer )
+	{
+		struct torrent_t *pNew = new struct torrent_t[ulSize+1];
+		
+		for( unsigned long ulKey = 0; ulKey < ulSize; ulKey++ )
+		{
+			pNew[ulKey+1] = pTorrents[ulKey];
+		}
+		
+		ulSize++;
+		
+		delete [] pTorrents;
+		
+		pTorrents = pNew;
 
-//		vecQuery.reserve(27);
+		pTorrents[0].strID = cstrID;
+		setRow( cstrID, bOffer );
 
-//		vecQuery = pQuery->nextRow( );
-//		
-//		delete pQuery;
+		setLatest( pTorrents[0].strAdded, bOffer );
 
-//		if( vecQuery.size( ) == 27 )
-//		{
-//			pTorrents[0].strTag = "101";
-//			pTorrents[0].strName = gmapLANG_CFG["unknown"];
-//			pTorrents[0].strLowerName = gmapLANG_CFG["unknown"];
-//			pTorrents[0].strID = string( );
-//			pTorrents[0].uiSeeders = 0;
-//			pTorrents[0].uiLeechers = 0;
-//			pTorrents[0].ulCompleted = 0;
-//			pTorrents[0].iSize = 0;
-//			pTorrents[0].uiFiles = 0;
-//			pTorrents[0].uiComments = 0;
-//			pTorrents[0].bAllow = true;
-//			pTorrents[0].bTop = false;
-//			pTorrents[0].bHL = false;
-//			pTorrents[0].bClassic = false;
-//			pTorrents[0].bReq = false;
-//			pTorrents[0].iDefaultDown = 100;
-//			pTorrents[0].iDefaultUp = 100;
-//			pTorrents[0].iTimeDown = 100;
-//			pTorrents[0].iTimeUp = 100;
-//			pTorrents[0].iFreeTo = 0;
-//			pTorrents[0].iFreeDown = 100;
-//			pTorrents[0].iFreeUp = 100;
-//		
-//			if( !vecQuery[1].empty( ) )
-//				pTorrents[0].strFileName = vecQuery[1];
+//		bResort = true;
+	}
+	
+	if( bOffer )
+	{
+		struct torrent_t *pNew = new struct torrent_t[ulSizeOffers+1];
+		
+		for( unsigned long ulKey = 0; ulKey < ulSizeOffers; ulKey++ )
+		{
+			pNew[ulKey+1] = pOffers[ulKey];
+		}
+		
+		ulSizeOffers++;
+		
+		delete [] pOffers;
+		
+		pOffers = pNew;
+		
+		pOffers[0].strID = cstrID;
+		setRow( cstrID, bOffer );
 
-//			if( !vecQuery[2].empty( ) )
-//			{
-//				// stick a lower case version in strNameLower for non case sensitive searching and sorting
+		setLatest( pOffers[0].strAdded, bOffer );
 
-//				pTorrents[0].strName = vecQuery[2];
-//				pTorrents[0].strLowerName = UTIL_ToLower( pTorrents[0].strName );
-//			}
-//	
-//			if( !vecQuery[3].empty( ) )
-//				pTorrents[0].strAdded = vecQuery[3];
+//		bResortOffers = true;
+	}
+}
 
-//			if( !vecQuery[4].empty( ) )
-//				pTorrents[0].iSize = UTIL_StringTo64( vecQuery[4].c_str( ) );
+void CCache :: deleteRow( const string &cstrID, bool bOffer )
+{
+	resetCache( bOffer );
 
-//			if( !vecQuery[5].empty( ) )
-//				pTorrents[0].uiFiles = (unsigned int)atoi( vecQuery[5].c_str( ) );
+	if( !bOffer )
+	{
+		string strAdded = string( "1970-01-01 00:00:00" );
 
-//			if( !vecQuery[0].empty( ) )
-//				pTorrents[0].strID = vecQuery[0];
-//			
-//			if( !vecQuery[6].empty( ) )
-//				pTorrents[0].strTag = vecQuery[6];
+		bool bDelete = false;
+		unsigned long ulNew = 0;
+		struct torrent_t *pNew = new struct torrent_t[ulSize-1];
+		
+		for( unsigned long ulKey = 0; ulKey < ulSize; ulKey++ )
+		{
+			if( pTorrents[ulKey].strID == cstrID )
+			{
+				bDelete = true;
+				continue;
+			}
 
-//			if( !vecQuery[7].empty( ) )
-//			{
-//				// this will overwrite the previous name, ulKey.e. the filename
+			if( ulNew == ulSize - 1 )
+				break;
+			pNew[ulNew] = pTorrents[ulKey];
+			if( pNew[ulNew].strAdded.compare( strAdded ) > 0 )
+				strAdded = pNew[ulNew].strAdded;
+			ulNew++;
+		}
+		
+		if( bDelete )
+		{
+			ulSize--;
+			
+			delete [] pTorrents;
+			
+			pTorrents = pNew;
 
-//				pTorrents[0].strName = vecQuery[7];
-//				pTorrents[0].strLowerName = UTIL_ToLower( pTorrents[0].strName );
-//			}
-//	
-//			if( !vecQuery[8].empty( ) )
-//				pTorrents[0].strIP = vecQuery[8];
+			setLatest( strAdded, bOffer );
 
-//			if( !vecQuery[9].empty( ) )
-//				pTorrents[0].strUploader = vecQuery[9];
-//	
-//			if( !vecQuery[10].empty( ) )
-//				pTorrents[0].strUploaderID = vecQuery[10];
-//	
-//			if( !vecQuery[11].empty( ) )
-//				pTorrents[0].strIMDb = vecQuery[11];
-//	
-//			if( !vecQuery[12].empty( ) )
-//				pTorrents[0].strIMDbID = vecQuery[12];
-//	
-//			if( !vecQuery[13].empty( ) )
-//				pTorrents[0].iDefaultDown = atoi( vecQuery[13].c_str( ) );
-//	
-//			if( !vecQuery[14].empty( ) )
-//				pTorrents[0].iDefaultUp = atoi( vecQuery[14].c_str( ) );
-//	
-//			if( !vecQuery[15].empty( ) )
-//				pTorrents[0].iTimeDown = atoi( vecQuery[15].c_str( ) );
-//	
-//			if( !vecQuery[16].empty( ) )
-//				pTorrents[0].iTimeUp = atoi( vecQuery[16].c_str( ) );
-//	
-//			if( !vecQuery[17].empty( ) )
-//				pTorrents[0].iFreeTo = UTIL_StringTo64( vecQuery[17].c_str( ) );
-//	
-//			if( !vecQuery[18].empty( ) && vecQuery[18] == "1" )
-//				pTorrents[0].bTop = true;
+//			bResort = true;
+		}
+		else
+			delete [] pNew;
+	}
+	
+	if( bOffer )
+	{
+		string strAdded = string( "1970-01-01 00:00:00" );
 
-//			if( !vecQuery[19].empty( ) && vecQuery[19] == "1" )
-//				pTorrents[0].bHL = true;
-//	
-//			if( !vecQuery[20].empty( ) && vecQuery[20] == "1" )
-//				pTorrents[0].bClassic = true;
-//	
-//			if( !vecQuery[21].empty( ) && vecQuery[21] == "1" )
-//				pTorrents[0].bReq = true;
-//	
-//			if( !vecQuery[22].empty( ) && vecQuery[22] == "1" )
-//				pTorrents[0].bAllow = false;
+		bool bDelete = false;
+		unsigned long ulNew = 0;
+		struct torrent_t *pNew = new struct torrent_t[ulSizeOffers-1];
+		
+		for( unsigned long ulKey = 0; ulKey < ulSizeOffers; ulKey++ )
+		{
+			if( pOffers[ulKey].strID == cstrID )
+			{
+				bDelete = true;
+				continue;
+			}
 
-//			pTorrents[0].uiSeeders = (unsigned int)atoi( vecQuery[23].c_str( ) );
-//			pTorrents[0].uiLeechers = (unsigned int)atoi( vecQuery[24].c_str( ) );
-//			pTorrents[0].ulCompleted = (unsigned int)atoi( vecQuery[25].c_str( ) );
-//			pTorrents[0].uiComments = (unsigned int)atoi( vecQuery[26].c_str( ) );
-//		}
-//	}
-//	
-//	if( bOffer )
-//	{
-//		struct torrent_t *pNew = new struct torrent_t[ulSizeOffer+1];
-//		
-//		for( unsigned long ulKey = 0; ulKey < ulSize; ulKey++ )
-//		{
-//			pNew[ulKey+1].strID = pOffers[ulKey].strID;
-//			pNew[ulKey+1].strInfoHash = pOffers[ulKey].strInfoHash;
-//			pNew[ulKey+1].strFileName = pOffers[ulKey].strFileName;
-//			pNew[ulKey+1].strName = pOffers[ulKey].strName;
-//			pNew[ulKey+1].strLowerName = pOffers[ulKey].strLowerName;
-//			pNew[ulKey+1].strAdded = pOffers[ulKey].strAdded;
-//			pNew[ulKey+1].iSize = pOffers[ulKey].iSize;
-//			pNew[ulKey+1].uiFiles = pOffers[ulKey].uiFiles;
-//			pNew[ulKey+1].strTag = pOffers[ulKey].strTag;
-//			pNew[ulKey+1].strUploader = pOffers[ulKey].strUploader;
-//			pNew[ulKey+1].strUploaderID = pOffers[ulKey].strUploaderID;
-//			pNew[ulKey+1].uiSeeders = pOffers[ulKey].uiSeeders;
-//			pNew[ulKey+1].uiComments = pOffers[ulKey].uiComments;
-//		}
-//		
-//		ulSizeOffer++;
-//		
-//		delete [] pOffers;
-//		
-//		pOffers = pNew;
-//		
-//		CMySQLQuery *pQuery = new CMySQLQuery( "SELECT bid,bhash,bfilename,bname,badded,bsize,bfiles,btag,btitle,buploader,buploaderid,UNIX_TIMESTAMP(bseeded),bcomments FROM offer" );
-//						
-//		vector<string> vecQuery;
-//		
-//		vecQuery.reserve(13);
+			if( ulNew == ulSizeOffers - 1 )
+				break;
+			pNew[ulNew] = pOffers[ulKey];
+			if( pNew[ulNew].strAdded.compare( strAdded ) > 0 )
+				strAdded = pNew[ulNew].strAdded;
+			ulNew++;
+		}
+		
+		if( bDelete )
+		{
+			ulSizeOffers--;
+			
+			delete [] pOffers;
+			
+			pOffers = pNew;
 
-//		vecQuery = pQuery->nextRow( );
-//		
-//		delete pQuery;
-//		
-//		if( vecQuery.size( ) == 13 )
-//		{
-//			pOffers[0].strTag = "101";
-//			pOffers[0].strName = gmapLANG_CFG["unknown"];
-//			pOffers[0].strLowerName = gmapLANG_CFG["unknown"];
-//			pOffers[0].strID = string( );
-//			pOffers[0].uiSeeders = 0;
-//			pOffers[0].bTop = false;
+			setLatest( strAdded, bOffer );
 
-//			pOffers[0].iSize = 0;
-//			pOffers[0].uiFiles = 0;
-//			pOffers[0].uiComments = 0;
-//			
-//			if( !vecQuery[0].empty( ) )
-//				pOffers[0].strID =vecQuery[0];
-//				
-//			if( !vecQuery[1].empty( ) )
-//				pOffers[0].strInfoHash =vecQuery[1];
-//			
-//			if( !vecQuery[2].empty( ) )
-//				pOffers[0].strFileName = vecQuery[2];
-
-//			if( !vecQuery[3].empty( ) )
-//			{
-//				// stick a lower case version in strNameLower for non case sensitive searching and sorting
-
-//				pOffers[0].strName = vecQuery[3];
-//				pOffers[0].strLowerName = UTIL_ToLower( pOffers[0].strName );
-//			}
-
-//			if( !vecQuery[4].empty( ) )
-//				pOffers[0].strAdded = vecQuery[4];
-
-//			if( !vecQuery[5].empty( ) )
-//				pOffers[0].iSize = UTIL_StringTo64( vecQuery[5].c_str( ) );
-
-//			if( !vecQuery[6].empty( ) )
-//				pOffers[0].uiFiles = (unsigned int)atoi( vecQuery[6].c_str( ) );
-
-//			if( !vecQuery[7].empty( ) )
-//				pOffers[0].strTag = vecQuery[7];
-
-//			if( !vecQuery[8].empty( ) )
-//			{
-//				// this will overwrite the previous name, ulKey.e. the filename
-
-//				pOffers[0].strName = vecQuery[8];
-//				pOffers[0].strLowerName = UTIL_ToLower( pOffers[0].strName );
-//			}
-
-
-//			if( !vecQuery[9].empty( ) )
-//				pOffers[0].strUploader = vecQuery[9];
-//			
-//			if( !vecQuery[10].empty( ) )
-//				pOffers[0].strUploaderID = vecQuery[10];
-//			
-//			if( !vecQuery[11].empty( ) && vecQuery[11] != "0" )
-//				pOffers[0].uiSeeders = 1;
-//				
-//			if( !vecQuery[12].empty( ) )
-//				pOffers[0].uiComments = (unsigned int)atoi( vecQuery[12].c_str( ) );
-//		}
-//	}
-//}
+//			bResortOffers = true;
+		}
+		else
+			delete [] pNew;
+	}
+}
 
 void CCache :: sort( const unsigned char cucSort, bool bNoTop, bool bOffer )
 {
@@ -9137,6 +9110,65 @@ unsigned long CCache :: getSizeUsers( )
 		return 0;
 }
 
+void CCache :: addRowUsers( const string &cstrUID )
+{
+	resetCacheUsers( );
+
+	struct user_t *pNew = new struct user_t[ulSizeUsers+1];
+	
+	for( unsigned long ulKey = 0; ulKey < ulSizeUsers; ulKey++ )
+	{
+		pNew[ulKey+1] = pUsers[ulKey];
+	}
+	
+	ulSizeUsers++;
+	
+	delete [] pUsers;
+	
+	pUsers = pNew;
+
+	pUsers[0].strUID = cstrUID;
+	setRowUsers( cstrUID );
+
+	bResortUsers = true;
+}
+
+void CCache :: deleteRowUsers( const string &cstrUID )
+{
+	resetCacheUsers( );
+
+	bool bDelete = false;
+	unsigned long ulNew = 0;
+	struct user_t *pNew = new struct user_t[ulSizeUsers-1];
+	
+	for( unsigned long ulKey = 0; ulKey < ulSizeUsers; ulKey++ )
+	{
+		if( pUsers[ulKey].strUID == cstrUID )
+		{
+			bDelete = true;
+			continue;
+		}
+
+		if( ulNew == ulSizeUsers - 1 )
+			break;
+		pNew[ulNew] = pUsers[ulKey];
+		ulNew++;
+	}
+	
+	if( bDelete )
+	{
+		ulSizeUsers--;
+		
+		delete [] pUsers;
+		
+		pUsers = pNew;
+
+//		bResortUsers = true;
+	}
+	else
+		delete [] pNew;
+}
+	
 void CCache :: sortUsers( const unsigned char cucSort )
 {
 	if( cucSort == ucSortUsers && !bResortUsers )
@@ -9252,14 +9284,14 @@ void CCache :: setRowUsers( const string &cstrUID )
 
 			if( vecQuery.size( ) == 14 )
 			{
-//				pUsers[ulKey].strUID = vecQuery[0];
-//				pUsers[ulKey].strLogin = vecQuery[1];
-//				pUsers[ulKey].strLowerLogin = UTIL_ToLower( pUsers[ulKey].strLogin );
+				pUsers[ulKey].strUID = vecQuery[0];
+				pUsers[ulKey].strLogin = vecQuery[1];
+				pUsers[ulKey].strLowerLogin = UTIL_ToLower( pUsers[ulKey].strLogin );
 				pUsers[ulKey].ucAccess = 0;
 				pUsers[ulKey].ucGroup = 0;
 		
-//				if( !vecQuery[2].empty( ) )
-//					pUsers[ulKey].strCreated = vecQuery[2];
+				if( !vecQuery[2].empty( ) )
+					pUsers[ulKey].strCreated = vecQuery[2];
 
 				if( !vecQuery[3].empty( ) )
 				{
@@ -9292,20 +9324,20 @@ void CCache :: setRowUsers( const string &cstrUID )
 				if( !vecQuery[8].empty( ) )
 					pUsers[ulKey].ulBonus = UTIL_StringTo64( vecQuery[8].c_str( ) );
 		
-//				if( !vecQuery[9].empty( ) )
-//					pUsers[ulKey].flSeedBonus = atof( vecQuery[9].c_str( ) );
+				if( !vecQuery[9].empty( ) )
+					pUsers[ulKey].flSeedBonus = atof( vecQuery[9].c_str( ) );
 
-//				if( !vecQuery[10].empty( ) )
-//					pUsers[ulKey].tLast = UTIL_StringTo64( vecQuery[10].c_str( ) );
+				if( !vecQuery[10].empty( ) )
+					pUsers[ulKey].tLast = UTIL_StringTo64( vecQuery[10].c_str( ) );
 		
 				if( !vecQuery[11].empty( ) )
 					pUsers[ulKey].tWarned = UTIL_StringTo64( vecQuery[11].c_str( ) );
 			
-//				if( !vecQuery[12].empty( ) )
-//					pUsers[ulKey].strInviter = vecQuery[12];
-//			
-//				if( !vecQuery[13].empty( ) )
-//					pUsers[ulKey].strInviterID = vecQuery[13];
+				if( !vecQuery[12].empty( ) )
+					pUsers[ulKey].strInviter = vecQuery[12];
+			
+				if( !vecQuery[13].empty( ) )
+					pUsers[ulKey].strInviterID = vecQuery[13];
 			}
 			
 			break;
