@@ -268,6 +268,17 @@ void CTracker :: serverResponseCommentsGET( struct request_t *pRequest, struct r
 		
 		// reply
 		pResponse->strContent += "function reply(replyId,textareaId) {\n";
+		pResponse->strContent += "  var replytoSpan = document.getElementById( 'replyto'+replyId );\n";
+		pResponse->strContent += "  var replytoData = replytoSpan.innerHTML;\n";
+		pResponse->strContent += "  var textarea = document.getElementById( textareaId );\n";
+		pResponse->strContent += "  var textData = textarea.value;\n";
+		pResponse->strContent += "  window.location.hash = \"commentarea\";\n";
+		pResponse->strContent += "  document.postacomment.comment.focus();\n";
+		pResponse->strContent += "  textarea.value = '------ [b]" + gmapLANG_CFG["comments_reply"] + ": [user]' + replytoData + '[/user][/b]([anchor=#comment' + replyId + ']#' + replyId + '[/anchor]) ------\\n';\n";
+		pResponse->strContent += "}\n\n";
+
+		// quote
+		pResponse->strContent += "function quote(replyId,textareaId) {\n";
 		pResponse->strContent += "  var replySpan = document.getElementById( 'reply'+replyId );\n";
 		pResponse->strContent += "  var replyData = replySpan.innerHTML;\n";
 		pResponse->strContent += "  var replytoSpan = document.getElementById( 'replyto'+replyId );\n";
@@ -276,7 +287,7 @@ void CTracker :: serverResponseCommentsGET( struct request_t *pRequest, struct r
 		pResponse->strContent += "  var textData = textarea.value;\n";
 		pResponse->strContent += "  window.location.hash = \"commentarea\";\n";
 		pResponse->strContent += "  document.postacomment.comment.focus();\n";
-		pResponse->strContent += "  textarea.value = '[quote=' + replytoData + ']' + replyData.stripX( ) + '[/quote]\\n';\n";
+		pResponse->strContent += "  textarea.value += '[quote=[user]' + replytoData + '[/user]]' + replyData.stripX( ) + '[/quote]\\n';\n";
 		pResponse->strContent += "}\n\n";
 //		pResponse->strContent += "function reply(replyId,formId,formName) {\n";
 //		pResponse->strContent += "  var replyForm = document.getElementById( formId );\n";
@@ -564,9 +575,9 @@ void CTracker :: serverResponseCommentsGET( struct request_t *pRequest, struct r
 					
 				pResponse->strContent += "<div class=\"comments_info_table\">\n";
 				pResponse->strContent += "<h3>" + gmapLANG_CFG["comments"] + "</h3>\n";
-				pResponse->strContent += "<p><a class=\"stats\" title=\"" + gmapLANG_CFG["name"] + ": " + UTIL_RemoveHTML( strOldName ) + "\" href=\"" + RESPONSE_STR_STATS_HTML + strJoined;
+				pResponse->strContent += "<h3><a class=\"stats\" title=\"" + gmapLANG_CFG["name"] + ": " + UTIL_RemoveHTML( strOldName ) + "\" href=\"" + RESPONSE_STR_STATS_HTML + strJoined;
 				pResponse->strContent += "\">";
-				pResponse->strContent += UTIL_RemoveHTML( strOldName ) + "</a></p>\n";
+				pResponse->strContent += UTIL_RemoveHTML( strOldName ) + "</a></h3>\n";
 				pResponse->strContent += "</div>\n";
 			}
 
@@ -722,7 +733,7 @@ void CTracker :: serverResponseCommentsGET( struct request_t *pRequest, struct r
 						if( strTime.empty( ) )
 							strTime = gmapLANG_CFG["unknown"];
 				
-						pResponse->strContent += "<tr class=\"com_header\">";
+						pResponse->strContent += "<tr class=\"com_header\" id=\"comment" + strID + "\">";
 						pResponse->strContent += "<td class=\"com_header\">";
 						pResponse->strContent += "<span style=\"display: none\" id=\"replyto" + strID + "\">" + UTIL_RemoveHTML( strName ) + "</span>\n";
 //						pResponse->strContent += UTIL_Xsprintf( gmapLANG_CFG["comments_posted_by"].c_str( ), strID.c_str( ), strUserLink.c_str( ), strIP.c_str( ), strTime.c_str( ) );
@@ -752,6 +763,7 @@ void CTracker :: serverResponseCommentsGET( struct request_t *pRequest, struct r
 						if( ( pRequest->user.ucAccess & m_ucAccessComments ) && ( !bNoComment || pRequest->user.ucAccess & m_ucAccessCommentsAlways ) )
 						{
 							pResponse->strContent += " [<a class=\"black\" title=\"" + gmapLANG_CFG["comments_reply"] + "\" href=\"javascript:;\" onclick=\"javascript: reply( '" + strID + "', 'commentarea' );\">" + gmapLANG_CFG["comments_reply"] + "</a>]";
+							pResponse->strContent += " [<a class=\"black\" title=\"" + gmapLANG_CFG["comments_quote"] + "\" href=\"javascript:;\" onclick=\"javascript: quote( '" + strID + "', 'commentarea' );\">" + gmapLANG_CFG["comments_quote"] + "</a>]";
 		//					pResponse->strContent += " [<a class=\"black\" title=\"" + gmapLANG_CFG["comments_reply"] + "\" href=\"" + RESPONSE_STR_COMMENTS_HTML + strJoined + "&amp;reply=" + strID;
 		//					pResponse->strContent += "#commentarea\">" + gmapLANG_CFG["comments_reply"] + "</a>]";
 						}

@@ -762,6 +762,17 @@ void CTracker :: serverResponseStatsGET( struct request_t *pRequest, struct resp
 		
 		// reply
 		pResponse->strContent += "function reply(replyId,textareaId) {\n";
+		pResponse->strContent += "  var replytoSpan = document.getElementById( 'replyto'+replyId );\n";
+		pResponse->strContent += "  var replytoData = replytoSpan.innerHTML;\n";
+		pResponse->strContent += "  var textarea = document.getElementById( textareaId );\n";
+		pResponse->strContent += "  var textData = textarea.value;\n";
+		pResponse->strContent += "  window.location.hash = \"commentarea\";\n";
+		pResponse->strContent += "  document.postacomment.comment.focus();\n";
+		pResponse->strContent += "  textarea.value = '------ [b]" + gmapLANG_CFG["comments_reply"] + ": [user]' + replytoData + '[/user][/b]([anchor=#comment' + replyId + ']#' + replyId + '[/anchor]) ------\\n';\n";
+		pResponse->strContent += "}\n\n";
+
+		// quote
+		pResponse->strContent += "function quote(replyId,textareaId) {\n";
 		pResponse->strContent += "  var replySpan = document.getElementById( 'reply'+replyId );\n";
 		pResponse->strContent += "  var replyData = replySpan.innerHTML;\n";
 		pResponse->strContent += "  var replytoSpan = document.getElementById( 'replyto'+replyId );\n";
@@ -770,7 +781,7 @@ void CTracker :: serverResponseStatsGET( struct request_t *pRequest, struct resp
 		pResponse->strContent += "  var textData = textarea.value;\n";
 		pResponse->strContent += "  window.location.hash = \"commentarea\";\n";
 		pResponse->strContent += "  document.postacomment.comment.focus();\n";
-		pResponse->strContent += "  textarea.value = '[quote=' + replytoData + ']' + replyData.stripX( ) + '[/quote]\\n';\n";
+		pResponse->strContent += "  textarea.value += '[quote=[user]' + replytoData + '[/user]]' + replyData.stripX( ) + '[/quote]\\n';\n";
 		pResponse->strContent += "}\n\n";
 //		pResponse->strContent += "function reply(replyId,formId,formName) {\n";
 //		pResponse->strContent += "  var replyForm = document.getElementById( formId );\n";
@@ -2088,17 +2099,17 @@ void CTracker :: serverResponseStatsGET( struct request_t *pRequest, struct resp
 					delete pQueryNote;
 
 					if( vecQueryNote.size( ) == 0 && ( pRequest->user.ucAccess & m_ucAccessComments ) )
-						CMySQLQuery mq01( "INSERT INTO notes (bid,buid,bnote) VALUES(" + cstrID + "," + pRequest->user.strUID + ",\'" + UTIL_StringToMySQL( cstrNotes ) + "\')" );
+						CMySQLQuery mq01( "INSERT INTO notes (bid,buid,bnote,badded) VALUES(" + cstrID + "," + pRequest->user.strUID + ",\'" + UTIL_StringToMySQL( cstrNotes ) + "\',NOW())" );
 					else if( vecQueryNote.size( ) == 2 )
 					{
-						CMySQLQuery mq02( "INSERT IGNORE INTO notes (bid,buid,bnote) VALUES(" + cstrID + "," + pRequest->user.strUID + ",\'" + UTIL_StringToMySQL( cstrNotes ) + "\')" );
+						CMySQLQuery mq02( "INSERT IGNORE INTO notes (bid,buid,bnote,badded) VALUES(" + cstrID + "," + pRequest->user.strUID + ",\'" + UTIL_StringToMySQL( cstrNotes ) + "\',NOW())" );
 						bExist = true;
 					}
 				}
 
 				pResponse->strContent += "<tr class=\"file_info\" id=\"notes\">";
 				pResponse->strContent += "<th class=\"file_info\">" + gmapLANG_CFG["notes"] + ":</th>\n";
-				pResponse->strContent += "<td class=\"file_info\">";
+				pResponse->strContent += "<td class=\"file_info\"><div class=\"notes\">";
 				
 				bool bAdded = false;
 				unsigned int uiNote = 0;
@@ -2147,7 +2158,7 @@ void CTracker :: serverResponseStatsGET( struct request_t *pRequest, struct resp
 				}
 				delete pQueryNotes;
 				
-				pResponse->strContent += "\n<form name=\"notes\" id=\"notesForm\" method=\"get\" action=\"" + string( RESPONSE_STR_STATS_HTML ) + "\">\n";
+				pResponse->strContent += "</div>\n<form name=\"notes\" id=\"notesForm\" method=\"get\" action=\"" + string( RESPONSE_STR_STATS_HTML ) + "\">\n";
 				pResponse->strContent += "<input name=\"id\" type=hidden value=\"" + cstrID + "\">\n";
 				if( pRequest->user.ucAccess & m_ucAccessComments )
 				{
@@ -2495,7 +2506,7 @@ void CTracker :: serverResponseStatsGET( struct request_t *pRequest, struct resp
 					if( strTime.empty( ) )
 						strTime = gmapLANG_CFG["unknown"];
 				
-					pResponse->strContent += "<tr class=\"com_header\">";
+					pResponse->strContent += "<tr class=\"com_header\" id=\"comment" + strID + "\">";
 					pResponse->strContent += "<td class=\"com_header\">";
 					pResponse->strContent += "<span style=\"display: none\" id=\"replyto" + strID + "\">" + UTIL_RemoveHTML( strName ) + "</span>\n";
 //					pResponse->strContent += UTIL_Xsprintf( gmapLANG_CFG["comments_posted_by"].c_str( ), strID.c_str( ), strUserLink.c_str( ), strIP.c_str( ), strTime.c_str( ) );
@@ -2526,6 +2537,7 @@ void CTracker :: serverResponseStatsGET( struct request_t *pRequest, struct resp
 					if( ( pRequest->user.ucAccess & m_ucAccessComments ) && ( !bNoComment || pRequest->user.ucAccess & m_ucAccessCommentsAlways ) )
 					{
 						pResponse->strContent += " [<a class=\"black\" title=\"" + gmapLANG_CFG["comments_reply"] + "\" href=\"javascript:;\" onclick=\"javascript: reply( '" + strID + "', 'commentarea' );\">" + gmapLANG_CFG["comments_reply"] + "</a>]";
+						pResponse->strContent += " [<a class=\"black\" title=\"" + gmapLANG_CFG["comments_quote"] + "\" href=\"javascript:;\" onclick=\"javascript: quote( '" + strID + "', 'commentarea' );\">" + gmapLANG_CFG["comments_quote"] + "</a>]";
 	//					pResponse->strContent += " [<a class=\"black\" title=\"" + gmapLANG_CFG["comments_reply"] + "\" href=\"" + RESPONSE_STR_COMMENTS_HTML + strJoined + "&amp;reply=" + strID;
 	//					pResponse->strContent += "#commentarea\">" + gmapLANG_CFG["comments_reply"] + "</a>]";
 					}
@@ -3506,12 +3518,12 @@ void CTracker :: serverResponseStatsGET( struct request_t *pRequest, struct resp
 							if( strFillFileName.empty( ) )
 								strFillFileName = "imagebarfill.png";
 
-							if( ucPercent > 0 )
+							if( ucPercent < 100 )
 							{
 								if( !imagefill.strURL.empty( ) )
-									pResponse->strContent += "<img class=\"percent\" src=\"" + imagefill.strURL + strFillFileName + "\" width=" + CAtomInt( ucPercent ).toString( ) + " height=8 alt=\"[" + gmapLANG_CFG["completed"] + "]\" name=\"Completed\" title=\"" + gmapLANG_CFG["completed"] + "\">";
+									pResponse->strContent += "<img class=\"percent\" src=\"" + imagefill.strURL + strFillFileName + "\" width=" + CAtomInt( 100 - ucPercent ).toString( ) + " height=8 alt=\"[" + gmapLANG_CFG["completed"] + "]\" name=\"Completed\" title=\"" + gmapLANG_CFG["completed"] + "\">";
 								else if( m_bServeLocal )
-									pResponse->strContent += "<img class=\"percent\" src=\"" + strFillFileName + "\" width=" + CAtomInt( ucPercent ).toString( ) + " height=8 alt=\"[" + gmapLANG_CFG["completed"] + "]\" name=\"Completed\" title=\"" + gmapLANG_CFG["completed"] + "\">";
+									pResponse->strContent += "<img class=\"percent\" src=\"" + strFillFileName + "\" width=" + CAtomInt( 100 - ucPercent ).toString( ) + " height=8 alt=\"[" + gmapLANG_CFG["completed"] + "]\" name=\"Completed\" title=\"" + gmapLANG_CFG["completed"] + "\">";
 							}
 
 							string strTransFileName = imagetrans.strName;
@@ -3519,12 +3531,12 @@ void CTracker :: serverResponseStatsGET( struct request_t *pRequest, struct resp
 							if( strTransFileName.empty( ) )
 								strTransFileName = "imagebartrans.png";
 
-							if( ucPercent < 100 )
+							if( ucPercent > 0 )
 							{
 								if( !imagetrans.strURL.empty( ) )
-									pResponse->strContent += "<img class=\"percent\" src=\"" + imagetrans.strURL + strTransFileName + "\" width=" + CAtomInt( 100 - ucPercent ).toString( ) + " height=8 alt=\"[" + gmapLANG_CFG["remaining"] + "]\" name=\"Remaining\" title=\"" + gmapLANG_CFG["remaining"] + "\">";
+									pResponse->strContent += "<img class=\"percent\" src=\"" + imagetrans.strURL + strTransFileName + "\" width=" + CAtomInt( ucPercent ).toString( ) + " height=8 alt=\"[" + gmapLANG_CFG["remaining"] + "]\" name=\"Remaining\" title=\"" + gmapLANG_CFG["remaining"] + "\">";
 								else if( m_bServeLocal )
-									pResponse->strContent += "<img class=\"percent\" src=\"" + strTransFileName + "\" width=" + CAtomInt( 100 - ucPercent ).toString( ) + " height=8 alt=\"[" + gmapLANG_CFG["remaining"] + "]\" name=\"Remaining\" title=\"" + gmapLANG_CFG["remaining"] + "\">";
+									pResponse->strContent += "<img class=\"percent\" src=\"" + strTransFileName + "\" width=" + CAtomInt( ucPercent ).toString( ) + " height=8 alt=\"[" + gmapLANG_CFG["remaining"] + "]\" name=\"Remaining\" title=\"" + gmapLANG_CFG["remaining"] + "\">";
 							}
 						}
 

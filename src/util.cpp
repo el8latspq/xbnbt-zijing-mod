@@ -33,6 +33,7 @@
 #include "atom.h"
 #include "bencode.h"
 #include "config.h"
+#include "server.h"
 #include "sha1.h"
 #include "tracker.h"
 #include "util.h"
@@ -1074,12 +1075,27 @@ const string UTIL_BBCode( const string &cstrHTML )
 	string :: size_type iURL = 0;
 	string :: size_type iEnd = 0;
 	
+	iStart = UTIL_ToLower( strHTML ).find( "[anchor=" );
+	while( iStart != string :: npos )
+	{
+		iURL = UTIL_ToLower( strHTML ).find( "]", iStart );
+		iEnd = UTIL_ToLower( strHTML ).find( "[/anchor]", iStart );
+		if( iURL < iEnd && ( strHTML[ iStart - 1 ] != '[' || strHTML[ iEnd + 9 ] != ']' ) && iEnd != string :: npos )
+		{
+			strHTML.replace( iEnd, 9, "</a>" );
+			strHTML.replace( iURL, 1, "\">" );
+			strHTML.replace( iStart, 8, "<a href=\"" );
+			iStart = UTIL_ToLower( strHTML ).find( "[anchor=", iStart );
+		}
+		else
+			iStart = UTIL_ToLower( strHTML ).find( "[anchor=", iStart + 8 );
+	}
 	iStart = UTIL_ToLower( strHTML ).find( "[url=" );
 	while( iStart != string :: npos )
 	{
 		iURL = UTIL_ToLower( strHTML ).find( "]", iStart );
 		iEnd = UTIL_ToLower( strHTML ).find( "[/url]", iStart );
-		if( iURL < iEnd && strHTML[ iStart - 1 ] != '[' && strHTML[ iEnd + 6 ] != ']' && iEnd != string :: npos )
+		if( iURL < iEnd && ( strHTML[ iStart - 1 ] != '[' || strHTML[ iEnd + 6 ] != ']' ) && iEnd != string :: npos )
 		{
 			strHTML.replace( iEnd, 6, "</a>" );
 			strHTML.replace( iURL, 1, "\">" );
@@ -1093,7 +1109,7 @@ const string UTIL_BBCode( const string &cstrHTML )
 	while( iStart != string :: npos )
 	{
 		iEnd = UTIL_ToLower( strHTML ).find( "]", iStart );
-		if( strHTML[ iStart - 1 ] != '[' && strHTML[ iEnd + 1 ] != ']' && iEnd != string :: npos )
+		if( ( strHTML[ iStart - 1 ] != '[' || strHTML[ iEnd + 1 ] != ']' ) && iEnd != string :: npos )
 		{
 			strHTML.replace( iEnd, 1, "\">" );
 			strHTML.replace( iStart, 5, "<img class=\"code\" alt=\"image\" src=\"" );
@@ -1109,7 +1125,7 @@ const string UTIL_BBCode( const string &cstrHTML )
 		if( iEnd != string :: npos )
 			iStart = UTIL_ToLower( strHTML ).substr( 0, iEnd ).rfind( "[color=" );
 		iURL = UTIL_ToLower( strHTML ).find( "]", iStart );
-		if( iURL < iEnd && strHTML[ iStart - 1 ] != '[' && strHTML[ iEnd + 8 ] != ']' && iEnd != string :: npos )
+		if( iURL < iEnd && ( strHTML[ iStart - 1 ] != '[' || strHTML[ iEnd + 8 ] != ']' ) && iEnd != string :: npos )
 		{
 			strHTML.replace( iEnd, 8, "</font>" );
 			strHTML.replace( iURL, 1, "\">" );
@@ -1126,7 +1142,7 @@ const string UTIL_BBCode( const string &cstrHTML )
 		if( iEnd != string :: npos )
 			iStart = UTIL_ToLower( strHTML ).substr( 0, iEnd ).rfind( "[font=" );
 		iURL = UTIL_ToLower( strHTML ).find( "]", iStart );
-		if( iURL < iEnd && strHTML[ iStart - 1 ] != '[' && strHTML[ iEnd + 7 ] != ']' && iEnd != string :: npos )
+		if( iURL < iEnd && ( strHTML[ iStart - 1 ] != '[' || strHTML[ iEnd + 7 ] != ']' ) && iEnd != string :: npos )
 		{
 			strHTML.replace( iEnd, 7, "</font>" );
 			strHTML.replace( iURL, 1, "\">" );
@@ -1143,7 +1159,7 @@ const string UTIL_BBCode( const string &cstrHTML )
 		if( iEnd != string :: npos )
 			iStart = UTIL_ToLower( strHTML ).substr( 0, iEnd ).rfind( "[size=" );
 		iURL = UTIL_ToLower( strHTML ).find( "]", iStart );
-		if( iURL < iEnd && strHTML[ iStart - 1 ] != '[' && strHTML[ iEnd + 7 ] != ']' && iEnd != string :: npos )
+		if( iURL < iEnd && ( strHTML[ iStart - 1 ] != '[' || strHTML[ iEnd + 7 ] != ']' ) && iEnd != string :: npos )
 		{
 			strHTML.replace( iEnd, 7, "</font>" );
 			strHTML.replace( iURL, 1, "\">" );
@@ -1152,6 +1168,19 @@ const string UTIL_BBCode( const string &cstrHTML )
 		}
 		else
 			iStart = UTIL_ToLower( strHTML ).find( "[size=", iStart + 6 );
+	}
+	iStart = UTIL_ToLower( strHTML ).find( "[user]" );
+	while( iStart != string :: npos )
+	{
+		iEnd = UTIL_ToLower( strHTML ).find( "[/user]", iStart );
+		if( iEnd != string :: npos && ( strHTML[ iStart - 1 ] != '[' || strHTML[ iEnd + 7 ] != ']' ) )
+		{
+			strURL = string( strHTML.substr( iStart + 6, iEnd - iStart - 6 ) );
+			strHTML.replace( iStart, iEnd - iStart + 7, gpServer->getTracker( )->getUserLink( string( ), strURL ) );
+			iStart = UTIL_ToLower( strHTML ).find( "[user]", iStart );
+		}
+		else
+			iStart = UTIL_ToLower( strHTML ).find( "[user]", iStart + 6 );
 	}
 	iStart = UTIL_ToLower( strHTML ).find( "[quote=" );
 	while( iStart != string :: npos )
@@ -1174,7 +1203,7 @@ const string UTIL_BBCode( const string &cstrHTML )
 	while( iStart != string :: npos )
 	{
 		iEnd = UTIL_ToLower( strHTML ).find( "[/url]", iStart );
-		if( iEnd != string :: npos && strHTML[ iStart - 1 ] != '[' && strHTML[ iEnd + 6 ] != ']' )
+		if( iEnd != string :: npos && ( strHTML[ iStart - 1 ] != '[' || strHTML[ iEnd + 6 ] != ']' ) )
 		{
 			strURL = string( strHTML.substr( iStart + 5, iEnd - iStart - 5 ) );
 			strHTML.replace( iEnd, 6, "</a>" );
@@ -1189,7 +1218,7 @@ const string UTIL_BBCode( const string &cstrHTML )
 	while( iStart != string :: npos )
 	{
 		iEnd = UTIL_ToLower( strHTML ).find( "[/img]", iStart );
-		if( iEnd != string :: npos && strHTML[ iStart - 1 ] != '[' && strHTML[ iEnd + 6 ] != ']' )
+		if( iEnd != string :: npos && ( strHTML[ iStart - 1 ] != '[' || strHTML[ iEnd + 6 ] != ']' ) )
 		{
 			strHTML.replace( iEnd, 6, "\">" );
 			strHTML.replace( iStart, 5, "<img class=\"code\" alt=\"image\" src=\"" );
@@ -1204,7 +1233,7 @@ const string UTIL_BBCode( const string &cstrHTML )
 		iEnd = UTIL_ToLower( strHTML ).find( "[/quote]", iStart );
 		if( iEnd != string :: npos )
 			iStart = UTIL_ToLower( strHTML ).substr( 0, iEnd ).rfind( "[quote]" );
-		if( iEnd != string :: npos && strHTML[ iStart - 1 ] != '[' && strHTML[ iEnd + 8 ] != ']' )
+		if( iEnd != string :: npos && ( strHTML[ iStart - 1 ] != '[' || strHTML[ iEnd + 8 ] != ']' ) )
 		{
 			strHTML.replace( iEnd, 8, "</td></tr></table>" );
 			strHTML.replace( iStart, 7, "<b>" + gmapLANG_CFG["quote"] + "</b><table class=\"quote\"><tr class=\"quote\"><td class=\"quote\">" );
@@ -1219,7 +1248,7 @@ const string UTIL_BBCode( const string &cstrHTML )
 		iEnd = UTIL_ToLower( strHTML ).find( "[/pre]", iStart );
 		if( iEnd != string :: npos )
 			iStart = UTIL_ToLower( strHTML ).substr( 0, iEnd ).rfind( "[pre]" );
-		if( iEnd != string :: npos && strHTML[ iStart - 1 ] != '[' && strHTML[ iEnd + 6 ] != ']' )
+		if( iEnd != string :: npos && ( strHTML[ iStart - 1 ] != '[' || strHTML[ iEnd + 6 ] != ']' ) )
 		{
 			strHTML.replace( iEnd, 6, "</pre>" );
 			strHTML.replace( iStart, 5, "<pre>" );
@@ -1232,7 +1261,7 @@ const string UTIL_BBCode( const string &cstrHTML )
 	while( iStart != string :: npos )
 	{
 		iEnd = UTIL_ToLower( strHTML ).find( "[/b]", iStart );
-		if( iEnd != string :: npos && strHTML[ iStart - 1 ] != '[' && strHTML[ iEnd + 4 ] != ']' )
+		if( iEnd != string :: npos && ( strHTML[ iStart - 1 ] != '[' || strHTML[ iEnd + 4 ] != ']' ) )
 		{
 			strHTML.replace( iEnd, 4, "</b>" );
 			strHTML.replace( iStart, 3, "<b>" );
@@ -1245,7 +1274,7 @@ const string UTIL_BBCode( const string &cstrHTML )
 	while( iStart != string :: npos )
 	{
 		iEnd = UTIL_ToLower( strHTML ).find( "[/i]", iStart );
-		if( iEnd != string :: npos && strHTML[ iStart - 1 ] != '[' && strHTML[ iEnd + 4 ] != ']' )
+		if( iEnd != string :: npos && ( strHTML[ iStart - 1 ] != '[' || strHTML[ iEnd + 4 ] != ']' ) )
 		{
 			strHTML.replace( iEnd, 4, "</i>" );
 			strHTML.replace( iStart, 3, "<i>" );
@@ -1258,7 +1287,7 @@ const string UTIL_BBCode( const string &cstrHTML )
 	while( iStart != string :: npos )
 	{
 		iEnd = UTIL_ToLower( strHTML ).find( "[/u]", iStart );
-		if( iEnd != string :: npos && strHTML[ iStart - 1 ] != '[' && strHTML[ iEnd + 4 ] != ']' )
+		if( iEnd != string :: npos && ( strHTML[ iStart - 1 ] != '[' || strHTML[ iEnd + 4 ] != ']' ) )
 		{
 			strHTML.replace( iEnd, 4, "</u>" );
 			strHTML.replace( iStart, 3, "<u>" );
@@ -1270,7 +1299,7 @@ const string UTIL_BBCode( const string &cstrHTML )
 	iStart = UTIL_ToLower( strHTML ).find( "[return]" );
 	while( iStart != string :: npos )
 	{
-		if( strHTML[ iStart - 1 ] != '[' && strHTML[ iStart + 8 ] != ']' )
+		if( strHTML[ iStart - 1 ] != '[' || strHTML[ iStart + 8 ] != ']' )
 		{
 			strHTML.replace( iStart, 8, "<br>" );
 			iStart = UTIL_ToLower( strHTML ).find( "[return]", iStart );
@@ -1469,6 +1498,41 @@ void UTIL_StripName( const string &cstrCompName, string &strReturnName1, string 
 	}
 }
 
+const string UTIL_RemoveBR( const string &cstrName )
+{
+	string strName = cstrName;
+
+	for( unsigned long ulCount = 0; ulCount < strName.size( ); ulCount++ )
+	{
+		if( strName[ulCount] == '\n' )
+		{
+			if( ulCount > 0 )
+			{
+				if( strName[ulCount - 1] == '\r' )
+				{
+					strName.replace( ulCount - 1, 2, "" );
+
+					ulCount -= 2;
+				}
+				else
+				{
+					strName.replace( ulCount, 1, "" );
+
+					ulCount -= 1;
+				}
+			}
+			else
+			{
+				strName.replace( ulCount, 1, "" );
+
+				ulCount -= 1;
+			}
+		}
+	}
+	
+	return strName;
+}
+
 const string UTIL_HTMLJoin( vector< pair< string, string > > &vecParams, const string &cstrStart, const string &cstrJoin, const string &cstrEqual )
 {
 	string strJoined = string( );
@@ -1607,6 +1671,90 @@ const bool UTIL_MatchVector( const string &cstrText, vector<string> &vecMatch, c
 	return true;
 }
 
+const string UTIL_PageBarIndex( unsigned long ulCount, const string &cstrPage, const unsigned int cuiPerPage, const string &cstrRef, const string &cstrParams, const bool bPageBarTop, const bool bShowPageNum )
+{
+	string strPageNav = string( );
+	string strPageNum = string( );
+	unsigned long ulStart = 0;
+	
+	if( !cstrPage.empty( ) )
+		ulStart = (unsigned long)atoi( cstrPage.c_str( ) ) * cuiPerPage;
+	
+	if( ulCount && cuiPerPage > 0 )
+	{
+		if( ulStart > 0 )
+			strPageNav += "<a title=\"" + gmapLANG_CFG["jump_to_page"] + ": " + CAtomInt( ( ulStart / cuiPerPage ) ).toString( ) + "\" href=\"" + cstrRef + "?page=" + CAtomInt( ( ulStart / cuiPerPage ) - 1 ).toString( ) + cstrParams + "\">";
+			
+		strPageNav += gmapLANG_CFG["last_page"];
+		
+		if( ulStart > 0 )
+			strPageNav += "</a>";
+		
+		strPageNav += "<span class=\"pipe\"> | </span>";
+		
+		if( ulStart + cuiPerPage < ulCount )
+			strPageNav += "<a title=\"" + gmapLANG_CFG["jump_to_page"] + ": " + CAtomInt( ( ulStart / cuiPerPage ) + 2 ).toString( ) + "\" href=\"" + cstrRef + "?page=" + CAtomInt( ( ulStart / cuiPerPage ) + 1 ).toString( ) + cstrParams + "\">";
+
+		strPageNav += gmapLANG_CFG["next_page"];
+		
+		if( ulStart + cuiPerPage < ulCount )
+			strPageNav += "</a>";
+		
+		strPageNum += gmapLANG_CFG["jump_to_page"] + ": \n";
+
+		for( unsigned long ulPerPage = 0; ulPerPage < ulCount; ulPerPage += cuiPerPage )
+		{
+//			strPageNum += " ";
+			
+			if( ( ulPerPage/cuiPerPage <= 2 ) || ( ulCount - ulPerPage <= cuiPerPage ) || ( abs( ulStart - ulPerPage )/cuiPerPage <= 2 ) )
+			{
+				// don't link to current page
+				if( ulPerPage != ulStart )
+				{
+					if( ulCount - ulPerPage <= cuiPerPage )
+						strPageNum += "<a title=\"" + gmapLANG_CFG["jump_to_page"] + ": " + gmapLANG_CFG["end_page"] + "\" href=\"" + cstrRef + "?endpage=1" + cstrParams + "\">";
+					else
+						strPageNum += "<a title=\"" + gmapLANG_CFG["jump_to_page"] + ": " + CAtomInt( ( ulPerPage / cuiPerPage ) + 1 ).toString( ) + "\" href=\"" + cstrRef + "?page=" + CAtomInt( ulPerPage / cuiPerPage ).toString( ) + cstrParams + "\">";
+				}
+
+				if( bShowPageNum )
+					strPageNum += CAtomInt( ( ulPerPage / cuiPerPage ) + 1 ).toString( );
+				else
+				{
+					if( ulCount - ulPerPage <= cuiPerPage )
+					{
+						if( ulPerPage != ulStart && ( abs( ulStart - ulPerPage )/cuiPerPage > 2 ) )
+							strPageNum += gmapLANG_CFG["end_page"];
+						else
+							strPageNum += CAtomInt( ulPerPage + 1 ).toString( ) + " - " + CAtomInt( ulCount ).toString( );
+					}
+					else
+						strPageNum += CAtomInt( ulPerPage + 1 ).toString( ) + " - " + CAtomInt( ulPerPage + cuiPerPage ).toString( );
+				}
+				
+				if( ulPerPage != ulStart )
+					strPageNum += "</a>\n";
+
+				// don't display a bar after the last page
+				if( ulPerPage + cuiPerPage < ulCount )
+					strPageNum += "<span class=\"pagenum_pipe\"> | </span>";
+			}
+			else
+			{
+				if( ( ulPerPage/cuiPerPage == 3 && ulPerPage < ulStart ) || ( ( ulCount - ulPerPage - 1 )/cuiPerPage == 1 && ulPerPage > ulStart ) )
+					strPageNum += "...<span class=\"pagenum_pipe\"> | </span>";
+			}
+		}
+		
+		if( bPageBarTop )
+			return "<p class=\"pagenum_top_bar\">\n" + strPageNav + "<br>\n" + strPageNum + "</p>\n\n";
+		else
+			return "<p class=\"pagenum_bottom\">\n" + strPageNum + "<br>\n" + strPageNav + "</p>\n\n";
+	}
+	else
+		return string( );
+}
+
 const string UTIL_PageBar( unsigned long ulCount, const string &cstrPage, const unsigned int cuiPerPage, const string &cstrRef, const string &cstrParams, const bool bPageBarTop, const bool bShowPageNum )
 {
 	string strPageNav = string( );
@@ -1640,9 +1788,9 @@ const string UTIL_PageBar( unsigned long ulCount, const string &cstrPage, const 
 
 		for( unsigned long ulPerPage = 0; ulPerPage < ulCount; ulPerPage += cuiPerPage )
 		{
-			strPageNum += " ";
+//			strPageNum += " ";
 			
-			if( ( ulPerPage/cuiPerPage <= 2 ) || (  ( ulCount - ulPerPage )/cuiPerPage <= 2 ) || ( abs( ulStart - ulPerPage )/cuiPerPage <=2 ) )
+			if( ( ulPerPage/cuiPerPage <= 2 ) || ( ( ulCount - ulPerPage )/cuiPerPage <= 2 ) || ( abs( ulStart - ulPerPage )/cuiPerPage <= 2 ) )
 			{
 				// don't link to current page
 				if( ulPerPage != ulStart )
@@ -1667,7 +1815,7 @@ const string UTIL_PageBar( unsigned long ulCount, const string &cstrPage, const 
 			}
 			else
 			{
-				if( ( ulPerPage/cuiPerPage == 3 && ulPerPage < ulStart ) || (  ( ulCount - ulPerPage )/cuiPerPage == 3 && ulPerPage > ulStart ) )
+				if( ( ulPerPage/cuiPerPage == 3 && ulPerPage < ulStart ) || ( ( ulCount - ulPerPage )/cuiPerPage == 3 && ulPerPage > ulStart ) )
 					strPageNum += "...<span class=\"pagenum_pipe\"> | </span>";
 			}
 		}
@@ -1717,7 +1865,7 @@ const string UTIL_PageBarAJAX( unsigned long ulCount, const string &cstrPage, co
 		{
 			strPageNum += " ";
 			
-			if( ( ulPerPage/cuiPerPage <= 2 ) || (  ( ulCount - ulPerPage )/cuiPerPage <= 2 ) || ( abs( ulStart - ulPerPage )/cuiPerPage <=2 ) )
+			if( ( ulPerPage/cuiPerPage <= 2 ) || ( ( ulCount - ulPerPage )/cuiPerPage <= 2 ) || ( abs( ulStart - ulPerPage )/cuiPerPage <= 2 ) )
 			{
 				// don't link to current page
 				if( ulPerPage != ulStart )
@@ -1742,7 +1890,7 @@ const string UTIL_PageBarAJAX( unsigned long ulCount, const string &cstrPage, co
 			}
 			else
 			{
-				if( ( ulPerPage/cuiPerPage == 3 && ulPerPage < ulStart ) || (  ( ulCount - ulPerPage )/cuiPerPage == 3 && ulPerPage > ulStart ) )
+				if( ( ulPerPage/cuiPerPage == 3 && ulPerPage < ulStart ) || ( ( ulCount - ulPerPage )/cuiPerPage == 3 && ulPerPage > ulStart ) )
 					strPageNum += "...<span class=\"pagenum_pipe\"> | </span>";
 			}
 		}

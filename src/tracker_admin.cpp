@@ -591,6 +591,7 @@ void CTracker :: serverResponseAdmin( struct request_t *pRequest, struct respons
 		pResponse->strContent += "<td class=\"admin_functions\"><a class=\"admin_functions\" href=\"" + RESPONSE_STR_ADMIN_HTML + "?func=free\">" + gmapLANG_CFG["admin_free"] + "</td>\n";
 		pResponse->strContent += "<td class=\"admin_functions\"><a class=\"admin_functions\" href=\"" + RESPONSE_STR_ADMIN_HTML + "?func=access\">" + gmapLANG_CFG["admin_access"] + "</td>\n";
 		pResponse->strContent += "<td class=\"admin_functions\"><a class=\"admin_functions\" href=\"" + RESPONSE_STR_ADMIN_HTML + "?func=config\">" + gmapLANG_CFG["admin_config"] + "</td>\n";
+		pResponse->strContent += "<td class=\"admin_functions\"><a class=\"admin_functions\" href=\"" + RESPONSE_STR_ADMIN_HTML + "?func=recycle\">" + gmapLANG_CFG["admin_recycle"] + "</td>\n";
 		pResponse->strContent += "<td class=\"admin_functions\"><a class=\"admin_functions\" href=\"" + RESPONSE_STR_ADMIN_HTML + "?func=stat\">" + gmapLANG_CFG["admin_stat"] + "</td>\n";
 		
 		pResponse->strContent += "</tr></table>\n<p>\n";
@@ -1346,6 +1347,319 @@ void CTracker :: serverResponseAdmin( struct request_t *pRequest, struct respons
 			pResponse->strContent += "</td></tr>\n";
 			
 			pResponse->strContent += "</table>\n";
+		}
+		else if( cstrAdminFunction == "recycle" )
+		{
+			const string cstrRecycleAction( pRequest->mapParams["action"] );
+			const string cstrRecycleID( pRequest->mapParams["id"] );
+			const string cstrOK( pRequest->mapParams["ok"] );
+
+			const string cstrPerPage( pRequest->mapParams["per_page"] );
+			unsigned long ulStart = 0;
+			unsigned int uiOverridePerPage = 0;
+
+			if ( cstrPerPage.empty( ) )
+			{
+				if( pRequest->mapCookies["per_page"].empty( ) )
+					uiOverridePerPage = m_uiPerPage;
+				else
+				{
+					uiOverridePerPage = (unsigned int)atoi( pRequest->mapCookies["per_page"].c_str( ) );
+
+					if( uiOverridePerPage < 1 || uiOverridePerPage > m_uiPerPageMax )
+						uiOverridePerPage = m_uiPerPage;
+				}
+			}
+			else
+			{
+				uiOverridePerPage = (unsigned int)atoi( cstrPerPage.c_str( ) );
+
+				if( uiOverridePerPage > m_uiPerPageMax )
+					uiOverridePerPage = m_uiPerPage;
+			}
+
+			const string cstrPage( pRequest->mapParams["page"] );
+
+			if( !cstrPage.empty( ) )
+				ulStart = (unsigned long)atoi( cstrPage.c_str( ) ) * uiOverridePerPage;
+
+			if( cstrRecycleAction.empty( ) )
+			{
+				unsigned long ulKeySize = 0;
+				unsigned long ulAdded = 0;
+				unsigned long ulSkipped = 0;
+
+				vector< pair< string, string > > vecParams;
+				vecParams.reserve(64);
+				string strJoined = string( );
+				string strReturn = string( );
+				
+				vecParams.push_back( pair<string, string>( string( "func" ), cstrAdminFunction ) );
+				vecParams.push_back( pair<string, string>( string( "per_page" ), cstrPerPage ) );
+
+				strJoined = UTIL_RemoveHTML( UTIL_HTMLJoin( vecParams, string( "&" ), string( "&" ), string( "=" ) ) );
+
+				vecParams.push_back( pair<string, string>( string( "page" ), cstrPage ) );
+				strReturn = RESPONSE_STR_ADMIN_HTML + UTIL_HTMLJoin( vecParams, string( "?" ), string( "&" ), string( "=" ) );
+
+				string strEngName = string( );
+				string strChiName = string( );
+
+				CMySQLQuery *pQuery = new CMySQLQuery( "SELECT bid,bname,badded,bsize,btag,btitle,buploader,buploaderid FROM allowed_archive ORDER BY badded DESC" );
+				
+				vector<string> vecQuery;
+				vecQuery.reserve(8);
+				
+				vecQuery = pQuery->nextRow( );
+
+				ulKeySize = (unsigned long)pQuery->numRows( );
+
+				if( vecQuery.size( ) == 8 )
+				{
+					pResponse->strContent += UTIL_PageBar( ulKeySize, cstrPage, uiOverridePerPage, RESPONSE_STR_ADMIN_HTML, strJoined, true );
+
+					pResponse->strContent += "<table class=\"user_detail_table\" id=\"user_seeding\">\n";
+
+					pResponse->strContent += "<tr>\n";
+
+					if( !m_vecTags.empty( ) )
+					{
+						pResponse->strContent += "<th class=\"tag\">" + gmapLANG_CFG["tag"];
+						pResponse->strContent += "</th>\n";
+					}
+					
+					// Name
+					pResponse->strContent += "<th class=\"name\">" + gmapLANG_CFG["name"];
+
+					pResponse->strContent += "</th>\n";
+					
+					// <th> added
+
+					pResponse->strContent += "<th class=\"date\">" + gmapLANG_CFG["added"];
+
+					pResponse->strContent += "</th>\n";
+
+					// <th> size
+
+					pResponse->strContent += "<th class=\"bytes\">" + gmapLANG_CFG["size"];
+
+					pResponse->strContent += "</th>\n";
+					
+					// <th> size
+
+					pResponse->strContent += "<th class=\"uploader\">" + gmapLANG_CFG["uploader"];
+
+					pResponse->strContent += "</th>\n";
+
+					// Admin
+					pResponse->strContent += "<th class=\"admin\">" + gmapLANG_CFG["admin"] + "</th>\n";
+
+					pResponse->strContent += "</tr>\n";
+
+					while( vecQuery.size( ) == 8 )
+					{
+						if( ulAdded < uiOverridePerPage )
+						{
+							if( ulSkipped == ulStart )
+							{
+								pResponse->strContent += "<tr>\n";
+
+								// display the tag
+								pResponse->strContent += "<td class=\"tag\">";
+								vector< pair< string, string > > :: iterator it2 = m_vecTagsMouse.begin( );
+								if( !m_vecTags.empty( ) )
+								{
+									string strNameIndex = string( );
+									string strTag = string( );
+									for( vector< pair< string, string > > :: iterator it1 = m_vecTags.begin( ); it1!= m_vecTags.end( ); it1++ )
+
+									{
+										strNameIndex = (*it1).first;
+										strTag = (*it1).second;
+
+										if( strNameIndex == vecQuery[4] )
+										{
+											if ( !(*it2).second.empty( ) )
+												pResponse->strContent += "<img class=\"tag\" src=\"" + (*it2).second + "\" alt=\"[" + strTag + "]\" title=\"" + strTag + "\" name=\"" + strTag + "\">";
+											else
+												pResponse->strContent += strTag;
+											break;
+										}
+										it2++;
+									}
+									
+								}
+
+								pResponse->strContent += "</td>\n";
+
+								pResponse->strContent += "<td class=\"name\">";
+								strEngName.erase( );
+								strChiName.erase( );
+								UTIL_StripName( vecQuery[5].c_str( ), strEngName, strChiName );
+								pResponse->strContent += "<span class=\"stats_bold\">" + UTIL_RemoveHTML( strEngName ) + "</span>";
+								if( !strChiName.empty( ) )
+									pResponse->strContent += "<br><span class=\"stats\">" + UTIL_RemoveHTML( strChiName ) + "</span>";
+								pResponse->strContent += "</td>\n";
+										
+								pResponse->strContent += "<td class=\"date\">";
+
+								if( !vecQuery[2].empty( ) )
+								{
+									const string :: size_type br = vecQuery[2].find( ' ' );
+									pResponse->strContent += vecQuery[2].substr( 0, br );
+									if( br != string :: npos )
+										pResponse->strContent += "<br>" + vecQuery[2].substr( br + 1 );
+									// strip year and seconds from time
+								}
+
+								pResponse->strContent += "</td>\n";
+
+								int64 iSize = UTIL_StringTo64( vecQuery[3].c_str( ) );
+
+								const string :: size_type br = UTIL_BytesToString( iSize ).find( ' ' );
+								pResponse->strContent += "<td class=\"bytes\">" + UTIL_BytesToString( iSize ).substr( 0, br );
+								if( br != string :: npos )
+									pResponse->strContent += "<br>" + UTIL_BytesToString( iSize ).substr( br + 1 );
+								pResponse->strContent += "</td>\n";
+								pResponse->strContent += "<td class=\"uploader\">" + getUserLink( vecQuery[7], vecQuery[6] ) + "</td>\n";
+								pResponse->strContent += "<td class=\"admin\">";
+								pResponse->strContent += "[<a class=\"blue\" href=\"" + RESPONSE_STR_ADMIN_HTML + "?func=recycle&amp;action=recover&amp;id=" + vecQuery[0];
+								pResponse->strContent += "&amp;return=" + UTIL_RemoveHTML( UTIL_StringToEscaped( strReturn ) );
+								pResponse->strContent += "\">" + gmapLANG_CFG["recycle_recover"] + "</a>]<br>";
+								pResponse->strContent += "[<a class=\"red\" href=\"" + RESPONSE_STR_ADMIN_HTML + "?func=recycle&amp;action=delete&amp;id=" + vecQuery[0];
+								pResponse->strContent += "&amp;return=" + UTIL_RemoveHTML( UTIL_StringToEscaped( strReturn ) );
+								pResponse->strContent += "\">" + gmapLANG_CFG["recycle_delete"] + "</a>]</td>\n";
+
+								pResponse->strContent += "</tr>\n";
+								ulAdded++;
+							}
+							else
+								ulSkipped++;
+						}
+						else
+							break;
+
+						vecQuery = pQuery->nextRow( );
+					}
+					pResponse->strContent += "</table>\n";
+
+					pResponse->strContent += UTIL_PageBar( ulKeySize, cstrPage, uiOverridePerPage, RESPONSE_STR_ADMIN_HTML, strJoined, false );
+				}
+
+				delete pQuery;
+			}
+			else if( !cstrRecycleID.empty( ) )
+			{
+				string strReturnPage( pRequest->mapParams["return"] );
+				
+				if( strReturnPage.empty( ) )
+					strReturnPage = RESPONSE_STR_ADMIN_HTML + "?func=recycle";
+
+				if( cstrOK == "1" )
+				{
+					bool bSuccess = false;
+
+					CMySQLQuery *pQuery = new CMySQLQuery( "SELECT bid,bfilename FROM allowed_archive WHERE bid=" + cstrRecycleID );
+				
+					vector<string> vecQuery;
+				
+					vecQuery.reserve(2);
+
+					vecQuery = pQuery->nextRow( );
+					
+					delete pQuery;
+					
+					if( vecQuery.size( ) == 2 && !vecQuery[1].empty( ) )
+					{
+						string strFileName = vecQuery[1];
+
+						if( cstrRecycleAction == "recover" )
+						{
+							if( !strFileName.empty( ) )
+							{
+								if( !m_strArchiveDir.empty( ) && UTIL_CheckDir( m_strArchiveDir.c_str( ) ) )
+								{
+									if( UTIL_CheckFile( string( m_strArchiveDir + cstrRecycleID + ".torrent" ).c_str( ) ) )
+									{
+										UTIL_MoveFile( string( m_strArchiveDir + cstrRecycleID + ".torrent" ).c_str( ), string( m_strAllowedDir + strFileName ).c_str( ) );
+										CMySQLQuery mq00( "INSERT INTO allowed (SELECT * FROM allowed_archive WHERE bid=" + cstrRecycleID + ")" );
+										CMySQLQuery mq01( "DELETE FROM allowed_archive WHERE bid=" + cstrRecycleID );
+
+										m_pCache->addRow( cstrRecycleID, false );
+
+										UTIL_LogFilePrint( "recycleTorrent: %s recovered torrent %s\n", pRequest->user.strLogin.c_str( ), strFileName.c_str( ) );
+
+										bSuccess = true;
+									}
+								}
+							}
+						}
+						else if( cstrRecycleAction == "delete" )
+						{
+							if( !m_strArchiveDir.empty( ) && UTIL_CheckDir( m_strArchiveDir.c_str( ) ) )
+							{
+								if( UTIL_CheckFile( string( m_strArchiveDir + cstrRecycleID + ".torrent" ).c_str( ) ) )
+								{
+									UTIL_DeleteFile( string( m_strArchiveDir + cstrRecycleID + ".torrent" ).c_str( ) );
+
+									CMySQLQuery mq01( "DELETE FROM allowed_archive WHERE bid=" + cstrRecycleID );
+									CMySQLQuery mq02( "DELETE FROM dstate WHERE bid=" + cstrRecycleID );
+									CMySQLQuery mq03( "DELETE FROM dstate_store WHERE bid=" + cstrRecycleID );
+									CMySQLQuery mq04( "DELETE FROM peers WHERE bid=" + cstrRecycleID );
+									CMySQLQuery mq05( "DELETE FROM statistics WHERE bid=" + cstrRecycleID );
+									CMySQLQuery mq06( "DELETE FROM bookmarks WHERE bid=" + cstrRecycleID );
+									CMySQLQuery mq07( "DELETE FROM thanks WHERE bid=" + cstrRecycleID );
+									CMySQLQuery mq08( "DELETE FROM talktorrent WHERE btid=" + cstrRecycleID );
+									CMySQLQuery mq09( "DELETE FROM talkrequest WHERE btid=" + cstrRecycleID );
+									CMySQLQuery mq10( "DELETE FROM comments WHERE btid=" + cstrRecycleID );
+
+									UTIL_LogFilePrint( "recycleTorrent: %s permanently deleted torrent %s\n", pRequest->user.strLogin.c_str( ), strFileName.c_str( ) );
+
+									bSuccess = true;
+								}
+							}
+						}
+					}
+
+					if( bSuccess )
+						pResponse->strContent += "<p class=\"deleted\">" + UTIL_Xsprintf( gmapLANG_CFG["recycle_action_succeed"].c_str( ), cstrRecycleID.c_str( ), string( "<a title=\"" + gmapLANG_CFG["navbar_admin"] + "\" href=\"" + strReturnPage + "\">" ).c_str( ), "</a>" ) + "</p>\n";
+					else
+						pResponse->strContent += "<p class=\"deleted\">" + UTIL_Xsprintf( gmapLANG_CFG["recycle_action_failed"].c_str( ), cstrRecycleID.c_str( ), string( "<a title=\"" + gmapLANG_CFG["navbar_admin"] + "\" href=\"" + strReturnPage + "\">" ).c_str( ), "</a>" ) + "</p>\n";
+				}
+				else
+				{
+					if( cstrRecycleAction == "recover" )
+					{
+						pResponse->strContent += "<form name=\"recovertorrent\" method=\"get\" action=\"" + string( RESPONSE_STR_ADMIN_HTML ) + "\" onSubmit=\"return validate( this )\">";
+						pResponse->strContent += "<div class=\"torrent_delete\">\n";
+						pResponse->strContent += "<p class=\"delete\">" + UTIL_Xsprintf( gmapLANG_CFG["recover_torrent_q"].c_str( ), cstrRecycleID.c_str( ) ) + "</p>\n";
+						pResponse->strContent += "<p class=\"delete\"><input name=\"func\" type=hidden value=\"recycle\"></p>\n";
+						pResponse->strContent += "<p class=\"delete\"><input name=\"action\" type=hidden value=\"" + cstrRecycleAction + "\"></p>\n";
+						pResponse->strContent += "<p class=\"delete\"><input name=\"id\" type=hidden value=\"" + cstrRecycleID + "\"></p>\n";
+						pResponse->strContent += "<p class=\"delete\"><input name=\"ok\" type=hidden value=\"1\"></p>\n";
+						pResponse->strContent += "<p class=\"delete\"><input name=\"return\" type=hidden value=\"" + strReturnPage + "\"></p>\n";
+						pResponse->strContent += "<div>\n";
+						pResponse->strContent += Button_Submit( "submit_recover", string( gmapLANG_CFG["yes"] ) );
+						pResponse->strContent += Button_Back( "cancel_recover", string( gmapLANG_CFG["no"] ) );
+						pResponse->strContent += "\n</div>\n</div></form>\n";
+					}
+					else if( cstrRecycleAction == "delete" ) 
+					{
+						pResponse->strContent += "<form name=\"deletetorrent\" method=\"get\" action=\"" + string( RESPONSE_STR_ADMIN_HTML ) + "\" onSubmit=\"return validate( this )\">";
+						pResponse->strContent += "<div class=\"torrent_delete\">\n";
+						pResponse->strContent += "<p class=\"delete\">" + UTIL_Xsprintf( gmapLANG_CFG["delete_torrent_q"].c_str( ), cstrRecycleID.c_str( ) ) + "</p>\n";
+						pResponse->strContent += "<p class=\"delete\"><input name=\"func\" type=hidden value=\"recycle\"></p>\n";
+						pResponse->strContent += "<p class=\"delete\"><input name=\"action\" type=hidden value=\"" + cstrRecycleAction + "\"></p>\n";
+						pResponse->strContent += "<p class=\"delete\"><input name=\"id\" type=hidden value=\"" + cstrRecycleID + "\"></p>\n";
+						pResponse->strContent += "<p class=\"delete\"><input name=\"ok\" type=hidden value=\"1\"></p>\n";
+						pResponse->strContent += "<p class=\"delete\"><input name=\"return\" type=hidden value=\"" + strReturnPage + "\"></p>\n";
+						pResponse->strContent += "<div>\n";
+						pResponse->strContent += Button_Submit( "submit_delete", string( gmapLANG_CFG["yes"] ) );
+						pResponse->strContent += Button_Back( "cancel_delete", string( gmapLANG_CFG["no"] ) );
+						pResponse->strContent += "\n</div>\n</div></form>\n";
+					}
+				}
+			}
 		}
 		else if( cstrAdminFunction == "stat" )
 		{

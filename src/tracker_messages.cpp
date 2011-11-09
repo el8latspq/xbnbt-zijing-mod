@@ -571,7 +571,7 @@ void CTracker :: serverResponseMessagesGET( struct request_t *pRequest, struct r
 					pResponse->strContent += "<tr class=\"messages_table_post\">\n";
 					pResponse->strContent += "<th class=\"messages_table_post\">" + gmapLANG_CFG["messages_post_message"] + "</th>\n";
 					pResponse->strContent += "<td class=\"messages_table_post\">\n<textarea id=\"messagearea\" name=\"message\" rows=8 cols=64>";
-					pResponse->strContent += "[quote=" + UTIL_RemoveHTML( strName ) + "]" + UTIL_RemoveHTML3( strMsgText ) + "[/quote]\n</textarea>\n</td>\n</tr>\n";
+					pResponse->strContent += "[quote=[user]" + UTIL_RemoveHTML( strName ) + "[/user]]" + UTIL_RemoveHTML3( strMsgText ) + "[/quote]\n</textarea>\n</td>\n</tr>\n";
 				}
 				else
 				{

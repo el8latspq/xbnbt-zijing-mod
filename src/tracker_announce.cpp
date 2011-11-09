@@ -350,10 +350,14 @@ void CTracker :: serverResponseAnnounce( struct request_t *pRequest,struct respo
 		if( gbDebug && ( gucDebugLevel & DEBUG_ANNOUNCE ) )
 			UTIL_LogPrint( "serverResponseAnnounce: user agent banning (enabled)\n" );
 
-		bool bClientBanned = UTIL_IsClientBanList( strUserAgent, m_pClientBannedList, true );
+//		bool bClientBanned = UTIL_IsClientBanList( strUserAgent, m_pClientBannedList, true );
+//
+//		if( !bClientBanned )
+//			bClientBanned = UTIL_IsClientBanList( cstrPeerID, m_pClientBannedList, false );
+		bool bClientBanned = UTIL_IsClientBanList( cstrPeerID, m_pClientBannedList, false );
 
 		if( !bClientBanned )
-			bClientBanned = UTIL_IsClientBanList( cstrPeerID, m_pClientBannedList, false );
+			bClientBanned = UTIL_IsClientBanList( strUserAgent, m_pClientBannedList, true );
 
 		switch( m_ucBanMode )
 		{

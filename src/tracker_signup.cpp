@@ -250,7 +250,8 @@ void CTracker :: serverResponseSignupPOST( struct request_t *pRequest, struct re
  					string strAdded = addUser( cstrLogin, cstrPass, m_ucMemberAccess, cstrMail );
 					if( !strAdded.empty( ) )
 					{
-						m_pCache->ResetUsers( );
+						m_pCache->addRowUsers( strAdded );
+//						m_pCache->ResetUsers( );
 						// Thanks! You've successfully signed up!
 						pResponse->strContent += "<p class=\"signup_ok\">" + UTIL_Xsprintf( gmapLANG_CFG["signup_success"].c_str( ), string( "<a title=\"" + gmapLANG_CFG["navbar_login"] + "\" href=\"" + RESPONSE_STR_LOGIN_HTML + "\">" ).c_str( ), "</a>" ) + "</p>\n\n";
 					}
@@ -524,7 +525,7 @@ void CTracker :: serverResponseInvitePOST( struct request_t *pRequest, struct re
 				return;
 			}
 
-			if( cstrMail.find( "@" ) == string :: npos || cstrMail.find( "." ) == string :: npos )
+			if( cstrMail.find( "@" ) == string :: npos || cstrMail.find( "@" ) == 0 || cstrMail.find( "." ) == string :: npos )
 			{
 				// Unable to signup. Your e-mail address is invalid.
 				pResponse->strContent += "<p class=\"signup_failed\">" + UTIL_Xsprintf( gmapLANG_CFG["signup_email_error"].c_str( ), string( "<a title=\"" + gmapLANG_CFG["navbar_sign_up_invite"] + "\" href=\"" + RESPONSE_STR_INVITE_HTML + "\">" ).c_str( ), "</a>" ) + "</p>\n\n";
@@ -607,7 +608,8 @@ void CTracker :: serverResponseInvitePOST( struct request_t *pRequest, struct re
 							system( string( "./sendschool.sh \"" + cstrMail + "\" \"" + cstrLogin + "\" \"" + cstrPass + "\" &" ).c_str( ) );
 							CMySQLQuery mq01( "UPDATE invites SET binvitee=\'" +  UTIL_StringToMySQL( cstrLogin ) + "\',binviteeid=" + strAdded + ",bused=1 WHERE bcode=\'" + UTIL_StringToMySQL( cstrCode ) + "\'" );
 							CMySQLQuery mq02( "UPDATE users SET binviter=\'" +  UTIL_StringToMySQL( vecQuery[2] ) +"\', binviterid=" + UTIL_StringToMySQL( vecQuery[1] ) + " WHERE buid=" + strAdded );
-							m_pCache->ResetUsers( );
+							m_pCache->addRowUsers( strAdded );
+//							m_pCache->ResetUsers( );
 							// Thanks! You've successfully signed up!
 							pResponse->strContent += "<p class=\"signup_ok\">" + UTIL_Xsprintf( gmapLANG_CFG["signup_success_mail"].c_str( ), UTIL_RemoveHTML( cstrMail ).c_str( ), string( "<a title=\"" + gmapLANG_CFG["navbar_login"] + "\" href=\"" + RESPONSE_STR_LOGIN_HTML + "\">" ).c_str( ), "</a>" ) + "</p>\n\n";
 						}
@@ -867,7 +869,7 @@ void CTracker :: serverResponseSignupSchoolPOST( struct request_t *pRequest, str
 
 				return;
 			}
-			if( cstrMail.find( "@" ) == string :: npos || cstrMail.find( "." ) == string :: npos )
+			if( cstrMail.find( "@" ) == string :: npos || cstrMail.find( "@" ) == 0 || cstrMail.find( "." ) == string :: npos )
 			{
 				// Unable to signup. Your e-mail address is invalid.
 				pResponse->strContent += "<p class=\"signup_failed\">" + UTIL_Xsprintf( gmapLANG_CFG["signup_email_error"].c_str( ), string( "<a title=\"" + gmapLANG_CFG["navbar_sign_up_school"] + "\" href=\"" + RESPONSE_STR_SIGNUP_SCHOOL_HTML + "\">" ).c_str( ), "</a>" ) + "</p>\n\n";
@@ -948,7 +950,8 @@ void CTracker :: serverResponseSignupSchoolPOST( struct request_t *pRequest, str
 							// Thanks! You've successfully signed up!
 							pResponse->strContent += "<p class=\"signup_ok\">" + UTIL_Xsprintf( gmapLANG_CFG["signup_success_mail"].c_str( ), UTIL_RemoveHTML( cstrMail ).c_str( ), string( "<a title=\"" + gmapLANG_CFG["navbar_login"] + "\" href=\"" + RESPONSE_STR_LOGIN_HTML + "\">" ).c_str( ), "</a>" ) + "</p>\n\n";
 						}
-						m_pCache->ResetUsers( );
+						m_pCache->addRowUsers( strAdded );
+//						m_pCache->ResetUsers( );
 					}
 					else
 						pResponse->strContent += "<p class=\"signup_failed\">" + UTIL_Xsprintf( gmapLANG_CFG["users_max_create_fail"].c_str( ), string( "<a title=\"" + gmapLANG_CFG["navbar_users"] + "\" href=\"" + RESPONSE_STR_SIGNUP_SCHOOL_HTML + "\">" ).c_str( ), "</a>" ) + "</p>\n";
@@ -1177,7 +1180,7 @@ void CTracker :: serverResponseRecoverPOST( struct request_t *pRequest, struct r
 
 				return;
 			}
-			if( cstrMail.find( "@" ) == string :: npos || cstrMail.find( "." ) == string :: npos )
+			if( cstrMail.find( "@" ) == string :: npos || cstrMail.find( "@" ) == 0 || cstrMail.find( "." ) == string :: npos )
 			{
 				// Unable to signup. Your e-mail address is invalid.
 				pResponse->strContent += "<p class=\"signup_failed\">" + UTIL_Xsprintf( gmapLANG_CFG["recover_email_error"].c_str( ), string( "<a title=\"" + gmapLANG_CFG["navbar_sign_up"] + "\" href=\"" + RESPONSE_STR_RECOVER_HTML + "\">" ).c_str( ), "</a>" ) + "</p>\n\n";

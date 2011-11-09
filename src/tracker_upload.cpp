@@ -851,6 +851,8 @@ void CTracker :: serverResponseUploadPOST( struct request_t *pRequest, struct re
 		return;
 	}
 
+	strPostedName = UTIL_RemoveBR( strPostedName );
+
 	// Output common HTML head
 	HTML_Common_Begin(  pRequest, pResponse, gmapLANG_CFG["upload_page"], string( CSS_UPLOAD ), string( ), NOT_INDEX, CODE_200 );
 	
@@ -888,33 +890,44 @@ void CTracker :: serverResponseUploadPOST( struct request_t *pRequest, struct re
 		{
 			// Get the uploaders IP - needs work
 
-			CMySQLQuery *pQuery = new CMySQLQuery( "INSERT INTO allowed (bhash,badded,bnodownload,bpost) VALUES(\'" + UTIL_StringToMySQL( cstrInfoHash ) + "\',NOW(),1,1)" );
+			CMySQLQuery *pQuery = new CMySQLQuery( "INSERT INTO allowed (bhash,badded,bnodownload,border,bpost) VALUES(\'" + UTIL_StringToMySQL( cstrInfoHash ) + "\',NOW(),1,NOW(),1)" );
 
-			pResponse->strContent += "<p class=\"body_upload\">" + gmapLANG_CFG["upload_ready_now"] + "</p>\n";
+			unsigned long ulLast = pQuery->lastInsertID( );
 
-			// Add the torrents details to the tag database
-			if( !strPostedName.empty( ) )
-				addTag( cstrInfoHash, strTag, strPostedName, strIntr, pRequest->user.strLogin, pRequest->user.strUID, pRequest->strIP, string( ), string( ), string( ), string( ), string( ), string( ), false, false );
-			else
-				addTag( cstrInfoHash, strTag, UTIL_HashToString( cstrInfoHash ), strIntr, pRequest->user.strLogin, pRequest->user.strUID, pRequest->strIP, string( ), string( ), string( ), string( ), string( ), string( ), false, false );
-				
-			m_pCache->Reset( );
+			string strUploadedID = string( );
+			
+			if( ulLast > 0 )
+				strUploadedID = CAtomLong( ulLast ).toString( );
 
-			pResponse->strContent += "<p class=\"success\">" + gmapLANG_CFG["successful"] + "</p>\n";
+			if( !strUploadedID.empty( ) )
+			{
+				pResponse->strContent += "<p class=\"body_upload\">" + gmapLANG_CFG["upload_ready_now"] + "</p>\n";
 
-			// The Trinity Edition - Addition Begins
-			// The following displays SEEDING INSTRUCTIONS after a user successfully uploads a torrent
+				// Add the torrents details to the tag database
+				if( !strPostedName.empty( ) )
+					modifyTag( strUploadedID, strTag, strPostedName, strIntr, pRequest->user.strLogin, pRequest->user.strUID, pRequest->strIP, string( ), string( ), string( ), string( ), string( ), false, string( ), false, string( ), false );
+				else
+					modifyTag( strUploadedID, strTag, UTIL_HashToString( cstrInfoHash ), strIntr, pRequest->user.strLogin, pRequest->user.strUID, pRequest->strIP, string( ), string( ), string( ), string( ), string( ), false, string( ), false, string( ), false );
+					
+//				m_pCache->Reset( );
+				m_pCache->addRow( strUploadedID, false );
 
-			pResponse->strContent += "<div class=\"seeding_instructions\">\n";
-			pResponse->strContent += "<table class=\"seeding_instructions\">\n";
-			pResponse->strContent += "<tr>\n<td>\n";
-			pResponse->strContent += "<p class=\"seeding_instructions_head\">" + gmapLANG_CFG["upload_seeding_instructions"] + "</p>\n";
-			pResponse->strContent += "<p class=\"seeding_instructions\">" + gmapLANG_CFG["upload_inst_verify"] + "<br>\n";
-			pResponse->strContent += gmapLANG_CFG["upload_inst_return"];
-			pResponse->strContent += "</p>\n</td>\n</tr>\n</table>\n";
-			pResponse->strContent += "</div>";
+				pResponse->strContent += "<p class=\"success\">" + gmapLANG_CFG["successful"] + "</p>\n";
 
-// 			UTIL_LogFilePrint( string( gmapLANG_CFG["user_uploaded_torrent"] + "\n" ).c_str( ), pRequest->user.strLogin.c_str( ), strIP.c_str( ), strFile.c_str( ) );
+				// The Trinity Edition - Addition Begins
+				// The following displays SEEDING INSTRUCTIONS after a user successfully uploads a torrent
+
+				pResponse->strContent += "<div class=\"seeding_instructions\">\n";
+				pResponse->strContent += "<table class=\"seeding_instructions\">\n";
+				pResponse->strContent += "<tr>\n<td>\n";
+				pResponse->strContent += "<p class=\"seeding_instructions_head\">" + gmapLANG_CFG["upload_seeding_instructions"] + "</p>\n";
+				pResponse->strContent += "<p class=\"seeding_instructions\">" + gmapLANG_CFG["upload_inst_verify"] + "<br>\n";
+				pResponse->strContent += gmapLANG_CFG["upload_inst_return"];
+				pResponse->strContent += "</p>\n</td>\n</tr>\n</table>\n";
+				pResponse->strContent += "</div>";
+
+// 				UTIL_LogFilePrint( string( gmapLANG_CFG["user_uploaded_torrent"] + "\n" ).c_str( ), pRequest->user.strLogin.c_str( ), strIP.c_str( ), strFile.c_str( ) );
+			}
 		}
 		// Output common HTML tail
 		HTML_Common_End( pRequest, pResponse, btv, NOT_INDEX, string( CSS_UPLOAD ) );
@@ -1214,9 +1227,10 @@ void CTracker :: serverResponseUploadPOST( struct request_t *pRequest, struct re
 						else
 							CMySQLQuery mq01( "UPDATE " + strDatabase + " SET bimdb=\'" + UTIL_StringToMySQL( strIMDb ) + "\',bimdbid=\'" + UTIL_StringToMySQL( strIMDbID ) + "\',bimdbupdated=NOW() WHERE bid=" + strUploadedID );
 							
-						if( vecQueryUploaded.size( ) == 2 && !vecQueryUploaded[0].empty( ) )
-							m_pCache->setLatest( vecQueryUploaded[0], bOffer );
-						m_pCache->Reset( bOffer );
+//						if( vecQueryUploaded.size( ) == 2 && !vecQueryUploaded[0].empty( ) )
+//							m_pCache->setLatest( vecQueryUploaded[0], bOffer );
+//						m_pCache->Reset( bOffer );
+						m_pCache->addRow( strUploadedID, bOffer );
 						
 						if( !bOffer )
 						{

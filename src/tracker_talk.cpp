@@ -694,7 +694,7 @@ void CTracker :: serverResponseTalkGET( struct request_t *pRequest, struct respo
 		pResponse->strContent += "}\n\n";
 		
 		// get torrent
-		pResponse->strContent += "function get_torrent(talkID,torrentID) {\n";
+		pResponse->strContent += "function get_torrent(talkID,torrentID,object) {\n";
 		pResponse->strContent += "  var divTalk = document.getElementById( talkID );\n";
 		pResponse->strContent += "  var divTorrent = document.getElementById( talkID+'_torrent'+torrentID );\n";
 		pResponse->strContent += "  var exist = false;\n";
@@ -711,19 +711,26 @@ void CTracker :: serverResponseTalkGET( struct request_t *pRequest, struct respo
 		pResponse->strContent += "          exist = true;\n";
 		pResponse->strContent += "          break; }\n";
 		pResponse->strContent += "      }\n";
-		pResponse->strContent += "      if(!exist)\n";
-		pResponse->strContent += "          divTalk.innerHTML = divTalk.innerHTML + '<div id=\"' + talkID + '_torrent' + torrentID + '\" class=\"talk_torrent\">" + UTIL_Xsprintf( gmapLANG_CFG["torrent_not_exist"].c_str( ), "' + torrentID + '" ) + "</div>';\n";
+		pResponse->strContent += "      if(!exist) {\n";
+		pResponse->strContent += "          divTalk.innerHTML = divTalk.innerHTML + '<div id=\"' + talkID + '_torrent' + torrentID + '\" class=\"talk_torrent\">" + UTIL_Xsprintf( gmapLANG_CFG["torrent_not_exist"].c_str( ), "' + torrentID + '" ) + "</div>'; }\n";
 		pResponse->strContent += "    }\n";
 		pResponse->strContent += "  }\n";
+		pResponse->strContent += "  object.style.color = \"white\";\n";
+		pResponse->strContent += "  object.style.backgroundColor = \"purple\";\n";
 		pResponse->strContent += "  if(!divTorrent) {\n";
 		pResponse->strContent += "    xmlhttp.open(\"GET\",'" + RESPONSE_STR_TALK_HTML + "?tid=' + torrentID,true);\n";
 //		pResponse->strContent += "    xmlhttp.open(\"GET\",'" + RESPONSE_STR_TALK_HTML + "?tid=' + torrentID + '&from=' + talkID,true);\n";
 		pResponse->strContent += "    xmlhttp.send(); }\n";
 		pResponse->strContent += "  else {\n";
-		pResponse->strContent += "    if( divTorrent.style.display == \"none\" )\n";
+		pResponse->strContent += "    if( divTorrent.style.display == \"none\" ) {\n";
 		pResponse->strContent += "      divTorrent.style.display = \"\";\n";
-		pResponse->strContent += "    else\n";
-		pResponse->strContent += "      divTorrent.style.display = \"none\"; }\n";
+		pResponse->strContent += "      object.style.color = \"white\";\n";
+		pResponse->strContent += "      object.style.backgroundColor = \"purple\"; }\n";
+		pResponse->strContent += "    else {\n";
+		pResponse->strContent += "      divTorrent.style.display = \"none\";\n";
+		pResponse->strContent += "      object.style.color = \"\";\n";
+		pResponse->strContent += "      object.style.backgroundColor = \"\"; }\n";
+		pResponse->strContent += "  }\n";
 		pResponse->strContent += "}\n\n";
 		
 		// return
@@ -795,6 +802,28 @@ void CTracker :: serverResponseTalkGET( struct request_t *pRequest, struct respo
 		pResponse->strContent += "    xmlhttp.send(); }\n";
 		pResponse->strContent += "}\n";
 		
+		// channel
+		pResponse->strContent += "function listen(object,channel,channel_link,nochannel_link) {\n";
+		pResponse->strContent += "  xmlhttp.onreadystatechange=function() {\n";
+		pResponse->strContent += "    if (xmlhttp.readyState==4 && xmlhttp.status==200) {\n";
+		pResponse->strContent += "      var xmldoc = xmlparser(xmlhttp.responseText);\n";
+		pResponse->strContent += "      var queryCode = xmldoc.getElementsByTagName('code')[0].childNodes[0].nodeValue;\n";
+		pResponse->strContent += "      if( queryCode=='1' || queryCode=='2' || queryCode=='3' ) {\n";
+		pResponse->strContent += "        if (object.innerHTML == channel_link)\n";
+		pResponse->strContent += "          object.innerHTML = nochannel_link;\n";
+		pResponse->strContent += "        else\n";
+		pResponse->strContent += "          object.innerHTML = channel_link;\n";
+		pResponse->strContent += "      }\n";
+		pResponse->strContent += "    }\n";
+		pResponse->strContent += "  }\n";
+		pResponse->strContent += "  if (object.innerHTML == channel_link) {\n";
+		pResponse->strContent += "    xmlhttp.open(\"GET\",\"" + RESPONSE_STR_QUERY_HTML + "?type=channel&action=add&channel=\"+encodeURIComponent(channel),true);\n";
+		pResponse->strContent += "    xmlhttp.send(); }\n";
+		pResponse->strContent += "  else {\n";
+		pResponse->strContent += "    xmlhttp.open(\"GET\",\"" + RESPONSE_STR_QUERY_HTML + "?type=channel&action=remove&channel=\"+encodeURIComponent(channel),true);\n";
+		pResponse->strContent += "    xmlhttp.send(); }\n";
+		pResponse->strContent += "}\n";
+
 		// reply
 //		pResponse->strContent += "function reply( commentid ) {\n";
 //		pResponse->strContent += "var comment = document.getElementById( \"comment\" + commentid );\n";
@@ -1027,8 +1056,9 @@ void CTracker :: serverResponseTalkGET( struct request_t *pRequest, struct respo
 		pResponse->strContent += "</p>";
 		pResponse->strContent += "</td>\n";
 		pResponse->strContent += "</tr>\n";
+		pResponse->strContent += "<div id=\"divTalkAutoload\">\n";
 		pResponse->strContent += "<tr class=\"talk_table_cat\">\n";
-		pResponse->strContent += "<td class=\"talk_table_cat\" id=\"tdTalkCat\">\n";
+		pResponse->strContent += "<td class=\"talk_table_cat\">\n";
 
 		CMySQLQuery *pQueryUser = new CMySQLQuery( "SELECT btalk,btalkref,btalktorrent,btalkrequest FROM users WHERE buid=" + pRequest->user.strUID );
 				
@@ -1118,7 +1148,22 @@ void CTracker :: serverResponseTalkGET( struct request_t *pRequest, struct respo
 			pResponse->strContent += "<a class=\"talk_channel";
 			if( strChannel == (*ulKey) )
 				pResponse->strContent += "_selected";
-			pResponse->strContent += "\" href=\"" + RESPONSE_STR_TALK_HTML + "?channel=" + UTIL_StringToEscaped( (*ulKey) ) + "\">" + UTIL_RemoveHTML( (*ulKey) ) + "</a>";
+			pResponse->strContent += "\" href=\"" + RESPONSE_STR_TALK_HTML + "?channel=" + UTIL_StringToEscaped( (*ulKey) ) + "\">" + UTIL_RemoveHTML( (*ulKey) );
+
+			CMySQLQuery *pQueryListen = new CMySQLQuery( "SELECT btalk FROM listen WHERE buid=" + pRequest->user.strUID + " AND bchannel=\'" + UTIL_StringToMySQL( (*ulKey) ) + "\'" );
+
+			vector<string> vecQueryListen;
+
+			vecQueryListen.reserve(1);
+
+			vecQueryListen = pQueryListen->nextRow( );
+		
+			delete pQueryListen;
+
+			if( vecQueryListen.size( ) == 1 && vecQueryListen[0] != "0" )
+				pResponse->strContent += "<span class=\"hot\">(" + vecQueryListen[0] + ")</span>";
+
+			pResponse->strContent += "</a>";
 //			pResponse->strContent += "<a href=\"javascript: ;\" onClick=\"javascrip: load('div','divTalk','" + RESPONSE_STR_TALK_HTML + "?show=all');\">" + gmapLANG_CFG["talk_show_all"] + "</a>";
 		}
 		pResponse->strContent += "<a class=\"talk_channel";
@@ -1128,6 +1173,7 @@ void CTracker :: serverResponseTalkGET( struct request_t *pRequest, struct respo
 
 		pResponse->strContent += "</td>\n";
 		pResponse->strContent += "</tr>\n";
+		pResponse->strContent += "</div>\n";
 		pResponse->strContent += "</table>\n";
 		
 		pResponse->strContent += "</td>\n";
@@ -1137,22 +1183,11 @@ void CTracker :: serverResponseTalkGET( struct request_t *pRequest, struct respo
 
 		pResponse->strContent += "<div class=\"talk_tag_hot\">";
 		pResponse->strContent += "<p class=\"talk_tag_hot\">" + gmapLANG_CFG["talk_tag_hot"] + "</p>";
-		CMySQLQuery *pQueryTag = new CMySQLQuery( "SELECT btag,COUNT(*) AS bcount FROM talktag WHERE bposted>NOW()-INTERVAL " + CAtomInt( CFG_GetInt( "bnbt_hot_day", 3 ) ).toString( ) + " DAY GROUP BY btag ORDER BY bcount DESC LIMIT 5");
-	
-		vector<string> vecQueryTag;
-	
-		vecQueryTag.reserve(2);
 
-		vecQueryTag = pQueryTag->nextRow( );
-
-		while( vecQueryTag.size( ) == 2 )
+		for( vector< pair< string, string > > :: iterator ulKey = m_vecTalkTags.begin( ); ulKey != m_vecTalkTags.end( ); ulKey++ )
 		{
-			pResponse->strContent += "<span class=\"talk_tag_hot\"><a class=\"talk_tag\" href=\"" + RESPONSE_STR_TALK_HTML + "?tag=" + UTIL_StringToEscaped( vecQueryTag[0] ) + "\">" + UTIL_RemoveHTML( "#" + vecQueryTag[0] + "#" ) + "</a></span>";
-			
-			vecQueryTag = pQueryTag->nextRow( );
+			pResponse->strContent += "<span class=\"talk_tag_hot\"><a class=\"talk_tag\" href=\"" + RESPONSE_STR_TALK_HTML + "?tag=" + UTIL_StringToEscaped( (*ulKey).first ) + "\">" + UTIL_RemoveHTML( "#" + (*ulKey).first + "#" ) + "</a></span>";
 		}
-		
-		delete pQueryTag;
 
 		pResponse->strContent += "</div>";
 
@@ -1891,7 +1926,7 @@ void CTracker :: serverResponseTalkGET( struct request_t *pRequest, struct respo
 			
 					if( pRequest->user.strUID != strUID )
 					{
-						pResponse->strContent += "<span class=\"user_friend\">[<a class=\"friend\" id=\"friend" + strUID + "\" class=\"red\" href=\"javascript: ;\" onClick=\"javascript: friend('" + strUID + "','" + gmapLANG_CFG["friend_add"] + "','" + gmapLANG_CFG["friend_remove"] + "');\">";
+						pResponse->strContent += "<span class=\"user_friend\">[<a class=\"friend\" id=\"friend" + strUID + "\" href=\"javascript: ;\" onClick=\"javascript: friend('" + strUID + "','" + gmapLANG_CFG["friend_add"] + "','" + gmapLANG_CFG["friend_remove"] + "');\">";
 			
 						CMySQLQuery *pQueryFriend = new CMySQLQuery( "SELECT buid,bfriendid FROM friends WHERE buid=" + pRequest->user.strUID + " AND bfriendid=" + strUID );
 
@@ -1927,6 +1962,42 @@ void CTracker :: serverResponseTalkGET( struct request_t *pRequest, struct respo
 				}
 			}
 			
+			if( strUID.empty( ) && !strChannel.empty( ) )
+			{
+				if( strChannel == gmapLANG_CFG["talk_channel_all"] )
+				{
+					if( cstrAutoload.empty( ) )
+						CMySQLQuery mq01( "UPDATE listen SET btalk=0 WHERE buid=" + pRequest->user.strUID );
+				}
+				else
+				{
+					if( cstrAutoload.empty( ) )
+						CMySQLQuery mq02( "UPDATE listen SET btalk=0 WHERE buid=" + pRequest->user.strUID + " AND bchannel=\'" + UTIL_StringToMySQL( strChannel ) + "\'" );
+
+					pResponse->strContent += "<div class=\"talk_channel\">\n<p>" + UTIL_RemoveHTML( strChannel );
+			
+					pResponse->strContent += "<span class=\"talk_listen\">[<a class=\"listen\" href=\"javascript: ;\" onClick=\"javascript: listen(this,'" + strChannel + "','" + gmapLANG_CFG["talk_channel_add"] + "','" + gmapLANG_CFG["talk_channel_remove"] + "');\">";
+		
+					CMySQLQuery *pQueryListen = new CMySQLQuery( "SELECT buid,bchannel FROM listen WHERE buid=" + pRequest->user.strUID + " AND bchannel=\'" + UTIL_StringToMySQL( strChannel ) + "\'" );
+
+					vector<string> vecQueryListen;
+
+					vecQueryListen.reserve(2);
+
+					vecQueryListen = pQueryListen->nextRow( );
+		
+					delete pQueryListen;
+		
+					if( vecQueryListen.size( ) == 2 )
+						pResponse->strContent += gmapLANG_CFG["talk_channel_remove"];
+					else
+						pResponse->strContent += gmapLANG_CFG["talk_channel_add"];
+
+					pResponse->strContent += "</a>]</span>";
+
+					pResponse->strContent += "</p></div>\n";
+				}
+			}
 //			ulCount = pQueryTalk->numRows( );
 			
 			if( vecQueryTalk.size( ) == 15 )
@@ -1990,7 +2061,7 @@ void CTracker :: serverResponseTalkGET( struct request_t *pRequest, struct respo
 		pResponse->strContent += "<!--\n";
 		pResponse->strContent += "setInterval( autoLoad, 300000 );\n";
 		pResponse->strContent += "function autoLoad() {\n";
-		pResponse->strContent += "  load('td','tdTalkCat','" + RESPONSE_STR_TALK_HTML + strJoined + "');\n";
+		pResponse->strContent += "  load('div','divTalkAutoload','" + RESPONSE_STR_TALK_HTML + strJoined + "');\n";
 		pResponse->strContent += "}\n";
 		pResponse->strContent += "//-->\n";
 		pResponse->strContent += "</script>\n\n";
@@ -2529,6 +2600,27 @@ void CTracker :: serverResponseTalkPOST( struct request_t *pRequest, struct resp
 
 				if( !strQueryValue.empty( ) )
 					CMySQLQuery mq05( strQuery + strQueryValue );
+
+				if( strReplyTo.empty( ) )
+				{
+					CMySQLQuery *pQueryListen = new CMySQLQuery( "SELECT buid FROM listen WHERE bchannel=\'" + UTIL_StringToMySQL( strChannel ) + "\'" );
+				
+					vector<string> vecQueryListen;
+		
+					vecQueryListen.reserve(1);
+
+					vecQueryListen = pQueryListen->nextRow( );
+					
+					while( vecQueryListen.size( ) == 1 )
+					{
+						if( !vecQueryListen[0].empty( ) && vecQueryListen[0] != pRequest->user.strUID )
+							CMySQLQuery mq06( "UPDATE listen SET btalk=btalk+1 WHERE buid=" + vecQueryListen[0] + " AND bchannel=\'" + UTIL_StringToMySQL( strChannel ) + "\'" );
+							
+						vecQueryListen = pQueryListen->nextRow( );
+					}
+			
+					delete pQueryListen;
+				}
 			}
 			
 			// Your comment has been posted.
@@ -2673,7 +2765,7 @@ const string CTracker :: TransferMentions( const string &cstrTalk, const string 
 					{
 						strID = strTag.substr( iLength, iEnd - iStart - 1 - iLength );
 						if( !strID.empty( ) && strID.find_first_not_of( "1234567890" ) == string :: npos )
-							strFullLink = "<a class=\"talk_torrent_link\" href=\"javascript: ;\" onClick=\"javascript: get_torrent(this.parentNode.parentNode.id,'" + strID + "');\">" + strTopic + "</a>";
+							strFullLink = "<a class=\"talk_torrent_link\" href=\"javascript: ;\" onClick=\"javascript: get_torrent(this.parentNode.parentNode.id,'" + strID + "',this);\">" + strTopic + "</a>";
 						else
 							strFullLink = "<a class=\"talk_tag\" href=\"" + RESPONSE_STR_TALK_HTML + "?tag=" + UTIL_StringToEscaped( strTag ) + "\">" + strTopic + "</a>";
 					}

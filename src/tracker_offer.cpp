@@ -335,13 +335,15 @@ void CTracker :: serverResponseOfferGET( struct request_t *pRequest, struct resp
 										CMySQLQuery mq03( "UPDATE subs SET subs.btid=" + strAllowedID + " WHERE subs.boid=" + strAllowID );
 										CMySQLQuery mq04( "UPDATE allowed,(SELECT btid,COUNT(*) AS bcount FROM subs WHERE btid=" + strAllowedID + " GROUP BY btid) AS subcount SET allowed.bsubs=subcount.bcount WHERE allowed.bid=subcount.btid" );
 										
-										if( vecQueryAllowed.size( ) == 2 && !vecQueryAllowed[0].empty( ) )
-											m_pCache->setLatest( vecQueryAllowed[0] );
-										m_pCache->Reset( );
+										m_pCache->addRow( strAllowedID, false );
+//										if( vecQueryAllowed.size( ) == 2 && !vecQueryAllowed[0].empty( ) )
+//											m_pCache->setLatest( vecQueryAllowed[0] );
+//										m_pCache->Reset( );
 										
 										CMySQLQuery mq05( "DELETE FROM offer WHERE bid=" + strAllowID );
 									
-										m_pCache->Reset( true );
+										m_pCache->deleteRow( strAllowID, true );
+//										m_pCache->Reset( true );
 										
 										if( !vecQueryOffer[12].empty( ) )
 										{
@@ -470,10 +472,10 @@ void CTracker :: serverResponseOfferGET( struct request_t *pRequest, struct resp
 							
 							if( !strFileName.empty( ) )
 							{
-								if( m_strArchiveDir.empty( ) )
+//								if( m_strArchiveDir.empty( ) )
 									UTIL_DeleteFile( string( m_strOfferDir + strFileName ).c_str( ) );
-								else
-									UTIL_MoveFile( string( m_strOfferDir + strFileName ).c_str( ), string( m_strArchiveDir + strFileName ).c_str( ) );
+//								else
+//									UTIL_MoveFile( string( m_strOfferDir + strFileName ).c_str( ), string( m_strArchiveDir + strFileName ).c_str( ) );
 							}
 							
 							if( vecQuery.size( ) == 3 )
@@ -505,7 +507,7 @@ void CTracker :: serverResponseOfferGET( struct request_t *pRequest, struct resp
 							UTIL_LogFilePrint( "deleteOffer: %s deleted offer %s\n", pRequest->user.strLogin.c_str( ), strFileName.c_str( ) );
 							UTIL_LogFilePrint( "deleteOffer: delete reason %s\n", strDelReason.c_str( ) );
 
-							deleteTag( strDelID, true );
+							deleteTag( strDelID, true, false );
 
 							// Output common HTML head
 							HTML_Common_Begin(  pRequest, pResponse, gmapLANG_CFG["offer_page"], string( CSS_OFFER ), string( ), NOT_INDEX, CODE_200 );

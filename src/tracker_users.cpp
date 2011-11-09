@@ -1321,68 +1321,94 @@ void CTracker :: serverResponseUsersGET( struct request_t *pRequest, struct resp
 					// Output common HTML head
 					HTML_Common_Begin(  pRequest, pResponse, gmapLANG_CFG["users_page"], string( CSS_USERS ), string( ), NOT_INDEX, CODE_200 );
 
-					// Are you sure it is ok to delete the user?
-					if( cstrOK == "1" )
+					if( vecQuery.size( ) == 12 && !cstrUser.empty( ) )
 					{
-						// Delete the user
-						deleteUser( cstrUID );
-						
-						m_pCache->ResetUsers( );
-						
-						UTIL_LogFilePrint( "deleteUser: %s deleted user %s\n", pRequest->user.strLogin.c_str( ), cstrUser.c_str( ) );
-	
-						// Inform the operator that the user was deleted
-						pResponse->strContent += "<p class=\"deleted_users\">" + UTIL_Xsprintf( gmapLANG_CFG["users_deleted_user"].c_str( ), cstrUser.c_str( ), string( "<a title=\"" + gmapLANG_CFG["navbar_users"] + "\" href=\"" + RESPONSE_STR_USERS_HTML + "\">" ).c_str( ), "</a>" ) + "</p>\n\n" ;
+						// Are you sure it is ok to delete the user?
+						if( cstrOK == "1" )
+						{
+							// Delete the user
+							deleteUser( cstrUID );
+							
+							m_pCache->deleteRowUsers( cstrUID );
+//							m_pCache->ResetUsers( );
+							
+							UTIL_LogFilePrint( "deleteUser: %s deleted user %s\n", pRequest->user.strLogin.c_str( ), cstrUser.c_str( ) );
+		
+							// Inform the operator that the user was deleted
+							pResponse->strContent += "<p class=\"deleted_users\">" + UTIL_Xsprintf( gmapLANG_CFG["users_deleted_user"].c_str( ), cstrUser.c_str( ), string( "<a title=\"" + gmapLANG_CFG["navbar_users"] + "\" href=\"" + RESPONSE_STR_USERS_HTML + "\">" ).c_str( ), "</a>" ) + "</p>\n\n" ;
 
-						// Output common HTML tail
-						HTML_Common_End( pRequest, pResponse, btv, NOT_INDEX, string( CSS_USERS ) );
+							// Output common HTML tail
+							HTML_Common_End( pRequest, pResponse, btv, NOT_INDEX, string( CSS_USERS ) );
 
-						return;
+							return;
+						}
+						else
+						{
+							// The Trinity Edition - Modification Begins
+							// The following replaces the OK response with a YES | NO option
+							// when DELETING A USER
+							// Are you sure you want to delete the user
+
+							pResponse->strContent += "<p class=\"delete\">" + UTIL_Xsprintf( gmapLANG_CFG["users_delete_q"].c_str( ), cstrUser.c_str( ) ) + "</p>\n\n" ;
+							pResponse->strContent += "<p class=\"delete\"><a title=\"" + gmapLANG_CFG["yes"] + "\" href=\"" + RESPONSE_STR_USERS_HTML + "?uid=" + cstrUID + "&amp;action=delete&amp;ok=1\">" + gmapLANG_CFG["yes"] + "</a> | <a title=\"" + gmapLANG_CFG["no"] + "\" href=\"" + string( JS_BACK ) + "\">" + gmapLANG_CFG["no"] + "</a></p>\n";
+
+							// Output common HTML tail
+							HTML_Common_End( pRequest, pResponse, btv, NOT_INDEX, string( CSS_USERS ) );
+
+							return;
+						}
 					}
 					else
 					{
-						// The Trinity Edition - Modification Begins
-						// The following replaces the OK response with a YES | NO option
-						// when DELETING A USER
-						// Are you sure you want to delete the user
-
-						pResponse->strContent += "<p class=\"delete\">" + UTIL_Xsprintf( gmapLANG_CFG["users_delete_q"].c_str( ), cstrUser.c_str( ) ) + "</p>\n\n" ;
-						pResponse->strContent += "<p class=\"delete\"><a title=\"" + gmapLANG_CFG["yes"] + "\" href=\"" + RESPONSE_STR_USERS_HTML + "?uid=" + cstrUID + "&amp;action=delete&amp;ok=1\">" + gmapLANG_CFG["yes"] + "</a> | <a title=\"" + gmapLANG_CFG["no"] + "\" href=\"" + string( JS_BACK ) + "\">" + gmapLANG_CFG["no"] + "</a></p>\n";
+						pResponse->strContent += "<p class=\"created_message_users\">" + UTIL_Xsprintf( gmapLANG_CFG["users_edit_nouser"].c_str( ), cstrUser.c_str( ) ) + "</p>\n\n" ;
+						pResponse->strContent += "<p class=\"failed_message_users\"><a title=\"" + gmapLANG_CFG["previous_page"] + "\" href=\"" + string( JS_BACK ) + "\">" + gmapLANG_CFG["previous_page"] + "</a></p>\n";
 
 						// Output common HTML tail
 						HTML_Common_End( pRequest, pResponse, btv, NOT_INDEX, string( CSS_USERS ) );
 
 						return;
 					}
-
 				}
 				else if( cstrAction == "reset" )
 				{
 					// Output common HTML head
 					HTML_Common_Begin(  pRequest, pResponse, gmapLANG_CFG["users_page"], string( CSS_USERS ), string( ), NOT_INDEX, CODE_200 );
-					// Are you sure it is ok to reset the passkey?
-					if( cstrOK == "1" )
+					if( vecQuery.size( ) == 12 && !cstrUser.empty( ) )
 					{
-						// reset the passkey
-						InitPasskey( cstrUser );
+						// Are you sure it is ok to reset the passkey?
+						if( cstrOK == "1" )
+						{
+							// reset the passkey
+							InitPasskey( cstrUser );
 
-						// Inform the operator that the passkey was reset
-						pResponse->strContent += "<p class=\"deleted_users\">" + UTIL_Xsprintf( gmapLANG_CFG["users_reset_passkey"].c_str( ), cstrUser.c_str( ), string( "<a title=\"" + gmapLANG_CFG["navbar_users"] + "\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?uid=" + cstrUID + "\">" ).c_str( ), "</a>" ) + "</p>\n\n" ;
+							// Inform the operator that the passkey was reset
+							pResponse->strContent += "<p class=\"deleted_users\">" + UTIL_Xsprintf( gmapLANG_CFG["users_reset_passkey"].c_str( ), cstrUser.c_str( ), string( "<a title=\"" + gmapLANG_CFG["navbar_users"] + "\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?uid=" + cstrUID + "\">" ).c_str( ), "</a>" ) + "</p>\n\n" ;
 
-						// Output common HTML tail
-						HTML_Common_End( pRequest, pResponse, btv, NOT_INDEX, string( CSS_USERS ) );
+							// Output common HTML tail
+							HTML_Common_End( pRequest, pResponse, btv, NOT_INDEX, string( CSS_USERS ) );
 
-						return;
+							return;
+						}
+						else
+						{
+							// The Trinity Edition - Modification Begins
+							// The following replaces the OK response with a YES | NO option
+							// when DELETING A USER
+							// Are you sure you want to delete the user
+
+							pResponse->strContent += "<p class=\"delete\">" + UTIL_Xsprintf( gmapLANG_CFG["users_reset_passkey_q"].c_str( ), cstrUser.c_str( ) ) + "</p>\n\n" ;
+							pResponse->strContent += "<p class=\"delete\"><a title=\"" + gmapLANG_CFG["yes"] + "\" href=\"" + RESPONSE_STR_USERS_HTML + "?uid=" + cstrUID + "&amp;action=reset&amp;ok=1\">" + gmapLANG_CFG["yes"] + "</a> | <a title=\"" + gmapLANG_CFG["no"] + "\" href=\"" + string( JS_BACK ) + "\">" + gmapLANG_CFG["no"] + "</a></p>\n";
+
+							// Output common HTML tail
+							HTML_Common_End( pRequest, pResponse, btv, NOT_INDEX, string( CSS_USERS ) );
+
+							return;
+						}
 					}
 					else
 					{
-						// The Trinity Edition - Modification Begins
-						// The following replaces the OK response with a YES | NO option
-						// when DELETING A USER
-						// Are you sure you want to delete the user
-
-						pResponse->strContent += "<p class=\"delete\">" + UTIL_Xsprintf( gmapLANG_CFG["users_reset_passkey_q"].c_str( ), cstrUser.c_str( ) ) + "</p>\n\n" ;
-						pResponse->strContent += "<p class=\"delete\"><a title=\"" + gmapLANG_CFG["yes"] + "\" href=\"" + RESPONSE_STR_USERS_HTML + "?uid=" + cstrUID + "&amp;action=reset&amp;ok=1\">" + gmapLANG_CFG["yes"] + "</a> | <a title=\"" + gmapLANG_CFG["no"] + "\" href=\"" + string( JS_BACK ) + "\">" + gmapLANG_CFG["no"] + "</a></p>\n";
+						pResponse->strContent += "<p class=\"created_message_users\">" + UTIL_Xsprintf( gmapLANG_CFG["users_edit_nouser"].c_str( ), cstrUser.c_str( ) ) + "</p>\n\n" ;
+						pResponse->strContent += "<p class=\"failed_message_users\"><a title=\"" + gmapLANG_CFG["previous_page"] + "\" href=\"" + string( JS_BACK ) + "\">" + gmapLANG_CFG["previous_page"] + "</a></p>\n";
 
 						// Output common HTML tail
 						HTML_Common_End( pRequest, pResponse, btv, NOT_INDEX, string( CSS_USERS ) );
@@ -1854,7 +1880,8 @@ void CTracker :: serverResponseUsersPOST( struct request_t *pRequest, struct res
 						string strAdded = addUser( cstrLogin, cstrPass, ucAccess, cstrMail );
 						if( !strAdded.empty( ) )
 						{
-							m_pCache->ResetUsers( );
+							m_pCache->addRowUsers( strAdded );
+//							m_pCache->ResetUsers( );
 							pResponse->strContent += "<p class=\"created_message_users\">" + UTIL_Xsprintf( gmapLANG_CFG["users_created_user"].c_str( ), UTIL_RemoveHTML( cstrLogin ).c_str( ), string( "<a title=\"" + gmapLANG_CFG["navbar_users"] + "\" href=\"" + RESPONSE_STR_USERS_HTML + "\">" ).c_str( ), "</a>" ) + "</p>\n";
 
 							UTIL_LogFilePrint( "addUser: %s created user %s\n", pRequest->user.strLogin.c_str( ), cstrLogin.c_str( ) );
