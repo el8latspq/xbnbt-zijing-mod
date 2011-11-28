@@ -527,6 +527,7 @@ struct torrent_t
 	bool bAllow;
 	bool bNoComment;
 	unsigned char ucTop;
+	unsigned char ucTopInTag;
 	int64 iTopTo;
 	unsigned char ucClassic;
 //	bool bHL;
@@ -887,6 +888,7 @@ private:
 	unsigned char m_ucAccessDelUsers;
 	unsigned char m_ucAccessEditAdmins;
 	unsigned char m_ucAccessInvites;
+	unsigned char m_ucAccessTradeInvites;
 	unsigned char m_ucAccessMessages;
 	unsigned char m_ucAccessSignup;
 	unsigned char m_ucAccessSignupDirect;
@@ -903,6 +905,8 @@ private:
 	vector< pair< string, string > > m_vecTags;
 	vector< pair< string, string > > m_vecTagsMouse;
 	
+	vector< pair< string, unsigned char > > m_vecChannels;
+
 	vector< string > m_vecQualities;
 	vector< string > m_vecMediums;
 	vector< string > m_vecEncodes;
@@ -913,6 +917,11 @@ private:
 	int RequiredDown[6];
 	float RequiredRatio[6];
 
+	bool m_bFreeGlobal;
+	int m_iFreeDownGlobal;
+	int m_iFreeUpGlobal;
+
+	string m_strMySQLTimeZero;
 	//
 	// XBNBT Main
 	//
@@ -1059,7 +1068,7 @@ public:
 	void Reset( bool bOffer = false );
 	void addRow( const string &cstrID, bool bOffer );
 	void deleteRow( const string &cstrID, bool bOffer );
-	void sort( const unsigned char cucSort, bool bNoTop, bool bOffer = false );
+	void sort( const unsigned char cucSort, bool bNoTop, bool bOffer = false, bool bInTag = false );
 	void setRow( const string &cstrID, bool bOffer );
 	void setActive( const string &cstrID, const unsigned char cucOpt );
 	void setCompleted( const string &cstrID, const unsigned char cucOpt );
@@ -1103,6 +1112,7 @@ private:
 	bool bResortOffers;
 	bool bResortUsers;
 	bool bSortNoTop;
+	bool bSortInTag;
 	time_t tLatest;
 	time_t tLatestOffer;
 	unsigned char ucSort;

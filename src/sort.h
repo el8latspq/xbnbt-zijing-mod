@@ -223,6 +223,29 @@ int dsortByTagNoTop( const void *elem1, const void *elem2 );
 int dsortByUploaderNoTop( const void *elem1, const void *elem2 );
 int dsortByDefaultNoTop( const void *elem1, const void *elem2 );
 
+int asortByNameInTag( const void *elem1, const void *elem2 );
+int asortByCompleteInTag( const void *elem1, const void *elem2 );
+int asortByDLInTag( const void *elem1, const void *elem2 );
+int asortByAddedInTag( const void *elem1, const void *elem2 );
+int asortBySizeInTag( const void *elem1, const void *elem2 );
+int asortByFilesInTag( const void *elem1, const void *elem2 );
+int asortByCommentsInTag( const void *elem1, const void *elem2 );
+int asortByCompletedInTag( const void *elem1, const void *elem2 );
+int asortByTagInTag( const void *elem1, const void *elem2 );
+int asortByUploaderInTag( const void *elem1, const void *elem2 );
+int asortByDefaultInTag( const void *elem1, const void *elem2 );
+int dsortByNameInTag( const void *elem1, const void *elem2 );
+int dsortByCompleteInTag( const void *elem1, const void *elem2 );
+int dsortByDLInTag( const void *elem1, const void *elem2 );
+int dsortByAddedInTag( const void *elem1, const void *elem2 );
+int dsortBySizeInTag( const void *elem1, const void *elem2 );
+int dsortByFilesInTag( const void *elem1, const void *elem2 );
+int dsortByCommentsInTag( const void *elem1, const void *elem2 );
+int dsortByCompletedInTag( const void *elem1, const void *elem2 );
+int dsortByTagInTag( const void *elem1, const void *elem2 );
+int dsortByUploaderInTag( const void *elem1, const void *elem2 );
+int dsortByDefaultInTag( const void *elem1, const void *elem2 );
+
 int asortByIP( const void *elem1, const void *elem2 );
 int dsortByIP( const void *elem1, const void *elem2 );
 

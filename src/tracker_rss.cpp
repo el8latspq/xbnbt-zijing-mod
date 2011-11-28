@@ -76,6 +76,7 @@ void CTracker :: serverResponseRSS( struct request_t *pRequest, struct response_
 	
 	const string strSearch( pRequest->mapParams["search"] );
 	const string strUploader( pRequest->mapParams["uploader"] );
+	const string strIMDbID( pRequest->mapParams["imdb"] );
 	const string strMatch( pRequest->mapParams["match"] );
 	
 	const string strChannelTag( pRequest->mapParams["tag"] );
@@ -84,12 +85,86 @@ void CTracker :: serverResponseRSS( struct request_t *pRequest, struct response_
 	const string strEncode( pRequest->mapParams["encode"] );
 	
 	const string cstrDay( pRequest->mapParams["day"] );
+	const string cstrSection( pRequest->mapParams["section"] );
+	const string cstrMode( pRequest->mapParams["mode"] );
 	const string cstrPasskey( pRequest->mapParams["passkey"] );
+
+	string strUID = string( );
+	unsigned char ucAccess = 0;
+
+	if( !cstrPasskey.empty( ) )
+	{
+		CMySQLQuery *pQuery = new CMySQLQuery( "SELECT buid,baccess FROM users WHERE bpasskey=\'" + UTIL_StringToMySQL( cstrPasskey ) + "\'" );
+				
+		vector<string> vecQuery;
+		
+		vecQuery.reserve(2);
+
+		vecQuery = pQuery->nextRow( );
+		
+		delete pQuery;
+
+		if( vecQuery.size( ) == 2 )
+		{
+			strUID = vecQuery[0];
+			ucAccess = (unsigned char)atoi( vecQuery[1].c_str( ) );
+		}
+	}
 	
+	vector<string> vecBookmark;
+	vecBookmark.reserve(64);
+	vector<string> vecFriend;
+	vecFriend.reserve(64);
+
+	if( !strUID.empty( ) )
+	{
+		if( ucAccess & m_ucAccessBookmark )
+		{
+			CMySQLQuery *pQuery = new CMySQLQuery( "SELECT bid FROM bookmarks WHERE buid=" + strUID );
+		
+			vector<string> vecQuery;
+		
+			vecQuery.reserve(1);
+
+			vecQuery = pQuery->nextRow( );
+
+			while( vecQuery.size( ) == 1 )
+			{
+				vecBookmark.push_back( vecQuery[0] );
+
+				vecQuery = pQuery->nextRow( );
+			}
+			
+			delete pQuery;
+		}
+		
+		if( cstrMode == "MyFriends" )
+		{
+			CMySQLQuery *pQuery = new CMySQLQuery( "SELECT bfriendid FROM friends WHERE buid=" + strUID );
+		
+			vector<string> vecQuery;
+		
+			vecQuery.reserve(1);
+
+			vecQuery = pQuery->nextRow( );
+
+			while( vecQuery.size( ) == 1 )
+			{
+				vecFriend.push_back( vecQuery[0] );
+
+				vecQuery = pQuery->nextRow( );
+			}
+			
+			delete pQuery;
+		}
+	}
+
 	vector<string> vecSearch;
 	vecSearch.reserve(64);
 	vector<string> vecUploader;
 	vecUploader.reserve(64);
+	vector<string> vecIMDb;
+	vecIMDb.reserve(64);
 	vector<string> vecFilter;
 	vecFilter.reserve(64);
 	vector<string> vecMedium;
@@ -101,6 +176,7 @@ void CTracker :: serverResponseRSS( struct request_t *pRequest, struct response_
 	
 	vecSearch = UTIL_SplitToVector( strSearch, " " );
 	vecUploader = UTIL_SplitToVector( strUploader, " " );
+	vecIMDb = UTIL_SplitToVector( strIMDbID, " " );
 	vecFilter = UTIL_SplitToVector( strChannelTag, " " );
 	vecMedium = UTIL_SplitToVector( strMedium, " " );
 	vecQuality = UTIL_SplitToVector( strQuality, " " );
@@ -443,6 +519,8 @@ void CTracker :: serverResponseRSS( struct request_t *pRequest, struct response_
 				continue;
 			if( !vecUploader.empty( ) && !UTIL_MatchVector( pTorrents[ulLoop].strUploader, vecUploader, ucMatchMethod ) )
 				continue;
+			if( !vecIMDb.empty( ) && !UTIL_MatchVector( pTorrents[ulLoop].strIMDbID, vecIMDb, ucMatchMethod ) )
+				continue;
 				
 			if( !vecFilter.empty( ) )  
 			{    
@@ -566,6 +644,80 @@ void CTracker :: serverResponseRSS( struct request_t *pRequest, struct response_
 				passed = difftime(now_t, mktime(&time_tm));
 				if( passed > atoi( cstrDay.c_str( ) ) * 3600 * 24 )
 					continue;
+			}
+			
+			if( !cstrSection.empty( ) )
+			{
+				if( cstrSection == "hot" && pTorrents[ulLoop].uiSeeders + pTorrents[ulLoop].uiLeechers < CFG_GetInt( "bnbt_hot_count" ,20 ) )
+					continue;
+					
+				if( cstrSection == "classic1" && pTorrents[ulLoop].ucClassic != 1 )
+					continue;
+				
+				if( cstrSection == "classic2" && pTorrents[ulLoop].ucClassic != 2 )
+					continue;
+					
+				if( cstrSection == "classic3" && pTorrents[ulLoop].ucClassic != 3 )
+					continue;
+				
+				if( cstrSection == "req" && !pTorrents[ulLoop].bReq )
+					continue;
+				
+				if( cstrSection == "free" )
+				{
+//					if( m_bFreeGlobal )
+//					{
+//						if( m_iFreeDownGlobal < pTorrents[ulLoop].iDefaultDown )
+//							pTorrents[ulLoop].iDefaultDown = m_iFreeDownGlobal;
+//						if( m_iFreeUpGlobal > pTorrents[ulLoop].iDefaultUp )
+//							pTorrents[ulLoop].iDefaultUp = m_iFreeUpGlobal;
+//					}
+//					
+					pTorrents[ulLoop].iFreeDown = pTorrents[ulLoop].iDefaultDown;
+					pTorrents[ulLoop].iFreeUp = pTorrents[ulLoop].iDefaultUp;
+
+					if( pTorrents[ulLoop].iFreeTo > 0 && pTorrents[ulLoop].iFreeTo > now_t )
+					{
+						if( pTorrents[ulLoop].iTimeDown < pTorrents[ulLoop].iFreeDown )
+							pTorrents[ulLoop].iFreeDown = pTorrents[ulLoop].iTimeDown;
+						if( pTorrents[ulLoop].iTimeUp > pTorrents[ulLoop].iFreeUp )
+							pTorrents[ulLoop].iFreeUp = pTorrents[ulLoop].iTimeUp;
+					}
+
+					if( pTorrents[ulLoop].iFreeDown != 0 )
+						continue;
+				}
+			}
+
+			if( !cstrMode.empty( ) )
+			{
+				// only display entries that match the mode
+				if( cstrMode == "Seeded" )
+				{
+					if( !pTorrents[ulLoop].uiSeeders )
+						continue;
+				}
+				else if( cstrMode == "Unseeded"  )
+				{
+					if( pTorrents[ulLoop].uiSeeders )
+						continue;
+				}
+// 				else if(( cstrMode == "MyTorrents"  ) && ( pRequest->user.ucAccess & ACCESS_UPLOAD ) )
+				else if( cstrMode == "MyTorrents" )
+				{
+					if( pTorrents[ulLoop].strUploaderID != strUID )
+						continue;
+				}
+				else if( cstrMode == "MyBookmarks" )
+				{
+					if( !UTIL_MatchVector( pTorrents[ulLoop].strID, vecBookmark, MATCH_METHOD_NONCASE_EQ ) )
+						continue;
+				}
+				else if( cstrMode == "MyFriends" )
+				{
+					if( !UTIL_MatchVector( pTorrents[ulLoop].strUploaderID, vecFriend, MATCH_METHOD_NONCASE_EQ ) )
+						continue;
+				}
 			}
 		
 			ulCount++;

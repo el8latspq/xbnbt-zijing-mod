@@ -26,18 +26,25 @@
 
 int asortByTop( const void *elem1, const void *elem2 )
 {
-	if( ( (const struct torrent_t *)elem1 )->uiSeeders > 0 && ( (const struct torrent_t *)elem2 )->uiSeeders > 0 )
-	{
+//	if( ( (const struct torrent_t *)elem1 )->uiSeeders > 0 && ( (const struct torrent_t *)elem2 )->uiSeeders > 0 )
+//	{
 		return ( (const struct torrent_t *)elem2 )->ucTop - ( (const struct torrent_t *)elem1 )->ucTop;
-//		if( ( (const struct torrent_t *)elem1 )->bTop )
-//			return -1;
-//		else
-//			return 1;
-	}
-	else
-		return ( (const struct torrent_t *)elem2 )->ucTop * ( (const struct torrent_t *)elem2 )->uiSeeders - ( (const struct torrent_t *)elem1 )->ucTop * ( (const struct torrent_t *)elem1 )->uiSeeders;
+//	}
+//	else
+//		return ( (const struct torrent_t *)elem2 )->ucTop * ( (const struct torrent_t *)elem2 )->uiSeeders - ( (const struct torrent_t *)elem1 )->ucTop * ( (const struct torrent_t *)elem1 )->uiSeeders;
 //		return 0;
 
+}
+
+int asortByTopInTag( const void *elem1, const void *elem2 )
+{
+//	if( ( (const struct torrent_t *)elem1 )->uiSeeders > 0 && ( (const struct torrent_t *)elem2 )->uiSeeders > 0 )
+//	{
+		return ( ( (const struct torrent_t *)elem2 )->ucTopInTag > ( (const struct torrent_t *)elem2 )->ucTop ? ( (const struct torrent_t *)elem2 )->ucTopInTag : ( (const struct torrent_t *)elem2 )->ucTop ) - ( ( (const struct torrent_t *)elem1 )->ucTopInTag > ( (const struct torrent_t *)elem1 )->ucTop ? ( (const struct torrent_t *)elem1 )->ucTopInTag : ( (const struct torrent_t *)elem1 )->ucTop );
+//	}
+//	else
+//		return ( ( (const struct torrent_t *)elem2 )->ucTopInTag > ( (const struct torrent_t *)elem2 )->ucTop ? ( (const struct torrent_t *)elem2 )->ucTopInTag : ( (const struct torrent_t *)elem2 )->ucTop ) * ( (const struct torrent_t *)elem2 )->uiSeeders - ( ( (const struct torrent_t *)elem1 )->ucTopInTag > ( (const struct torrent_t *)elem1 )->ucTop ? ( (const struct torrent_t *)elem1 )->ucTopInTag : ( (const struct torrent_t *)elem1 )->ucTop ) * ( (const struct torrent_t *)elem1 )->uiSeeders;
+//		return 0;
 }
 
 int asortByName( const void *elem1, const void *elem2 )
@@ -475,6 +482,206 @@ int dsortByDefaultNoTop( const void *elem1, const void *elem2 )
 	return ( (const struct torrent_t *)elem2 )->strOrder.compare( ( (const struct torrent_t *)elem1 )->strOrder );
 }
 //sortByNoTop Complete
+
+//sortByInTag Start
+int asortByNameInTag( const void *elem1, const void *elem2 )
+{
+	if( asortByTopInTag( elem1, elem2 ) != 0 )
+		return asortByTopInTag( elem1, elem2 );
+	else
+//		return ( (const struct torrent_t *)elem1 )->strName.compare( ( (const struct torrent_t *)elem2 )->strName );
+		return ( (const struct torrent_t *)elem1 )->strLowerName.compare( ( (const struct torrent_t *)elem2 )->strLowerName );
+}
+
+int asortByCompleteInTag( const void *elem1, const void *elem2 )
+{
+	if( asortByTopInTag( elem1, elem2 ) != 0 )
+		return asortByTopInTag( elem1, elem2 );
+	else
+		return ( (const struct torrent_t *)elem1 )->uiSeeders - ( (const struct torrent_t *)elem2 )->uiSeeders;
+}
+
+int asortByDLInTag( const void *elem1, const void *elem2 )
+{
+	if( asortByTopInTag( elem1, elem2 ) != 0 )
+		return asortByTopInTag( elem1, elem2 );
+	else
+		return ( (const struct torrent_t *)elem1 )->uiLeechers - ( (const struct torrent_t *)elem2 )->uiLeechers;
+}
+
+int asortByAddedInTag( const void *elem1, const void *elem2 )
+{
+	if( asortByTopInTag( elem1, elem2 ) != 0 )
+		return asortByTopInTag( elem1, elem2 );
+	else
+		return ( (const struct torrent_t *)elem1 )->strAdded.compare( ( (const struct torrent_t *)elem2 )->strAdded );
+}
+
+int asortBySizeInTag( const void *elem1, const void *elem2 )
+{
+	// int64's will overflow, force a compare
+
+	const struct torrent_t *tor1( (const struct torrent_t *)elem1 );
+	const struct torrent_t *tor2( (const struct torrent_t *)elem2 );
+	
+	if( asortByTopInTag( elem1, elem2 ) != 0 )
+		return asortByTopInTag( elem1, elem2 );
+	else
+		if( tor1->iSize < tor2->iSize )
+			return -1;
+		else if( tor1->iSize > tor2->iSize )
+			return 1;
+		else
+			return 0;
+}
+
+int asortByFilesInTag( const void *elem1, const void *elem2 )
+{
+	if( asortByTopInTag( elem1, elem2 ) != 0 )
+		return asortByTopInTag( elem1, elem2 );
+	else
+		return ( (const struct torrent_t *)elem1 )->uiFiles - ( (const struct torrent_t *)elem2 )->uiFiles;
+}
+
+int asortByCommentsInTag( const void *elem1, const void *elem2 )
+{
+	if( asortByTopInTag( elem1, elem2 ) != 0 )
+		return asortByTopInTag( elem1, elem2 );
+	else
+		return ( (const struct torrent_t *)elem1 )->uiComments - ( (const struct torrent_t *)elem2 )->uiComments;
+}
+
+int asortByCompletedInTag( const void *elem1, const void *elem2 )
+{
+	if( asortByTopInTag( elem1, elem2 ) != 0 )
+		return asortByTopInTag( elem1, elem2 );
+	else
+		return ( (const struct torrent_t *)elem1 )->ulCompleted - ( (const struct torrent_t *)elem2 )->ulCompleted;
+}
+
+int asortByTagInTag( const void *elem1, const void *elem2 )
+{
+	if( asortByTopInTag( elem1, elem2 ) != 0 )
+		return asortByTopInTag( elem1, elem2 );
+	else
+		return ( (const struct torrent_t *)elem1 )->strTag.compare( ( (const struct torrent_t *)elem2 )->strTag );
+} 
+
+int asortByUploaderInTag( const void *elem1, const void *elem2 )
+{
+	if( asortByTopInTag( elem1, elem2 ) != 0 )
+		return asortByTopInTag( elem1, elem2 );
+	else
+		return ( (const struct torrent_t *)elem1 )->strUploader.compare( ( (const struct torrent_t *)elem2 )->strUploader );
+}
+
+int asortByDefaultInTag( const void *elem1, const void *elem2 )
+{
+	if( asortByTopInTag( elem1, elem2 ) != 0 )
+		return asortByTopInTag( elem1, elem2 );
+	else
+		return ( (const struct torrent_t *)elem1 )->strOrder.compare( ( (const struct torrent_t *)elem2 )->strOrder );
+}
+
+int dsortByNameInTag( const void *elem1, const void *elem2 )
+{
+	if( asortByTopInTag( elem1, elem2 ) != 0 )
+		return asortByTopInTag( elem1, elem2 );
+	else
+//		return ( (const struct torrent_t *)elem2 )->strName.compare( ( (const struct torrent_t *)elem1 )->strName );
+		return ( (const struct torrent_t *)elem2 )->strLowerName.compare( ( (const struct torrent_t *)elem1 )->strLowerName );
+}
+
+int dsortByCompleteInTag( const void *elem1, const void *elem2 )
+{
+	if( asortByTopInTag( elem1, elem2 ) != 0 )
+		return asortByTopInTag( elem1, elem2 );
+	else
+		return ( (const struct torrent_t *)elem2 )->uiSeeders - ( (const struct torrent_t *)elem1 )->uiSeeders;
+}
+
+int dsortByDLInTag( const void *elem1, const void *elem2 )
+{
+	if( asortByTopInTag( elem1, elem2 ) != 0 )
+		return asortByTopInTag( elem1, elem2 );
+	else
+		return ( (const struct torrent_t *)elem2 )->uiLeechers - ( (const struct torrent_t *)elem1 )->uiLeechers;
+}
+
+int dsortByAddedInTag( const void *elem1, const void *elem2 )
+{
+	if( asortByTopInTag( elem1, elem2 ) != 0 )
+		return asortByTopInTag( elem1, elem2 );
+	else
+		return ( (const struct torrent_t *)elem2 )->strAdded.compare( ( (const struct torrent_t *)elem1 )->strAdded );
+}
+
+int dsortBySizeInTag( const void *elem1, const void *elem2 )
+{
+	// int64's will overflow, force a compare
+
+	const struct torrent_t *tor1( (const struct torrent_t *)elem1 );
+	const struct torrent_t *tor2( (const struct torrent_t *)elem2 );
+	
+	if( asortByTopInTag( elem1, elem2 ) != 0 )
+		return asortByTopInTag( elem1, elem2 );
+	else
+		if( tor1->iSize < tor2->iSize )
+			return 1;
+		else if( tor1->iSize > tor2->iSize )
+			return -1;
+		else
+			return 0;
+}
+
+int dsortByFilesInTag( const void *elem1, const void *elem2 )
+{
+	if( asortByTopInTag( elem1, elem2 ) != 0 )
+		return asortByTopInTag( elem1, elem2 );
+	else
+		return ( (const struct torrent_t *)elem2 )->uiFiles - ( (const struct torrent_t *)elem1 )->uiFiles;
+}
+
+int dsortByCommentsInTag( const void *elem1, const void *elem2 )
+{
+	if( asortByTopInTag( elem1, elem2 ) != 0 )
+		return asortByTopInTag( elem1, elem2 );
+	else
+		return ( (const struct torrent_t *)elem2 )->uiComments - ( (const struct torrent_t *)elem1 )->uiComments;
+}
+
+int dsortByCompletedInTag( const void *elem1, const void *elem2 )
+{
+	if( asortByTopInTag( elem1, elem2 ) != 0 )
+		return asortByTopInTag( elem1, elem2 );
+	else
+		return ( (const struct torrent_t *)elem2 )->ulCompleted - ( (const struct torrent_t *)elem1 )->ulCompleted;
+}
+
+int dsortByTagInTag( const void *elem1, const void *elem2 )
+{
+	if( asortByTopInTag( elem1, elem2 ) != 0 )
+		return asortByTopInTag( elem1, elem2 );
+	else
+		return ( (const struct torrent_t *)elem2 )->strTag.compare( ( (const struct torrent_t *)elem1 )->strTag );
+}
+
+int dsortByUploaderInTag( const void *elem1, const void *elem2 )
+{
+	if( asortByTopInTag( elem1, elem2 ) != 0 )
+		return asortByTopInTag( elem1, elem2 );
+	else
+		return ( (const struct torrent_t *)elem2 )->strUploader.compare( ( (const struct torrent_t *)elem1 )->strUploader );
+}
+
+int dsortByDefaultInTag( const void *elem1, const void *elem2 )
+{
+	if( asortByTopInTag( elem1, elem2 ) != 0 )
+		return asortByTopInTag( elem1, elem2 );
+	else
+		return ( (const struct torrent_t *)elem2 )->strOrder.compare( ( (const struct torrent_t *)elem1 )->strOrder );
+}
+//sortByInTag Complete
 
 int asortpByUpped( const void *elem1, const void *elem2 )
 {

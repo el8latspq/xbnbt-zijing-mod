@@ -843,6 +843,7 @@ void CTracker :: serverResponseTalkGET( struct request_t *pRequest, struct respo
 		const string cstrTag( pRequest->mapParams["tag"] );
 		const string cstrTalk( pRequest->mapParams["talk"] );
 		const string cstrShow( pRequest->mapParams["show"] );
+		const string cstrToChannel( pRequest->mapParams["tochannel"] );
 		const string cstrPage( pRequest->mapParams["page"] );
 		const string cstrPerPage( pRequest->mapParams["per_page"] );
 //		const string cstrFromID( pRequest->mapParams["from"] );
@@ -890,10 +891,6 @@ void CTracker :: serverResponseTalkGET( struct request_t *pRequest, struct respo
 	//			if( !strRT.empty( ) )
 					pResponse->strContent += "<input id=\"inputRT\" type=\"hidden\" name=\"rt\" value=\"\">\n";
 					pResponse->strContent += "<input id=\"inputRTTo\" type=\"hidden\" name=\"rtto\" value=\"\">\n";
-//				if( !strChannel.empty( ) )
-//					pResponse->strContent += "<input type=\"hidden\" name=\"channel\" value=\"" + strChannel + "\">\n";
-//				else if( cstrShow == "requests" )
-//					pResponse->strContent += "<input type=\"hidden\" name=\"channel\" value=\"" + gmapLANG_CFG["talk_channel_requests"] + "\">\n";
 				if( !strUID.empty( ) )
 					pResponse->strContent += "<input type=\"hidden\" name=\"uid\" value=\"" + strUID + "\">\n";
 				if( !cstrShow.empty( ) )
@@ -908,19 +905,15 @@ void CTracker :: serverResponseTalkGET( struct request_t *pRequest, struct respo
 				pResponse->strContent += "<tr class=\"talk_table_post\">\n";
 				pResponse->strContent += "<td class=\"talk_table_header\">\n";
 				pResponse->strContent += "<span class=\"talk_table_header\">" + gmapLANG_CFG["talk"] + ":</span>";
-				vector<string> vecChannel;
-				vecChannel.reserve(64);
-				
-				vecChannel = UTIL_SplitToVector( gmapLANG_CFG["talk_channels"], "|" );
 
 				pResponse->strContent += "<span class=\"talk_table_channel\">" + gmapLANG_CFG["talk_channel"] + "</span>";
 				pResponse->strContent += "<select name=\"channel\">";
-				for( vector<string> :: iterator ulKey = vecChannel.begin( ); ulKey != vecChannel.end( ); ulKey++ )
+				for( vector< pair<string, unsigned char> > :: iterator ulKey = m_vecChannels.begin( ); ulKey != m_vecChannels.end( ); ulKey++ )
 				{
-					pResponse->strContent += "<option value=\"" + (*ulKey) + "\"";
-					if( strChannel == (*ulKey) || ( cstrShow == "requests" && (*ulKey) == gmapLANG_CFG["talk_channel_requests"] ) )
+					pResponse->strContent += "<option value=\"" + (*ulKey).first + "\"";
+					if( strChannel == (*ulKey).first || cstrToChannel == (*ulKey).first || ( cstrShow == "requests" && (*ulKey).first == CFG_GetString( "bnbt_talk_channel_requests", gmapLANG_CFG["talk_channel_requests"] ) ) )
 						pResponse->strContent += " selected";
-					pResponse->strContent += ">" + UTIL_RemoveHTML( (*ulKey) ) + "\n";
+					pResponse->strContent += ">" + UTIL_RemoveHTML( (*ulKey).first ) + "\n";
 				}
 				pResponse->strContent += "</select>\n";
 				pResponse->strContent += "</td>\n";
@@ -1135,22 +1128,17 @@ void CTracker :: serverResponseTalkGET( struct request_t *pRequest, struct respo
 		pResponse->strContent += "</td>\n";
 		pResponse->strContent += "</tr>\n";
 
-		vector<string> vecChannel;
-		vecChannel.reserve(64);
-		
-		vecChannel = UTIL_SplitToVector( gmapLANG_CFG["talk_channels"], "|" );
-
 		pResponse->strContent += "<tr class=\"talk_table_channel\">\n";
 		pResponse->strContent += "<td class=\"talk_table_channel\">\n";
 		pResponse->strContent += "<p class=\"talk_table_channel\">" + gmapLANG_CFG["talk_channel"] + "</p>";
-		for( vector<string> :: iterator ulKey = vecChannel.begin( ); ulKey != vecChannel.end( ); ulKey++ )
+		for( vector< pair<string, unsigned char> > :: iterator ulKey = m_vecChannels.begin( ); ulKey != m_vecChannels.end( ); ulKey++ )
 		{
 			pResponse->strContent += "<a class=\"talk_channel";
-			if( strChannel == (*ulKey) )
+			if( strChannel == (*ulKey).first )
 				pResponse->strContent += "_selected";
-			pResponse->strContent += "\" href=\"" + RESPONSE_STR_TALK_HTML + "?channel=" + UTIL_StringToEscaped( (*ulKey) ) + "\">" + UTIL_RemoveHTML( (*ulKey) );
+			pResponse->strContent += "\" href=\"" + RESPONSE_STR_TALK_HTML + "?channel=" + UTIL_StringToEscaped( (*ulKey).first ) + "\">" + UTIL_RemoveHTML( (*ulKey).first );
 
-			CMySQLQuery *pQueryListen = new CMySQLQuery( "SELECT btalk FROM listen WHERE buid=" + pRequest->user.strUID + " AND bchannel=\'" + UTIL_StringToMySQL( (*ulKey) ) + "\'" );
+			CMySQLQuery *pQueryListen = new CMySQLQuery( "SELECT btalk FROM listen WHERE buid=" + pRequest->user.strUID + " AND bchannel=\'" + UTIL_StringToMySQL( (*ulKey).first ) + "\'" );
 
 			vector<string> vecQueryListen;
 
@@ -1526,7 +1514,61 @@ void CTracker :: serverResponseTalkGET( struct request_t *pRequest, struct respo
 		}
 		else if( !cstrTag.empty( ) )
 		{
-			pResponse->strContent += "<div class=\"talk_tag\">" + UTIL_Xsprintf( gmapLANG_CFG["talk_tag_about"].c_str( ), string( "<span class=\"talk_tag\">" + UTIL_RemoveHTML( cstrTag ) + "</span>" ).c_str( ) ) + "</div>\n";
+			pResponse->strContent += "<div class=\"talk_tag\">";
+
+			string strTagAbout = string( );
+
+			if( cstrTag.find( gmapLANG_CFG["post"] ) == 0 )
+			{
+				string :: size_type iLength = gmapLANG_CFG["post"].size( );
+				string strAnnID = cstrTag.substr( iLength );
+				if( !strAnnID.empty( ) && strAnnID.find_first_not_of( "1234567890" ) == string :: npos )
+				{
+					CMySQLQuery *pQueryAnn = new CMySQLQuery( "SELECT btitle FROM announcements WHERE bid=" + strAnnID );
+				
+					vector<string> vecQueryAnn;
+			
+					vecQueryAnn.reserve(1);
+
+					vecQueryAnn = pQueryAnn->nextRow( );
+
+					delete pQueryAnn;
+
+					if( vecQueryAnn.size( ) == 1 && !vecQueryAnn[0].empty( ) )
+						strTagAbout += UTIL_Xsprintf( gmapLANG_CFG["talk_post_about"].c_str( ), string( "<span class=\"talk_tag\">" + UTIL_RemoveHTML( vecQueryAnn[0] ) + "</span>" ).c_str( ) );
+					else
+						strTagAbout += UTIL_Xsprintf( gmapLANG_CFG["talk_post_nonexist"].c_str( ), strAnnID.c_str( ) );
+				}
+			}
+			else if( cstrTag.find( gmapLANG_CFG["bet_match"] ) == 0 )
+			{
+				string :: size_type iLength = gmapLANG_CFG["bet_match"].size( );
+				string strBetID = cstrTag.substr( iLength );
+				if( !strBetID.empty( ) && strBetID.find_first_not_of( "1234567890" ) == string :: npos )
+				{
+					CMySQLQuery *pQueryBet = new CMySQLQuery( "SELECT btitle FROM bets WHERE bid=" + strBetID );
+				
+					vector<string> vecQueryBet;
+			
+					vecQueryBet.reserve(1);
+
+					vecQueryBet = pQueryBet->nextRow( );
+
+					delete pQueryBet;
+
+					if( vecQueryBet.size( ) == 1 && !vecQueryBet[0].empty( ) )
+						strTagAbout += UTIL_Xsprintf( gmapLANG_CFG["talk_bet_about"].c_str( ), string( "<span class=\"talk_tag\">" + UTIL_RemoveHTML( vecQueryBet[0] ) + "</span>" ).c_str( ) );
+					else
+						strTagAbout += UTIL_Xsprintf( gmapLANG_CFG["talk_bet_nonexist"].c_str( ), strBetID.c_str( ) );
+				}
+			}
+
+			if( !strTagAbout.empty( ) )
+				pResponse->strContent += strTagAbout;
+			else
+				pResponse->strContent += UTIL_Xsprintf( gmapLANG_CFG["talk_tag_about"].c_str( ), string( "<span class=\"talk_tag\">" + UTIL_RemoveHTML( cstrTag ) + "</span>" ).c_str( ) );
+
+			pResponse->strContent += "</div>\n";
 			
 			pQueryTalk = new CMySQLQuery( "SELECT bid FROM talktag WHERE btag='" + UTIL_StringToMySQL( cstrTag ) + "' ORDER BY bposted DESC LIMIT " + CAtomLong( ulStart ).toString( ) + "," + CAtomLong( uiOverridePerPage ).toString( ) );
 				
@@ -1974,7 +2016,7 @@ void CTracker :: serverResponseTalkGET( struct request_t *pRequest, struct respo
 					if( cstrAutoload.empty( ) )
 						CMySQLQuery mq02( "UPDATE listen SET btalk=0 WHERE buid=" + pRequest->user.strUID + " AND bchannel=\'" + UTIL_StringToMySQL( strChannel ) + "\'" );
 
-					pResponse->strContent += "<div class=\"talk_channel\">\n<p>" + UTIL_RemoveHTML( strChannel );
+					pResponse->strContent += "<div class=\"talk_channel\">\n" + UTIL_RemoveHTML( strChannel );
 			
 					pResponse->strContent += "<span class=\"talk_listen\">[<a class=\"listen\" href=\"javascript: ;\" onClick=\"javascript: listen(this,'" + strChannel + "','" + gmapLANG_CFG["talk_channel_add"] + "','" + gmapLANG_CFG["talk_channel_remove"] + "');\">";
 		
@@ -1995,7 +2037,7 @@ void CTracker :: serverResponseTalkGET( struct request_t *pRequest, struct respo
 
 					pResponse->strContent += "</a>]</span>";
 
-					pResponse->strContent += "</p></div>\n";
+					pResponse->strContent += "</div>\n";
 				}
 			}
 //			ulCount = pQueryTalk->numRows( );
@@ -2863,6 +2905,61 @@ const string CTracker :: TransferMentions( const string &cstrTalk, const string 
 			iStart = UTIL_ToLower( strTalk ).find( "http://", iEnd );
 	}
 	
+	iStart = UTIL_ToLower( strTalk ).find( "https://" );
+	while( iStart != string :: npos )
+	{
+		iEnd = UTIL_ToLower( strTalk ).find_first_not_of( "abcdefghijklmnopqrstuvwxyz1234567890./@:?=&;+#%-_$!*'(),", iStart + 8 );
+		
+		string strLink = strTalk.substr( iStart, iEnd - iStart );
+		
+		if( strLink.size( ) > 8 )
+		{
+			string :: size_type iSlash = strLink.find( "/", 8 );
+			string strDomain = strLink.substr( 8, iSlash - 8 );
+			bool bURL = true;
+
+			if( strDomain.size( ) > 0 )
+			{
+				vector<string> vecDomain;
+				vecDomain.reserve(64);
+				
+				vecDomain = UTIL_SplitToVectorStrict( strDomain, "." );
+
+				if( vecDomain.size( ) > 1 )
+				{
+					for( vector<string> :: iterator ulKey = vecDomain.begin( ); ulKey != vecDomain.end( ); ulKey++ )
+					{
+						if( (*ulKey).size( ) == 0 )
+						{
+							bURL = false;
+							break;
+						}
+						if( ( ulKey + 1 ) == vecDomain.end( ) && ( (*ulKey).size( ) < 2 || (*ulKey).size( ) > 4 ) )
+						{
+							bURL = false;
+							break;
+						}
+					}
+				}
+				else
+					bURL = false;
+			}
+			
+			if( bURL )
+			{
+				string strFullLink = "<a class=\"talk_link\" target=\"_blank\" href=\"" + strLink + "\">" + strLink + "</a>";
+			
+				strTalk.replace( iStart, iEnd - iStart, strFullLink );
+			
+				iStart = UTIL_ToLower( strTalk ).find( "https://", iStart + strFullLink.size( ) );
+			}
+			else
+				iStart = UTIL_ToLower( strTalk ).find( "https://", iEnd );
+
+		}
+		else
+			iStart = UTIL_ToLower( strTalk ).find( "https://", iEnd );
+	}
 	
 	return strTalk;
 }
@@ -3083,9 +3180,9 @@ const string CTracker :: GenerateTalk( const vector<string> &vecQuery, const uns
 
 				strReturn += "<span class=\"talk_header\">" + strUserLinkRT + ":</span>";
 
-				strReturn += "<span class=\"talk_content\">" + TransferMentions( vecQueryOne[4], strRTID ) + "</span><br>";
+				strReturn += "<span class=\"talk_content\">" + TransferMentions( vecQueryOne[4], strRTID ) + "</span><p></p>";
 
-				strReturn += "<br><a class=\"talk_time\" href=\"" + RESPONSE_STR_TALK_HTML + "?id=" + vecQueryOne[0] + "\">" + vecQueryOne[3] + "</a>";
+				strReturn += "<a class=\"talk_time\" href=\"" + RESPONSE_STR_TALK_HTML + "?id=" + vecQueryOne[0] + "\">" + vecQueryOne[3] + "</a>";
 
 				if( !vecQueryOne[8].empty( ) )
 					strReturn += "<a class=\"talk_reply_link\" href=\"" + RESPONSE_STR_TALK_HTML + "?id=" + vecQueryOne[7] + "\">" + UTIL_Xsprintf( gmapLANG_CFG["talk_reply_to"].c_str( ), UTIL_RemoveHTML( vecQueryOne[8] ).c_str( ) ) + "</a>";

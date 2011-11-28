@@ -143,11 +143,11 @@
 		a.share_warned:hover{text-decoration:none}
 		a.number{text-decoration:none}
 		a.number:hover{text-decoration:underline}
-		a.file{text-decoration:none}
-		a.file{font-size:8pt}
+		a.file{text-decoration:none; font-size:8pt; color:grey}
+		a.file:hover{color:black}
 		/*a.file:hover{text-decoration:underline}*/
 	/* ----- specific div elements ----- */
-		div.top_tool_left,div.top_tool_right
+		div.top_tool_left,div.top_tool_right,div.top_tool_left_fixed,div.top_tool_right_fixed
 		{
 			position:absolute;
 			z-index:3;
@@ -161,9 +161,10 @@
 			border-radius:0.5em;
 			opacity:0.9;
 		}
-		div.top_tool_left{text-align:left}
-		div.top_tool_right{text-align:right}
-		div.top_menu_left,div.top_menu_right
+/*		div.top_tool_left_fixed,div.top_tool_right_fixed{position:fixed}*/
+		div.top_tool_left,div.top_tool_left_fixed{text-align:left}
+		div.top_tool_right,div.top_tool_right_fixed{text-align:right}
+		div.top_menu_left,div.top_menu_right,div.top_menu_left_fixed,div.top_menu_right_fixed
 		{
 			position:absolute;
 			z-index:3;
@@ -177,15 +178,16 @@
 			border-radius:0.5em;
 			opacity:0.9;
 		}
-		div.top_menu_left{text-align:left}
-		div.top_menu_right{text-align:right}
+/*		div.top_menu_left_fixed,div.top_menu_right_fixed{position:fixed}*/
+		div.top_menu_left,div.top_menu_left_fixed{text-align:left}
+		div.top_menu_right,div.top_menu_right_fixed{text-align:right}
 		div.go_top{
 			background-color:grey;
 			border-radius:0.5em;
 			position:fixed;
-			right:30px;
+			right:24px;
 			bottom:0px;
-			opacity:0.7;
+			opacity:0.8;
 		}
 		div.go_top:hover{opacity:1.0}
 		div.quote{max-width:770px}
@@ -206,13 +208,27 @@
 			border-spacing:0px;
 			border:0px;
 			border-radius:0.5em;
+		}
+		table.top_bar_fixed{
+			position:fixed;
+			z-index:0;
+			top:0px;
+			right:90px;
+			padding:3px 5px;
+			border-collapse:separate;
+			border-spacing:0px;
+			border:0px;
+			border-radius:0.5em;
+			background-color:grey;
 			transition:all 0.5s;
 			-moz-transition:all 0.5s;
 			-webkit-transition:all 0.5s;
 			-o-transition:all 0.5s;
+			opacity:0.8;
 		}
+		table.top_bar_fixed:hover{opacity:1.0}
 		table.main_table{width:100%}
-		table.main_table{background-color:#f5f4eb}
+		table.main_table{background-color:transparent}
 	/* ----- specific table rows ----- */
 		tr.top_header{background-color:#ccccff}
 		tr.own{background-color:#bbaf9b}
@@ -226,8 +242,12 @@
 	/* ----- specific table data ----- */
 		td.main_table_header{padding:0px}
 		td.main_table_header{border:0px}
-		td.main_table_torrent{padding:10px 10px 10px 10px}
-	/*	td.main_table_torrent{border-color:black}*/
+		td.main_table_torrent{
+			padding:10px 10px 10px 10px;
+			background-color:#f5f4eb;
+			border-radius:0.5em;
+		/*	border-color:black;*/
+		}
 		td.top_avatar{background-color:#ccccff}
 		td.top_avatar{border:0px}
 		td.top_avatar{text-align:left}
@@ -255,6 +275,7 @@
 			-webkit-transition:all 0.5s;
 			-o-transition:all 0.5s;
 		}
+		td.top_trigger{text-align:right}
 /*		td.top_login:hover{
  			background-color:#dee3e7;
  		}*/
@@ -280,7 +301,7 @@
 		td.index_number,td.index_number_red,td.index_number_green,td.index_number_blue{
 			text-align:center;
 			font-weight:bold;
-			padding:5px 5px 5px 5px;
+			padding:5px 3px 5px 3px;
 			border-width:1px 0px 1px 0px;
 		}
 		td.number_red,td.index_number_red{color:red}
@@ -323,7 +344,7 @@
 		span.red{color:red}
 		span.normal{font-style:normal}
 		span.italic{font-style:italic}
-		span.file{font-size:8pt}
+		span.file{font-size:8pt; color:grey}
 	/* ----- specific fieldset elements ----- */	
 		fieldset.quote{margin:5px 0px 5px 0px}
 		fieldset.quote{background-color:#efefef}
@@ -376,7 +397,7 @@
 			-o-transition:all 0.5s;
 		}
 		td.navbar:hover{background-color:#dee3e7}
-		td.navbar_index,td.navbar_login,td.navbar_offer,td.navbar_upload,td.navbar_logout,td.navbar_signup,td.navbar_rss,td.navbar_xml,td.navbar_info,td.navbar_rules,td.navbar_faq,td.navbar_staff,td.navbar_rank,td.navbar_log,td.navbar_admin,td.navbar_users,td.navbar_tags,td.navbar_language,td.navbar_xstats,td.navbar_xtorrent
+		td.navbar_index,td.navbar_login,td.navbar_offer,td.navbar_upload,td.navbar_logout,td.navbar_signup,td.navbar_rss,td.navbar_xml,td.navbar_info,td.navbar_rules,td.navbar_faq,td.navbar_staff,td.navbar_rank,td.navbar_bet,td.navbar_log,td.navbar_admin,td.navbar_users,td.navbar_tags,td.navbar_language,td.navbar_xstats,td.navbar_xtorrent
 		{
 			padding:0px;
 			border:1px solid transparent;
@@ -384,7 +405,7 @@
 		/*	border-top:2px solid purple;*/
 			background-color:#dee3e7;
 		}
-		a.navbar_index,a.navbar_login,a.navbar_offer,a.navbar_upload,a.navbar_logout,a.navbar_rss,a.navbar_xml,a.navbar_info,a.navbar_rules,a.navbar_faq,a.navbar_staff,a.navbar_rank,a.navbar_log,a.navbar_admin,a.navbar_users,a.navbar_tags,a.navbar_language,a.navbar_xstats,a.navbar_xtorrent
+		a.navbar_index,a.navbar_login,a.navbar_offer,a.navbar_upload,a.navbar_logout,a.navbar_rss,a.navbar_xml,a.navbar_info,a.navbar_rules,a.navbar_faq,a.navbar_staff,a.navbar_rank,a.navbar_bet,a.navbar_log,a.navbar_admin,a.navbar_users,a.navbar_tags,a.navbar_language,a.navbar_xstats,a.navbar_xtorrent
 		{
 			font-size:10pt;
 			text-decoration:none;
@@ -500,10 +521,10 @@
 			background-color:#dee3e7;
 		}
 		td.index_tag{text-align:center}
-		td.index_tag{padding:0px 5px 0px 0px}
+		td.index_tag{padding:0px 3px 0px 0px}
 		td.index_tag{border-width:1px 0px 1px 0px}
 		td.index_admin{text-align:center}
-		td.index_admin{padding:5px 5px 5px 5px}
+		td.index_admin{padding:5px 3px 5px 3px}
 		td.index_admin{border-width:1px 0px 1px 0px}
 		td.index_admin_delete{text-align:right}
 		td.index_admin_delete{padding:5px 5px 5px 5px}
@@ -517,7 +538,7 @@
 		td.download_left{border:0px}
 		td.download_left{white-space:normal}
 		td.index_uploader{text-align:center}
-		td.index_uploader{padding:5px 5px 5px 5px}
+		td.index_uploader{padding:5px 0px 5px 0px}
 		td.index_uploader{border-width:1px 0px 1px 0px}
 		td.second_left{min-width:270px}
 		td.second_left{width:360px}
@@ -537,10 +558,11 @@
 		td.index_comment{border-width:1px 0px 1px 0px}
 		td.index_comment{padding:5px 5px 5px 5px}
 		td.index_date{text-align:center}
-		td.index_date{padding:5px 5px 5px 5px}
+		td.index_date{color:grey}
+		td.index_date{padding:5px 3px 5px 3px}
 		td.index_date{border-width:1px 0px 1px 0px}
 		td.index_bytes{text-align:center}
-		td.index_bytes{padding:5px 5px 5px 5px}
+		td.index_bytes{padding:5px 0px 5px 0px}
 		td.index_bytes{border-width:1px 0px 1px 0px}
 		a.table_header_icon{text-decoration:none}
 		a.classic_level_1{color:#9400d3; text-decoration:none}
@@ -641,7 +663,7 @@
 		a.index_comments:hover{color:black}
 		a.index_subs{text-decoration:none; font-weight:normal; color:brown}
 		a.index_subs{margin-right:1em}
-		a.index_subs:hover{color:black}
+		a.index_subs:hover{color:red}
 		a.index_req{text-decoration:none; font-weight:normal; color:red}
 		/*a.index_req{margin-left:1em}*/
 		a.index_req:hover{background-color:red}
@@ -838,7 +860,7 @@
 	/* ----- specific ----- */
 		a.log{text-decoration:none; color:blue}
 		p.logtitle{text-align:left}
-		p.logtitle{font-size:15px; font-weight:bold}
+		p.logtitle{font-size:12pt; font-weight:bold}
 		table.log_main{width:800px}
 		table.log_table{width:100%}
 		table.log_table{border:0px}
@@ -1040,8 +1062,12 @@
 			padding:10px 10px 10px 10px;
 			font-size:10pt;
 			text-decoration:none;
+			transition:all 0.5s;
+			-moz-transition:all 0.5s;
+			-webkit-transition:all 0.5s;
+			-o-transition:all 0.5s;
 		}
-		/*a.talk_cat:hover{background-color:#eeeeff}*/
+		a.talk_cat:hover{background-color:#eeeeff}
 		a.talk_cat:hover,a.talk_cat_selected:hover{text-decoration:underline}
 		a.talk_cat_selected{background-color:#eeeeff}
 		a.talk_cat_selected{color:blue}
@@ -1051,7 +1077,12 @@
 			padding:10px 10px 10px 10px;
 			font-size:10pt;
 			text-decoration:none;
+			transition:all 0.5s;
+			-moz-transition:all 0.5s;
+			-webkit-transition:all 0.5s;
+			-o-transition:all 0.5s;
 		}
+		a.talk_channel:hover{background-color:#eeeeff}
 		a.talk_channel:hover,a.talk_channel_selected:hover{text-decoration:underline}
 		a.talk_channel_selected{background-color:#eeeeff}
 		a.talk_channel_selected{color:blue}
@@ -1179,11 +1210,15 @@
 		td.messages_body{white-space:normal; word-wrap:break-word}
 		td.messages_body{max-width:800px}
 		td.messages_title{width:100%}
+		td.messages_admin{text-align:right}
 		td.messages_delete{text-align:right}
 		p.messages_table_post{text-align:center}
 		p.messages_table_posted{text-align:center}
 		p.messages_posted{text-align:center}
 		div.messages_table_post_button{text-align:center}	
+	/* ----- specific ----- */		
+		th.messages_table_post{text-align:right; vertical-align:top; white-space:nowrap}
+		th.messages_table_post{padding:5px 10px 5px 10px}
 
 /* ----- info.html ----- */
 	/* ----- navbar ----- */
@@ -1248,38 +1283,42 @@
 		td.votecount{text-align:left}
 		td.votecount{border:0px}
 		p.votetitle{text-align:center}
-		p.votetitle{font-weight:bold; font-size:12px}
+		p.votetitle{font-weight:bold}
 		p.votebonus{text-align:center}
 		p.votebutton{text-align:center}
 		p.votetotal{text-align:center}
-		p.votetotal{font-size:12px}
 
-/* ----- votes.html ----- */
+/* ----- bet.html ----- */
 	/* ----- specific ----- */
 /*		td.vote{text-align:center}*/
 /*		table.bet_table{width:300px}
 		table.bet_table{table-layout:fixed}*/
 		tr.betoptioned{color:blue; font-weight:bold}
+		tr.betpayback{font-style:italic}
 		th.betheader{border:0px}
 		th.betheader{background-color: transparent}
 		td.bet{white-space:normal; word-wrap:break-word}
 		td.betinput{text-align:left}
-		td.betinput{border:0px}
-		td.betoption{border:0px}
+		td.betinput{border-width:1px 0px}
+		td.betoption{text-align:center}
+		td.betoption{border-width:1px 0px}
 		td.betcount{text-align:center}
-		td.betcount{border:0px}
+		td.betcount{border-width:1px 0px}
+		td.betbonus{text-align:center}
+		td.betbonus{border-width:1px 0px}
 		td.betadmin{text-align:right}
 		p.bettitle{text-align:center}
-		p.bettitle{font-weight:bold; font-size:12px}
+		p.bettitle{font-weight:bold}
+		p.betnote{text-align:center}
+		p.betnote{font-weight:bold; color:red}
 		p.betbonus{text-align:center}
 		p.betbutton{text-align:center}
 		p.betskip{text-align:center}
-		p.betskip{font-size:12px}
 		p.betskiped{text-align:center}
-		p.betskiped{font-weight:bold; font-size:12px; color:blue}
+		p.betskiped{font-weight:bold; color:blue}
 		p.bettotal{text-align:center}
-		p.bettotal{font-size:12px}
-		span.betresult{font-weight:bold; font-size:12px; color:red}
+		p.bettotal{font-weight:bold}
+		span.betresult{font-weight:bold; color:red}
 
 /* ----- rules.html ----- */
 	/* ----- specific ----- */
@@ -1287,7 +1326,7 @@
 		div.change_rules_button{text-align:center}
 		a.rules{text-decoration:none; color:blue}
 		p.rulestitle{text-align:left}
-		p.rulestitle{font-size:15px; font-weight:bold}
+		p.rulestitle{font-size:12pt; font-weight:bold}
 		p.change_rules_input{text-align:left}
 		p.changed_rules{text-align:center}
 		table.rules_main{width:800px}
@@ -1314,7 +1353,7 @@
 		div.change_faq_button{text-align:center}
 		a.faq{text-decoration:none; color:blue}
 		p.faqtitle{text-align:left}
-		p.faqtitle{font-size:15px; font-weight:bold}
+		p.faqtitle{font-size:12pt; font-weight:bold}
 		p.change_faq_input{text-align:left}
 		p.changed_faq{text-align:center}
 		table.faq_main{width:800px}
@@ -1335,18 +1374,13 @@
 		td.faq_admin{text-align:center}
 		td.faq_content{white-space:normal; word-wrap:break-word}
 
-/* ----- messages.html ----- */
-	/* ----- specific ----- */		
-		th.messages_table_post{text-align:right; vertical-align:top; white-space:nowrap}
-		th.messages_table_post{padding:5px 10px 5px 10px}
-
 /* ----- staff.html ----- */
 	/* ----- specific ----- */
 		table.staff_main{width:800px}
 		table.staff_table{width:100%}
 		table.staff_table{border:0px}
 		p.stafftitle{text-align:left}
-		p.stafftitle{font-size:15px; font-weight:bold}
+		p.stafftitle{font-size:12pt; font-weight:bold}
 		td.staff_title{background-color:#f5f4eb}
 		td.staff_title{border:0px}
 		td.staff_title{padding:0px 0px 0px 0px}

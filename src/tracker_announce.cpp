@@ -530,7 +530,6 @@ void CTracker :: serverResponseAnnounce( struct request_t *pRequest,struct respo
 		bool bAllow = false;
 		string strAdded = string( );
 		int64 iFreeDown = 100, iDefaultDown = 100, iFreeTo = 0;
-		int64 iFreeDownGlobal = CFG_GetInt( "bnbt_free_down_global", 100 );
 
 		if( vecQueryPeer.size( ) == 4 && vecQueryPeer[2] != "0" )
 			bAllow = true;
@@ -552,18 +551,21 @@ void CTracker :: serverResponseAnnounce( struct request_t *pRequest,struct respo
 
 			if( !vecQuery[1].empty( ) )
 				iDefaultDown = UTIL_StringTo64( vecQuery[1].c_str( ) );
-			if( CFG_GetInt( "bnbt_free_global", 0 ) == 1 )
+
+			if( m_bFreeGlobal )
 			{
-				if( iFreeDownGlobal < iDefaultDown )
-					iDefaultDown = iFreeDownGlobal;
+				if( m_iFreeDownGlobal < iDefaultDown )
+					iDefaultDown = m_iFreeDownGlobal;
 			}
 			
 			if( !vecQuery[3].empty( ) )
 				iFreeTo = UTIL_StringTo64( vecQuery[3].c_str( ) );
+
 			time_t now_t = time( NULL );
 
 			if( !vecQuery[2].empty( ) )
 				iFreeDown = UTIL_StringTo64( vecQuery[2].c_str( ) );
+
 			if( iFreeTo > 0 && iFreeTo > now_t )
 			{
 				if( iDefaultDown < iFreeDown )

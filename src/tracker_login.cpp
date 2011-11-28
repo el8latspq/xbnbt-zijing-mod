@@ -1115,18 +1115,18 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 		pResponse->strContent += "<tr class=\"user_table\"><th class=\"user_table\">" + gmapLANG_CFG["user_downloaded"] + "</th><td class=\"user_table\">" + UTIL_BytesToString( user.ulDownloaded ) + "</td></tr>";
 		pResponse->strContent += "<tr class=\"user_table\"><th class=\"user_table\">" + gmapLANG_CFG["user_bonus"] + "</th><td class=\"user_table\">\n";
 		pResponse->strContent += CAtomLong( user.ulBonus / 100 ).toString( ) + "." + CAtomInt( ( user.ulBonus % 100 ) / 10 ).toString( ) + CAtomInt( user.ulBonus % 10 ).toString( );
-		pResponse->strContent += "</td></tr>";
 
 		if( user.flSeedBonus > -0.999 )
 		{
 			char szFloat[16];
 			memset( szFloat, 0, sizeof( szFloat ) / sizeof( char ) );
 			snprintf( szFloat, sizeof( szFloat ) / sizeof( char ), "%0.2f", user.flSeedBonus );
-// 					if( !user.strSeedBonus.empty( ) )
-				pResponse->strContent += "<tr class=\"user_table\"><th class=\"user_table\">" + gmapLANG_CFG["user_seed_bonus"] + gmapLANG_CFG["per_hour"] + "</th><td class=\"user_table\">" + szFloat + "</td></tr>";
-// 					else
-// 						pResponse->strContent += "<tr class=\"user_table\"><th class=\"user_table\">" + gmapLANG_CFG["user_seed_bonus"] + "</th><td class=\"user_table\">" + gmapLANG_CFG["na"] + "</td></tr>";
+// 			if( !user.strSeedBonus.empty( ) )
+				pResponse->strContent += UTIL_Xsprintf( gmapLANG_CFG["user_seed_bonus_per_hour"].c_str( ), szFloat );
+// 			else
+// 				pResponse->strContent += "<tr class=\"user_table\"><th class=\"user_table\">" + gmapLANG_CFG["user_seed_bonus"] + "</th><td class=\"user_table\">" + gmapLANG_CFG["na"] + "</td></tr>";
 		}
+		pResponse->strContent += "</td></tr>";
 
 		if( ( ( pRequest->user.ucAccess & m_ucAccessUserDetails ) || pRequest->user.strUID == user.strUID ) && !user.strMail.empty( ) )
 			pResponse->strContent += "<tr class=\"user_table\"><th class=\"user_table\">" + gmapLANG_CFG["email"] + "</th><td class=\"user_table\">" + UTIL_RemoveHTML( user.strMail ) + "</td></tr>";
@@ -1319,13 +1319,14 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 			if( pRequest->user.strUID == user.strUID && ( CFG_GetInt( "bnbt_bonus_trade_enable", 0 ) == 0 ? false : true ) )
 			{
 				const string cstrTrade( pRequest->mapParams["trade"] );
-				int iTradeRate = CFG_GetInt( "bnbt_bonus_trade_rate", 500 );
+
+				int iUploadRate = CFG_GetInt( "bnbt_bonus_trade_upload_rate", 500 );
+				int iInviteRate = CFG_GetInt( "bnbt_bonus_trade_invite_rate", 10000 );
 				string strRatioLimit = CFG_GetString( "bnbt_bonus_trade_ratio_limit", "5.0" );
+
 				if( cstrTrade.empty( ) )
 				{
 					pResponse->strContent += "<div class=\"bonus_function\">\n";
-					pResponse->strContent += "<form name=\"bonustrade\" method=\"get\" action=\"" + string( RESPONSE_STR_LOGIN_HTML ) + "\" onSubmit=\"return validate( this )\">";
-					pResponse->strContent += "<input name=\"show\" type=hidden value=\"" + cstrDetailShow + "\">\n";
 					
 					pResponse->strContent += "<table class=\"bonus_function\">\n";
 					pResponse->strContent += "<tr class=\"bonus_function\">\n";
@@ -1334,81 +1335,107 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 					pResponse->strContent += "<th class=\"bonus_function\">" + gmapLANG_CFG["bonus_function_deal"] + "</th>";
 					pResponse->strContent += "</tr>\n";
 					pResponse->strContent += "<tr class=\"bonus_function\">\n";
+					pResponse->strContent += "<form name=\"bonusupload\" method=\"get\" action=\"" + string( RESPONSE_STR_LOGIN_HTML ) + "\" onSubmit=\"return validate( this )\">";
+					pResponse->strContent += "<input name=\"show\" type=hidden value=\"" + cstrDetailShow + "\">\n";
+					pResponse->strContent += "<input name=\"trade\" type=hidden value=\"upload\">\n";
 					pResponse->strContent += "<td class=\"bonus_function\">\n";
-					pResponse->strContent += gmapLANG_CFG["bonus_function_trade"] + "\n";
-					pResponse->strContent += "<input name=\"trade\" alt=\"[" + gmapLANG_CFG["bonus_function_trade"] + "]\" type=text size=5 maxlength=3 value=\"\"> GB";
-					pResponse->strContent += "<br>" + UTIL_Xsprintf( gmapLANG_CFG["bonus_function_trade_note"].c_str( ), strRatioLimit.c_str( ) );
+					pResponse->strContent += gmapLANG_CFG["bonus_function_trade_upload"] + "\n";
+					pResponse->strContent += "<input name=\"upload\" alt=\"[" + gmapLANG_CFG["bonus_function_trade_upload"] + "]\" type=text size=5 maxlength=3 value=\"\"> GB";
+					pResponse->strContent += "<br>" + UTIL_Xsprintf( gmapLANG_CFG["bonus_function_trade_upload_note"].c_str( ), strRatioLimit.c_str( ) );
 					pResponse->strContent += "</td>\n";
 					pResponse->strContent += "<td class=\"bonus_function\">\n";
-					pResponse->strContent += UTIL_Xsprintf( gmapLANG_CFG["bonus_function_trade_rate"].c_str( ), CAtomInt( iTradeRate ).toString( ).c_str( ) );
+					pResponse->strContent += UTIL_Xsprintf( gmapLANG_CFG["bonus_function_trade_upload_rate"].c_str( ), CAtomInt( iUploadRate ).toString( ).c_str( ) );
 					pResponse->strContent += "</td>\n";
 					pResponse->strContent += "<td class=\"bonus_function\">\n";
-					pResponse->strContent += "<input name=\"submit_bonus_trade_button\" alt=\"" + gmapLANG_CFG["yes"] + "\" type=submit value=\"" + gmapLANG_CFG["yes"] + "\"";
+					pResponse->strContent += "<input name=\"submit_bonus_trade_upload_button\" alt=\"" + gmapLANG_CFG["yes"] + "\" type=submit value=\"" + gmapLANG_CFG["yes"] + "\"";
 					if( user.flShareRatio > atof( strRatioLimit.c_str( ) ) || user.flShareRatio < 0 )
 						pResponse->strContent += " disabled=true";
 					pResponse->strContent += ">\n";
 					pResponse->strContent += "</td>\n";
+					pResponse->strContent += "</form>\n";
+					pResponse->strContent += "</tr>\n";
+					pResponse->strContent += "<tr class=\"bonus_function\">\n";
+					pResponse->strContent += "<form name=\"bonusinvite\" method=\"get\" action=\"" + string( RESPONSE_STR_LOGIN_HTML ) + "\" onSubmit=\"return validate( this )\">";
+					pResponse->strContent += "<input name=\"show\" type=hidden value=\"" + cstrDetailShow + "\">\n";
+					pResponse->strContent += "<input name=\"trade\" type=hidden value=\"invite\">\n";
+					pResponse->strContent += "<td class=\"bonus_function\">\n";
+					pResponse->strContent += gmapLANG_CFG["bonus_function_trade_invite"] + "\n";
+					pResponse->strContent += "<input name=\"invite\" type=hidden value=\"1\">";
+					pResponse->strContent += UTIL_Xsprintf( gmapLANG_CFG["bonus_function_trade_invite_note"].c_str( ), strRatioLimit.c_str( ) );
+					pResponse->strContent += "</td>\n";
+					pResponse->strContent += "<td class=\"bonus_function\">\n";
+					pResponse->strContent += UTIL_Xsprintf( gmapLANG_CFG["bonus_function_trade_invite_rate"].c_str( ), CAtomInt( iInviteRate ).toString( ).c_str( ) );
+					pResponse->strContent += "</td>\n";
+					pResponse->strContent += "<td class=\"bonus_function\">\n";
+					pResponse->strContent += "<input name=\"submit_bonus_trade_invite_button\" alt=\"" + gmapLANG_CFG["yes"] + "\" type=submit value=\"" + gmapLANG_CFG["yes"] + "\"";
+					if( !( ( user.ucAccess & m_ucAccessTradeInvites ) && ( user.flShareRatio > atof( strRatioLimit.c_str( ) ) || user.flShareRatio < 0 ) ) )
+						pResponse->strContent += " disabled=true";
+					pResponse->strContent += ">\n";
+					pResponse->strContent += "</td>\n";
+					pResponse->strContent += "</form>\n";
 					pResponse->strContent += "</tr>\n";
 					pResponse->strContent += "</table>\n";
-					pResponse->strContent += "</form>\n</div>\n";
+					pResponse->strContent += "</div>\n";
 
 				}
-				else
+				else if( cstrTrade == "upload" )
 				{
+					const string cstrUpload( pRequest->mapParams["upload"] );
 					const string cstrOK( pRequest->mapParams["ok"] );
 					string strPageParameters = LOGIN_HTML;
-					if( pRequest->mapParams["submit_bonus_trade_button"] == gmapLANG_CFG["yes"] )
+					if( pRequest->mapParams["submit_bonus_trade_upload_button"] == gmapLANG_CFG["yes"] )
 					{
-						strPageParameters += "?show=bonus&trade=" + cstrTrade;
+						strPageParameters += "?show=bonus&trade=upload&upload=" + cstrUpload;
 						if( !cstrOK.empty( ) )
 							strPageParameters += "&ok=" + cstrOK;
-//						pResponse->strContent += "<script type=\"text/javascript\">\n";
-//						pResponse->strContent += "<!--\n";
-//						
-//						pResponse->strContent += "window.location=\"" + strPageParameters + "\"\n";
+						pResponse->strContent += "<script type=\"text/javascript\">\n";
+						pResponse->strContent += "<!--\n";
+						
+						pResponse->strContent += "window.location=\"" + strPageParameters + "\"\n";
 
-//						pResponse->strContent += "//-->\n";
-//						pResponse->strContent += "</script>\n\n";
- 							return JS_ReturnToPage( pRequest, pResponse, strPageParameters );
-//						return;
+						pResponse->strContent += "//-->\n";
+						pResponse->strContent += "</script>\n\n";
+						return;
+//						return JS_ReturnToPage( pRequest, pResponse, strPageParameters );
 					}
 					bool bNum = true;
-					if( cstrTrade.find_first_not_of( "1234567890" ) != string :: npos )
+					if( cstrUpload.find_first_not_of( "1234567890" ) != string :: npos )
 						bNum  = false;
 					if( bNum && !( user.flShareRatio > atof( strRatioLimit.c_str( ) ) || user.flShareRatio < 0 ) )
 					{
-						int64 iTrade = atoi( cstrTrade.c_str( ) );
-						if( user.ulBonus >= iTrade * iTradeRate * 100 )
+						int64 iUpload = atoi( cstrUpload.c_str( ) );
+						if( user.ulBonus >= iUpload * iUploadRate * 100 )
 						{
 							if( cstrOK == "1" )
 							{
 								if( user.ulBonus > 0 )
 								{
-//										m_pCache->setUserData( user.strUID, iTrade * 1024 * 1024 * 1024, 0, -iTrade * iTradeRate * 100 );
-									CMySQLQuery mq01( "UPDATE users SET bbonus=bbonus-" + CAtomLong( iTrade * iTradeRate * 100 ).toString( ) + ",buploaded=buploaded+" + CAtomLong( iTrade * 1024 * 1024 * 1024 ).toString( ) + " WHERE buid=" + user.strUID );
+//									m_pCache->setUserData( user.strUID, iTrade * 1024 * 1024 * 1024, 0, -iTrade * iTradeRate * 100 );
+									CMySQLQuery mq01( "UPDATE users SET bbonus=bbonus-" + CAtomLong( iUpload * iUploadRate * 100 ).toString( ) + ",buploaded=buploaded+" + CAtomLong( iUpload * 1024 * 1024 * 1024 ).toString( ) + " WHERE buid=" + user.strUID );
 									
-									pResponse->strContent += "<p class=\"bonustrade\"><span class=\"red\">" + gmapLANG_CFG["bonus_function_trade_succeed"] + "</span></p>\n";
-									pResponse->strContent += "<p class=\"bonustrade\"><span class=\"blue\">" + UTIL_Xsprintf( gmapLANG_CFG["bonus_function_trade_detail"].c_str( ), cstrTrade.c_str( ), CAtomInt( iTrade * iTradeRate ).toString( ).c_str( ) ) + "</span></p>\n";
+									pResponse->strContent += "<p class=\"bonustrade\"><span class=\"red\">" + gmapLANG_CFG["bonus_function_trade_upload_succeed"] + "</span></p>\n";
+									pResponse->strContent += "<p class=\"bonustrade\"><span class=\"blue\">" + UTIL_Xsprintf( gmapLANG_CFG["bonus_function_trade_upload_detail"].c_str( ), cstrUpload.c_str( ), CAtomInt( iUpload * iUploadRate ).toString( ).c_str( ) ) + "</span></p>\n";
 									
-									UTIL_LogFilePrint( "tradeBonus: %s traded %s Bonus for %s GB upload\n", user.strLogin.c_str( ), CAtomInt( iTrade * iTradeRate ).toString( ).c_str( ), cstrTrade.c_str( ) );
-									return JS_ReturnToPage( pRequest, pResponse, LOGIN_HTML + "?show=bonus" );
-//									pResponse->strContent += "<script type=\"text/javascript\">\n";
-//									pResponse->strContent += "<!--\n";
-//									
-//									pResponse->strContent += "window.location=\"" + RESPONSE_STR_LOGIN_HTML + "\"\n";
+									UTIL_LogFilePrint( "tradeBonus: %s traded %s Bonus for %s GB upload\n", user.strLogin.c_str( ), CAtomInt( iUpload * iUploadRate ).toString( ).c_str( ), cstrUpload.c_str( ) );
+//									return JS_ReturnToPage( pRequest, pResponse, LOGIN_HTML + "?show=bonus" );
+									pResponse->strContent += "<script type=\"text/javascript\">\n";
+									pResponse->strContent += "<!--\n";
+									
+									pResponse->strContent += "window.location=\"" + RESPONSE_STR_LOGIN_HTML + "?show=bonus\"\n";
 
-//									pResponse->strContent += "//-->\n";
-//									pResponse->strContent += "</script>\n\n";
+									pResponse->strContent += "//-->\n";
+									pResponse->strContent += "</script>\n\n";
 								}
 							}
 							else
 							{
 								pResponse->strContent += "<div class=\"bonus_function\">\n";
 								pResponse->strContent += "<form name=\"bonustrade\" method=\"get\" action=\"" + string( RESPONSE_STR_LOGIN_HTML ) + "\" onSubmit=\"return validate( this )\">";
-								pResponse->strContent += "<p class=\"bonustrade\"><input name=\"show\" type=hidden value=\"" + cstrDetailShow + "\"></p>\n";
-								pResponse->strContent += "<p class=\"bonustrade\"><input name=\"trade\" type=hidden value=\"" + cstrTrade + "\"></p>\n";
-								pResponse->strContent += "<p class=\"bonustrade\"><span class=\"blue\">" + UTIL_Xsprintf( gmapLANG_CFG["bonus_function_trade_detail"].c_str( ), cstrTrade.c_str( ), CAtomInt( iTrade * iTradeRate ).toString( ).c_str( ) ) + "</span></p>\n";
-								pResponse->strContent += "<p class=\"bonustrade\"><input name=\"ok\" type=hidden value=\"1\"></p>\n";
+								pResponse->strContent += "<input name=\"show\" type=hidden value=\"" + cstrDetailShow + "\">\n";
+								pResponse->strContent += "<input name=\"trade\" type=hidden value=\"" + cstrTrade + "\">\n";
+								pResponse->strContent += "<input name=\"upload\" type=hidden value=\"" + cstrUpload + "\">\n";
+								pResponse->strContent += "<p class=\"bonustrade\"><span class=\"blue\">" + UTIL_Xsprintf( gmapLANG_CFG["bonus_function_trade_upload_detail"].c_str( ), cstrUpload.c_str( ), CAtomInt( iUpload * iUploadRate ).toString( ).c_str( ) ) + "</span></p>\n";
+								pResponse->strContent += "<input name=\"ok\" type=hidden value=\"1\">\n";
 								pResponse->strContent += Button_Submit( "submit_bonus_trade", string( gmapLANG_CFG["yes"] ) );
 								pResponse->strContent += Button_Back( "cancel_bonus_trade", string( gmapLANG_CFG["no"] ) );
 								pResponse->strContent += "</form></div>\n";
@@ -1416,7 +1443,77 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 						}
 						else
 						{
-							pResponse->strContent += "<p class=\"bonustrade\">" + UTIL_Xsprintf( gmapLANG_CFG["bonus_function_trade_not_enough"].c_str( ), CAtomInt( iTrade * iTradeRate ).toString( ).c_str( ) ) + "</p>\n";
+							pResponse->strContent += "<p class=\"bonustrade\">" + UTIL_Xsprintf( gmapLANG_CFG["bonus_function_trade_upload_not_enough"].c_str( ), CAtomInt( iUpload * iUploadRate ).toString( ).c_str( ) ) + "</p>\n";
+							
+						}
+					}
+				}
+				else if( cstrTrade == "invite" )
+				{
+					const string cstrInvite( pRequest->mapParams["invite"] );
+					const string cstrOK( pRequest->mapParams["ok"] );
+					string strPageParameters = LOGIN_HTML;
+					if( pRequest->mapParams["submit_bonus_trade_invite_button"] == gmapLANG_CFG["yes"] )
+					{
+						strPageParameters += "?show=bonus&trade=invite&invite=" + cstrInvite;
+						if( !cstrOK.empty( ) )
+							strPageParameters += "&ok=" + cstrOK;
+						pResponse->strContent += "<script type=\"text/javascript\">\n";
+						pResponse->strContent += "<!--\n";
+						
+						pResponse->strContent += "window.location=\"" + strPageParameters + "\"\n";
+
+						pResponse->strContent += "//-->\n";
+						pResponse->strContent += "</script>\n\n";
+
+						HTML_Common_End( pRequest, pResponse, btv, NOT_INDEX, string( CSS_LOGIN ) );
+
+						return;
+//						return JS_ReturnToPage( pRequest, pResponse, strPageParameters );
+					}
+					if( ( user.ucAccess & m_ucAccessTradeInvites ) && ( user.flShareRatio > atof( strRatioLimit.c_str( ) ) || user.flShareRatio < 0 ) )
+					{
+						int64 iInvite = atoi( cstrInvite.c_str( ) );
+						if( user.ulBonus >= iInvite * iInviteRate * 100 )
+						{
+							if( cstrOK == "1" )
+							{
+								if( user.ulBonus > 0 )
+								{
+//									m_pCache->setUserData( user.strUID, iTrade * 1024 * 1024 * 1024, 0, -iTrade * iTradeRate * 100 );
+									CMySQLQuery mq01( "UPDATE users SET bbonus=bbonus-" + CAtomLong( iInvite * iInviteRate * 100 ).toString( ) + ",binvites=binvites+" + cstrInvite + " WHERE buid=" + user.strUID );
+									
+									pResponse->strContent += "<p class=\"bonustrade\"><span class=\"red\">" + gmapLANG_CFG["bonus_function_trade_invite_succeed"] + "</span></p>\n";
+									pResponse->strContent += "<p class=\"bonustrade\"><span class=\"blue\">" + UTIL_Xsprintf( gmapLANG_CFG["bonus_function_trade_invite_detail"].c_str( ), cstrInvite.c_str( ), CAtomInt( iInvite * iInviteRate ).toString( ).c_str( ) ) + "</span></p>\n";
+									
+									UTIL_LogFilePrint( "tradeBonus: %s traded %s Bonus for %s invite(s)\n", user.strLogin.c_str( ), CAtomInt( iInvite * iInviteRate ).toString( ).c_str( ), cstrInvite.c_str( ) );
+//									return JS_ReturnToPage( pRequest, pResponse, LOGIN_HTML + "?show=bonus" );
+									pResponse->strContent += "<script type=\"text/javascript\">\n";
+									pResponse->strContent += "<!--\n";
+									
+									pResponse->strContent += "window.location=\"" + RESPONSE_STR_LOGIN_HTML + "?show=bonus\"\n";
+
+									pResponse->strContent += "//-->\n";
+									pResponse->strContent += "</script>\n\n";
+								}
+							}
+							else
+							{
+								pResponse->strContent += "<div class=\"bonus_function\">\n";
+								pResponse->strContent += "<form name=\"bonustrade\" method=\"get\" action=\"" + string( RESPONSE_STR_LOGIN_HTML ) + "\" onSubmit=\"return validate( this )\">";
+								pResponse->strContent += "<input name=\"show\" type=hidden value=\"" + cstrDetailShow + "\">\n";
+								pResponse->strContent += "<input name=\"trade\" type=hidden value=\"" + cstrTrade + "\">\n";
+								pResponse->strContent += "<input name=\"invite\" type=hidden value=\"" + cstrInvite + "\">\n";
+								pResponse->strContent += "<p class=\"bonustrade\"><span class=\"blue\">" + UTIL_Xsprintf( gmapLANG_CFG["bonus_function_trade_invite_detail"].c_str( ), cstrInvite.c_str( ), CAtomInt( iInvite * iInviteRate ).toString( ).c_str( ) ) + "</span></p>\n";
+								pResponse->strContent += "<input name=\"ok\" type=hidden value=\"1\">\n";
+								pResponse->strContent += Button_Submit( "submit_bonus_trade", string( gmapLANG_CFG["yes"] ) );
+								pResponse->strContent += Button_Back( "cancel_bonus_trade", string( gmapLANG_CFG["no"] ) );
+								pResponse->strContent += "</form></div>\n";
+							}
+						}
+						else
+						{
+							pResponse->strContent += "<p class=\"bonustrade\">" + UTIL_Xsprintf( gmapLANG_CFG["bonus_function_trade_invite_not_enough"].c_str( ), CAtomInt( iInvite * iInviteRate ).toString( ).c_str( ) ) + "</p>\n";
 							
 						}
 					}
@@ -1439,7 +1536,7 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 						pResponse->strContent += "<p class=\"invite\"><span>" + UTIL_Xsprintf( gmapLANG_CFG["invite_function_invites_left"].c_str( ), string( "<span class=\"red\">" + user.strInvites + "</span>" ).c_str( ) );
 						pResponse->strContent += "<input name=\"invite\"alt=\"[" + gmapLANG_CFG["invite_function_create_invite"] + "]\" type=submit value=\"" + gmapLANG_CFG["invite_function_create_invite"] + "\"";
 						if( CFG_GetInt( "bnbt_invite_enable", 0 ) == 0 || !( user.ucAccess & m_ucAccessInvites ) || ( user.ucInvitable == 0 ) || (unsigned int)atoi( user.strInvites.c_str( ) ) == 0 || ( m_bRatioRestrict && checkShareRatio( user.ulDownloaded, user.flShareRatio ) ) )
-							pResponse->strContent += " disabled=\"yes\"";
+							pResponse->strContent += " disabled=true";
 						pResponse->strContent += ">";
 						if( CFG_GetInt( "bnbt_invite_enable", 0 ) == 0 )
 							pResponse->strContent += "<span class=\"red\">" + gmapLANG_CFG["invite_function_invite_close"] + "</span>";
@@ -1480,6 +1577,8 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 
 							pResponse->strContent += "//-->\n";
 							pResponse->strContent += "</script>\n\n";
+
+							HTML_Common_End( pRequest, pResponse, btv, NOT_INDEX, string( CSS_LOGIN ) );
 
 							return;
 						}
@@ -2110,11 +2209,6 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 
 //			time_t now_t = time( 0 );
 
-			bool bFreeGlobal = CFG_GetInt( "bnbt_free_global", 0 ) == 0 ? false : true;
-
-			int64 iFreeDownGlobal = CFG_GetInt( "bnbt_free_down_global", 100 );
-			int64 iFreeUpGlobal = CFG_GetInt( "bnbt_free_up_global", 100 );
-			
 			string strEngName = string( );
 			string strChiName = string( );
 			
@@ -2477,7 +2571,7 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 							{
 								if( pTorrents[ulKey].iFreeDown != 100 )
 								{
-									if( pTorrents[ulKey].iDefaultDown == 0 && !( bFreeGlobal && iFreeDownGlobal == 0 ) )
+									if( pTorrents[ulKey].iDefaultDown == 0 && !( m_bFreeGlobal && m_iFreeDownGlobal == 0 ) )
 										pResponse->strContent += "<span class=\"free_down_free\" title=\"" + gmapLANG_CFG["free_down_free"] + "\">" + gmapLANG_CFG["free_down_free_short"] + "</span>";
 									else if( pTorrents[ulKey].iFreeDown > 0 )
 										pResponse->strContent += "<span class=\"free_down\" title=\"" + UTIL_Xsprintf( gmapLANG_CFG["free_down"].c_str( ), CAtomInt( pTorrents[ulKey].iFreeDown ).toString( ).c_str( ) ) + "\">" + UTIL_Xsprintf( gmapLANG_CFG["free_down_short"].c_str( ), CAtomInt( pTorrents[ulKey].iFreeDown ).toString( ).c_str( ) )+ "</span>";
@@ -2770,7 +2864,7 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 								{
 									if( pTorrents[ulKey].iFreeDown != 100 )
 									{
-										if( pTorrents[ulKey].iDefaultDown == 0 && !( bFreeGlobal && iFreeDownGlobal == 0 ) )
+										if( pTorrents[ulKey].iDefaultDown == 0 && !( m_bFreeGlobal && m_iFreeDownGlobal == 0 ) )
 											pResponse->strContent += "<span class=\"free_down_free\" title=\"" + gmapLANG_CFG["free_down_free"] + "\">" + gmapLANG_CFG["free_down_free_short"] + "</span>";
 										else if( pTorrents[ulKey].iFreeDown > 0 )
 											pResponse->strContent += "<span class=\"free_down\" title=\"" + UTIL_Xsprintf( gmapLANG_CFG["free_down"].c_str( ), CAtomInt( pTorrents[ulKey].iFreeDown ).toString( ).c_str( ) ) + "\">" + UTIL_Xsprintf( gmapLANG_CFG["free_down_short"].c_str( ), CAtomInt( pTorrents[ulKey].iFreeDown ).toString( ).c_str( ) )+ "</span>";
@@ -3030,7 +3124,7 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 									{
 										if( pTorrents[ulKey].iFreeDown != 100 )
 										{
-											if( pTorrents[ulKey].iDefaultDown == 0 && !( bFreeGlobal && iFreeDownGlobal == 0 ) )
+											if( pTorrents[ulKey].iDefaultDown == 0 && !( m_bFreeGlobal && m_iFreeDownGlobal == 0 ) )
 												pResponse->strContent += "<span class=\"free_down_free\" title=\"" + gmapLANG_CFG["free_down_free"] + "\">" + gmapLANG_CFG["free_down_free_short"] + "</span>";
 											else if( pTorrents[ulKey].iFreeDown > 0 )
 												pResponse->strContent += "<span class=\"free_down\" title=\"" + UTIL_Xsprintf( gmapLANG_CFG["free_down"].c_str( ), CAtomInt( pTorrents[ulKey].iFreeDown ).toString( ).c_str( ) ) + "\">" + UTIL_Xsprintf( gmapLANG_CFG["free_down_short"].c_str( ), CAtomInt( pTorrents[ulKey].iFreeDown ).toString( ).c_str( ) )+ "</span>";
@@ -3294,7 +3388,7 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 									{
 										if( pTorrents[ulKey].iFreeDown != 100 )
 										{
-											if( pTorrents[ulKey].iDefaultDown == 0 && !( bFreeGlobal && iFreeDownGlobal == 0 ) )
+											if( pTorrents[ulKey].iDefaultDown == 0 && !( m_bFreeGlobal && m_iFreeDownGlobal == 0 ) )
 												pResponse->strContent += "<span class=\"free_down_free\" title=\"" + gmapLANG_CFG["free_down_free"] + "\">" + gmapLANG_CFG["free_down_free_short"] + "</span>";
 											else if( pTorrents[ulKey].iFreeDown > 0 )
 												pResponse->strContent += "<span class=\"free_down\" title=\"" + UTIL_Xsprintf( gmapLANG_CFG["free_down"].c_str( ), CAtomInt( pTorrents[ulKey].iFreeDown ).toString( ).c_str( ) ) + "\">" + UTIL_Xsprintf( gmapLANG_CFG["free_down_short"].c_str( ), CAtomInt( pTorrents[ulKey].iFreeDown ).toString( ).c_str( ) )+ "</span>";
@@ -3582,7 +3676,7 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 									{
 										if( pTorrents[ulKey].iFreeDown != 100 )
 										{
-											if( pTorrents[ulKey].iDefaultDown == 0 && !( bFreeGlobal && iFreeDownGlobal == 0 ) )
+											if( pTorrents[ulKey].iDefaultDown == 0 && !( m_bFreeGlobal && m_iFreeDownGlobal == 0 ) )
 												pResponse->strContent += "<span class=\"free_down_free\" title=\"" + gmapLANG_CFG["free_down_free"] + "\">" + gmapLANG_CFG["free_down_free_short"] + "</span>";
 											else if( pTorrents[ulKey].iFreeDown > 0 )
 												pResponse->strContent += "<span class=\"free_down\" title=\"" + UTIL_Xsprintf( gmapLANG_CFG["free_down"].c_str( ), CAtomInt( pTorrents[ulKey].iFreeDown ).toString( ).c_str( ) ) + "\">" + UTIL_Xsprintf( gmapLANG_CFG["free_down_short"].c_str( ), CAtomInt( pTorrents[ulKey].iFreeDown ).toString( ).c_str( ) )+ "</span>";

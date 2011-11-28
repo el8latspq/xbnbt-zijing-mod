@@ -414,7 +414,7 @@ void CTracker :: serverResponseMessagesGET( struct request_t *pRequest, struct r
 									pResponse->strContent += "<td class=\"messages\">" + UTIL_RemoveHTML( strName ) + "</td>\n";
 							
 								pResponse->strContent += "<td class=\"messages\">" + strTime + "</td>\n";
-								pResponse->strContent += "<td class=\"messages\">";
+								pResponse->strContent += "<td class=\"messages_admin\">";
 								if( strNameID != "0" && !bModeSent )
 									pResponse->strContent += "[<a class=\"black\" title=\"" + gmapLANG_CFG["messages_reply"] + "\" href=\"" + RESPONSE_STR_MESSAGES_HTML + "?reply=" + strID + strJoined + "\">" + gmapLANG_CFG["messages_reply"] + "</a>] ";
 								pResponse->strContent += "[<a class=\"red\" title=\"" + gmapLANG_CFG["delete"] + "\" href=\"" + RESPONSE_STR_MESSAGES_HTML + "?del=" + strID + strJoined + "\">" + gmapLANG_CFG["delete"] + "</a>]</td>\n";

@@ -380,7 +380,7 @@ void CTracker :: serverResponseInviteGET( struct request_t *pRequest, struct res
 		pResponse->strContent += "<div class=\"signup_form_button\">\n";
 		pResponse->strContent += "<input name=\"submit_signup_button\"alt=\"[" + gmapLANG_CFG["signup"] + "]\" type=submit value=\"" + gmapLANG_CFG["signup"] + "\"";
 		if( CFG_GetInt( "bnbt_invite_enable", 0 ) == 0 )
-			pResponse->strContent += " disabled=\"yes\"";
+			pResponse->strContent += " disabled=true";
 		pResponse->strContent += ">";
 		if( CFG_GetInt( "bnbt_invite_enable", 0 ) == 0 )
 			pResponse->strContent += "<span class=\"red\">" + gmapLANG_CFG["invite_function_invite_close"] + "</span>";

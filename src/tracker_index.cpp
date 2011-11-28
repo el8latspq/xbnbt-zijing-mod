@@ -385,11 +385,6 @@ void CTracker :: serverResponseIndexGET( struct request_t *pRequest, struct resp
 		
 		time_t now_t = time( 0 );
 
-		bool bFreeGlobal = CFG_GetInt( "bnbt_free_global", 0 ) == 0 ? false : true;
-	
-		int64 iFreeDownGlobal = CFG_GetInt( "bnbt_free_down_global", 100 );
-		int64 iFreeUpGlobal = CFG_GetInt( "bnbt_free_up_global", 100 );
-
 //		if( m_bCountUniquePeers )
 //		{
 //			CMySQLQuery *pQueryIP = new CMySQLQuery( "SELECT bip from ips" );
@@ -400,259 +395,6 @@ void CTracker :: serverResponseIndexGET( struct request_t *pRequest, struct resp
 //			delete pQueryIP;
 //		}
 
-		// Sort
-		const string strSort( pRequest->mapParams["sort"] );
-		const string cstrNoTop( pRequest->mapParams["notop"] );
-		
-		bool bNoTop = false;
-		
-		if( !cstrNoTop.empty( ) && cstrNoTop == "1" )
-			bNoTop = true;
-		
-		if( !bNoTop )
-			m_pCache->setTop( );
-
-		if( m_bSort )
-		{
-			const unsigned char cucSort( (unsigned char)atoi( strSort.c_str( ) ) );
-			if( !strSort.empty( ) )
-				m_pCache->sort( cucSort, bNoTop );
-			else
-//				if( m_bShowAdded )
-//					m_pCache->sort( SORT_DADDED, bNoTop );
-					m_pCache->sort( SORT_DDEFAULT, bNoTop );
-		}
-		else
-//			if( m_bShowAdded )
-//				m_pCache->sort( SORT_DADDED, bNoTop );
-				m_pCache->sort( SORT_DDEFAULT, bNoTop );
-		
-//		if( m_bSort )
-//		{
-//			const unsigned char cucSort( (unsigned char)atoi( strSort.c_str( ) ) );
-
-//			if( !strSort.empty( ) )
-//			{
-//				if( !bNoTop )
-//				{
-//					switch( cucSort )
-//					{
-//					case SORT_ANAME:
-//						qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), asortByName );
-//						break;
-//					case SORT_ACOMPLETE:
-//						qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), asortByComplete );
-//						break;
-//					case SORT_AINCOMPLETE:
-//						qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), asortByDL );
-//						break;
-//					case SORT_AADDED:
-//						if( m_bShowAdded )
-//							qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), asortByAdded );
-//						break;
-//					case SORT_ASIZE:
-//						if( m_bShowSize )
-//							qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), asortBySize );
-//						break;
-//					case SORT_AFILES:
-//						if( m_bShowNumFiles )
-//							qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), asortByFiles );
-//						break;
-//					case SORT_ACOMMENTS:
-//						if( m_bAllowComments )
-//							qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), asortByComments );
-//						break;
-//	// 				case SORT_AAVGLEFT:
-//	// 					if( m_bShowAverageLeft )
-//	// 					{
-//	// 						if( m_bShowLeftAsProgress )
-//	// 							qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), dsortByAvgLeftPercent );
-//	// 						else
-//	// 							qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), asortByAvgLeftPercent );
-//	// 					}
-//	// 					break;
-//					case SORT_ACOMPLETED:
-//						if( m_bShowCompleted )
-//							qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), asortByCompleted );
-//						break;
-//	//				case SORT_ATRANSFERRED:
-//	//					if( m_bShowTransferred )
-//	//						qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), asortByTransferred );
-//	//					break;
-//					case SORT_ATAG:
-//						qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), asortByTag );
-//						break;
-//					case SORT_AUPLOADER:
-//						if( m_bShowUploader )
-//							qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), asortByUploader );
-//						break;
-//	//				case SORT_AIP:
-//	//					if( pRequest->user.ucAccess & m_ucAccessSortIP )
-//	//						qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), asortByIP );
-//	//					break;
-//					case SORT_DNAME:
-//						qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), dsortByName );
-//						break;
-//					case SORT_DCOMPLETE:
-//						qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), dsortByComplete );
-//						break;
-//					case SORT_DINCOMPLETE:
-//						qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), dsortByDL );
-//						break;
-//					case SORT_DADDED:
-//						if( m_bShowAdded )
-//							qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), dsortByAdded );
-//						break;
-//					case SORT_DSIZE:
-//						if( m_bShowSize )
-//							qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), dsortBySize );
-//						break;
-//					case SORT_DFILES:
-//						if( m_bShowNumFiles )
-//							qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), dsortByFiles );
-//						break;
-//					case SORT_DCOMMENTS:
-//						if( m_bAllowComments )
-//							qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), dsortByComments );
-//						break;
-//	// 				case SORT_DAVGLEFT:
-//	// 					if( m_bShowAverageLeft )
-//	// 					{
-//	// 						if( m_bShowLeftAsProgress )
-//	// 							qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), asortByAvgLeftPercent );
-//	// 						else
-//	// 							qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), dsortByAvgLeftPercent );
-//	// 					}
-//	// 					break;
-//					case SORT_DCOMPLETED:
-//						if( m_bShowCompleted )
-//							qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), dsortByCompleted );
-//						break;
-//	//				case SORT_DTRANSFERRED:
-//	//					if( m_bShowTransferred )
-//	//						qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), dsortByTransferred );
-//	//					break;
-//					case SORT_DTAG:
-//						qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), dsortByTag );
-//						break;
-//					case SORT_DUPLOADER:
-//						if( m_bShowUploader )
-//							qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), dsortByUploader );
-//						break;
-//	//				case SORT_DIP:
-//	//					if( pRequest->user.ucAccess & m_ucAccessSortIP )
-//	//						qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), dsortByIP );
-//	//					break;
-//					default:
-//						// default action is to sort by added if we can
-//						if( m_bShowAdded )
-//							qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), dsortByAdded );
-//					}
-//				}
-//				else
-//				{
-//					switch( cucSort )
-//					{
-//					case SORT_ANAME:
-//						qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), asortByNameNoTop );
-//						break;
-//					case SORT_ACOMPLETE:
-//						qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), asortByCompleteNoTop );
-//						break;
-//					case SORT_AINCOMPLETE:
-//						qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), asortByDLNoTop );
-//						break;
-//					case SORT_AADDED:
-//						if( m_bShowAdded )
-//							qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), asortByAddedNoTop );
-//						break;
-//					case SORT_ASIZE:
-//						if( m_bShowSize )
-//							qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), asortBySizeNoTop );
-//						break;
-//					case SORT_AFILES:
-//						if( m_bShowNumFiles )
-//							qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), asortByFilesNoTop );
-//						break;
-//					case SORT_ACOMMENTS:
-//						if( m_bAllowComments )
-//							qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), asortByCommentsNoTop );
-//						break;
-//					case SORT_ACOMPLETED:
-//						if( m_bShowCompleted )
-//							qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), asortByCompletedNoTop );
-//						break;
-//					case SORT_ATAG:
-//						qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), asortByTagNoTop );
-//						break;
-//					case SORT_AUPLOADER:
-//						if( m_bShowUploader )
-//							qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), asortByUploaderNoTop );
-//						break;
-//					case SORT_DNAME:
-//						qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), dsortByNameNoTop );
-//						break;
-//					case SORT_DCOMPLETE:
-//						qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), dsortByCompleteNoTop );
-//						break;
-//					case SORT_DINCOMPLETE:
-//						qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), dsortByDLNoTop );
-//						break;
-//					case SORT_DADDED:
-//						if( m_bShowAdded )
-//							qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), dsortByAddedNoTop );
-//						break;
-//					case SORT_DSIZE:
-//						if( m_bShowSize )
-//							qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), dsortBySizeNoTop );
-//						break;
-//					case SORT_DFILES:
-//						if( m_bShowNumFiles )
-//							qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), dsortByFilesNoTop );
-//						break;
-//					case SORT_DCOMMENTS:
-//						if( m_bAllowComments )
-//							qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), dsortByCommentsNoTop );
-//						break;
-//					case SORT_DCOMPLETED:
-//						if( m_bShowCompleted )
-//							qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), dsortByCompletedNoTop );
-//						break;
-//					case SORT_DTAG:
-//						qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), dsortByTagNoTop );
-//						break;
-//					case SORT_DUPLOADER:
-//						if( m_bShowUploader )
-//							qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), dsortByUploaderNoTop );
-//						break;
-//					default:
-//						// default action is to sort by added if we can
-//						if( m_bShowAdded )
-//							qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), dsortByAddedNoTop );
-//					}
-//				}
-//			}
-//			else
-//			{
-//				// default action is to sort by added if we can
-
-//				if( m_bShowAdded )
-//					if( !bNoTop )
-//						qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), dsortByAdded );
-//					else
-//						qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), dsortByAddedNoTop );
-//			}
-//		}
-//		else
-//		{
-//			// sort is disabled, but default action is to sort by added if we can
-
-//			if( m_bShowAdded )
-//				if( !bNoTop )
-//					qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), dsortByAdded );
-//				else
-//					qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), dsortByAddedNoTop );
-//		}
 			
 			
 
@@ -957,7 +699,7 @@ void CTracker :: serverResponseIndexGET( struct request_t *pRequest, struct resp
 							pResponse->strContent += "<table class=\"index_ratio_warned\">\n";
 							pResponse->strContent += "<tr class=\"index_ratio_warned\">\n";
 							pResponse->strContent += "<td class=\"index_ratio_warned\">\n";
-							pResponse->strContent += UTIL_Xsprintf( gmapLANG_CFG["index_ratio_warned"].c_str( ), CAtomInt( RequiredDown[i] ).toString( ).c_str( ), string( szFloat ).c_str( ) );
+							pResponse->strContent += UTIL_Xsprintf( gmapLANG_CFG["index_ratio_warned"].c_str( ), CAtomInt( RequiredDown[i] ).toString( ).c_str( ), string( szFloat ).c_str( ), string( "<a class=\"blue\" href=\"" + RESPONSE_STR_INDEX_HTML + "?section=free\">" ).c_str( ), "</a>", string( "<a class=\"red\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?show=bonus\">" ).c_str( ), "</a>" );
 							pResponse->strContent += "</td></tr></table>";
 						}
 						
@@ -1141,6 +883,24 @@ void CTracker :: serverResponseIndexGET( struct request_t *pRequest, struct resp
 		vecQuality = UTIL_SplitToVector( strQuality, " " );
 		vecEncode = UTIL_SplitToVector( strEncode, " " );
 
+		bool bInTag = false;
+
+		if( !vecFilter.empty( ) )
+		{
+			bInTag = true;
+
+			string strInTag = vecFilter[0].substr( 0, 1 );
+
+			for( vector<string> :: iterator ulKey = vecFilter.begin( ); ulKey != vecFilter.end( ); ulKey++ )
+			{
+				if( (*ulKey).substr( 0, 1 ) != strInTag )
+				{
+					bInTag = false;
+					break;
+				}
+			}
+		}
+
 //		vector<string> vecNotes;
 //		vecNotes.reserve(64);
 //		vecNotes = UTIL_SplitToVector( strNote, " " );
@@ -1180,6 +940,260 @@ void CTracker :: serverResponseIndexGET( struct request_t *pRequest, struct resp
 			delete pQuery;
 		}
 
+		// Sort
+		const string strSort( pRequest->mapParams["sort"] );
+		const string cstrNoTop( pRequest->mapParams["notop"] );
+		
+		bool bNoTop = false;
+		
+		if( !cstrNoTop.empty( ) && cstrNoTop == "1" )
+			bNoTop = true;
+		
+		if( !bNoTop )
+			m_pCache->setTop( );
+
+		if( m_bSort )
+		{
+			const unsigned char cucSort( (unsigned char)atoi( strSort.c_str( ) ) );
+			if( !strSort.empty( ) )
+				m_pCache->sort( cucSort, bNoTop, false, bInTag );
+			else
+//				if( m_bShowAdded )
+//					m_pCache->sort( SORT_DADDED, bNoTop );
+					m_pCache->sort( SORT_DDEFAULT, bNoTop, false, bInTag );
+		}
+		else
+//			if( m_bShowAdded )
+//				m_pCache->sort( SORT_DADDED, bNoTop );
+				m_pCache->sort( SORT_DDEFAULT, bNoTop, false, bInTag );
+		
+//		if( m_bSort )
+//		{
+//			const unsigned char cucSort( (unsigned char)atoi( strSort.c_str( ) ) );
+
+//			if( !strSort.empty( ) )
+//			{
+//				if( !bNoTop )
+//				{
+//					switch( cucSort )
+//					{
+//					case SORT_ANAME:
+//						qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), asortByName );
+//						break;
+//					case SORT_ACOMPLETE:
+//						qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), asortByComplete );
+//						break;
+//					case SORT_AINCOMPLETE:
+//						qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), asortByDL );
+//						break;
+//					case SORT_AADDED:
+//						if( m_bShowAdded )
+//							qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), asortByAdded );
+//						break;
+//					case SORT_ASIZE:
+//						if( m_bShowSize )
+//							qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), asortBySize );
+//						break;
+//					case SORT_AFILES:
+//						if( m_bShowNumFiles )
+//							qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), asortByFiles );
+//						break;
+//					case SORT_ACOMMENTS:
+//						if( m_bAllowComments )
+//							qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), asortByComments );
+//						break;
+//	// 				case SORT_AAVGLEFT:
+//	// 					if( m_bShowAverageLeft )
+//	// 					{
+//	// 						if( m_bShowLeftAsProgress )
+//	// 							qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), dsortByAvgLeftPercent );
+//	// 						else
+//	// 							qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), asortByAvgLeftPercent );
+//	// 					}
+//	// 					break;
+//					case SORT_ACOMPLETED:
+//						if( m_bShowCompleted )
+//							qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), asortByCompleted );
+//						break;
+//	//				case SORT_ATRANSFERRED:
+//	//					if( m_bShowTransferred )
+//	//						qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), asortByTransferred );
+//	//					break;
+//					case SORT_ATAG:
+//						qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), asortByTag );
+//						break;
+//					case SORT_AUPLOADER:
+//						if( m_bShowUploader )
+//							qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), asortByUploader );
+//						break;
+//	//				case SORT_AIP:
+//	//					if( pRequest->user.ucAccess & m_ucAccessSortIP )
+//	//						qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), asortByIP );
+//	//					break;
+//					case SORT_DNAME:
+//						qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), dsortByName );
+//						break;
+//					case SORT_DCOMPLETE:
+//						qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), dsortByComplete );
+//						break;
+//					case SORT_DINCOMPLETE:
+//						qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), dsortByDL );
+//						break;
+//					case SORT_DADDED:
+//						if( m_bShowAdded )
+//							qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), dsortByAdded );
+//						break;
+//					case SORT_DSIZE:
+//						if( m_bShowSize )
+//							qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), dsortBySize );
+//						break;
+//					case SORT_DFILES:
+//						if( m_bShowNumFiles )
+//							qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), dsortByFiles );
+//						break;
+//					case SORT_DCOMMENTS:
+//						if( m_bAllowComments )
+//							qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), dsortByComments );
+//						break;
+//	// 				case SORT_DAVGLEFT:
+//	// 					if( m_bShowAverageLeft )
+//	// 					{
+//	// 						if( m_bShowLeftAsProgress )
+//	// 							qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), asortByAvgLeftPercent );
+//	// 						else
+//	// 							qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), dsortByAvgLeftPercent );
+//	// 					}
+//	// 					break;
+//					case SORT_DCOMPLETED:
+//						if( m_bShowCompleted )
+//							qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), dsortByCompleted );
+//						break;
+//	//				case SORT_DTRANSFERRED:
+//	//					if( m_bShowTransferred )
+//	//						qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), dsortByTransferred );
+//	//					break;
+//					case SORT_DTAG:
+//						qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), dsortByTag );
+//						break;
+//					case SORT_DUPLOADER:
+//						if( m_bShowUploader )
+//							qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), dsortByUploader );
+//						break;
+//	//				case SORT_DIP:
+//	//					if( pRequest->user.ucAccess & m_ucAccessSortIP )
+//	//						qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), dsortByIP );
+//	//					break;
+//					default:
+//						// default action is to sort by added if we can
+//						if( m_bShowAdded )
+//							qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), dsortByAdded );
+//					}
+//				}
+//				else
+//				{
+//					switch( cucSort )
+//					{
+//					case SORT_ANAME:
+//						qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), asortByNameNoTop );
+//						break;
+//					case SORT_ACOMPLETE:
+//						qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), asortByCompleteNoTop );
+//						break;
+//					case SORT_AINCOMPLETE:
+//						qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), asortByDLNoTop );
+//						break;
+//					case SORT_AADDED:
+//						if( m_bShowAdded )
+//							qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), asortByAddedNoTop );
+//						break;
+//					case SORT_ASIZE:
+//						if( m_bShowSize )
+//							qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), asortBySizeNoTop );
+//						break;
+//					case SORT_AFILES:
+//						if( m_bShowNumFiles )
+//							qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), asortByFilesNoTop );
+//						break;
+//					case SORT_ACOMMENTS:
+//						if( m_bAllowComments )
+//							qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), asortByCommentsNoTop );
+//						break;
+//					case SORT_ACOMPLETED:
+//						if( m_bShowCompleted )
+//							qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), asortByCompletedNoTop );
+//						break;
+//					case SORT_ATAG:
+//						qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), asortByTagNoTop );
+//						break;
+//					case SORT_AUPLOADER:
+//						if( m_bShowUploader )
+//							qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), asortByUploaderNoTop );
+//						break;
+//					case SORT_DNAME:
+//						qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), dsortByNameNoTop );
+//						break;
+//					case SORT_DCOMPLETE:
+//						qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), dsortByCompleteNoTop );
+//						break;
+//					case SORT_DINCOMPLETE:
+//						qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), dsortByDLNoTop );
+//						break;
+//					case SORT_DADDED:
+//						if( m_bShowAdded )
+//							qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), dsortByAddedNoTop );
+//						break;
+//					case SORT_DSIZE:
+//						if( m_bShowSize )
+//							qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), dsortBySizeNoTop );
+//						break;
+//					case SORT_DFILES:
+//						if( m_bShowNumFiles )
+//							qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), dsortByFilesNoTop );
+//						break;
+//					case SORT_DCOMMENTS:
+//						if( m_bAllowComments )
+//							qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), dsortByCommentsNoTop );
+//						break;
+//					case SORT_DCOMPLETED:
+//						if( m_bShowCompleted )
+//							qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), dsortByCompletedNoTop );
+//						break;
+//					case SORT_DTAG:
+//						qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), dsortByTagNoTop );
+//						break;
+//					case SORT_DUPLOADER:
+//						if( m_bShowUploader )
+//							qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), dsortByUploaderNoTop );
+//						break;
+//					default:
+//						// default action is to sort by added if we can
+//						if( m_bShowAdded )
+//							qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), dsortByAddedNoTop );
+//					}
+//				}
+//			}
+//			else
+//			{
+//				// default action is to sort by added if we can
+
+//				if( m_bShowAdded )
+//					if( !bNoTop )
+//						qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), dsortByAdded );
+//					else
+//						qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), dsortByAddedNoTop );
+//			}
+//		}
+//		else
+//		{
+//			// sort is disabled, but default action is to sort by added if we can
+
+//			if( m_bShowAdded )
+//				if( !bNoTop )
+//					qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), dsortByAdded );
+//				else
+//					qsort( pTorrents, ulKeySize, sizeof( struct torrent_t ), dsortByAddedNoTop );
+//		}
+		
 		// Top search
 //		if( m_bSearch )
 //		{
@@ -1193,7 +1207,7 @@ void CTracker :: serverResponseIndexGET( struct request_t *pRequest, struct resp
 			{
 				pResponse->strContent += "<td class=\"index_main_tag\">";
 				pResponse->strContent += "<a class=\"index_main_tag";
-				if( vecFilter.size( ) == 1 )
+				if( bInTag )
 				{
 					if( vecFilter[0].substr( 0, 1 ) == CAtomInt( uiCount ).toString( ) )
 						pResponse->strContent += "_selected";
@@ -1217,7 +1231,7 @@ void CTracker :: serverResponseIndexGET( struct request_t *pRequest, struct resp
 			
 			pResponse->strContent += "</td>\n</tr>\n";
 
-			if( vecFilter.size( ) == 1 )
+			if( bInTag )
 			{
 				string strTemp = string( );
 				unsigned int uiCount = 0;
@@ -1239,8 +1253,12 @@ void CTracker :: serverResponseIndexGET( struct request_t *pRequest, struct resp
 						{
 							strTemp += "<td class=\"index_sub_tag\">";
 							strTemp += "<a class=\"index_sub_tag";
-							if( vecFilter[0] == strNameIndex )
-								strTemp += "_selected";
+							for( vector<string> :: iterator ulKey = vecFilter.begin( ); ulKey != vecFilter.end( ); ulKey++ )
+								if( *ulKey == strNameIndex || *ulKey == strNameIndex.substr( 0, 1 ) )
+								{
+									strTemp += "_selected";
+									break;
+								}
 							strTemp += "\" href=\"" + RESPONSE_STR_INDEX_HTML + "?tag=" + strNameIndex + "\">";
 							strTemp += UTIL_RemoveHTML( strTag ) + "</a></td>";
 							uiCount++;
@@ -1300,7 +1318,10 @@ void CTracker :: serverResponseIndexGET( struct request_t *pRequest, struct resp
 							pResponse->strContent += "<input name=\"checker" + strNameIndex.substr( 0, 1 ) + "\" type=checkbox onclick=\"javascript: check(form,'checker" + strNameIndex.substr( 0, 1 ) + "','tag" + strNameIndex.substr( 0, 1 ) + "')\"";
 							for( vector<string> :: iterator ulKey = vecFilter.begin( ); ulKey != vecFilter.end( ); ulKey++ )
 								if( *ulKey == strNameIndex.substr( 0, 1 ) )
+								{
 									pResponse->strContent += " checked";
+									break;
+								}
 							pResponse->strContent += "><a class=\"filter_by\" title=\"" + UTIL_RemoveHTML( gmapLANG_CFG["filter_by"] + ": " + gmapLANG_CFG["index_main_tag"+strNameIndex.substr( 0, 1 )] ) + "\" href=\"" + RESPONSE_STR_INDEX_HTML + "?tag=" + strNameIndex.substr( 0, 1 ) + "\">";
 							pResponse->strContent += UTIL_RemoveHTML( gmapLANG_CFG["index_main_tag"+strNameIndex.substr( 0, 1 )] ) + "</a> : </td>\n\n";
 						}
@@ -1324,7 +1345,10 @@ void CTracker :: serverResponseIndexGET( struct request_t *pRequest, struct resp
 //							pResponse->strContent += " checked";
 						for( vector<string> :: iterator ulKey = vecFilter.begin( ); ulKey != vecFilter.end( ); ulKey++ )
 							if( *ulKey == strNameIndex || *ulKey == strNameIndex.substr( 0, 1 ) )
+							{
 								pResponse->strContent += " checked";
+								break;
+							}
 						pResponse->strContent += "><a class=\"filter_by\" title=\"" + UTIL_RemoveHTML( gmapLANG_CFG["filter_by"] + ": " + strTag )+ "\" href=\"" + RESPONSE_STR_INDEX_HTML + "?tag=" + strNameIndex + "\">";
 
 						pResponse->strContent += UTIL_RemoveHTML( strTag );
@@ -1701,6 +1725,20 @@ void CTracker :: serverResponseIndexGET( struct request_t *pRequest, struct resp
 		pResponse->strContent += "</table>\n\n";
 //		pResponse->strContent += "</p>\n\n";
 
+		const string cstrEndPage( pRequest->mapParams["endpage"] );
+
+		bool bSectionFree = false;
+		bool bSetFree = false;
+		if( !cstrSection.empty( ) && cstrSection == "free" )
+		{
+			if( cstrEndPage == "1" )
+			{
+				m_pCache->setFree( );
+				bSetFree = true;
+			}
+			bSectionFree = true;
+		}
+
 		// which page are we viewing
 
 		unsigned long ulStart = 0;
@@ -1728,7 +1766,6 @@ void CTracker :: serverResponseIndexGET( struct request_t *pRequest, struct resp
 
 		// Count matching torrents for top of page
 		unsigned long ulFound = 0;
-		const string cstrEndPage( pRequest->mapParams["endpage"] );
 
 		unsigned char ucMatchMethod = MATCH_METHOD_NONCASE_AND;
 
@@ -1856,13 +1893,6 @@ void CTracker :: serverResponseIndexGET( struct request_t *pRequest, struct resp
 			}
 		}
 		
-		bool bSectionFree = false;
-		if( !cstrSection.empty( ) && cstrSection == "free" )
-		{
-			m_pCache->setFree( );
-			bSectionFree = true;
-		}
-
 		// search, filter and count messages
 		pResponse->strContent += "<p class=\"search_filter\">\n";
 		
@@ -2155,8 +2185,33 @@ void CTracker :: serverResponseIndexGET( struct request_t *pRequest, struct resp
 				if( cstrSection == "req" && !pTorrents[ulKey].bReq )
 					continue;
 				
-				if( cstrSection == "free" && pTorrents[ulKey].iFreeDown != 0 )
-					continue;
+				if( cstrSection == "free" )
+				{
+					if( !bSetFree )
+					{
+//						if( m_bFreeGlobal )
+//						{
+//							if( m_iFreeDownGlobal < pTorrents[ulKey].iDefaultDown )
+//								pTorrents[ulKey].iDefaultDown = m_iFreeDownGlobal;
+//							if( m_iFreeUpGlobal > pTorrents[ulKey].iDefaultUp )
+//								pTorrents[ulKey].iDefaultUp = m_iFreeUpGlobal;
+//						}
+//						
+						pTorrents[ulKey].iFreeDown = pTorrents[ulKey].iDefaultDown;
+						pTorrents[ulKey].iFreeUp = pTorrents[ulKey].iDefaultUp;
+
+						if( pTorrents[ulKey].iFreeTo > 0 && pTorrents[ulKey].iFreeTo > now_t )
+						{
+							if( pTorrents[ulKey].iTimeDown < pTorrents[ulKey].iFreeDown )
+								pTorrents[ulKey].iFreeDown = pTorrents[ulKey].iTimeDown;
+							if( pTorrents[ulKey].iTimeUp > pTorrents[ulKey].iFreeUp )
+								pTorrents[ulKey].iFreeUp = pTorrents[ulKey].iTimeUp;
+						}
+					}
+
+					if( pTorrents[ulKey].iFreeDown != 0 )
+						continue;
+				}
 			}
 
 			if( !cstrMode.empty( ) )
@@ -2696,14 +2751,14 @@ void CTracker :: serverResponseIndexGET( struct request_t *pRequest, struct resp
 				{
 					if( !bSectionFree )
 					{
-						if( bFreeGlobal )
-						{
-							if( iFreeDownGlobal < pTorrents[ulKey].iDefaultDown )
-								pTorrents[ulKey].iDefaultDown = iFreeDownGlobal;
-							if( iFreeUpGlobal > pTorrents[ulKey].iDefaultUp )
-								pTorrents[ulKey].iDefaultUp = iFreeUpGlobal;
-						}
-						
+//						if( m_bFreeGlobal )
+//						{
+//							if( m_iFreeDownGlobal < pTorrents[ulKey].iDefaultDown )
+//								pTorrents[ulKey].iDefaultDown = m_iFreeDownGlobal;
+//							if( m_iFreeUpGlobal > pTorrents[ulKey].iDefaultUp )
+//								pTorrents[ulKey].iDefaultUp = m_iFreeUpGlobal;
+//						}
+//						
 						pTorrents[ulKey].iFreeDown = pTorrents[ulKey].iDefaultDown;
 						pTorrents[ulKey].iFreeUp = pTorrents[ulKey].iDefaultUp;
 
@@ -2720,20 +2775,21 @@ void CTracker :: serverResponseIndexGET( struct request_t *pRequest, struct resp
 
 					if( !bNoTop )
 					{
-						if( ucTopLast > 1 && pTorrents[ulKey].ucTop < ucTopLast )
+						if( ucTopLast > 1 && ( pTorrents[ulKey].ucTopInTag > pTorrents[ulKey].ucTop && bInTag ? pTorrents[ulKey].ucTopInTag : pTorrents[ulKey].ucTop ) < ucTopLast )
 						{
-							if( ucTopLast - pTorrents[ulKey].ucTop < 4 )
-								pResponse->strContent += "<tr class=\"top_split\"><td class=\"top_split\" colspan=15></td></tr>\n";
-							ucTopLast = pTorrents[ulKey].ucTop;
+							if( ucTopLast - ( pTorrents[ulKey].ucTopInTag > pTorrents[ulKey].ucTop && bInTag ? pTorrents[ulKey].ucTopInTag : pTorrents[ulKey].ucTop ) < 4 )
+								pResponse->strContent += "<tr class=\"top_split\"><td class=\"top_split\" colspan=13></td></tr>\n";
+							ucTopLast = ( pTorrents[ulKey].ucTopInTag > pTorrents[ulKey].ucTop && bInTag ? pTorrents[ulKey].ucTopInTag : pTorrents[ulKey].ucTop );
 						}
 
-						if( pTorrents[ulKey].ucTop == 0 )
+						if( ( pTorrents[ulKey].ucTopInTag > pTorrents[ulKey].ucTop && bInTag ? pTorrents[ulKey].ucTopInTag : pTorrents[ulKey].ucTop ) == 0 )
 							pResponse->strContent += "<tr class=\"normal\"\n";
 						else
 						{
-							if( pTorrents[ulKey].ucTop > 2 )
-								pResponse->strContent += "<tr class=\"top_global\"\n";
-							else if( pTorrents[ulKey].ucTop > 1 )
+//							if( pTorrents[ulKey].ucTop > 2 )
+//								pResponse->strContent += "<tr class=\"top_global\"\n";
+//							else if( pTorrents[ulKey].ucTop > 1 )
+							if( ( pTorrents[ulKey].ucTopInTag > pTorrents[ulKey].ucTop && bInTag ? pTorrents[ulKey].ucTopInTag : pTorrents[ulKey].ucTop ) > 1 )
 								pResponse->strContent += "<tr class=\"top\"\n";
 							else
 								pResponse->strContent += "<tr class=\"top_float\"\n";
@@ -2998,7 +3054,7 @@ void CTracker :: serverResponseIndexGET( struct request_t *pRequest, struct resp
 						tTimeTop /= 24;
 						day_left =  tTimeTop;
 					}
-					if( pTorrents[ulKey].ucTop > 0 && !bNoTop )
+					if( ( pTorrents[ulKey].ucTopInTag > pTorrents[ulKey].ucTop && bInTag ? pTorrents[ulKey].ucTopInTag : pTorrents[ulKey].ucTop ) > 0 && !bNoTop )
 					{
 						pResponse->strContent += "<span class=\"top\"";
 						if( day_left >= 0 )
@@ -3015,7 +3071,10 @@ void CTracker :: serverResponseIndexGET( struct request_t *pRequest, struct resp
 						else
 
 							pResponse->strContent += ">";
-						pResponse->strContent += gmapLANG_CFG["top_level_"+CAtomInt( pTorrents[ulKey].ucTop ).toString( )] + ":</span>";
+						if( pTorrents[ulKey].ucTopInTag > pTorrents[ulKey].ucTop && bInTag )
+							pResponse->strContent += gmapLANG_CFG["top_level_"+CAtomInt( pTorrents[ulKey].ucTopInTag ).toString( )+"_intag"] + ":</span>";
+						else
+							pResponse->strContent += gmapLANG_CFG["top_level_"+CAtomInt( pTorrents[ulKey].ucTop ).toString( )] + ":</span>";
 					}
 					if( strChiName.empty( ) )
 						pResponse->strContent += "<br>";
@@ -3038,7 +3097,7 @@ void CTracker :: serverResponseIndexGET( struct request_t *pRequest, struct resp
 //					{
 						if( pTorrents[ulKey].iFreeDown == 0 )
 							pResponse->strContent += "<a class=\"stats_free\" title=\"";
-						else if( pTorrents[ulKey].ucTop > 0 && !bNoTop )
+						else if( ( pTorrents[ulKey].ucTopInTag > pTorrents[ulKey].ucTop && bInTag ? pTorrents[ulKey].ucTopInTag : pTorrents[ulKey].ucTop ) > 0 && !bNoTop )
 							pResponse->strContent += "<a class=\"stats_top\" title=\"";
 						else if( pTorrents[ulKey].ucClassic == 1 )
 							pResponse->strContent += "<a class=\"classic_level_1\" title=\"";
@@ -3085,7 +3144,7 @@ void CTracker :: serverResponseIndexGET( struct request_t *pRequest, struct resp
 					{
 						if( pTorrents[ulKey].iFreeDown != 100 )
 						{
-							if( pTorrents[ulKey].iDefaultDown == 0 && !( bFreeGlobal && iFreeDownGlobal == 0 ) )
+							if( pTorrents[ulKey].iDefaultDown == 0 && !( m_bFreeGlobal && m_iFreeDownGlobal == 0 ) )
 								pResponse->strContent += "<span class=\"free_down_free\" title=\"" + gmapLANG_CFG["free_down_free"] + "\">" + gmapLANG_CFG["free_down_free_short"] + "</span>";
 							else if( pTorrents[ulKey].iFreeDown > 0 )
 								pResponse->strContent += "<span class=\"free_down\" title=\"" + UTIL_Xsprintf( gmapLANG_CFG["free_down"].c_str( ), CAtomInt( pTorrents[ulKey].iFreeDown ).toString( ).c_str( ) ) + "\">" + UTIL_Xsprintf( gmapLANG_CFG["free_down_short"].c_str( ), CAtomInt( pTorrents[ulKey].iFreeDown ).toString( ).c_str( ) )+ "</span>";
@@ -3313,13 +3372,14 @@ void CTracker :: serverResponseIndexGET( struct request_t *pRequest, struct resp
 					
 					if( !bNoTop )
 					{
-						if( pTorrents[ulKey].ucTop == 0 )
+						if( ( pTorrents[ulKey].ucTopInTag > pTorrents[ulKey].ucTop && bInTag ? pTorrents[ulKey].ucTopInTag : pTorrents[ulKey].ucTop ) == 0 )
 							pResponse->strContent += "<tr class=\"normal\"\n";
 						else
 						{
-							if( pTorrents[ulKey].ucTop > 2 )
-								pResponse->strContent += "<tr class=\"top_global\"\n";
-							else if( pTorrents[ulKey].ucTop > 1 )
+//							if( pTorrents[ulKey].ucTop > 2 )
+//								pResponse->strContent += "<tr class=\"top_global\"\n";
+//							else if( pTorrents[ulKey].ucTop > 1 )
+							if( ( pTorrents[ulKey].ucTopInTag > pTorrents[ulKey].ucTop && bInTag ? pTorrents[ulKey].ucTopInTag : pTorrents[ulKey].ucTop ) > 1 )
 								pResponse->strContent += "<tr class=\"top\"\n";
 							else
 								pResponse->strContent += "<tr class=\"top_float\"\n";
@@ -3457,7 +3517,7 @@ void CTracker :: serverResponseIndexGET( struct request_t *pRequest, struct resp
 						strColor = "blue";
 
 					if( pRequest->user.ucAccess & m_ucAccessComments )
-						pResponse->strContent += "<a class=\"index_share\" target=\"_blank\" href=\"" + RESPONSE_STR_TALK_HTML + "?talk=" + UTIL_StringToEscaped( gmapLANG_CFG["share"] + "#" + gmapLANG_CFG["torrent"] + pTorrents[ulKey].strID + "#" ) + "&amp;tag=" + UTIL_StringToEscaped( gmapLANG_CFG["torrent"] + pTorrents[ulKey].strID ) + "\">" + UTIL_Xsprintf( gmapLANG_CFG["index_shares"].c_str( ), string( "<span class=\"" + strColor + "\">" + CAtomInt( pTorrents[ulKey].uiShares ).toString( ) + "</span>" ).c_str( ) ) + "</a>";
+						pResponse->strContent += "<a class=\"index_share\" target=\"_blank\" href=\"" + RESPONSE_STR_TALK_HTML + "?talk=" + UTIL_StringToEscaped( gmapLANG_CFG["share"] + "#" + gmapLANG_CFG["torrent"] + pTorrents[ulKey].strID + "#" ) + "&amp;tag=" + UTIL_StringToEscaped( gmapLANG_CFG["torrent"] + pTorrents[ulKey].strID ) + "&amp;tochannel=" + UTIL_StringToEscaped( gmapLANG_CFG["talk_channel_share"] ) + "\">" + UTIL_Xsprintf( gmapLANG_CFG["index_shares"].c_str( ), string( "<span class=\"" + strColor + "\">" + CAtomInt( pTorrents[ulKey].uiShares ).toString( ) + "</span>" ).c_str( ) ) + "</a>";
 
 //					pResponse->strContent += "</span>";
 					pResponse->strContent += "</td>\n";
@@ -3580,7 +3640,7 @@ void CTracker :: serverResponseIndexGET( struct request_t *pRequest, struct resp
 			if( pRequest->user.ucAccess & m_ucAccessDelTorrents )
 			{
 				pResponse->strContent += "<tr class=\"index_admin_delete\">";
-				pResponse->strContent += "<td class=\"index_admin_delete\" colspan=12>";
+				pResponse->strContent += "<td class=\"index_admin_delete\" colspan=13>";
 				pResponse->strContent += "<input name=\"return\" type=\"hidden\" value=\"" + RESPONSE_STR_INDEX_HTML + strReturn + "\">";
 				pResponse->strContent += "<input type=\"button\" value=\"" + gmapLANG_CFG["torrents_select_all"] + "\" onClick=\"this.value=checkall(form,'" + gmapLANG_CFG["torrents_select_all"] + "','" + gmapLANG_CFG["torrents_select_none"] + "')\">";
 				pResponse->strContent += Button_Submit( "submit_torrents_delete", string( gmapLANG_CFG["delete"] ) );

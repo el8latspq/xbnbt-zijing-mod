@@ -377,6 +377,12 @@ CTracker :: CTracker( )
 	initTags( );
 	initShareRatio( );
 
+	m_bFreeGlobal = CFG_GetInt( "bnbt_free_global", 0 ) == 0 ? false : true;
+	m_iFreeDownGlobal = CFG_GetInt( "bnbt_free_down_global", 100 );
+	m_iFreeUpGlobal = CFG_GetInt( "bnbt_free_up_global", 100 );
+
+	m_strMySQLTimeZero = CFG_GetString( "mysql_time_zero", "0000-00-00 00:00:00" );
+	
 #if defined ( XBNBT_GD )
 	// Initialise XBNBT DynStat variables
 	if( gbDebug )
@@ -1420,6 +1426,7 @@ void CTracker :: loadAccess( )
 	m_ucAccessEditAdmins = (unsigned char)CFG_GetInt( "bnbt_access_edit_admins", ACCESS_LEADER );
 
 	m_ucAccessInvites = (unsigned char)CFG_GetInt( "bnbt_access_invites", ACCESS_VIEW );
+	m_ucAccessTradeInvites = (unsigned char)CFG_GetInt( "bnbt_access_trade_invites", ACCESS_UPLOAD );
 	m_ucAccessMessages = (unsigned char)CFG_GetInt( "bnbt_access_messages", ACCESS_VIEW );
 
 
@@ -1495,7 +1502,7 @@ void CTracker :: expireDownloaders( )
 	
 	m_vecNotes.clear( );
 
-	CMySQLQuery *pQueryNotes = new CMySQLQuery( "SELECT bnote,COUNT(*) AS bcount FROM notes WHERE badded>NOW()-INTERVAL 1 WEEK GROUP by bnote ORDER BY bcount DESC LIMIT 8" );
+	CMySQLQuery *pQueryNotes = new CMySQLQuery( "SELECT bnote,COUNT(*) AS bcount FROM notes WHERE badded>NOW()-INTERVAL 1 WEEK GROUP BY bnote ORDER BY bcount DESC LIMIT 8" );
 
 	vector<string> vecQueryNotes;
 
@@ -3213,6 +3220,10 @@ void CTracker :: deleteUser( const string &strUID )
 			UTIL_LogPrint( "deleteUser: started\n" );
 
 	CMySQLQuery mq01( "DELETE FROM users WHERE buid=" + strUID );
+
+//	m_pCache->ResetUsers( );
+	m_pCache->deleteRowUsers( strUID );
+
 	CMySQLQuery mq02( "DELETE FROM users_prefs WHERE buid=" + strUID );
 	CMySQLQuery mq03( "DELETE FROM peers WHERE buid=" + strUID + " AND bcompleted=0" );
 	CMySQLQuery mq04( "DELETE FROM messages WHERE bsendtoid=" + strUID );
@@ -3222,7 +3233,7 @@ void CTracker :: deleteUser( const string &strUID )
 	CMySQLQuery mq08( "DELETE FROM friends WHERE bfriendid=" + strUID );
 	CMySQLQuery mq09( "DELETE FROM invites WHERE bownerid=" + strUID );
 	CMySQLQuery mq10( "DELETE FROM listen WHERE buid=" + strUID );
-
+							
 	if( gbDebug )
 		if( gucDebugLevel & DEBUG_TRACKER )
 			UTIL_LogPrint( "deleteUser: completed\n" );
@@ -3877,8 +3888,6 @@ void CTracker :: Announce( const struct announce_t &ann, bool &bRespond )
 //						string strAdded = string( );
 						int64 iAdded = 0;
 						int64 iFreeDown = 100, iFreeUp = 100, iDefaultDown = 100, iDefaultUp = 100, iFreeTo = 0;
-						int64 iFreeDownGlobal = CFG_GetInt( "bnbt_free_down_global", 100 );
-						int64 iFreeUpGlobal = CFG_GetInt( "bnbt_free_up_global", 100 );
 						int64 iSeeded = 0;
 						
 						CMySQLQuery *pQuery = new CMySQLQuery( "SELECT UNIX_TIMESTAMP(badded),bdefault_down,bdefault_up,bfree_down,bfree_up,UNIX_TIMESTAMP(bfree_to),breq,bseeders,UNIX_TIMESTAMP(bseeded) FROM allowed WHERE bid=" + ann.strID );
@@ -3902,12 +3911,12 @@ void CTracker :: Announce( const struct announce_t &ann, bool &bRespond )
 								iDefaultDown = UTIL_StringTo64( vecQuery[1].c_str( ) );
 							if( !vecQuery[2].empty( ) )
 								iDefaultUp = UTIL_StringTo64( vecQuery[2].c_str( ) );
-							if( CFG_GetInt( "bnbt_free_global", 0 ) == 1 )
+							if( m_bFreeGlobal )
 							{
-								if( iFreeDownGlobal < iDefaultDown )
-									iDefaultDown = iFreeDownGlobal;
-								if( iFreeUpGlobal > iDefaultUp )
-									iDefaultUp = iFreeUpGlobal;
+								if( m_iFreeDownGlobal < iDefaultDown )
+									iDefaultDown = m_iFreeDownGlobal;
+								if( m_iFreeUpGlobal > iDefaultUp )
+									iDefaultUp = m_iFreeUpGlobal;
 							}
 							
 							if( !vecQuery[3].empty( ) )
@@ -4083,8 +4092,6 @@ void CTracker :: Announce( const struct announce_t &ann, bool &bRespond )
 	//			string strAdded = string( );
 				int64 iAdded = 0;
 				int64 iFreeDown = 100, iFreeUp = 100, iDefaultDown = 100, iDefaultUp = 100, iFreeTo = 0;
-				int64 iFreeDownGlobal = CFG_GetInt( "bnbt_free_down_global", 100 );
-				int64 iFreeUpGlobal = CFG_GetInt( "bnbt_free_up_global", 100 );
 				int64 iSeeded = 0;
 					
 				CMySQLQuery *pQuery = new CMySQLQuery( "SELECT UNIX_TIMESTAMP(badded),bdefault_down,bdefault_up,bfree_down,bfree_up,UNIX_TIMESTAMP(bfree_to),breq,bseeders,UNIX_TIMESTAMP(bseeded) FROM allowed WHERE bid=" + ann.strID );
@@ -4108,12 +4115,12 @@ void CTracker :: Announce( const struct announce_t &ann, bool &bRespond )
 						iDefaultDown = UTIL_StringTo64( vecQuery[1].c_str( ) );
 					if( !vecQuery[2].empty( ) )
 						iDefaultUp = UTIL_StringTo64( vecQuery[2].c_str( ) );
-					if( CFG_GetInt( "bnbt_free_global", 0 ) == 1 )
+					if( m_bFreeGlobal )
 					{
-						if( iFreeDownGlobal < iDefaultDown )
-							iDefaultDown = iFreeDownGlobal;
-						if( iFreeUpGlobal > iDefaultUp )
-							iDefaultUp = iFreeUpGlobal;
+						if( m_iFreeDownGlobal < iDefaultDown )
+							iDefaultDown = m_iFreeDownGlobal;
+						if( m_iFreeUpGlobal > iDefaultUp )
+							iDefaultUp = m_iFreeUpGlobal;
 					}
 					
 					if( !vecQuery[3].empty( ) )
@@ -5700,20 +5707,15 @@ void CTracker :: initTags( )
 
 	unsigned char ucTag = 1;
 	unsigned int ucTag_Index = ucTag * 100 + 1;
-
 	string strName = "bnbt_tag" + CAtomInt( ucTag_Index ).toString( );
 	string strTag = CFG_GetString( strName, string( ) );
-	string strQualities = CFG_GetString( "bnbt_qualities", string( ) );
-	string strMediums = CFG_GetString( "bnbt_mediums", string( ) );
-	string strEncodes = CFG_GetString( "bnbt_encodes", string( ) );
 
 	m_vecTags.reserve(64);
 	m_vecTagsMouse.reserve(64);
 	
-	m_vecQualities.reserve(64);
-	m_vecMediums.reserve(64);
-	m_vecEncodes.reserve(64);
-
+	m_vecTags.clear( );
+	m_vecTagsMouse.clear( );
+	
 	string :: size_type iSplit = 0;
 	string :: size_type iSplitNext = 0;
 
@@ -5755,35 +5757,70 @@ void CTracker :: initTags( )
 			
 	}
 	
-	iSplit = 0;
-	iSplitNext = 0;
-	
-	while( iSplitNext != string :: npos )
+	unsigned char ucChannel = 1;
+	string strChannel = CFG_GetString( "bnbt_talk_channel" + CAtomInt( ucChannel ).toString( ), string( ) );
+
+	m_vecChannels.reserve(64);
+
+	m_vecChannels.clear( );
+
+	while( !strChannel.empty( ) )
 	{
-		iSplitNext = strQualities.find( "|", iSplit + 1 );
-		m_vecQualities.push_back( strQualities.substr( iSplit, iSplitNext - iSplit ) );
-		iSplit = iSplitNext + 1;
+		iSplit = strChannel.find( "|" );
+
+		if( iSplit == string :: npos ) 
+			m_vecChannels.push_back( pair<string, unsigned char>( strChannel, m_ucMemberAccess ) );
+		else
+			m_vecChannels.push_back( pair<string, unsigned char>( strChannel.substr( 0, iSplit ), (unsigned char)atoi( strChannel.substr( iSplit + 1 ).c_str( ) ) ) );
+		
+		strChannel = CFG_GetString( "bnbt_talk_channel" + CAtomInt( ++ucChannel ).toString( ), string( ) );
 	}
 	
-	iSplit = 0;
-	iSplitNext = 0;
-	
-	while( iSplitNext != string :: npos )
-	{
-		iSplitNext = strMediums.find( "|", iSplit + 1 );
-		m_vecMediums.push_back( strMediums.substr( iSplit, iSplitNext - iSplit ) );
-		iSplit = iSplitNext + 1;
-	}
-	
-	iSplit = 0;
-	iSplitNext = 0;
-	
-	while( iSplitNext != string :: npos )
-	{
-		iSplitNext = strEncodes.find( "|", iSplit + 1 );
-		m_vecEncodes.push_back( strEncodes.substr( iSplit, iSplitNext - iSplit ) );
-		iSplit = iSplitNext + 1;
-	}
+	string strQualities = CFG_GetString( "bnbt_qualities", string( ) );
+	string strMediums = CFG_GetString( "bnbt_mediums", string( ) );
+	string strEncodes = CFG_GetString( "bnbt_encodes", string( ) );
+
+	m_vecQualities.reserve(64);
+	m_vecMediums.reserve(64);
+	m_vecEncodes.reserve(64);
+
+	m_vecQualities.clear( );
+	m_vecMediums.clear( );
+	m_vecEncodes.clear( );
+
+	m_vecQualities = UTIL_SplitToVector( strQualities, "|" );
+	m_vecMediums = UTIL_SplitToVector( strMediums, "|" );
+	m_vecEncodes = UTIL_SplitToVector( strEncodes, "|" );
+
+//	iSplit = 0;
+//	iSplitNext = 0;
+//	
+//	while( iSplitNext != string :: npos )
+//	{
+//		iSplitNext = strQualities.find( "|", iSplit + 1 );
+//		m_vecQualities.push_back( strQualities.substr( iSplit, iSplitNext - iSplit ) );
+//		iSplit = iSplitNext + 1;
+//	}
+//	
+//	iSplit = 0;
+//	iSplitNext = 0;
+//	
+//	while( iSplitNext != string :: npos )
+//	{
+//		iSplitNext = strMediums.find( "|", iSplit + 1 );
+//		m_vecMediums.push_back( strMediums.substr( iSplit, iSplitNext - iSplit ) );
+//		iSplit = iSplitNext + 1;
+//	}
+//	
+//	iSplit = 0;
+//	iSplitNext = 0;
+//	
+//	while( iSplitNext != string :: npos )
+//	{
+//		iSplitNext = strEncodes.find( "|", iSplit + 1 );
+//		m_vecEncodes.push_back( strEncodes.substr( iSplit, iSplitNext - iSplit ) );
+//		iSplit = iSplitNext + 1;
+//	}
 
 	if( gbDebug )
 		if( gucDebugLevel & DEBUG_TRACKER )
@@ -5821,7 +5858,7 @@ void CTracker :: initShareRatio( )
 	}
 }
 
-// Javascrpt
+// Javascript
 
 // Javascript for Return to page
 void CTracker :: JS_ReturnToPage( struct request_t *pRequest, struct response_t *pResponse, const string &cstrPageParameters )
@@ -5970,6 +6007,16 @@ void CTracker :: HTML_Nav_Bar( struct request_t *pRequest, struct response_t *pR
 			if( cstrURL == RESPONSE_STR_RANK_HTML )
 				pResponse->strContent += "_rank";
 			pResponse->strContent += "\"><a class=\"navbar_rank\" title=\"" + gmapLANG_CFG["navbar_rank"] + "\" href=\"" + RESPONSE_STR_RANK_HTML + "\">" + gmapLANG_CFG["navbar_rank"] + "</a></td>\n";
+		}
+
+		// bet
+		if( !pRequest->user.strUID.empty( ) && ( pRequest->user.ucAccess & m_ucAccessView ) )
+		{
+			pResponse->strContent += "<td class=\"navbar";
+//			if( cstrCSS == CSS_RANK )
+			if( cstrURL == RESPONSE_STR_BET_HTML )
+				pResponse->strContent += "_bet";
+			pResponse->strContent += "\"><a class=\"navbar_bet\" title=\"" + gmapLANG_CFG["navbar_bet"] + "\" href=\"" + RESPONSE_STR_BET_HTML + "\">" + gmapLANG_CFG["navbar_bet"] + "</a></td>\n";
 		}
 
 		// rules
@@ -6227,6 +6274,9 @@ void CTracker :: HTML_Common_Begin( struct request_t *pRequest, struct response_
 		}
 	}
 
+	// include javascript
+	pResponse->strContent += "<script language=\"JavaScript\" type=\"text/javascript\" src=\"/files/js/common.js\"></script>\n";
+
 	// Content-Type
 	if( !gstrCharSet.empty( ) )
 		pResponse->strContent += "<META http-equiv=\"Content-Type\" content=\"" + gmapMime[".html"] + "; charset=" + gstrCharSet + "\">\n";
@@ -6287,91 +6337,91 @@ void CTracker :: HTML_Common_Begin( struct request_t *pRequest, struct response_
 //	if( !STR_TARGET_REL.empty( ) && !STR_TARGET_BLANK.empty( ) )
 //		pResponse->strContent += JS_Target( STR_TARGET_REL, STR_TARGET_BLANK );
 
-	pResponse->strContent += "<script type=\"text/javascript\">\n";
-	pResponse->strContent += "<!--\n";
-
-	pResponse->strContent += "function getTop(e){\n";
-	pResponse->strContent += "var offset=e.offsetTop;\n";
-	pResponse->strContent += "  if(e.offsetParent!=null) offset+=getTop(e.offsetParent);\n";
-	pResponse->strContent += "  return offset;\n";
-	pResponse->strContent += "}\n";
-
-	pResponse->strContent += "function getLeft(e){\n";
-	pResponse->strContent += "var offset=e.offsetLeft;\n";
-	pResponse->strContent += "  if(e.offsetParent!=null) offset+=getLeft(e.offsetParent);\n";
-	pResponse->strContent += "  return offset;\n";
-	pResponse->strContent += "}\n";
-	
-	// hideTool
-	pResponse->strContent += "function hideTool( event, idTool, idTrigger ) {\n";
-	pResponse->strContent += "  var tool = document.getElementById( idTool );\n";
-	pResponse->strContent += "  var trigger = document.getElementById( idTrigger );\n";
-	pResponse->strContent += "  if( tool ) {\n";
-	pResponse->strContent += "    if( event.relatedTarget && event.relatedTarget.id != idTool && event.relatedTarget.id != idTrigger ) {\n";
-	pResponse->strContent += "      tool.style.display=\"none\";\n";
-	pResponse->strContent += "      hideTrigger( idTrigger ); }\n";
-	pResponse->strContent += "    else\n";
-	pResponse->strContent += "      if( !event.relatedTarget ) {\n";
-	pResponse->strContent += "        tool.style.display=\"none\";\n";
-	pResponse->strContent += "        hideTrigger( idTrigger ); }\n";
-	pResponse->strContent += "  }\n";
-	pResponse->strContent += "}\n";
-	
-	// showToolLeft
-	pResponse->strContent += "function showToolLeft( idTool, idTrigger ) {\n";
-	pResponse->strContent += "  var tool = document.getElementById( idTool );\n";
-	pResponse->strContent += "  var trigger = document.getElementById( idTrigger );\n";
-	pResponse->strContent += "  var triggerTop = parseInt(getTop( trigger ));\n";
-	pResponse->strContent += "  var triggerLeft = parseInt(getLeft( trigger ));\n";
-	pResponse->strContent += "  var triggerHeight = parseInt(trigger.offsetHeight);\n";
-	pResponse->strContent += "  if( tool && tool.style.display==\"none\" ) {\n";
-	pResponse->strContent += "    tool.style.display=\"\";\n";
-	pResponse->strContent += "    tool.style.top=(triggerTop+triggerHeight).toString()+'px';\n";
-	pResponse->strContent += "    tool.style.left=triggerLeft.toString()+'px';\n";
-	pResponse->strContent += "    showTrigger( idTrigger );\n";
-	pResponse->strContent += "  }\n";
-	pResponse->strContent += "}\n";
-
-	// showToolRight
-	pResponse->strContent += "function showToolRight( idTool, idTrigger ) {\n";
-	pResponse->strContent += "  var tool = document.getElementById( idTool );\n";
-	pResponse->strContent += "  var trigger = document.getElementById( idTrigger );\n";
-	pResponse->strContent += "  var triggerTop = parseInt(getTop( trigger ));\n";
-	pResponse->strContent += "  var triggerLeft = parseInt(getLeft( trigger ));\n";
-	pResponse->strContent += "  var triggerHeight = parseInt(trigger.offsetHeight);\n";
-	pResponse->strContent += "  var triggerWidth = parseInt(trigger.offsetWidth);\n";
-	pResponse->strContent += "  if( tool && tool.style.display==\"none\" ) {\n";
-	pResponse->strContent += "    tool.style.display=\"\";\n";
-	pResponse->strContent += "    var toolWidth = parseInt(tool.offsetWidth);\n";
-	pResponse->strContent += "    tool.style.top=(triggerTop+triggerHeight).toString()+'px';\n";
-	pResponse->strContent += "    if( triggerLeft+triggerWidth > document.documentElement.clientWidth )\n";
-	pResponse->strContent += "      tool.style.left=(document.documentElement.clientWidth-toolWidth).toString()+'px';\n";
-	pResponse->strContent += "    else\n";
-	pResponse->strContent += "      tool.style.left=(triggerLeft+triggerWidth-toolWidth).toString()+'px';\n";
-	pResponse->strContent += "    showTrigger( idTrigger );\n";
-	pResponse->strContent += "  }\n";
-	pResponse->strContent += "}\n";
-
-	// hideTrigger
-	pResponse->strContent += "function hideTrigger( idTrigger ) {\n";
-	pResponse->strContent += "  var trigger = document.getElementById( idTrigger );\n";
-//	pResponse->strContent += "  trigger.style.borderColor=\"transparent\";\n";
-	pResponse->strContent += "  trigger.style.backgroundColor=\"transparent\";\n";
-	pResponse->strContent += "}\n";
-
-	// showTrigger
-	pResponse->strContent += "function showTrigger( idTrigger ) {\n";
-	pResponse->strContent += "  var trigger = document.getElementById( idTrigger );\n";
-//	pResponse->strContent += "  trigger.style.borderColor=\"purple\";\n";
-	pResponse->strContent += "  trigger.style.backgroundColor=\"#dee3e7\";\n";
-	pResponse->strContent += "}\n";
-
-	pResponse->strContent += "//-->\n";
-	pResponse->strContent += "</script>\n\n";
+//	pResponse->strContent += "<script type=\"text/javascript\">\n";
+//	pResponse->strContent += "<!--\n";
+//
+//	pResponse->strContent += "function getTop(e){\n";
+//	pResponse->strContent += "var offset=e.offsetTop;\n";
+//	pResponse->strContent += "  if(e.offsetParent!=null) offset+=getTop(e.offsetParent);\n";
+//	pResponse->strContent += "  return offset;\n";
+//	pResponse->strContent += "}\n";
+//
+//	pResponse->strContent += "function getLeft(e){\n";
+//	pResponse->strContent += "var offset=e.offsetLeft;\n";
+//	pResponse->strContent += "  if(e.offsetParent!=null) offset+=getLeft(e.offsetParent);\n";
+//	pResponse->strContent += "  return offset;\n";
+//	pResponse->strContent += "}\n";
+//	
+//	// hideTool
+//	pResponse->strContent += "function hideTool( event, idTool, idTrigger ) {\n";
+//	pResponse->strContent += "  var tool = document.getElementById( idTool );\n";
+//	pResponse->strContent += "  var trigger = document.getElementById( idTrigger );\n";
+//	pResponse->strContent += "  if( tool ) {\n";
+//	pResponse->strContent += "    if( event.relatedTarget && event.relatedTarget.id != idTool && event.relatedTarget.id != idTrigger ) {\n";
+//	pResponse->strContent += "      tool.style.display=\"none\";\n";
+//	pResponse->strContent += "      hideTrigger( idTrigger ); }\n";
+//	pResponse->strContent += "    else\n";
+//	pResponse->strContent += "      if( !event.relatedTarget ) {\n";
+//	pResponse->strContent += "        tool.style.display=\"none\";\n";
+//	pResponse->strContent += "        hideTrigger( idTrigger ); }\n";
+//	pResponse->strContent += "  }\n";
+//	pResponse->strContent += "}\n";
+//	
+//	// showToolLeft
+//	pResponse->strContent += "function showToolLeft( idTool, idTrigger ) {\n";
+//	pResponse->strContent += "  var tool = document.getElementById( idTool );\n";
+//	pResponse->strContent += "  var trigger = document.getElementById( idTrigger );\n";
+//	pResponse->strContent += "  var triggerTop = parseInt(getTop( trigger ));\n";
+//	pResponse->strContent += "  var triggerLeft = parseInt(getLeft( trigger ));\n";
+//	pResponse->strContent += "  var triggerHeight = parseInt(trigger.offsetHeight);\n";
+//	pResponse->strContent += "  if( tool && tool.style.display==\"none\" ) {\n";
+//	pResponse->strContent += "    tool.style.display=\"\";\n";
+//	pResponse->strContent += "    tool.style.top=(triggerTop+triggerHeight).toString()+'px';\n";
+//	pResponse->strContent += "    tool.style.left=triggerLeft.toString()+'px';\n";
+//	pResponse->strContent += "    showTrigger( idTrigger );\n";
+//	pResponse->strContent += "  }\n";
+//	pResponse->strContent += "}\n";
+//
+//	// showToolRight
+//	pResponse->strContent += "function showToolRight( idTool, idTrigger ) {\n";
+//	pResponse->strContent += "  var tool = document.getElementById( idTool );\n";
+//	pResponse->strContent += "  var trigger = document.getElementById( idTrigger );\n";
+//	pResponse->strContent += "  var triggerTop = parseInt(getTop( trigger ));\n";
+//	pResponse->strContent += "  var triggerLeft = parseInt(getLeft( trigger ));\n";
+//	pResponse->strContent += "  var triggerHeight = parseInt(trigger.offsetHeight);\n";
+//	pResponse->strContent += "  var triggerWidth = parseInt(trigger.offsetWidth);\n";
+//	pResponse->strContent += "  if( tool && tool.style.display==\"none\" ) {\n";
+//	pResponse->strContent += "    tool.style.display=\"\";\n";
+//	pResponse->strContent += "    var toolWidth = parseInt(tool.offsetWidth);\n";
+//	pResponse->strContent += "    tool.style.top=(triggerTop+triggerHeight).toString()+'px';\n";
+//	pResponse->strContent += "    if( triggerLeft+triggerWidth > document.documentElement.clientWidth )\n";
+//	pResponse->strContent += "      tool.style.left=(document.documentElement.clientWidth-toolWidth).toString()+'px';\n";
+//	pResponse->strContent += "    else\n";
+//	pResponse->strContent += "      tool.style.left=(triggerLeft+triggerWidth-toolWidth).toString()+'px';\n";
+//	pResponse->strContent += "    showTrigger( idTrigger );\n";
+//	pResponse->strContent += "  }\n";
+//	pResponse->strContent += "}\n";
+//
+//	// hideTrigger
+//	pResponse->strContent += "function hideTrigger( idTrigger ) {\n";
+//	pResponse->strContent += "  var trigger = document.getElementById( idTrigger );\n";
+////	pResponse->strContent += "  trigger.style.borderColor=\"transparent\";\n";
+//	pResponse->strContent += "  trigger.style.backgroundColor=\"transparent\";\n";
+//	pResponse->strContent += "}\n";
+//
+//	// showTrigger
+//	pResponse->strContent += "function showTrigger( idTrigger ) {\n";
+//	pResponse->strContent += "  var trigger = document.getElementById( idTrigger );\n";
+////	pResponse->strContent += "  trigger.style.borderColor=\"purple\";\n";
+//	pResponse->strContent += "  trigger.style.backgroundColor=\"#dee3e7\";\n";
+//	pResponse->strContent += "}\n";
+//
+//	pResponse->strContent += "//-->\n";
+//	pResponse->strContent += "</script>\n\n";
 
 	pResponse->strContent += "<table class=\"top_bar\">\n";
 	pResponse->strContent += "<tr class=\"top_bar\">\n";
-	pResponse->strContent += "<td class=\"top_login\" id=\"tdLoginTrigger\" onMouseOver=\"javascript: showToolLeft('tdLogin','tdLoginTrigger');\" onMouseOut=\"javascript: hideTool(event,'tdLogin','tdLoginTrigger');\">\n";
+	pResponse->strContent += "<td class=\"top_login\"";
 
 	CMySQLQuery *pQueryUser = 0;
 	
@@ -6390,13 +6440,19 @@ void CTracker :: HTML_Common_Begin( struct request_t *pRequest, struct response_
 
 	if( pRequest->user.strUID.empty( ) )
 	{
+		pResponse->strContent += ">\n";
 		pResponse->strContent += UTIL_Xsprintf( gmapLANG_CFG["login1"].c_str( ), string( "<a class=\"red\" title=\"" + gmapLANG_CFG["login"] + "\" href=\"" + RESPONSE_STR_LOGIN_HTML + "\">" ).c_str( ), "</a>" );
 		pResponse->strContent += "</td>\n";
+		pResponse->strContent += "<td class=\"top_trigger\">";
+		pResponse->strContent += "<a class=\"black\" target=\"_blank\" title=\"" + gmapLANG_CFG["navbar_rss"] + "\" href=\"" + RESPONSE_STR_SEPERATOR + rssdump.strName + "\">" + gmapLANG_CFG["navbar_rss"] + "</a>\n";
+		pResponse->strContent += "</td>\n";
+		pResponse->strContent += "</tr></table>\n";
 	}
 	else if( vecQueryUser.size( ) == 13 )
 	{
 		CMySQLQuery mq01( "UPDATE users SET bip=\'" + UTIL_StringToMySQL( pRequest->strIP ) + "\' WHERE buid=" + pRequest->user.strUID );
 		
+		pResponse->strContent += " id=\"tdLoginTrigger\" onMouseOver=\"javascript: showToolLeft('tdLogin','tdLoginTrigger');\" onMouseOut=\"javascript: hideTool(event,'tdLogin','tdLoginTrigger');\">\n";
 		pResponse->strContent += UTIL_Xsprintf( gmapLANG_CFG["login2"].c_str( ), getUserLink( pRequest->user.strUID, pRequest->user.strLogin ).c_str( ) );
 
 		pResponse->strContent += "<span class=\"top_pipe\">|</span>";
@@ -6404,7 +6460,7 @@ void CTracker :: HTML_Common_Begin( struct request_t *pRequest, struct response_
 
 
 
-		pResponse->strContent += "</td>\n<td class=\"top_trigger\" id=\"tdToolTrigger\" onMouseOver=\"javascript: showToolLeft('tdTool','tdToolTrigger');\" onMouseOut=\"javascript: hideTool(event,'tdTool','tdToolTrigger');\">";
+		pResponse->strContent += "</td>\n<td class=\"top_tool\" id=\"tdToolTrigger\" onMouseOver=\"javascript: showToolLeft('tdTool','tdToolTrigger');\" onMouseOut=\"javascript: hideTool(event,'tdTool','tdToolTrigger');\">";
 		pResponse->strContent += "<a title=\"" + gmapLANG_CFG["login2_profile"] + "\" href=\"" + RESPONSE_STR_LOGIN_HTML + "\">";
 		pResponse->strContent += gmapLANG_CFG["login2_tool_icon"];
 		pResponse->strContent += "</a></td>\n";
@@ -6475,7 +6531,9 @@ void CTracker :: HTML_Common_Begin( struct request_t *pRequest, struct response_
 		delete pQuery;
 		ulCount = ulUnread + ulRead;
 
-		pResponse->strContent += "</td>\n<td class=\"top_tool\" id=\"tdMessageTrigger\"";
+		pResponse->strContent += "</td>\n";
+
+		pResponse->strContent += "<td class=\"top_trigger\" id=\"tdMessageTrigger\"";
 
 		if( ulUnread > 0 )
 		{
@@ -6515,8 +6573,10 @@ void CTracker :: HTML_Common_Begin( struct request_t *pRequest, struct response_
 //		pResponse->strContent += "<a class=\"top_talk\" href=\"" + RESPONSE_STR_TALK_HTML + "\">" + gmapLANG_CFG["talk_show_home"] + "</a>";
 //		if( ulHome > 0 )
 //			pResponse->strContent += "<span class=\"hot\">(" + vecQueryUser[9] + ")</span>";
-
-		pResponse->strContent += "</td>\n<td class=\"top_trigger\" id=\"tdClientTrigger\" onMouseOver=\"javascript: showToolRight('tdClient','tdClientTrigger');\" onMouseOut=\"javascript: hideTool(event,'tdClient','tdClientTrigger');\">";
+//		if( ulTalk > 0 )
+//			pResponse->strContent += "<script type=\"text/javascript\">showToolLeft('tdTalk','tdTalkTrigger');</script>";
+		pResponse->strContent += "</td>\n";
+		pResponse->strContent += "<td class=\"top_trigger\" id=\"tdClientTrigger\" onMouseOver=\"javascript: showToolRight('tdClient','tdClientTrigger');\" onMouseOut=\"javascript: hideTool(event,'tdClient','tdClientTrigger');\">";
 		pResponse->strContent += gmapLANG_CFG["login2_client_icon"];
 
 		pRequest->user.strInvites = vecQueryUser[8];
@@ -6524,18 +6584,22 @@ void CTracker :: HTML_Common_Begin( struct request_t *pRequest, struct response_
 //		if( ( pRequest->user.ucAccess & m_ucAccessRSS ) && !rssdump.strName.empty( ) )
 		if( pRequest->user.ucAccess & m_ucAccessRSS )
 		{
-			string cstrFilter( pRequest->mapParams["tag"] );
+			string cstrTag( pRequest->mapParams["tag"] );
 			const string cstrMedium( pRequest->mapParams["medium"] );
 			const string cstrQuality( pRequest->mapParams["quality"] );
 			const string cstrEncode( pRequest->mapParams["encode"] );
 			const string cstrSearch( pRequest->mapParams["search"] );
 			const string cstrUploader( pRequest->mapParams["uploader"] );
+			const string cstrIMDbID( pRequest->mapParams["imdb"] );
 			const string cstrMatch( pRequest->mapParams["match"] );
+			const string cstrDay( pRequest->mapParams["day"] );
+			const string cstrSection( pRequest->mapParams["section"] );
+			const string cstrMode( pRequest->mapParams["mode"] );
 			const string cstrNoTag( pRequest->mapParams["notag"] );
 
 			string strPageParameters = string( );
 			
-			if( cstrFilter.empty( ) && !pRequest->user.strUID.empty( ) && cstrNoTag != "1" )
+			if( cstrTag.empty( ) && !pRequest->user.strUID.empty( ) && cstrNoTag != "1" )
 			{
 				CMySQLQuery *pQueryPrefs = new CMySQLQuery( "SELECT bdefaulttag FROM users_prefs WHERE buid=" + pRequest->user.strUID );
 			
@@ -6545,19 +6609,23 @@ void CTracker :: HTML_Common_Begin( struct request_t *pRequest, struct response_
 
 				delete pQueryPrefs;
 				
-				cstrFilter = mapPrefs["bdefaulttag"];
+				cstrTag = mapPrefs["bdefaulttag"];
 			}
 			
 			vector< pair< string, string > > vecParams;
 			vecParams.reserve(64);
 			
-			vecParams.push_back( pair<string, string>( string( "tag" ), cstrFilter ) );
+			vecParams.push_back( pair<string, string>( string( "tag" ), cstrTag ) );
 			vecParams.push_back( pair<string, string>( string( "medium" ), cstrMedium ) );
 			vecParams.push_back( pair<string, string>( string( "quality" ), cstrQuality ) );
 			vecParams.push_back( pair<string, string>( string( "encode" ), cstrEncode ) );
 			vecParams.push_back( pair<string, string>( string( "search" ), cstrSearch ) );
 			vecParams.push_back( pair<string, string>( string( "uploader" ), cstrUploader ) );
+			vecParams.push_back( pair<string, string>( string( "imdb" ), cstrIMDbID ) );
 			vecParams.push_back( pair<string, string>( string( "match" ), cstrMatch ) );
+			vecParams.push_back( pair<string, string>( string( "day" ), cstrDay ) );
+			vecParams.push_back( pair<string, string>( string( "section" ), cstrSection ) );
+			vecParams.push_back( pair<string, string>( string( "mode" ), cstrMode ) );
 			
 			strPageParameters += UTIL_HTMLJoin( vecParams, string( "?" ), string( "&" ), string( "=" ) );
 				
@@ -6568,6 +6636,8 @@ void CTracker :: HTML_Common_Begin( struct request_t *pRequest, struct response_
 				pResponse->strContent += "<a class=\"black\" target=\"_blank\" title=\"" + gmapLANG_CFG["navbar_rss"] + "\" href=\"" + RESPONSE_STR_SEPERATOR + rssdump.strName + strPageParameters + "\">" + gmapLANG_CFG["navbar_rss"] + "</a>\n";
 		}
 		pResponse->strContent += "</td>\n";
+
+//		pResponse->strContent += "</tr></table>\n";
 
 		pResponse->strContent += "<div class=\"top_tool_left\" style=\"display:none\" id=\"tdLogin\" onMouseOver=\"javascript: showToolLeft('tdLogin','tdLoginTrigger');\" onMouseOut=\"javascript: hideTool(event,'tdLogin','tdLoginTrigger');\">\n";
 
@@ -6622,8 +6692,24 @@ void CTracker :: HTML_Common_Begin( struct request_t *pRequest, struct response_
 		pResponse->strContent += "<a class=\"top_menu\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?show=invites\">" + gmapLANG_CFG["user_detail_invites"] + "<span class=\"hot\">(" + pRequest->user.strInvites + ")</span></a>";
 		pResponse->strContent += "<a class=\"top_menu\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?show=comments\">" + gmapLANG_CFG["user_detail_comments"] + "</a>";
 		pResponse->strContent += "</div>";
-		
-		pResponse->strContent += "<div class=\"top_menu_left\" style=\"display:none\" id=\"tdTalk\" onMouseOver=\"javascript: showToolLeft('tdTalk','tdTalkTrigger');\" onMouseOut=\"javascript: hideTool(event,'tdTalk','tdTalkTrigger');\">\n";
+
+//		pResponse->strContent += "<table class=\"top_bar_fixed\">\n";
+//		pResponse->strContent += "<tr class=\"top_bar\">\n";
+
+		pResponse->strContent += "</tr></table>\n";
+
+		if( ulUnread > 0 )
+		{
+			pResponse->strContent += "<div class=\"top_tool_right_fixed\" style=\"display:none\" id=\"tdMessage\" onMouseOver=\"javascript: showToolRight('tdMessage','tdMessageTrigger');\" onMouseOut=\"javascript: hideTool(event,'tdMessage','tdMessageTrigger');\">\n";
+			pResponse->strContent += gmapLANG_CFG["messages_unread_notice"];
+			pResponse->strContent += "</div>\n";
+			pResponse->strContent += "<script type=\"text/javascript\">showToolRight('tdMessage','tdMessageTrigger');</script>\n";
+		}
+		pResponse->strContent += "\n<div class=\"go_top\">";
+		pResponse->strContent += "<a href=\"javascript: ;\" onclick=\"javascript: scroll(0,0);\">" + gmapLANG_CFG["login2_gotop_icon"] + "</a>";
+		pResponse->strContent += "</div>\n";
+
+		pResponse->strContent += "<div class=\"top_menu_left_fixed\" style=\"display:none\" id=\"tdTalk\" onMouseOver=\"javascript: showToolLeft('tdTalk','tdTalkTrigger');\" onMouseOut=\"javascript: hideTool(event,'tdTalk','tdTalkTrigger');\">\n";
 
 //		pResponse->strContent += "<span class=\"top_tool\">" + gmapLANG_CFG["talk_page"] + ": ";
 		pResponse->strContent += "<a class=\"top_menu\" href=\"" + RESPONSE_STR_TALK_HTML + "\">" + gmapLANG_CFG["talk_show_home"];
@@ -6652,16 +6738,11 @@ void CTracker :: HTML_Common_Begin( struct request_t *pRequest, struct response_
 
 		pResponse->strContent += "<hr class=\"top_menu\" onMouseOver=\"javascript: showToolLeft('tdTalk','tdTalkTrigger');\"></hr>";
 
-		vector<string> vecChannel;
-		vecChannel.reserve(64);
-		
-		vecChannel = UTIL_SplitToVector( gmapLANG_CFG["talk_channels"], "|" );
-
-		for( vector<string> :: iterator ulKey = vecChannel.begin( ); ulKey != vecChannel.end( ); ulKey++ )
+		for( vector< pair<string, unsigned char> > :: iterator ulKey = m_vecChannels.begin( ); ulKey != m_vecChannels.end( ); ulKey++ )
 		{
-			pResponse->strContent += "<a class=\"top_menu\" href=\"" + RESPONSE_STR_TALK_HTML + "?channel=" + UTIL_StringToEscaped( (*ulKey) ) + "\">" + UTIL_RemoveHTML( (*ulKey) );
+			pResponse->strContent += "<a class=\"top_menu\" href=\"" + RESPONSE_STR_TALK_HTML + "?channel=" + UTIL_StringToEscaped( (*ulKey).first ) + "\">" + UTIL_RemoveHTML( (*ulKey).first );
 
-			CMySQLQuery *pQueryListen = new CMySQLQuery( "SELECT btalk FROM listen WHERE buid=" + pRequest->user.strUID + " AND bchannel=\'" + UTIL_StringToMySQL( (*ulKey) ) + "\'" );
+			CMySQLQuery *pQueryListen = new CMySQLQuery( "SELECT btalk FROM listen WHERE buid=" + pRequest->user.strUID + " AND bchannel=\'" + UTIL_StringToMySQL( (*ulKey).first ) + "\'" );
 
 			vector<string> vecQueryListen;
 
@@ -6682,23 +6763,8 @@ void CTracker :: HTML_Common_Begin( struct request_t *pRequest, struct response_
 		}
 
 		pResponse->strContent += "</div>\n";
-
-		if( ulUnread > 0 )
-		{
-			pResponse->strContent += "<div class=\"top_tool_right\" style=\"display:none\" id=\"tdMessage\" onMouseOver=\"javascript: showToolRight('tdMessage','tdMessageTrigger');\" onMouseOut=\"javascript: hideTool(event,'tdMessage','tdMessageTrigger');\">\n";
-			pResponse->strContent += gmapLANG_CFG["messages_unread_notice"];
-			pResponse->strContent += "</div>\n";
-			pResponse->strContent += "<script type=\"text/javascript\">showToolRight('tdMessage','tdMessageTrigger');</script>";
-		}
-		pResponse->strContent += "\n<div class=\"go_top\">";
-		pResponse->strContent += "<a href=\"javascript: ;\" onclick=\"javascript: scroll(0,0);\">" + gmapLANG_CFG["login2_gotop_icon"] + "</a>";
-		pResponse->strContent += "</div>\n";
-
-//		if( ulTalk > 0 )
-//			pResponse->strContent += "<script type=\"text/javascript\">showToolLeft('tdTalk','tdTalkTrigger');</script>";
 	}
 //	pResponse->strContent += "</td>\n<td class=\"top_info\">";
-	pResponse->strContent += "</tr></table>\n";
 	
 //	pResponse->strContent += "<table class=\"top_bar_hidden\">\n";
 //	pResponse->strContent += "<tr class=\"top_bar_hidden\"><td class=\"top_bar_hidden\">\n";
@@ -6847,12 +6913,12 @@ void CTracker :: HTML_Common_End( struct request_t *pRequest, struct response_t 
 	{
 		const unsigned int cuiOnline( ( unsigned int )gpServer->m_vecClients.size( ) );
 
-		if ( cuiOnline > 1 )
+//		if ( cuiOnline > 1 )
 			// Users plural
 			pResponse->strContent += "<p class=\"users_online\">" + UTIL_Xsprintf( gmapLANG_CFG["users_online"].c_str( ), CAtomInt( cuiOnline ).toString( ).c_str( ) ) + "</p>\n\n";
-		else
-			// User singular
-			pResponse->strContent += "<p class=\"users_online\">" + UTIL_Xsprintf( gmapLANG_CFG["user_online"].c_str( ), CAtomInt( cuiOnline ).toString( ).c_str( ) ) + "</p>\n\n";
+//		else
+//			// User singular
+//			pResponse->strContent += "<p class=\"users_online\">" + UTIL_Xsprintf( gmapLANG_CFG["user_online"].c_str( ), CAtomInt( cuiOnline ).toString( ).c_str( ) ) + "</p>\n\n";
 	}
 
 	pResponse->strContent += "</td></tr>";
@@ -6987,7 +7053,7 @@ void CTracker :: HTML_Common_End( struct request_t *pRequest, struct response_t 
 	pResponse->strContent += "  showToolRight('tdMessage','tdMessageTrigger'); }\n";
 	pResponse->strContent += "if( toolTalk && toolTalk.style.display==\"\" ) {\n";
 	pResponse->strContent += "  toolTalk.style.display=\"none\";\n";
-	pResponse->strContent += "  showToolLeft('tdTalk','tdTalkTrigger'); }";
+	pResponse->strContent += "  showToolLeft('tdTalk','tdTalkTrigger'); }\n";
 	pResponse->strContent += "//-->\n";
 	pResponse->strContent += "</script>\n\n";
 
@@ -7578,6 +7644,7 @@ CCache :: CCache( )
 	bResort_Completed = true;
 	bResort_Order = true;
 	bSortNoTop = false;
+	bSortInTag = false;
 	bResortOffers = true;
 	bResortUsers = true;
 	ulSize = 0;
@@ -7615,6 +7682,7 @@ void CCache :: Reset( bool bOffer )
 		bResort_Completed = true;
 		bResort_Order = true;
 		bSortNoTop = false;
+		bSortInTag = false;
 	}
 }
 
@@ -7627,15 +7695,15 @@ void CCache :: resetCache( bool bOffer )
 		
 		ulSize = 0;
 	
-		CMySQLQuery *pQuery = new CMySQLQuery( "SELECT bid,bfilename,bname,badded,bsize,bfiles,btag,btitle,bip,buploader,buploaderid,bimdb,bimdbid,bdefault_down,bdefault_up,bfree_down,bfree_up,UNIX_TIMESTAMP(bfree_to),btop,UNIX_TIMESTAMP(btop_to),bclassic,breq,bnodownload,border,bseeders,bseeders6,bleechers,bleechers6,bcompleted,bcomments,bthanks,bshares,bsubs,bpost FROM allowed ORDER BY bid DESC" );
+		CMySQLQuery *pQuery = new CMySQLQuery( "SELECT bid,bfilename,bname,badded,bsize,bfiles,btag,btitle,bip,buploader,buploaderid,bimdb,bimdbid,bdefault_down,bdefault_up,bfree_down,bfree_up,UNIX_TIMESTAMP(bfree_to),btop,btop_intag,UNIX_TIMESTAMP(btop_to),bclassic,breq,bnodownload,border,bseeders,bseeders6,bleechers,bleechers6,bcompleted,bcomments,bthanks,bshares,bsubs,bpost FROM allowed ORDER BY bid DESC" );
 				
 		vector<string> vecQuery;
 
-		vecQuery.reserve(34);
+		vecQuery.reserve(35);
 
 		vecQuery = pQuery->nextRow( );
 		
-		if( vecQuery.size( ) == 34 )
+		if( vecQuery.size( ) == 35 )
 		{
 			setLatest( vecQuery[3], bOffer );
 //			struct tm time_tm;
@@ -7660,7 +7728,7 @@ void CCache :: resetCache( bool bOffer )
 
 		unsigned long ulCount = 0;
 
-		while( vecQuery.size( ) == 34 )
+		while( vecQuery.size( ) == 35 )
 		{
 			pTorrents[ulCount].strTag = "101";
 			pTorrents[ulCount].strName = gmapLANG_CFG["unknown"];
@@ -7679,6 +7747,7 @@ void CCache :: resetCache( bool bOffer )
 			pTorrents[ulCount].bAllow = true;
 			pTorrents[ulCount].bPost = false;
 			pTorrents[ulCount].ucTop = 0;
+			pTorrents[ulCount].ucTopInTag = 0;
 			pTorrents[ulCount].ucClassic = 0;
 			pTorrents[ulCount].bReq = false;
 			pTorrents[ulCount].iFreeDown = 100;
@@ -7757,31 +7826,34 @@ void CCache :: resetCache( bool bOffer )
 				pTorrents[ulCount].ucTop = (unsigned char)atoi( vecQuery[18].c_str( ) );
 
 			if( !vecQuery[19].empty( ) )
-				pTorrents[ulCount].iTopTo = UTIL_StringTo64( vecQuery[19].c_str( ) );
+				pTorrents[ulCount].ucTopInTag = (unsigned char)atoi( vecQuery[19].c_str( ) );
 
 			if( !vecQuery[20].empty( ) )
-				pTorrents[ulCount].ucClassic = (unsigned char)atoi( vecQuery[20].c_str( ) );
-	
-			if( !vecQuery[21].empty( ) && vecQuery[21] == "1" )
-				pTorrents[ulCount].bReq = true;
+				pTorrents[ulCount].iTopTo = UTIL_StringTo64( vecQuery[20].c_str( ) );
+
+			if( !vecQuery[21].empty( ) )
+				pTorrents[ulCount].ucClassic = (unsigned char)atoi( vecQuery[21].c_str( ) );
 	
 			if( !vecQuery[22].empty( ) && vecQuery[22] == "1" )
+				pTorrents[ulCount].bReq = true;
+	
+			if( !vecQuery[23].empty( ) && vecQuery[23] == "1" )
 				pTorrents[ulCount].bAllow = false;
 
-			if( !vecQuery[23].empty( ) )
-				pTorrents[ulCount].strOrder = vecQuery[23];
+			if( !vecQuery[24].empty( ) )
+				pTorrents[ulCount].strOrder = vecQuery[24];
 
-			pTorrents[ulCount].uiSeeders = atoi( vecQuery[24].c_str( ) );
-			pTorrents[ulCount].uiSeeders6 = atoi( vecQuery[25].c_str( ) );
-			pTorrents[ulCount].uiLeechers = atoi( vecQuery[26].c_str( ) );
-			pTorrents[ulCount].uiLeechers6 = atoi( vecQuery[27].c_str( ) );
-			pTorrents[ulCount].ulCompleted = atoi( vecQuery[28].c_str( ) );
-			pTorrents[ulCount].uiComments = atoi( vecQuery[29].c_str( ) );
-			pTorrents[ulCount].uiThanks = atoi( vecQuery[30].c_str( ) );
-			pTorrents[ulCount].uiShares = atoi( vecQuery[31].c_str( ) );
-			pTorrents[ulCount].uiSubs = atoi( vecQuery[32].c_str( ) );
+			pTorrents[ulCount].uiSeeders = atoi( vecQuery[25].c_str( ) );
+			pTorrents[ulCount].uiSeeders6 = atoi( vecQuery[26].c_str( ) );
+			pTorrents[ulCount].uiLeechers = atoi( vecQuery[27].c_str( ) );
+			pTorrents[ulCount].uiLeechers6 = atoi( vecQuery[28].c_str( ) );
+			pTorrents[ulCount].ulCompleted = atoi( vecQuery[29].c_str( ) );
+			pTorrents[ulCount].uiComments = atoi( vecQuery[30].c_str( ) );
+			pTorrents[ulCount].uiThanks = atoi( vecQuery[31].c_str( ) );
+			pTorrents[ulCount].uiShares = atoi( vecQuery[32].c_str( ) );
+			pTorrents[ulCount].uiSubs = atoi( vecQuery[33].c_str( ) );
 
-			if( !vecQuery[33].empty( ) && vecQuery[33] == "1" )
+			if( !vecQuery[34].empty( ) && vecQuery[34] == "1" )
 				pTorrents[ulCount].bPost = true;
 
 			ulCount++;
@@ -7791,6 +7863,21 @@ void CCache :: resetCache( bool bOffer )
 	
 		delete pQuery;
 	
+		bool bFreeGlobal = CFG_GetInt( "bnbt_free_global", 0 ) == 0 ? false : true;
+		int iFreeDownGlobal = CFG_GetInt( "bnbt_free_down_global", 100 );
+		int iFreeUpGlobal = CFG_GetInt( "bnbt_free_up_global", 100 );
+
+		for( unsigned long ulKey = 0; ulKey < ulSize; ulKey++ )
+		{
+			if( bFreeGlobal )
+			{
+				if( iFreeDownGlobal < pTorrents[ulKey].iDefaultDown )
+					pTorrents[ulKey].iDefaultDown = iFreeDownGlobal;
+				if( iFreeUpGlobal > pTorrents[ulKey].iDefaultUp )
+					pTorrents[ulKey].iDefaultUp = iFreeUpGlobal;
+			}
+		}
+
 		bReset = false;
 		
 		bResort = false;
@@ -7799,6 +7886,7 @@ void CCache :: resetCache( bool bOffer )
 		bResort_Completed = false;
 		bResort_Order = false;
 		bSortNoTop = true;
+		bSortInTag = false;
 		
 		ucSort = SORT_DADDED;
 	}
@@ -7851,6 +7939,7 @@ void CCache :: resetCache( bool bOffer )
 			pOffers[ulCount].strID = string( );
 			pOffers[ulCount].uiSeeders = 0;
 			pOffers[ulCount].ucTop = 0;
+			pOffers[ulCount].ucTopInTag = 0;
 			pOffers[ulCount].iSize = 0;
 			pOffers[ulCount].uiFiles = 0;
 			pOffers[ulCount].uiComments = 0;
@@ -7957,7 +8046,12 @@ time_t CCache :: getLatest( bool bOffer )
 
 void CCache :: addRow( const string &cstrID, bool bOffer )
 {
-	resetCache( bOffer );
+	if( ( bReset && !bOffer ) || ( bResetOffers && bOffer ) )
+	{
+		resetCache( bOffer );
+
+		return;
+	}
 
 	if( !bOffer )
 	{
@@ -8008,7 +8102,12 @@ void CCache :: addRow( const string &cstrID, bool bOffer )
 
 void CCache :: deleteRow( const string &cstrID, bool bOffer )
 {
-	resetCache( bOffer );
+	if( ( bReset && !bOffer ) || ( bResetOffers && bOffer ) )
+	{
+		resetCache( bOffer );
+
+		return;
+	}
 
 	if( !bOffer )
 	{
@@ -8091,9 +8190,9 @@ void CCache :: deleteRow( const string &cstrID, bool bOffer )
 	}
 }
 
-void CCache :: sort( const unsigned char cucSort, bool bNoTop, bool bOffer )
+void CCache :: sort( const unsigned char cucSort, bool bNoTop, bool bOffer, bool bInTag )
 {
-	if( !bOffer && !bResort && ( cucSort == ucSort ) && ( bNoTop == bSortNoTop ) )
+	if( !bOffer && !bResort && ( cucSort == ucSort ) && ( bNoTop == bSortNoTop ) && ( bInTag == bSortInTag ) )
 	{
 		switch( cucSort )
 		{
@@ -8142,6 +8241,7 @@ void CCache :: sort( const unsigned char cucSort, bool bNoTop, bool bOffer )
 		ulKeySize = ulSize;
 		ucSort = cucSort;
 		bSortNoTop = bNoTop;
+		bSortInTag = bInTag;
 		bResort = false;
 		bResort_Seeders = false;
 		bResort_Leechers = false;
@@ -8151,112 +8251,173 @@ void CCache :: sort( const unsigned char cucSort, bool bNoTop, bool bOffer )
 	
 	if( !bNoTop )
 	{
-		switch( cucSort )
+		if( !bInTag )
 		{
-		case SORT_ANAME:
-			qsort( pSort, ulKeySize, sizeof( struct torrent_t ), asortByName );
-			break;
-		case SORT_ACOMPLETE:
-			qsort( pSort, ulKeySize, sizeof( struct torrent_t ), asortByComplete );
-			break;
-		case SORT_AINCOMPLETE:
-			qsort( pSort, ulKeySize, sizeof( struct torrent_t ), asortByDL );
-			break;
-		case SORT_AADDED:
-			qsort( pSort, ulKeySize, sizeof( struct torrent_t ), asortByAdded );
-			break;
-		case SORT_ADEFAULT:
-			qsort( pSort, ulKeySize, sizeof( struct torrent_t ), asortByDefault );
-			break;
-		case SORT_ASIZE:
-			qsort( pSort, ulKeySize, sizeof( struct torrent_t ), asortBySize );
-			break;
-//		case SORT_AFILES:
-//			qsort( pSort, ulKeySize, sizeof( struct torrent_t ), asortByFiles );
-//			break;
-//		case SORT_ACOMMENTS:
-//			qsort( pSort, ulKeySize, sizeof( struct torrent_t ), asortByComments );
-//			break;
-// 				case SORT_AAVGLEFT:
-// 					if( m_bShowAverageLeft )
-// 					{
-// 						if( m_bShowLeftAsProgress )
-// 							qsort( pSort, ulKeySize, sizeof( struct torrent_t ), dsortByAvgLeftPercent );
-// 						else
-// 							qsort( pSort, ulKeySize, sizeof( struct torrent_t ), asortByAvgLeftPercent );
-// 					}
-// 					break;
-		case SORT_ACOMPLETED:
-			qsort( pSort, ulKeySize, sizeof( struct torrent_t ), asortByCompleted );
-			break;
-//				case SORT_ATRANSFERRED:
-//					if( m_bShowTransferred )
-//						qsort( pSort, ulKeySize, sizeof( struct torrent_t ), asortByTransferred );
-//					break;
-//		case SORT_ATAG:
-//			qsort( pSort, ulKeySize, sizeof( struct torrent_t ), asortByTag );
-//			break;
-		case SORT_AUPLOADER:
-			qsort( pSort, ulKeySize, sizeof( struct torrent_t ), asortByUploader );
-			break;
-//				case SORT_AIP:
-//					if( pRequest->user.ucAccess & m_ucAccessSortIP )
-//						qsort( pSort, ulKeySize, sizeof( struct torrent_t ), asortByIP );
-//					break;
-		case SORT_DNAME:
-			qsort( pSort, ulKeySize, sizeof( struct torrent_t ), dsortByName );
-			break;
-		case SORT_DCOMPLETE:
-			qsort( pSort, ulKeySize, sizeof( struct torrent_t ), dsortByComplete );
-			break;
-		case SORT_DINCOMPLETE:
-			qsort( pSort, ulKeySize, sizeof( struct torrent_t ), dsortByDL );
-			break;
-		case SORT_DADDED:
-			qsort( pSort, ulKeySize, sizeof( struct torrent_t ), dsortByAdded );
-			break;
-		case SORT_DDEFAULT:
-			qsort( pSort, ulKeySize, sizeof( struct torrent_t ), dsortByDefault );
-			break;
-		case SORT_DSIZE:
-			qsort( pSort, ulKeySize, sizeof( struct torrent_t ), dsortBySize );
-			break;
-//		case SORT_DFILES:
-//			qsort( pSort, ulKeySize, sizeof( struct torrent_t ), dsortByFiles );
-//			break;
-//		case SORT_DCOMMENTS:
-//			qsort( pSort, ulKeySize, sizeof( struct torrent_t ), dsortByComments );
-//			break;
-// 				case SORT_DAVGLEFT:
-// 					if( m_bShowAverageLeft )
-// 					{
-// 						if( m_bShowLeftAsProgress )
-// 							qsort( pSort, ulKeySize, sizeof( struct torrent_t ), asortByAvgLeftPercent );
-// 						else
-// 							qsort( pSort, ulKeySize, sizeof( struct torrent_t ), dsortByAvgLeftPercent );
-// 					}
-// 					break;
-		case SORT_DCOMPLETED:
-			qsort( pSort, ulKeySize, sizeof( struct torrent_t ), dsortByCompleted );
-			break;
-//				case SORT_DTRANSFERRED:
-//					if( m_bShowTransferred )
-//						qsort( pSort, ulKeySize, sizeof( struct torrent_t ), dsortByTransferred );
-//					break;
-//		case SORT_DTAG:
-//			qsort( pSort, ulKeySize, sizeof( struct torrent_t ), dsortByTag );
-//			break;
-		case SORT_DUPLOADER:
-			qsort( pSort, ulKeySize, sizeof( struct torrent_t ), dsortByUploader );
-			break;
-//				case SORT_DIP:
-//					if( pRequest->user.ucAccess & m_ucAccessSortIP )
-//						qsort( pSort, ulKeySize, sizeof( struct torrent_t ), dsortByIP );
-//					break;
-		default:
-			// default action is to sort by added if we can
-//			qsort( pSort, ulKeySize, sizeof( struct torrent_t ), dsortByAdded );
-			qsort( pSort, ulKeySize, sizeof( struct torrent_t ), dsortByDefault );
+			switch( cucSort )
+			{
+			case SORT_ANAME:
+				qsort( pSort, ulKeySize, sizeof( struct torrent_t ), asortByName );
+				break;
+			case SORT_ACOMPLETE:
+				qsort( pSort, ulKeySize, sizeof( struct torrent_t ), asortByComplete );
+				break;
+			case SORT_AINCOMPLETE:
+				qsort( pSort, ulKeySize, sizeof( struct torrent_t ), asortByDL );
+				break;
+			case SORT_AADDED:
+				qsort( pSort, ulKeySize, sizeof( struct torrent_t ), asortByAdded );
+				break;
+			case SORT_ADEFAULT:
+				qsort( pSort, ulKeySize, sizeof( struct torrent_t ), asortByDefault );
+				break;
+			case SORT_ASIZE:
+				qsort( pSort, ulKeySize, sizeof( struct torrent_t ), asortBySize );
+				break;
+	//		case SORT_AFILES:
+	//			qsort( pSort, ulKeySize, sizeof( struct torrent_t ), asortByFiles );
+	//			break;
+	//		case SORT_ACOMMENTS:
+	//			qsort( pSort, ulKeySize, sizeof( struct torrent_t ), asortByComments );
+	//			break;
+	// 				case SORT_AAVGLEFT:
+	// 					if( m_bShowAverageLeft )
+	// 					{
+	// 						if( m_bShowLeftAsProgress )
+	// 							qsort( pSort, ulKeySize, sizeof( struct torrent_t ), dsortByAvgLeftPercent );
+	// 						else
+	// 							qsort( pSort, ulKeySize, sizeof( struct torrent_t ), asortByAvgLeftPercent );
+	// 					}
+	// 					break;
+			case SORT_ACOMPLETED:
+				qsort( pSort, ulKeySize, sizeof( struct torrent_t ), asortByCompleted );
+				break;
+	//				case SORT_ATRANSFERRED:
+	//					if( m_bShowTransferred )
+	//						qsort( pSort, ulKeySize, sizeof( struct torrent_t ), asortByTransferred );
+	//					break;
+	//		case SORT_ATAG:
+	//			qsort( pSort, ulKeySize, sizeof( struct torrent_t ), asortByTag );
+	//			break;
+			case SORT_AUPLOADER:
+				qsort( pSort, ulKeySize, sizeof( struct torrent_t ), asortByUploader );
+				break;
+	//				case SORT_AIP:
+	//					if( pRequest->user.ucAccess & m_ucAccessSortIP )
+	//						qsort( pSort, ulKeySize, sizeof( struct torrent_t ), asortByIP );
+	//					break;
+			case SORT_DNAME:
+				qsort( pSort, ulKeySize, sizeof( struct torrent_t ), dsortByName );
+				break;
+			case SORT_DCOMPLETE:
+				qsort( pSort, ulKeySize, sizeof( struct torrent_t ), dsortByComplete );
+				break;
+			case SORT_DINCOMPLETE:
+				qsort( pSort, ulKeySize, sizeof( struct torrent_t ), dsortByDL );
+				break;
+			case SORT_DADDED:
+				qsort( pSort, ulKeySize, sizeof( struct torrent_t ), dsortByAdded );
+				break;
+			case SORT_DDEFAULT:
+				qsort( pSort, ulKeySize, sizeof( struct torrent_t ), dsortByDefault );
+				break;
+			case SORT_DSIZE:
+				qsort( pSort, ulKeySize, sizeof( struct torrent_t ), dsortBySize );
+				break;
+	//		case SORT_DFILES:
+	//			qsort( pSort, ulKeySize, sizeof( struct torrent_t ), dsortByFiles );
+	//			break;
+	//		case SORT_DCOMMENTS:
+	//			qsort( pSort, ulKeySize, sizeof( struct torrent_t ), dsortByComments );
+	//			break;
+	// 				case SORT_DAVGLEFT:
+	// 					if( m_bShowAverageLeft )
+	// 					{
+	// 						if( m_bShowLeftAsProgress )
+	// 							qsort( pSort, ulKeySize, sizeof( struct torrent_t ), asortByAvgLeftPercent );
+	// 						else
+	// 							qsort( pSort, ulKeySize, sizeof( struct torrent_t ), dsortByAvgLeftPercent );
+	// 					}
+	// 					break;
+			case SORT_DCOMPLETED:
+				qsort( pSort, ulKeySize, sizeof( struct torrent_t ), dsortByCompleted );
+				break;
+	//				case SORT_DTRANSFERRED:
+	//					if( m_bShowTransferred )
+	//						qsort( pSort, ulKeySize, sizeof( struct torrent_t ), dsortByTransferred );
+	//					break;
+	//		case SORT_DTAG:
+	//			qsort( pSort, ulKeySize, sizeof( struct torrent_t ), dsortByTag );
+	//			break;
+			case SORT_DUPLOADER:
+				qsort( pSort, ulKeySize, sizeof( struct torrent_t ), dsortByUploader );
+				break;
+	//				case SORT_DIP:
+	//					if( pRequest->user.ucAccess & m_ucAccessSortIP )
+	//						qsort( pSort, ulKeySize, sizeof( struct torrent_t ), dsortByIP );
+	//					break;
+			default:
+				// default action is to sort by added if we can
+	//			qsort( pSort, ulKeySize, sizeof( struct torrent_t ), dsortByAdded );
+				qsort( pSort, ulKeySize, sizeof( struct torrent_t ), dsortByDefault );
+			}
+		}
+		else
+		{
+			switch( cucSort )
+			{
+			case SORT_ANAME:
+				qsort( pSort, ulKeySize, sizeof( struct torrent_t ), asortByNameInTag );
+				break;
+			case SORT_ACOMPLETE:
+				qsort( pSort, ulKeySize, sizeof( struct torrent_t ), asortByCompleteInTag );
+				break;
+			case SORT_AINCOMPLETE:
+				qsort( pSort, ulKeySize, sizeof( struct torrent_t ), asortByDLInTag );
+				break;
+			case SORT_AADDED:
+				qsort( pSort, ulKeySize, sizeof( struct torrent_t ), asortByAddedInTag );
+				break;
+			case SORT_ADEFAULT:
+				qsort( pSort, ulKeySize, sizeof( struct torrent_t ), asortByDefaultInTag );
+				break;
+			case SORT_ASIZE:
+				qsort( pSort, ulKeySize, sizeof( struct torrent_t ), asortBySizeInTag );
+				break;
+			case SORT_ACOMPLETED:
+				qsort( pSort, ulKeySize, sizeof( struct torrent_t ), asortByCompletedInTag );
+				break;
+			case SORT_AUPLOADER:
+				qsort( pSort, ulKeySize, sizeof( struct torrent_t ), asortByUploaderInTag );
+				break;
+			case SORT_DNAME:
+				qsort( pSort, ulKeySize, sizeof( struct torrent_t ), dsortByNameInTag );
+				break;
+			case SORT_DCOMPLETE:
+				qsort( pSort, ulKeySize, sizeof( struct torrent_t ), dsortByCompleteInTag );
+				break;
+			case SORT_DINCOMPLETE:
+				qsort( pSort, ulKeySize, sizeof( struct torrent_t ), dsortByDLInTag );
+				break;
+			case SORT_DADDED:
+				qsort( pSort, ulKeySize, sizeof( struct torrent_t ), dsortByAddedInTag );
+				break;
+			case SORT_DDEFAULT:
+				qsort( pSort, ulKeySize, sizeof( struct torrent_t ), dsortByDefaultInTag );
+				break;
+			case SORT_DSIZE:
+				qsort( pSort, ulKeySize, sizeof( struct torrent_t ), dsortBySizeInTag );
+				break;
+			case SORT_DCOMPLETED:
+				qsort( pSort, ulKeySize, sizeof( struct torrent_t ), dsortByCompletedInTag );
+				break;
+			case SORT_DUPLOADER:
+				qsort( pSort, ulKeySize, sizeof( struct torrent_t ), dsortByUploaderInTag );
+				break;
+			default:
+				// default action is to sort by added if we can
+	//			qsort( pSort, ulKeySize, sizeof( struct torrent_t ), dsortByAdded );
+				qsort( pSort, ulKeySize, sizeof( struct torrent_t ), dsortByDefaultInTag );
+			}
 		}
 	}
 	else
@@ -8348,17 +8509,17 @@ void CCache :: setRow( const string &cstrID, bool bOffer )
 		{
 			if( pTorrents[ulKey].strID == cstrID )
 			{
-				CMySQLQuery *pQuery = new CMySQLQuery( "SELECT bid,bfilename,bname,badded,bsize,bfiles,btag,btitle,bip,buploader,buploaderid,bimdb,bimdbid,bdefault_down,bdefault_up,bfree_down,bfree_up,UNIX_TIMESTAMP(bfree_to),btop,UNIX_TIMESTAMP(btop_to),bclassic,breq,bnodownload,border,bseeders,bseeders6,bleechers,bleechers6,bcompleted,bcomments,bthanks,bshares,bsubs,bpost FROM allowed WHERE bid=" + cstrID );
+				CMySQLQuery *pQuery = new CMySQLQuery( "SELECT bid,bfilename,bname,badded,bsize,bfiles,btag,btitle,bip,buploader,buploaderid,bimdb,bimdbid,bdefault_down,bdefault_up,bfree_down,bfree_up,UNIX_TIMESTAMP(bfree_to),btop,btop_intag,UNIX_TIMESTAMP(btop_to),bclassic,breq,bnodownload,border,bseeders,bseeders6,bleechers,bleechers6,bcompleted,bcomments,bthanks,bshares,bsubs,bpost FROM allowed WHERE bid=" + cstrID );
 				
 				vector<string> vecQuery;
 
-				vecQuery.reserve(34);
+				vecQuery.reserve(35);
 
 				vecQuery = pQuery->nextRow( );
 				
 				delete pQuery;
 
-				if( vecQuery.size( ) == 34 )
+				if( vecQuery.size( ) == 35 )
 				{
 					pTorrents[ulKey].strTag = "101";
 					pTorrents[ulKey].strName = gmapLANG_CFG["unknown"];
@@ -8377,6 +8538,7 @@ void CCache :: setRow( const string &cstrID, bool bOffer )
 					pTorrents[ulKey].bAllow = true;
 					pTorrents[ulKey].bPost = false;
 					pTorrents[ulKey].ucTop = 0;
+					pTorrents[ulKey].ucTopInTag = 0;
 					pTorrents[ulKey].ucClassic = 0;
 					pTorrents[ulKey].bReq = false;
 					pTorrents[ulKey].iDefaultDown = 100;
@@ -8455,32 +8617,47 @@ void CCache :: setRow( const string &cstrID, bool bOffer )
 						pTorrents[ulKey].ucTop = (unsigned char)atoi( vecQuery[18].c_str( ) );
 
 					if( !vecQuery[19].empty( ) )
-						pTorrents[ulKey].iTopTo = UTIL_StringTo64( vecQuery[19].c_str( ) );
+						pTorrents[ulKey].ucTopInTag = (unsigned char)atoi( vecQuery[19].c_str( ) );
 
 					if( !vecQuery[20].empty( ) )
-						pTorrents[ulKey].ucClassic = (unsigned char)atoi( vecQuery[20].c_str( ) );
+						pTorrents[ulKey].iTopTo = UTIL_StringTo64( vecQuery[20].c_str( ) );
 
-					if( !vecQuery[21].empty( ) && vecQuery[21] == "1" )
-						pTorrents[ulKey].bReq = true;
+					if( !vecQuery[21].empty( ) )
+						pTorrents[ulKey].ucClassic = (unsigned char)atoi( vecQuery[21].c_str( ) );
 
 					if( !vecQuery[22].empty( ) && vecQuery[22] == "1" )
+						pTorrents[ulKey].bReq = true;
+
+					if( !vecQuery[23].empty( ) && vecQuery[23] == "1" )
 						pTorrents[ulKey].bAllow = false;
 
-					if( !vecQuery[23].empty( ) )
-						pTorrents[ulKey].strOrder = vecQuery[23];
+					if( !vecQuery[24].empty( ) )
+						pTorrents[ulKey].strOrder = vecQuery[24];
 					
-					pTorrents[ulKey].uiSeeders = atoi( vecQuery[24].c_str( ) );
-					pTorrents[ulKey].uiSeeders6 = atoi( vecQuery[25].c_str( ) );
-					pTorrents[ulKey].uiLeechers = atoi( vecQuery[26].c_str( ) );
-					pTorrents[ulKey].uiLeechers6 = atoi( vecQuery[27].c_str( ) );
-					pTorrents[ulKey].ulCompleted = atoi( vecQuery[28].c_str( ) );
-					pTorrents[ulKey].uiComments = atoi( vecQuery[29].c_str( ) );
-					pTorrents[ulKey].uiThanks = atoi( vecQuery[30].c_str( ) );
-					pTorrents[ulKey].uiShares = atoi( vecQuery[31].c_str( ) );
-					pTorrents[ulKey].uiSubs = atoi( vecQuery[32].c_str( ) );
+					pTorrents[ulKey].uiSeeders = atoi( vecQuery[25].c_str( ) );
+					pTorrents[ulKey].uiSeeders6 = atoi( vecQuery[26].c_str( ) );
+					pTorrents[ulKey].uiLeechers = atoi( vecQuery[27].c_str( ) );
+					pTorrents[ulKey].uiLeechers6 = atoi( vecQuery[28].c_str( ) );
+					pTorrents[ulKey].ulCompleted = atoi( vecQuery[29].c_str( ) );
+					pTorrents[ulKey].uiComments = atoi( vecQuery[30].c_str( ) );
+					pTorrents[ulKey].uiThanks = atoi( vecQuery[31].c_str( ) );
+					pTorrents[ulKey].uiShares = atoi( vecQuery[32].c_str( ) );
+					pTorrents[ulKey].uiSubs = atoi( vecQuery[33].c_str( ) );
 
-					if( !vecQuery[33].empty( ) && vecQuery[33] == "1" )
+					if( !vecQuery[34].empty( ) && vecQuery[34] == "1" )
 						pTorrents[ulKey].bPost = true;
+
+					bool bFreeGlobal = CFG_GetInt( "bnbt_free_global", 0 ) == 0 ? false : true;
+					int iFreeDownGlobal = CFG_GetInt( "bnbt_free_down_global", 100 );
+					int iFreeUpGlobal = CFG_GetInt( "bnbt_free_up_global", 100 );
+
+					if( bFreeGlobal )
+					{
+						if( iFreeDownGlobal < pTorrents[ulKey].iDefaultDown )
+							pTorrents[ulKey].iDefaultDown = iFreeDownGlobal;
+						if( iFreeUpGlobal > pTorrents[ulKey].iDefaultUp )
+							pTorrents[ulKey].iDefaultUp = iFreeUpGlobal;
+					}
 				}
 				break;
 			}
@@ -8512,6 +8689,7 @@ void CCache :: setRow( const string &cstrID, bool bOffer )
 					pOffers[ulKey].strID = string( );
 					pOffers[ulKey].uiSeeders = 0;
 					pOffers[ulKey].ucTop = 0;
+					pOffers[ulKey].ucTopInTag = 0;
 
 					pOffers[ulKey].iSize = 0;
 					pOffers[ulKey].uiFiles = 0;
@@ -8849,24 +9027,23 @@ void CCache :: setSubs( const string &cstrID, const unsigned char cucOpt )
 
 void CCache :: setFree( )
 {
-	resetCache( );
+//	resetCache( );
 	
 	time_t now_t = time( 0 );
 	
-	bool bFreeGlobal = CFG_GetInt( "bnbt_free_global", 0 ) == 0 ? false : true;
-	
-	int iFreeDownGlobal = CFG_GetInt( "bnbt_free_down_global", 100 );
-	int iFreeUpGlobal = CFG_GetInt( "bnbt_free_up_global", 100 );
-	
+//	bool bFreeGlobal = CFG_GetInt( "bnbt_free_global", 0 ) == 0 ? false : true;
+//	int iFreeDownGlobal = CFG_GetInt( "bnbt_free_down_global", 100 );
+//	int iFreeUpGlobal = CFG_GetInt( "bnbt_free_up_global", 100 );
+
 	for( unsigned long ulKey = 0; ulKey < ulSize; ulKey++ )
 	{
-		if( bFreeGlobal )
-		{
-			if( iFreeDownGlobal < pTorrents[ulKey].iDefaultDown )
-				pTorrents[ulKey].iDefaultDown = iFreeDownGlobal;
-			if( iFreeUpGlobal > pTorrents[ulKey].iDefaultUp )
-				pTorrents[ulKey].iDefaultUp = iFreeUpGlobal;
-		}
+//		if( bFreeGlobal )
+//		{
+//			if( iFreeDownGlobal < pTorrents[ulKey].iDefaultDown )
+//				pTorrents[ulKey].iDefaultDown = iFreeDownGlobal;
+//			if( iFreeUpGlobal > pTorrents[ulKey].iDefaultUp )
+//				pTorrents[ulKey].iDefaultUp = iFreeUpGlobal;
+//		}
 		
 		pTorrents[ulKey].iFreeDown = pTorrents[ulKey].iDefaultDown;
 		pTorrents[ulKey].iFreeUp = pTorrents[ulKey].iDefaultUp;
@@ -8889,9 +9066,10 @@ void CCache :: setTop( )
 
 	for( unsigned long ulKey = 0; ulKey < ulSize; ulKey++ )
 	{
-		if( pTorrents[ulKey].ucTop > 0 && pTorrents[ulKey].iTopTo > 0 && pTorrents[ulKey].iTopTo < now_t )
+		if( ( pTorrents[ulKey].ucTop > 0 || pTorrents[ulKey].ucTopInTag > 0 ) && pTorrents[ulKey].iTopTo > 0 && pTorrents[ulKey].iTopTo < now_t )
 		{
 			pTorrents[ulKey].ucTop = 0;
+			pTorrents[ulKey].ucTopInTag = 0;
 			bResort = true;
 		}
 	}
@@ -9112,7 +9290,12 @@ unsigned long CCache :: getSizeUsers( )
 
 void CCache :: addRowUsers( const string &cstrUID )
 {
-	resetCacheUsers( );
+	if( bResetUsers )
+	{
+		resetCacheUsers( );
+
+		return;
+	}
 
 	struct user_t *pNew = new struct user_t[ulSizeUsers+1];
 	
@@ -9135,7 +9318,12 @@ void CCache :: addRowUsers( const string &cstrUID )
 
 void CCache :: deleteRowUsers( const string &cstrUID )
 {
-	resetCacheUsers( );
+	if( bResetUsers )
+	{
+		resetCacheUsers( );
+
+		return;
+	}
 
 	bool bDelete = false;
 	unsigned long ulNew = 0;

@@ -57,12 +57,20 @@ void CTracker :: serverResponseAdmin( struct request_t *pRequest, struct respons
 
 			if( bNum )
 			{
+				m_iFreeDownGlobal = atoi( cstrFreeDownGlobal.c_str( ) );
+				m_iFreeUpGlobal = atoi( cstrFreeUpGlobal.c_str( ) );
 				CFG_SetString( "bnbt_free_down_global", cstrFreeDownGlobal );
 				CFG_SetString( "bnbt_free_up_global", cstrFreeUpGlobal );
 				if( pRequest->mapParams.find( "free_global" ) != pRequest->mapParams.end( ) && pRequest->mapParams["free_global"] == "on" )
+				{
+					m_bFreeGlobal = true;
 					CFG_SetInt( "bnbt_free_global", 1 );
+				}
 				else
+				{
+					m_bFreeGlobal = false;
 					CFG_SetInt( "bnbt_free_global", 0 );
+				}
 				CFG_Close( CFG_FILE );
 				m_pCache->Reset( );
 			}
@@ -252,15 +260,20 @@ void CTracker :: serverResponseAdmin( struct request_t *pRequest, struct respons
 		
 		if( pRequest->mapParams["submit_bonus_trade_button"] == gmapLANG_CFG["Submit"] )
 		{
-			const string cstrBonusTradeRate = pRequest->mapParams["trade_rate"];
+			const string cstrBonusTradeUploadRate = pRequest->mapParams["trade_upload_rate"];
+			const string cstrBonusTradeInviteRate = pRequest->mapParams["trade_invite_rate"];
 			bool bNum = true;
-			for( int i = 0; i < cstrBonusTradeRate.length( ) && bNum; i++ )
-				if( !isdigit( cstrBonusTradeRate[i] ) )
+			for( int i = 0; i < cstrBonusTradeUploadRate.length( ) && bNum; i++ )
+				if( !isdigit( cstrBonusTradeUploadRate[i] ) )
+					bNum  = false;
+			for( int i = 0; i < cstrBonusTradeInviteRate.length( ) && bNum; i++ )
+				if( !isdigit( cstrBonusTradeInviteRate[i] ) )
 					bNum  = false;
 
 			if( bNum )
 			{
-				CFG_SetString( "bnbt_bonus_trade_rate", cstrBonusTradeRate );
+				CFG_SetString( "bnbt_bonus_trade_upload_rate", cstrBonusTradeUploadRate );
+				CFG_SetString( "bnbt_bonus_trade_invite_rate", cstrBonusTradeInviteRate );
 				if( pRequest->mapParams.find( "trade" ) != pRequest->mapParams.end( ) && pRequest->mapParams["trade"] == "on" )
 					CFG_SetInt( "bnbt_bonus_trade_enable", 1 );
 				else
@@ -387,6 +400,11 @@ void CTracker :: serverResponseAdmin( struct request_t *pRequest, struct respons
 
                         gmapLANG_CFG.clear( );
 			LANG_CFG_Init( LANG_CFG_FILE );
+
+			CFG_Open( CFG_FILE );
+			CFG_SetDefaults( );
+			CFG_Close( CFG_FILE );
+			initTags( );
 
 			return JS_ReturnToPage( pRequest, pResponse, ADMIN_HTML + "?func=stat" );
 		}
@@ -1118,6 +1136,17 @@ void CTracker :: serverResponseAdmin( struct request_t *pRequest, struct respons
 			}
 			pResponse->strContent += "</select>\n</td>\n</tr>\n";
 			ucAccess = m_ucAccessAdmin;
+			pResponse->strContent += "<tr class=\"admin_access\"><th class=\"admin_access\">" + gmapLANG_CFG["set_access_trade_invites"] + "</th><td><select name=\"trade_invites\">\n";
+			while( ucAccess > 0 )
+			{
+				pResponse->strContent += "<option value=\"" + CAtomInt( ucAccess ).toString( ) + "\"";
+				if( ucAccess == m_ucAccessTradeInvites )
+					pResponse->strContent += " selected";
+				pResponse->strContent += ">" + UTIL_AccessToText( ucAccess ) + "</option>\n";
+				ucAccess = ucAccess >> 1;
+			}
+			pResponse->strContent += "</select>\n</td>\n</tr>\n";
+			ucAccess = m_ucAccessAdmin;
 			pResponse->strContent += "<tr class=\"admin_access\"><th class=\"admin_access\">" + gmapLANG_CFG["set_access_messages"] + "</th><td><select name=\"messages\">\n";
 			while( ucAccess > 0 )
 			{
@@ -1284,7 +1313,8 @@ void CTracker :: serverResponseAdmin( struct request_t *pRequest, struct respons
 			pResponse->strContent += "</form></div>\n";
 			pResponse->strContent += "</form></td></tr>\n";
 			
-			string strBonusTradeRate = CFG_GetString( "bnbt_bonus_trade_rate", "500" );
+			string strBonusTradeUploadRate = CFG_GetString( "bnbt_bonus_trade_upload_rate", "500" );
+			string strBonusTradeInviteRate = CFG_GetString( "bnbt_bonus_trade_invite_rate", "50000" );
 			
 			pResponse->strContent += "<tr class=\"admin_function\">\n";
 			pResponse->strContent += "<td class=\"admin_function\">\n";
@@ -1298,8 +1328,9 @@ void CTracker :: serverResponseAdmin( struct request_t *pRequest, struct respons
 			pResponse->strContent += "><label for=\"id_trade\">" + gmapLANG_CFG["admin_trade_enable"] + "</label>";
 			pResponse->strContent += Button_Submit( "submit_bonus_trade", string( gmapLANG_CFG["Submit"] ) );
 			pResponse->strContent += "</p>";
-			pResponse->strContent += "<p class=\"admin_trade\"><input name=\"trade_rate\" type=text size=5 maxlength=3 value=\"" + strBonusTradeRate + "\"> / GB";
-			pResponse->strContent += "</p></form></div>\n";
+			pResponse->strContent += "<p class=\"admin_trade\"><input name=\"trade_upload_rate\" type=text size=5 maxlength=3 value=\"" + strBonusTradeUploadRate + "\"> / GB</p>";
+			pResponse->strContent += "<p class=\"admin_trade\"><input name=\"trade_invite_rate\" type=text size=5 maxlength=5 value=\"" + strBonusTradeInviteRate + "\"> / Invite</p>";
+			pResponse->strContent += "</form></div>\n";
 			pResponse->strContent += "</form></td></tr>\n";
 			
 			string strGiftRule = CFG_GetString( "bnbt_new_user_gift_rule", string( ) );
@@ -1579,7 +1610,7 @@ void CTracker :: serverResponseAdmin( struct request_t *pRequest, struct respons
 							{
 								if( !m_strArchiveDir.empty( ) && UTIL_CheckDir( m_strArchiveDir.c_str( ) ) )
 								{
-									if( UTIL_CheckFile( string( m_strArchiveDir + cstrRecycleID + ".torrent" ).c_str( ) ) )
+									if( UTIL_CheckFile( string( m_strArchiveDir + cstrRecycleID + ".torrent" ).c_str( ) ) && !UTIL_CheckFile( string( m_strAllowedDir + strFileName ).c_str( ) ) )
 									{
 										UTIL_MoveFile( string( m_strArchiveDir + cstrRecycleID + ".torrent" ).c_str( ), string( m_strAllowedDir + strFileName ).c_str( ) );
 										CMySQLQuery mq00( "INSERT INTO allowed (SELECT * FROM allowed_archive WHERE bid=" + cstrRecycleID + ")" );
@@ -2954,8 +2985,8 @@ void CTracker :: serverResponseTags( struct request_t *pRequest, struct response
 			}
 
 			CFG_Close( CFG_FILE );
-			m_vecTags.clear( );
-			m_vecTagsMouse.clear( );
+//			m_vecTags.clear( );
+//			m_vecTagsMouse.clear( );
 			initTags( );
 
 			return JS_ReturnToPage( pRequest, pResponse, TAGS_HTML );
@@ -3004,8 +3035,8 @@ void CTracker :: serverResponseTags( struct request_t *pRequest, struct response
 			strName = "bnbt_tag" + CAtomInt( ucTagPrevious ).toString( );
 			CFG_Delete( strName );
 			CFG_Close( CFG_FILE );
-			m_vecTags.clear( );
-			m_vecTagsMouse.clear( );
+//			m_vecTags.clear( );
+//			m_vecTagsMouse.clear( );
 			initTags( );
 
 			return JS_ReturnToPage( pRequest, pResponse, TAGS_HTML );
@@ -3056,8 +3087,8 @@ void CTracker :: serverResponseTags( struct request_t *pRequest, struct response
 			}
 
 			CFG_Close( CFG_FILE );
-			m_vecTags.clear( );
-			m_vecTagsMouse.clear( );
+//			m_vecTags.clear( );
+//			m_vecTagsMouse.clear( );
 			initTags( );
 
 			return JS_ReturnToPage( pRequest, pResponse, TAGS_HTML );

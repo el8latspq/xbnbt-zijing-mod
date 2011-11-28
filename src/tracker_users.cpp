@@ -1329,9 +1329,6 @@ void CTracker :: serverResponseUsersGET( struct request_t *pRequest, struct resp
 							// Delete the user
 							deleteUser( cstrUID );
 							
-							m_pCache->deleteRowUsers( cstrUID );
-//							m_pCache->ResetUsers( );
-							
 							UTIL_LogFilePrint( "deleteUser: %s deleted user %s\n", pRequest->user.strLogin.c_str( ), cstrUser.c_str( ) );
 		
 							// Inform the operator that the user was deleted

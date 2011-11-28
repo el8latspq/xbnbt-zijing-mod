@@ -48,6 +48,14 @@ void CTracker :: serverResponseFileUploadGET( struct request_t *pRequest, struct
 //		const string cstrGUID( pRequest->mapParams["guid"] );
 		const string cstrName( pRequest->mapParams["name"] );
 
+		pResponse->strCode = "200 " + gmapLANG_CFG["server_response_200"];
+
+		// Content-Type
+		if( !gstrCharSet.empty( ) )
+			pResponse->mapHeaders.insert( pair<string, string>( "Content-Type", string( gmapMime[".html"] + "; charset=" ) + gstrCharSet ) );
+		else
+			UTIL_LogPrint( "CTracker: HTML_Common_Begin: Content-Type!\n" );
+
 		// define doctype
 		if( !STR_DOC_TYPE.empty( ) )
 			pResponse->strContent += STR_DOC_TYPE;
@@ -145,6 +153,14 @@ void CTracker :: serverResponseSubUploadGET( struct request_t *pRequest, struct 
 			strDatabase = "allowed";
 			strIDKey = "btid";
 		}
+
+		pResponse->strCode = "200 " + gmapLANG_CFG["server_response_200"];
+
+		// Content-Type
+		if( !gstrCharSet.empty( ) )
+			pResponse->mapHeaders.insert( pair<string, string>( "Content-Type", string( gmapMime[".html"] + "; charset=" ) + gstrCharSet ) );
+		else
+			UTIL_LogPrint( "CTracker: HTML_Common_Begin: Content-Type!\n" );
 
 		// define doctype
 		if( !STR_DOC_TYPE.empty( ) )
