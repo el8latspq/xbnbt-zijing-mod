@@ -33,6 +33,7 @@
 #define CSS_OFFER "offer"
 #define CSS_UPLOAD "upload"
 #define CSS_COMMENTS "comments"
+#define CSS_PHP "php"
 
 // XBNBT Some common Javascript
 #define JS_BACK "javascript:history.back();"
@@ -96,6 +97,7 @@
 #define RESPONSE_USERBAR	44
 #define RESPONSE_RANK		45
 #define RESPONSE_QUERY		46
+#define RESPONSE_PHP		47
 
 
 // Common strings
@@ -699,6 +701,8 @@ public:
 	void serverResponseBetsPOST( struct request_t *pRequest, struct response_t *pResponse, CAtomList *pPost );
 	void serverResponseXML( struct request_t *pRequest, struct response_t *pResponse );
 	void serverResponseQuery( struct request_t *pRequest, struct response_t *pResponse );
+	void serverResponsePHPGET( struct request_t *pRequest, struct response_t *pResponse );
+	void serverResponsePHPPOST( struct request_t *pRequest, struct response_t *pResponse, CAtomList *pPost );
 	void serverResponseRSS( struct request_t *pRequest, struct response_t *pResponse );
 	void serverResponseRSSXSL( struct request_t *pRequest, struct response_t *pResponse );
 	void serverResponseCSS( struct request_t *pRequest, struct response_t *pResponse );
@@ -889,6 +893,7 @@ private:
 	unsigned char m_ucAccessEditAdmins;
 	unsigned char m_ucAccessInvites;
 	unsigned char m_ucAccessTradeInvites;
+	unsigned char m_ucAccessAdminBets;
 	unsigned char m_ucAccessMessages;
 	unsigned char m_ucAccessSignup;
 	unsigned char m_ucAccessSignupDirect;

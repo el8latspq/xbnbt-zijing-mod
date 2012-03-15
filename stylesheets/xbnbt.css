@@ -538,7 +538,7 @@
 		td.download_left{border:0px}
 		td.download_left{white-space:normal}
 		td.index_uploader{text-align:center}
-		td.index_uploader{padding:5px 0px 5px 0px}
+		td.index_uploader{padding:5px 3px 5px 0px}
 		td.index_uploader{border-width:1px 0px 1px 0px}
 		td.second_left{min-width:270px}
 		td.second_left{width:360px}
@@ -559,10 +559,10 @@
 		td.index_comment{padding:5px 5px 5px 5px}
 		td.index_date{text-align:center}
 		td.index_date{color:grey}
-		td.index_date{padding:5px 3px 5px 3px}
+		td.index_date{padding:5px 3px 5px 0px}
 		td.index_date{border-width:1px 0px 1px 0px}
 		td.index_bytes{text-align:center}
-		td.index_bytes{padding:5px 0px 5px 0px}
+		td.index_bytes{padding:5px 3px 5px 0px}
 		td.index_bytes{border-width:1px 0px 1px 0px}
 		a.table_header_icon{text-decoration:none}
 		a.classic_level_1{color:#9400d3; text-decoration:none}
@@ -1300,7 +1300,7 @@
 		td.bet{white-space:normal; word-wrap:break-word}
 		td.betinput{text-align:left}
 		td.betinput{border-width:1px 0px}
-		td.betoption{text-align:center}
+		td.betoption{text-align:left}
 		td.betoption{border-width:1px 0px}
 		td.betcount{text-align:center}
 		td.betcount{border-width:1px 0px}

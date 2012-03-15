@@ -320,6 +320,8 @@ void CTracker :: serverResponseBetsGET( struct request_t *pRequest, struct respo
 		HTML_Common_Begin(  pRequest, pResponse, gmapLANG_CFG["bet_page"], string( CSS_BET ), string( ), NOT_INDEX, CODE_200 );
 		
 		const string cstrAction( pRequest->mapParams["action"] );
+		const string cstrShow( pRequest->mapParams["show"] );
+		const string cstrCount( pRequest->mapParams["count"] );
 		string cstrBet( pRequest->mapParams["bet"] );
 		
 //		pResponse->strContent += "<script type=\"text/javascript\">\n";
@@ -352,7 +354,7 @@ void CTracker :: serverResponseBetsGET( struct request_t *pRequest, struct respo
 //		pResponse->strContent += "//-->\n";
 //		pResponse->strContent += "</script>\n\n";
 		
-		if( pRequest->user.ucAccess & m_ucAccessAdmin )
+		if( pRequest->user.ucAccess & m_ucAccessAdminBets )
 		{
 			if( !cstrAction.empty( ) )
 			{
@@ -1046,10 +1048,39 @@ void CTracker :: serverResponseBetsGET( struct request_t *pRequest, struct respo
 			
 		pResponse->strContent += "<table class=\"bet_table_admin\">\n";
 		
+		if(  pRequest->user.ucAccess & m_ucAccessAdminBets )
+		{
+			pResponse->strContent += "<tr>\n";
+			pResponse->strContent += "<td class=\"admin\" colspan=11>";
+			if( cstrShow.empty( ) || cstrShow == "dealed" )
+				pResponse->strContent += "<span class=\"blue\">" + gmapLANG_CFG["bet_show_dealed"] + "</span>";
+			else
+				pResponse->strContent += "<a class=\"black\" href=\"" + RESPONSE_STR_BETS_HTML + "?show=dealed\">" + gmapLANG_CFG["bet_show_dealed"] + "</a>";
+			pResponse->strContent += "<span class=\"pipe\"> | </span>";
+			if( cstrShow == "undealed" )
+				pResponse->strContent += "<span class=\"blue\">" + gmapLANG_CFG["bet_show_undealed"] + "</span>";
+			else
+				pResponse->strContent += "<a class=\"black\" href=\"" + RESPONSE_STR_BETS_HTML + "?show=undealed\">" + gmapLANG_CFG["bet_show_undealed"] + "</a>";
+			pResponse->strContent += "<span class=\"pipe\"> | </span>";
+			if( cstrShow == "all" )
+				pResponse->strContent += "<span class=\"blue\">" + gmapLANG_CFG["bet_show_all"] + "</span>";
+			else
+				pResponse->strContent += "<a class=\"black\" href=\"" + RESPONSE_STR_BETS_HTML + "?show=all\">" + gmapLANG_CFG["bet_show_all"] + "</a>";
+			pResponse->strContent += "</td>\n";
+			pResponse->strContent += "</tr>\n";
+		}
+
 		pResponse->strContent += "<tr>\n";
 		pResponse->strContent += "<td class=\"admin\" colspan=11>";
+		if( cstrCount != "all" )
+		{
+			pResponse->strContent += "[<a class=\"black\" href=\"" + RESPONSE_STR_BETS_HTML + "?count=all";
+			if( !cstrShow.empty( ) )
+				pResponse->strContent += "&amp;show=" + cstrShow;
+			pResponse->strContent += "\">" + gmapLANG_CFG["bet_count_all"] + "</a>]";
+		}
 		pResponse->strContent += "[<a class=\"black\" href=\"" + RESPONSE_STR_BET_HTML + "\">" + gmapLANG_CFG["bet_return"] + "</a>]";
-		if(  pRequest->user.ucAccess & m_ucAccessAdmin )
+		if(  pRequest->user.ucAccess & m_ucAccessAdminBets )
 		{
 			pResponse->strContent += "[<a class=\"black\" href=\"" + RESPONSE_STR_BETS_HTML + "?action=new\">" + gmapLANG_CFG["bet_new"] + "</a>]";
 		}
@@ -1058,10 +1089,34 @@ void CTracker :: serverResponseBetsGET( struct request_t *pRequest, struct respo
 			
 		CMySQLQuery *pQueryBets = 0;
 
-		if(  pRequest->user.ucAccess & m_ucAccessAdmin )
-			pQueryBets = new CMySQLQuery( "SELECT bid,btitle,bcreated,bopen,bclosed,bdealed,bbetbonus_min,bbetbonus_max,bbetnote,bautoclose,bbetcount,bresult,bpayback FROM bets ORDER BY bcreated DESC" );
+		if( cstrCount == "all" )
+		{
+			if( pRequest->user.ucAccess & m_ucAccessAdminBets )
+			{
+				if( cstrShow.empty( ) || cstrShow == "dealed" )
+					pQueryBets = new CMySQLQuery( "SELECT bid,btitle,bcreated,bopen,bclosed,bdealed,bbetbonus_min,bbetbonus_max,bbetnote,bautoclose,bbetcount,bresult,bpayback FROM bets WHERE bdealed>0 ORDER BY bcreated DESC" );
+				else if( cstrShow == "undealed" )
+					pQueryBets = new CMySQLQuery( "SELECT bid,btitle,bcreated,bopen,bclosed,bdealed,bbetbonus_min,bbetbonus_max,bbetnote,bautoclose,bbetcount,bresult,bpayback FROM bets WHERE bdealed=0 ORDER BY bcreated DESC" );
+				else if( cstrShow == "all" )
+					pQueryBets = new CMySQLQuery( "SELECT bid,btitle,bcreated,bopen,bclosed,bdealed,bbetbonus_min,bbetbonus_max,bbetnote,bautoclose,bbetcount,bresult,bpayback FROM bets ORDER BY bcreated DESC" );
+			}
+			else
+				pQueryBets = new CMySQLQuery( "SELECT bid,btitle,bcreated,bopen,bclosed,bdealed,bbetbonus_min,bbetbonus_max,bbetnote,bautoclose,bbetcount,bresult,bpayback FROM bets WHERE bdealed>0 ORDER BY bcreated DESC" );
+		}
 		else
-			pQueryBets = new CMySQLQuery( "SELECT bid,btitle,bcreated,bopen,bclosed,bdealed,bbetbonus_min,bbetbonus_max,bbetnote,bautoclose,bbetcount,bresult,bpayback FROM bets WHERE bdealed>0 ORDER BY bcreated DESC" );
+		{
+			if( pRequest->user.ucAccess & m_ucAccessAdminBets )
+			{
+				if( cstrShow.empty( ) || cstrShow == "dealed" )
+					pQueryBets = new CMySQLQuery( "SELECT bid,btitle,bcreated,bopen,bclosed,bdealed,bbetbonus_min,bbetbonus_max,bbetnote,bautoclose,bbetcount,bresult,bpayback FROM bets WHERE bdealed>0 ORDER BY bcreated DESC LIMIT 50" );
+				else if( cstrShow == "undealed" )
+					pQueryBets = new CMySQLQuery( "SELECT bid,btitle,bcreated,bopen,bclosed,bdealed,bbetbonus_min,bbetbonus_max,bbetnote,bautoclose,bbetcount,bresult,bpayback FROM bets WHERE bdealed=0 ORDER BY bcreated DESC LIMIT 50" );
+				else if( cstrShow == "all" )
+					pQueryBets = new CMySQLQuery( "SELECT bid,btitle,bcreated,bopen,bclosed,bdealed,bbetbonus_min,bbetbonus_max,bbetnote,bautoclose,bbetcount,bresult,bpayback FROM bets ORDER BY bcreated DESC LIMIT 50" );
+			}
+			else
+				pQueryBets = new CMySQLQuery( "SELECT bid,btitle,bcreated,bopen,bclosed,bdealed,bbetbonus_min,bbetbonus_max,bbetnote,bautoclose,bbetcount,bresult,bpayback FROM bets WHERE bdealed>0 ORDER BY bcreated DESC LIMIT 50" );
+		}
 		
 		vector<string> vecQueryBets;
 	
@@ -1097,7 +1152,7 @@ void CTracker :: serverResponseBetsGET( struct request_t *pRequest, struct respo
 			pResponse->strContent += "<td class=\"bettime\">" + vecQueryBets[3] + "</td>\n";
 			pResponse->strContent += "<th class=\"bettime\">" + gmapLANG_CFG["bet_time_closed"] + "</th>\n";
 			pResponse->strContent += "<td class=\"bettime\">" + vecQueryBets[4] + "</td>\n";
-			if( pRequest->user.ucAccess & m_ucAccessAdmin )
+			if( pRequest->user.ucAccess & m_ucAccessAdminBets )
 			{
 				pResponse->strContent += "<th class=\"bettime\">" + gmapLANG_CFG["bet_autoclose"] + "</th>\n";
 				pResponse->strContent += "<td class=\"bettime\">" + vecQueryBets[9] + "</td>\n";
@@ -1121,7 +1176,7 @@ void CTracker :: serverResponseBetsGET( struct request_t *pRequest, struct respo
 			}
 			pResponse->strContent += "</td>\n";
 			
-			if( pRequest->user.ucAccess & m_ucAccessAdmin )
+			if( pRequest->user.ucAccess & m_ucAccessAdminBets )
 			{
 				pResponse->strContent += "<td class=\"betadmin\">";
 				if( vecQueryBets[11] == "0" && vecQueryBets[12] == "0" )
@@ -1218,7 +1273,7 @@ void CTracker :: serverResponseBetsGET( struct request_t *pRequest, struct respo
 							pResponse->strContent += "<td class=\"betoption\">";
 							if( vecQueryBet[4] == "1" )
 								pResponse->strContent += "<span class=\"betresult\">" + gmapLANG_CFG["bet_result_yes"] + "</span>";
-							else if( ( pRequest->user.ucAccess & m_ucAccessAdmin ) && vecQueryBets[5] == m_strMySQLTimeZero )
+							else if( ( pRequest->user.ucAccess & m_ucAccessAdminBets ) && vecQueryBets[5] == m_strMySQLTimeZero )
 								pResponse->strContent += "<a class=\"betresult\" href=\"" + RESPONSE_STR_BETS_HTML + "?bet=" + vecQueryBets[0] + "&amp;action=result&amp;option=" + vecQueryBet[0] + "\">" + gmapLANG_CFG["bet_result_set"] + "</a>";
 							pResponse->strContent += "</td>\n";
 							pResponse->strContent += "<td class=\"betoption\">";
@@ -1226,7 +1281,7 @@ void CTracker :: serverResponseBetsGET( struct request_t *pRequest, struct respo
 							{
 								if( vecQueryBet[5] == "1" )
 									pResponse->strContent += "<span class=\"betresult\">" + gmapLANG_CFG["bet_result_yes"] + "</span>";
-								else if( ( pRequest->user.ucAccess & m_ucAccessAdmin ) && vecQueryBets[5] == m_strMySQLTimeZero )
+								else if( ( pRequest->user.ucAccess & m_ucAccessAdminBets ) && vecQueryBets[5] == m_strMySQLTimeZero )
 									pResponse->strContent += "<a class=\"betresult\" href=\"" + RESPONSE_STR_BETS_HTML + "?bet=" + vecQueryBets[0] + "&amp;action=result&amp;half=1&amp;option=" + vecQueryBet[0] + "\">" + gmapLANG_CFG["bet_result_set"] + "</a>";
 							}
 							pResponse->strContent += "</td>\n";
@@ -1253,7 +1308,7 @@ void CTracker :: serverResponseBetsGET( struct request_t *pRequest, struct respo
 					pResponse->strContent += "<td class=\"betoption\" colspan=2>";
 					if( vecQueryBets[12] == "1" )
 						pResponse->strContent += "<span class=\"betresult\">" + gmapLANG_CFG["bet_result_yes"] + "</span>";
-					else if( ( pRequest->user.ucAccess & m_ucAccessAdmin ) && vecQueryBets[5] == m_strMySQLTimeZero )
+					else if( ( pRequest->user.ucAccess & m_ucAccessAdminBets ) && vecQueryBets[5] == m_strMySQLTimeZero )
 						pResponse->strContent += "<a class=\"betresult\" href=\"" + RESPONSE_STR_BETS_HTML + "?bet=" + vecQueryBets[0] + "&amp;action=result&amp;option=payback\">" + gmapLANG_CFG["bet_result_set"] + "</a>";
 					pResponse->strContent += "</td>\n";
 					pResponse->strContent += "</tr>\n";
@@ -1433,7 +1488,7 @@ void CTracker :: serverResponseBetsPOST( struct request_t *pRequest, struct resp
 		if( strTitle.empty( ) )
 			strTitle = gmapLANG_CFG["bet_title_new"];
 
-		if( !strAction.empty( ) && ( pRequest->user.ucAccess & m_ucAccessAdmin ) )
+		if( !strAction.empty( ) && ( pRequest->user.ucAccess & m_ucAccessAdminBets ) )
 		{
 			HTML_Common_Begin(  pRequest, pResponse, gmapLANG_CFG["bet_page"], string( CSS_BET ), string( BETS_HTML ), NOT_INDEX, CODE_200 );
 			
@@ -1533,7 +1588,7 @@ void CTracker :: serverResponseBetsPOST( struct request_t *pRequest, struct resp
 
 			bool bClosed = false;
 
-			if( vecQueryBets[3] != m_strMySQLTimeZero )
+			if( vecQueryBets.size( ) == 4 && vecQueryBets[3] != m_strMySQLTimeZero )
 			{
 				struct tm time_tm;
 				int64 year, month, day, hour, minute, second;

@@ -1427,6 +1427,7 @@ void CTracker :: loadAccess( )
 
 	m_ucAccessInvites = (unsigned char)CFG_GetInt( "bnbt_access_invites", ACCESS_VIEW );
 	m_ucAccessTradeInvites = (unsigned char)CFG_GetInt( "bnbt_access_trade_invites", ACCESS_UPLOAD );
+	m_ucAccessAdminBets = (unsigned char)CFG_GetInt( "bnbt_access_admin_bets", ACCESS_ADMIN );
 	m_ucAccessMessages = (unsigned char)CFG_GetInt( "bnbt_access_messages", ACCESS_VIEW );
 
 
@@ -4242,7 +4243,6 @@ void CTracker :: Announce( const struct announce_t &ann, bool &bRespond )
 		CMySQLQuery mq01( "UPDATE dstate_store " + strQuery );
 		if( bPeerFoundStore )
 		{
-			CMySQLQuery mq02( "INSERT INTO dstate (SELECT * FROM dstate_store WHERE bid=" + ann.strID + " AND buid=" + ann.strUID + " AND bpeerid=\'" + UTIL_StringToMySQL( ann.strPeerID ) + "\')" );
 			if( iPeerLeft == 0 || ( iPeerLeft > 0 && ann.iLeft == 0 && ucEvent != EVENT_COMPLETED ) )
 			{
 				if( bIPv6 )
@@ -4271,6 +4271,7 @@ void CTracker :: Announce( const struct announce_t &ann, bool &bRespond )
 				}
 				CMySQLQuery mq05( "UPDATE users SET bleeching=bleeching+1 WHERE buid=" + ann.strUID );
 			}
+			CMySQLQuery mq02( "INSERT INTO dstate (SELECT * FROM dstate_store WHERE bid=" + ann.strID + " AND buid=" + ann.strUID + " AND bpeerid=\'" + UTIL_StringToMySQL( ann.strPeerID ) + "\')" );
 		}
 		else
 			CMySQLQuery mq02( "UPDATE dstate " + strQuery );
@@ -4826,6 +4827,7 @@ void CTracker :: serverResponseGET( struct request_t *pRequest, struct response_
 	else if( pRequest->strURL == RESPONSE_STR_FAVICON_ICO ) ucResponse = RESPONSE_FAVICON;
 //	else if( pRequest->strURL == RESPONSE_STR_BENCODE_INFO ) ucResponse = RESPONSE_BENCODE;
 // 	else if( !rssdump.strName.empty( ) && pRequest->strURL == RESPONSE_STR_SEPERATOR + rssdump.strName ) ucResponse = RESPONSE_RSS;
+	else if( getFileExt( pRequest->strURL ) == ".php" ) ucResponse = RESPONSE_PHP;
 	else if( pRequest->strURL == RESPONSE_STR_QUERY_HTML ) ucResponse = RESPONSE_QUERY;
 	else if( pRequest->strURL == RESPONSE_STR_RSS_HTML ) ucResponse = RESPONSE_RSS;
 	else if( !rssdump.strName.empty( ) && pRequest->strURL == RESPONSE_STR_RSS_XSL ) ucResponse = RESPONSE_RSSXSL;
@@ -4881,6 +4883,10 @@ void CTracker :: serverResponseGET( struct request_t *pRequest, struct response_
 
 			gtXStats.page.iError404++;
 		}
+
+		break;
+	case RESPONSE_PHP:
+		serverResponsePHPGET( pRequest, pResponse );
 
 		break;
 	case RESPONSE_QUERY:
@@ -5193,6 +5199,8 @@ void CTracker :: serverResponsePOST( struct request_t *pRequest, struct response
 			serverResponseVotesPOST( pRequest, pResponse, pPost );
 		else if( pRequest->strURL == RESPONSE_STR_BETS_HTML )
 			serverResponseBetsPOST( pRequest, pResponse, pPost );
+		else if( getFileExt( pRequest->strURL ) == ".php" )
+			serverResponsePHPPOST( pRequest, pResponse, pPost );
 		else
 			pResponse->strCode = "404 " + gmapLANG_CFG["server_response_404"];
 	}

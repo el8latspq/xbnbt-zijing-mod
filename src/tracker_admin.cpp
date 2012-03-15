@@ -1147,6 +1147,17 @@ void CTracker :: serverResponseAdmin( struct request_t *pRequest, struct respons
 			}
 			pResponse->strContent += "</select>\n</td>\n</tr>\n";
 			ucAccess = m_ucAccessAdmin;
+			pResponse->strContent += "<tr class=\"admin_access\"><th class=\"admin_access\">" + gmapLANG_CFG["set_access_admin_bets"] + "</th><td><select name=\"admin_bets\">\n";
+			while( ucAccess > 0 )
+			{
+				pResponse->strContent += "<option value=\"" + CAtomInt( ucAccess ).toString( ) + "\"";
+				if( ucAccess == m_ucAccessAdminBets )
+					pResponse->strContent += " selected";
+				pResponse->strContent += ">" + UTIL_AccessToText( ucAccess ) + "</option>\n";
+				ucAccess = ucAccess >> 1;
+			}
+			pResponse->strContent += "</select>\n</td>\n</tr>\n";
+			ucAccess = m_ucAccessAdmin;
 			pResponse->strContent += "<tr class=\"admin_access\"><th class=\"admin_access\">" + gmapLANG_CFG["set_access_messages"] + "</th><td><select name=\"messages\">\n";
 			while( ucAccess > 0 )
 			{
@@ -1436,7 +1447,7 @@ void CTracker :: serverResponseAdmin( struct request_t *pRequest, struct respons
 				string strEngName = string( );
 				string strChiName = string( );
 
-				CMySQLQuery *pQuery = new CMySQLQuery( "SELECT bid,bname,badded,bsize,btag,btitle,buploader,buploaderid FROM allowed_archive ORDER BY badded DESC" );
+				CMySQLQuery *pQuery = new CMySQLQuery( "SELECT bid,bname,badded,bsize,btag,btitle,buploader,buploaderid FROM allowed_archive" );
 				
 				vector<string> vecQuery;
 				vecQuery.reserve(8);
@@ -1590,64 +1601,70 @@ void CTracker :: serverResponseAdmin( struct request_t *pRequest, struct respons
 				{
 					bool bSuccess = false;
 
-					CMySQLQuery *pQuery = new CMySQLQuery( "SELECT bid,bfilename FROM allowed_archive WHERE bid=" + cstrRecycleID );
+					CMySQLQuery *pQuery = new CMySQLQuery( "SELECT bhash,bfilename,bpost FROM allowed_archive WHERE bid=" + cstrRecycleID );
 				
 					vector<string> vecQuery;
 				
-					vecQuery.reserve(2);
+					vecQuery.reserve(3);
 
 					vecQuery = pQuery->nextRow( );
 					
 					delete pQuery;
 					
-					if( vecQuery.size( ) == 2 && !vecQuery[1].empty( ) )
+					if( vecQuery.size( ) == 3 && ( !vecQuery[1].empty( ) || vecQuery[2] == "1" ) ) 
 					{
 						string strFileName = vecQuery[1];
 
+						CMySQLQuery *pQueryAllowed = new CMySQLQuery( "SELECT bid FROM allowed WHERE bhash=\'" + UTIL_StringToMySQL( vecQuery[0] ) + "\'" );
+					
+						vector<string> vecQueryAllowed;
+					
+						vecQueryAllowed.reserve(1);
+
+						vecQueryAllowed = pQueryAllowed->nextRow( );
+						
+						delete pQueryAllowed;
+
 						if( cstrRecycleAction == "recover" )
 						{
-							if( !strFileName.empty( ) )
+							if( ( !strFileName.empty( ) || vecQuery[2] == "1" ) && vecQueryAllowed.size( ) == 0 )
 							{
-								if( !m_strArchiveDir.empty( ) && UTIL_CheckDir( m_strArchiveDir.c_str( ) ) )
+								if( ( !strFileName.empty( ) && !m_strArchiveDir.empty( ) && UTIL_CheckDir( m_strArchiveDir.c_str( ) ) && UTIL_CheckFile( string( m_strArchiveDir + cstrRecycleID + ".torrent" ).c_str( ) ) && !UTIL_CheckFile( string( m_strAllowedDir + strFileName ).c_str( ) ) ) || vecQuery[2] == "1" )
 								{
-									if( UTIL_CheckFile( string( m_strArchiveDir + cstrRecycleID + ".torrent" ).c_str( ) ) && !UTIL_CheckFile( string( m_strAllowedDir + strFileName ).c_str( ) ) )
-									{
+									if( !strFileName.empty( ) )
 										UTIL_MoveFile( string( m_strArchiveDir + cstrRecycleID + ".torrent" ).c_str( ), string( m_strAllowedDir + strFileName ).c_str( ) );
-										CMySQLQuery mq00( "INSERT INTO allowed (SELECT * FROM allowed_archive WHERE bid=" + cstrRecycleID + ")" );
-										CMySQLQuery mq01( "DELETE FROM allowed_archive WHERE bid=" + cstrRecycleID );
+									CMySQLQuery mq00( "INSERT INTO allowed (SELECT * FROM allowed_archive WHERE bid=" + cstrRecycleID + ")" );
+									CMySQLQuery mq01( "DELETE FROM allowed_archive WHERE bid=" + cstrRecycleID );
 
-										m_pCache->addRow( cstrRecycleID, false );
+									m_pCache->addRow( cstrRecycleID, false );
 
-										UTIL_LogFilePrint( "recycleTorrent: %s recovered torrent %s\n", pRequest->user.strLogin.c_str( ), strFileName.c_str( ) );
+									UTIL_LogFilePrint( "recycleTorrent: %s recovered torrent %s\n", pRequest->user.strLogin.c_str( ), strFileName.c_str( ) );
 
-										bSuccess = true;
-									}
+									bSuccess = true;
 								}
 							}
 						}
 						else if( cstrRecycleAction == "delete" )
 						{
-							if( !m_strArchiveDir.empty( ) && UTIL_CheckDir( m_strArchiveDir.c_str( ) ) )
+							if( ( !m_strArchiveDir.empty( ) && UTIL_CheckDir( m_strArchiveDir.c_str( ) ) && UTIL_CheckFile( string( m_strArchiveDir + cstrRecycleID + ".torrent" ).c_str( ) ) ) || vecQuery[2] == "1" )
 							{
-								if( UTIL_CheckFile( string( m_strArchiveDir + cstrRecycleID + ".torrent" ).c_str( ) ) )
-								{
+								if( !strFileName.empty( ) )
 									UTIL_DeleteFile( string( m_strArchiveDir + cstrRecycleID + ".torrent" ).c_str( ) );
 
-									CMySQLQuery mq01( "DELETE FROM allowed_archive WHERE bid=" + cstrRecycleID );
-									CMySQLQuery mq02( "DELETE FROM dstate WHERE bid=" + cstrRecycleID );
-									CMySQLQuery mq03( "DELETE FROM dstate_store WHERE bid=" + cstrRecycleID );
-									CMySQLQuery mq04( "DELETE FROM peers WHERE bid=" + cstrRecycleID );
-									CMySQLQuery mq05( "DELETE FROM statistics WHERE bid=" + cstrRecycleID );
-									CMySQLQuery mq06( "DELETE FROM bookmarks WHERE bid=" + cstrRecycleID );
-									CMySQLQuery mq07( "DELETE FROM thanks WHERE bid=" + cstrRecycleID );
-									CMySQLQuery mq08( "DELETE FROM talktorrent WHERE btid=" + cstrRecycleID );
-									CMySQLQuery mq09( "DELETE FROM talkrequest WHERE btid=" + cstrRecycleID );
-									CMySQLQuery mq10( "DELETE FROM comments WHERE btid=" + cstrRecycleID );
+								CMySQLQuery mq01( "DELETE FROM allowed_archive WHERE bid=" + cstrRecycleID );
+								CMySQLQuery mq02( "DELETE FROM dstate WHERE bid=" + cstrRecycleID );
+								CMySQLQuery mq03( "DELETE FROM dstate_store WHERE bid=" + cstrRecycleID );
+								CMySQLQuery mq04( "DELETE FROM peers WHERE bid=" + cstrRecycleID );
+								CMySQLQuery mq05( "DELETE FROM statistics WHERE bid=" + cstrRecycleID );
+								CMySQLQuery mq06( "DELETE FROM bookmarks WHERE bid=" + cstrRecycleID );
+								CMySQLQuery mq07( "DELETE FROM thanks WHERE bid=" + cstrRecycleID );
+								CMySQLQuery mq08( "DELETE FROM talktorrent WHERE btid=" + cstrRecycleID );
+								CMySQLQuery mq09( "DELETE FROM talkrequest WHERE btid=" + cstrRecycleID );
+								CMySQLQuery mq10( "DELETE FROM comments WHERE btid=" + cstrRecycleID );
 
-									UTIL_LogFilePrint( "recycleTorrent: %s permanently deleted torrent %s\n", pRequest->user.strLogin.c_str( ), strFileName.c_str( ) );
+								UTIL_LogFilePrint( "recycleTorrent: %s permanently deleted torrent %s\n", pRequest->user.strLogin.c_str( ), strFileName.c_str( ) );
 
-									bSuccess = true;
-								}
+								bSuccess = true;
 							}
 						}
 					}

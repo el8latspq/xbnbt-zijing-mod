@@ -87,7 +87,7 @@ endif
 CFLAGS += $(OFLAGS) $(DFLAGS) $(WFLAGS) $(WPPFLAGS) $(IFLAGS) -I.
 
 # OBJS = atom.o base64.o bencode.o client.o config.o link.o md5.o server.o sha1.o sort.o tracker_log.o tracker_file.o tracker_rules.o tracker_faq.o  util.o
-OBJS = atom.o base64.o bencode.o client.o config.o md5.o server.o sha1.o sort.o tracker_faq.o tracker_log.o tracker_rules.o util.o
+OBJS = atom.o base64.o bencode.o client.o config.o md5.o server.o sha1.o sort.o tracker_faq.o tracker_log.o tracker_php.o tracker_rules.o util.o
 OBJS_BNBT = bnbt.o bnbt_mysql.o tracker.o tracker_announce.o tracker_scrape.o
 OBJS_BNBTMYSQL = bnbt.mysql.o bnbt_mysql.mysql.o tracker.mysql.o tracker_admin.mysql.o tracker_announce.mysql.o tracker_bet.mysql.o tracker_comments.mysql.o tracker_file.mysql.o tracker_index.mysql.o tracker_info.mysql.o tracker_login.mysql.o tracker_messages.mysql.o tracker_offer.mysql.o tracker_query.mysql.o tracker_rss.mysql.o tracker_scrape.mysql.o tracker_signup.mysql.o tracker_staff.mysql.o tracker_stats.mysql.o tracker_talk.mysql.o tracker_torrent.mysql.o tracker_upload.mysql.o tracker_users.mysql.o
 
@@ -225,6 +225,7 @@ tracker_log.o: bnbt.h atom.h config.h html.h tracker.h util.h
 tracker_login.o: bnbt.h atom.h config.h html.h tracker.h util.h
 tracker_messages.o: bnbt.h atom.h bnbt_mysql.h config.h html.h tracker.h util.h
 tracker_offer.o: bnbt.h atom.h config.h bnbt_mysql.h html.h sort.h tracker.h util.h server.h
+tracker_php.o: bnbt.h atom.h config.h tracker.h util.h
 tracker_rss.o: bnbt.h atom.h bencode.h bnbt_mysql.h config.h html.h md5.h server.h sort.h tracker.h util.h
 tracker_rules.o: bnbt.h atom.h config.h html.h tracker.h util.h
 tracker_scrape.o: bnbt.h atom.h bencode.h bnbt_mysql.h config.h tracker.h util.h

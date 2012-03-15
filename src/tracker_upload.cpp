@@ -274,10 +274,11 @@ void CTracker :: serverResponseUploadGET( struct request_t *pRequest, struct res
 		// Has the tracker had the maximum torrent limit set?
 		if( m_uiMaxTorrents != 0 )
 		{
-			CMySQLQuery *pQuery = new CMySQLQuery( "SELECT bfilename FROM allowed" );
+//			CMySQLQuery *pQuery = new CMySQLQuery( "SELECT bid FROM allowed" );
 			
 			// Has the tracker reached it's maximum torrent file limit?
-			if( pQuery->nextRow( ).size( ) == 1 && pQuery->numRows( ) >= m_uiMaxTorrents )
+//			if( pQuery->nextRow( ).size( ) == 1 && pQuery->numRows( ) >= m_uiMaxTorrents )
+			if( m_pCache->getSize( ) >= m_uiMaxTorrents )
 			{
 				// This tracker has reached its torrent limit.
 				pResponse->strContent += "<p class=\"denied\">" + UTIL_Xsprintf( gmapLANG_CFG["upload_torrent_limit"].c_str( ), string( "<a title=\"" + gmapLANG_CFG["navbar_index"] + "\" href=\"" + RESPONSE_STR_INDEX_HTML + "\">" ).c_str( ), "</a>" ) + "</p>\n";
@@ -285,11 +286,11 @@ void CTracker :: serverResponseUploadGET( struct request_t *pRequest, struct res
 				// Output common HTML tail
 				HTML_Common_End( pRequest, pResponse, btv, NOT_INDEX, string( CSS_UPLOAD ) );
 				
-				delete pQuery;
+//				delete pQuery;
 
 				return;
 			}
-			delete pQuery;
+//			delete pQuery;
 		}
 		
 		// The Trinity Edition - Modification Begins
@@ -501,14 +502,6 @@ void CTracker :: serverResponseUploadGET( struct request_t *pRequest, struct res
 		pResponse->strContent += gmapLANG_CFG["upload_name_sample"] + "<span class=\"blue\" id=\"sample\"></span></td>\n</tr>\n";
 		pResponse->strContent += "<tr class=\"torrent_upload\" id=\"id_imdb\">\n<th class=\"torrent_upload\">" + gmapLANG_CFG["imdb"] + "</th>\n";
 		pResponse->strContent += "<td class=\"torrent_upload\"><input name=\"imdb\" alt=\"[" + gmapLANG_CFG["imdb"] + "]\" type=text size=12 maxlength=16>" + gmapLANG_CFG["imdb_note"] + "</td>\n</tr>\n";
-// 		pResponse->strContent += "<span id=\"template1\" style=\"display: none\">" + gmapLANG_CFG["upload_name_template_1"] + "</span>\n";
-// 		pResponse->strContent += "<span id=\"template2\" style=\"display: none\">" + gmapLANG_CFG["upload_name_template_2"] + "</span>\n";
-// 		pResponse->strContent += "<span id=\"template3\" style=\"display: none\">" + gmapLANG_CFG["upload_name_template_3"] + "</span>\n";
-// 		pResponse->strContent += "<span id=\"sample1\" style=\"display: none\">" + gmapLANG_CFG["upload_name_sample_1"] + "</span>\n";
-// 		pResponse->strContent += "<span id=\"sample2\" style=\"display: none\">" + gmapLANG_CFG["upload_name_sample_2"] + "</span>\n";
-// 		pResponse->strContent += "<span id=\"sample3\" style=\"display: none\">" + gmapLANG_CFG["upload_name_sample_3"] + "</span>\n";
-// 		pResponse->strContent += "<p class=\"torrent_upload\"><label for=\"uploadintrimg\">" + gmapLANG_CFG["intrimg"] + "</label><br>\n";
-// 		pResponse->strContent += "<input name=\"intrimg\" id=\"uploadintrimg\" type=text size=96 maxlength=" + CAtomInt( MAX_INFO_LINK_LEN ).toString( ) + "><br></p>\n";
 		pResponse->strContent += "<tr class=\"torrent_upload\">\n<th class=\"torrent_upload\">" + gmapLANG_CFG["upload_attachment"] + "</th>\n";
 		pResponse->strContent += "<td class=\"torrent_upload\"><iframe src=\"/fileupload.html\" frameborder=\"0\" scrolling=\"no\"></iframe>";
 		pResponse->strContent += "</td>\n</tr>\n";
@@ -516,65 +509,6 @@ void CTracker :: serverResponseUploadGET( struct request_t *pRequest, struct res
 		pResponse->strContent += "<td class=\"torrent_upload\">";
 		pResponse->strContent += UTIL_Edit_Tool_Bar( );
 		
-//		pResponse->strContent += "<input style=\"font-weight: bold\" type=\"button\" name=\"B\" value=\"" + gmapLANG_CFG["insert_b"] + "\" onclick=\"javascript: doInsertSelect('[b]', '[/b]')\">\n";
-//		pResponse->strContent += "<input style=\"font-style: italic\" type=\"button\" name=\"I\" value=\"" + gmapLANG_CFG["insert_i"] + "\" onclick=\"javascript: doInsertSelect('[i]', '[/i]')\">\n";
-//		pResponse->strContent += "<input style=\"text-decoration: underline\" type=\"button\" name=\"U\" value=\"" + gmapLANG_CFG["insert_u"] + "\" onclick=\"javascript: doInsertSelect('[u]', '[/u]')\">\n";
-//		pResponse->strContent += "<select name='size' onchange=\"insertSize(this.options[this.selectedIndex].value,'" + gmapLANG_CFG["insert_here"] + "')\">\n";
-//		pResponse->strContent += "<option value=\"0\">" + gmapLANG_CFG["insert_fontsize"] + "</option>\n";
-//		pResponse->strContent += "<option value=\"1\">1</option>\n";
-//		pResponse->strContent += "<option value=\"2\">2</option>\n";
-//		pResponse->strContent += "<option value=\"3\">3</option>\n";
-//		pResponse->strContent += "<option value=\"4\">4</option>\n";
-//		pResponse->strContent += "<option value=\"5\">5</option>\n";
-//		pResponse->strContent += "<option value=\"6\">6</option>\n";
-//		pResponse->strContent += "<option value=\"7\">7</option>\n";
-//		pResponse->strContent += "</select>\n";
-//		pResponse->strContent += "<select name=\"color\" onchange=\"insertFont(this.options[this.selectedIndex].value, 'color')\">\n";
-//		pResponse->strContent += "<option value=\"0\">" + gmapLANG_CFG["insert_fontcolor"] + "</option>\n";
-//		pResponse->strContent += "<option style=\"background-color: black\" value=\"Black\">Black</option>\n";
-//		pResponse->strContent += "<option style=\"background-color: sienna\" value=\"Sienna\">Sienna</option>\n";
-//		pResponse->strContent += "<option style=\"background-color: darkolivegreen\" value=\"DarkOliveGreen\">Dark Olive Green</option>\n";
-//		pResponse->strContent += "<option style=\"background-color: darkgreen\" value=\"DarkGreen\">Dark Green</option>\n";
-//		pResponse->strContent += "<option style=\"background-color: darkslateblue\" value=\"DarkSlateBlue\">Dark Slate Blue</option>\n";
-//		pResponse->strContent += "<option style=\"background-color: navy\" value=\"Navy\">Navy</option>\n";
-//		pResponse->strContent += "<option style=\"background-color: indigo\" value=\"Indigo\">Indigo</option>\n";
-//		pResponse->strContent += "<option style=\"background-color: darkslategray\" value=\"DarkSlateGray\">Dark Slate Gray</option>\n";
-//		pResponse->strContent += "<option style=\"background-color: darkred\" value=\"DarkRed\">Dark Red</option>\n";
-//		pResponse->strContent += "<option style=\"background-color: darkorange\" value=\"DarkOrange\">Dark Orange</option>\n";
-//		pResponse->strContent += "<option style=\"background-color: olive\" value=\"Olive\">Olive</option>\n";
-//		pResponse->strContent += "<option style=\"background-color: green\" value=\"Green\">Green</option>\n";
-//		pResponse->strContent += "<option style=\"background-color: teal\" value=\"Teal\">Teal</option>\n";
-//		pResponse->strContent += "<option style=\"background-color: blue\" value=\"Blue\">Blue</option>\n";
-//		pResponse->strContent += "<option style=\"background-color: slategray\" value=\"SlateGray\">Slate Gray</option>\n";
-//		pResponse->strContent += "<option style=\"background-color: dimgray\" value=\"DimGray\">Dim Gray</option>\n";
-//		pResponse->strContent += "<option style=\"background-color: red\" value=\"Red\">Red</option>\n";
-//		pResponse->strContent += "<option style=\"background-color: sandybrown\" value=\"SandyBrown\">Sandy Brown</option>\n";
-//		pResponse->strContent += "<option style=\"background-color: yellowgreen\" value=\"YellowGreen\">Yellow Green</option>\n";
-//		pResponse->strContent += "<option style=\"background-color: seagreen\" value=\"SeaGreen\">Sea Green</option>\n";
-//		pResponse->strContent += "<option style=\"background-color: mediumturquoise\" value=\"MediumTurquoise\">Medium Turquoise</option>\n";
-//		pResponse->strContent += "<option style=\"background-color: royalblue\" value=\"RoyalBlue\">Royal Blue</option>\n";
-//		pResponse->strContent += "<option style=\"background-color: purple\" value=\"Purple\">Purple</option>\n";
-//		pResponse->strContent += "<option style=\"background-color: gray\" value=\"Gray\">Gray</option>\n";
-//		pResponse->strContent += "<option style=\"background-color: magenta\" value=\"Magenta\">Magenta</option>\n";
-//		pResponse->strContent += "<option style=\"background-color: orange\" value=\"Orange\">Orange</option>\n";
-//		pResponse->strContent += "<option style=\"background-color: yellow\" value=\"Yellow\">Yellow</option>\n";
-//		pResponse->strContent += "<option style=\"background-color: lime\" value=\"Lime\">Lime</option>\n";
-//		pResponse->strContent += "<option style=\"background-color: cyan\" value=\"Cyan\">Cyan</option>\n";
-//		pResponse->strContent += "<option style=\"background-color: deepskyblue\" value=\"DeepSkyBlue\">Deep Sky Blue</option>\n";
-//		pResponse->strContent += "<option style=\"background-color: darkorchid\" value=\"DarkOrchid\">Dark Orchid</option>\n";
-//		pResponse->strContent += "<option style=\"background-color: silver\" value=\"Silver\">Silver</option>\n";
-//		pResponse->strContent += "<option style=\"background-color: pink\" value=\"Pink\">Pink</option>\n";
-//		pResponse->strContent += "<option style=\"background-color: wheat\" value=\"Wheat\">Wheat</option>\n";
-//		pResponse->strContent += "<option style=\"background-color: lemonchiffon\" value=\"LemonChiffon\">Lemon Chiffon</option>\n";
-//		pResponse->strContent += "<option style=\"background-color: palegreen\" value=\"PaleGreen\">Pale Green</option>\n";
-//		pResponse->strContent += "<option style=\"background-color: paleturquoise\" value=\"PaleTurquoise\">Pale Turquoise</option>\n";
-//		pResponse->strContent += "<option style=\"background-color: lightblue\" value=\"LightBlue\">Light Blue</option>\n";
-//		pResponse->strContent += "<option style=\"background-color: plum\" value=\"Plum\">Plum</option>\n"; 
-//		pResponse->strContent += "<option style=\"background-color: white\" value=\"White\">White</option>\n";
-//		pResponse->strContent += "</select>\n";
-//		pResponse->strContent += "<input type=\"button\" name=\"IMG\" value=\"" + gmapLANG_CFG["insert_img"] + "\" onclick=\"javascript: tag_image('" + gmapLANG_CFG["insert_img_fill"] + "','" + gmapLANG_CFG["insert_error"] + "')\">\n";
-//		pResponse->strContent += "<input type=\"button\" name=\"URL\" value=\"" + gmapLANG_CFG["insert_url"] + "\" onclick=\"javascript: tag_url('" + gmapLANG_CFG["insert_url_fill"] + "','" + gmapLANG_CFG["insert_url_title"] + "','" + gmapLANG_CFG["insert_error"] +"')\">\n";
-//		pResponse->strContent += "<input type=\"button\" name=\"QUOTE\" value=\"" + gmapLANG_CFG["insert_quote"] + "\" onclick=\"javascript: doInsertSelect('[quote]', '[/quote]')\"><br>";
 		pResponse->strContent += "<br>";
 		pResponse->strContent += gmapLANG_CFG["upload_note_intr"] + "<br>\n";
 
@@ -1037,6 +971,8 @@ void CTracker :: serverResponseUploadPOST( struct request_t *pRequest, struct re
 				
 				vecQuery = pQuery->nextRow( );
 				
+				delete pQuery;
+				
 				CMySQLQuery *pQueryOffer = new CMySQLQuery( "SELECT bfilename FROM offer WHERE bhash=\'" + UTIL_StringToMySQL( cstrInfoHash ) + "\'" );
 			
 				vector<string> vecQueryOffer;
@@ -1044,6 +980,8 @@ void CTracker :: serverResponseUploadPOST( struct request_t *pRequest, struct re
 				vecQueryOffer.reserve(1);
 				
 				vecQueryOffer = pQueryOffer->nextRow( );
+
+				delete pQueryOffer;
 				// Does this torrent info hash already exist amoung the torrent files that were parsed?
 
 				if( vecQuery.size( ) == 1 || ( !( pRequest->user.ucAccess & m_ucAccessUploadTorrents ) && vecQueryOffer.size( ) == 1 ) )
@@ -1358,9 +1296,6 @@ void CTracker :: serverResponseUploadPOST( struct request_t *pRequest, struct re
 						pResponse->strContent += "<p class=\"failed\">" + gmapLANG_CFG["failed"] + "</p>\n";
 					}
 				}
-				
-				delete pQuery;
-				delete pQueryOffer;
 			}
 			else
 			{

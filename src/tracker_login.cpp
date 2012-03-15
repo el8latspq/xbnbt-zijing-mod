@@ -1322,7 +1322,8 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 
 				int iUploadRate = CFG_GetInt( "bnbt_bonus_trade_upload_rate", 500 );
 				int iInviteRate = CFG_GetInt( "bnbt_bonus_trade_invite_rate", 10000 );
-				string strRatioLimit = CFG_GetString( "bnbt_bonus_trade_ratio_limit", "5.0" );
+				string strUploadRatioLimit = CFG_GetString( "bnbt_bonus_trade_upload_ratio_limit", "5.0" );
+				string strInviteRatioLimit = CFG_GetString( "bnbt_bonus_trade_invite_ratio_limit", "2.0" );
 
 				if( cstrTrade.empty( ) )
 				{
@@ -1341,14 +1342,14 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 					pResponse->strContent += "<td class=\"bonus_function\">\n";
 					pResponse->strContent += gmapLANG_CFG["bonus_function_trade_upload"] + "\n";
 					pResponse->strContent += "<input name=\"upload\" alt=\"[" + gmapLANG_CFG["bonus_function_trade_upload"] + "]\" type=text size=5 maxlength=3 value=\"\"> GB";
-					pResponse->strContent += "<br>" + UTIL_Xsprintf( gmapLANG_CFG["bonus_function_trade_upload_note"].c_str( ), strRatioLimit.c_str( ) );
+					pResponse->strContent += "<br>" + UTIL_Xsprintf( gmapLANG_CFG["bonus_function_trade_upload_note"].c_str( ), strUploadRatioLimit.c_str( ) );
 					pResponse->strContent += "</td>\n";
 					pResponse->strContent += "<td class=\"bonus_function\">\n";
 					pResponse->strContent += UTIL_Xsprintf( gmapLANG_CFG["bonus_function_trade_upload_rate"].c_str( ), CAtomInt( iUploadRate ).toString( ).c_str( ) );
 					pResponse->strContent += "</td>\n";
 					pResponse->strContent += "<td class=\"bonus_function\">\n";
 					pResponse->strContent += "<input name=\"submit_bonus_trade_upload_button\" alt=\"" + gmapLANG_CFG["yes"] + "\" type=submit value=\"" + gmapLANG_CFG["yes"] + "\"";
-					if( user.flShareRatio > atof( strRatioLimit.c_str( ) ) || user.flShareRatio < 0 )
+					if( user.flShareRatio > atof( strUploadRatioLimit.c_str( ) ) || user.flShareRatio < 0 )
 						pResponse->strContent += " disabled=true";
 					pResponse->strContent += ">\n";
 					pResponse->strContent += "</td>\n";
@@ -1361,14 +1362,14 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 					pResponse->strContent += "<td class=\"bonus_function\">\n";
 					pResponse->strContent += gmapLANG_CFG["bonus_function_trade_invite"] + "\n";
 					pResponse->strContent += "<input name=\"invite\" type=hidden value=\"1\">";
-					pResponse->strContent += UTIL_Xsprintf( gmapLANG_CFG["bonus_function_trade_invite_note"].c_str( ), strRatioLimit.c_str( ) );
+					pResponse->strContent += UTIL_Xsprintf( gmapLANG_CFG["bonus_function_trade_invite_note"].c_str( ), strInviteRatioLimit.c_str( ) );
 					pResponse->strContent += "</td>\n";
 					pResponse->strContent += "<td class=\"bonus_function\">\n";
 					pResponse->strContent += UTIL_Xsprintf( gmapLANG_CFG["bonus_function_trade_invite_rate"].c_str( ), CAtomInt( iInviteRate ).toString( ).c_str( ) );
 					pResponse->strContent += "</td>\n";
 					pResponse->strContent += "<td class=\"bonus_function\">\n";
 					pResponse->strContent += "<input name=\"submit_bonus_trade_invite_button\" alt=\"" + gmapLANG_CFG["yes"] + "\" type=submit value=\"" + gmapLANG_CFG["yes"] + "\"";
-					if( !( ( user.ucAccess & m_ucAccessTradeInvites ) && ( user.flShareRatio > atof( strRatioLimit.c_str( ) ) || user.flShareRatio < 0 ) ) )
+					if( !( ( user.ucAccess & m_ucAccessTradeInvites ) && ( user.flShareRatio > atof( strInviteRatioLimit.c_str( ) ) || user.flShareRatio < 0 ) ) )
 						pResponse->strContent += " disabled=true";
 					pResponse->strContent += ">\n";
 					pResponse->strContent += "</td>\n";
@@ -1401,7 +1402,7 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 					bool bNum = true;
 					if( cstrUpload.find_first_not_of( "1234567890" ) != string :: npos )
 						bNum  = false;
-					if( bNum && !( user.flShareRatio > atof( strRatioLimit.c_str( ) ) || user.flShareRatio < 0 ) )
+					if( bNum && !( user.flShareRatio > atof( strUploadRatioLimit.c_str( ) ) || user.flShareRatio < 0 ) )
 					{
 						int64 iUpload = atoi( cstrUpload.c_str( ) );
 						if( user.ulBonus >= iUpload * iUploadRate * 100 )
@@ -1471,7 +1472,7 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 						return;
 //						return JS_ReturnToPage( pRequest, pResponse, strPageParameters );
 					}
-					if( ( user.ucAccess & m_ucAccessTradeInvites ) && ( user.flShareRatio > atof( strRatioLimit.c_str( ) ) || user.flShareRatio < 0 ) )
+					if( ( user.ucAccess & m_ucAccessTradeInvites ) && ( user.flShareRatio > atof( strInviteRatioLimit.c_str( ) ) || user.flShareRatio < 0 ) )
 					{
 						int64 iInvite = atoi( cstrInvite.c_str( ) );
 						if( user.ulBonus >= iInvite * iInviteRate * 100 )
