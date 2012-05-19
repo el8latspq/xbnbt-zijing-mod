@@ -86,7 +86,7 @@ inline void UTIL_GetClientIdentity( const string &cstrPeerID, const string &cstr
 	};
 
 	// Initialise the structure with the known client masks
-	const clienttype_t KnownClientMask[9] =
+	const clienttype_t KnownClientMask[10] =
 	{
 		{ '-', 'A', 'Z',  -1,  -1,  -1,  -1, '-',  -1,  -1, VERSION_METHOD_1, "Azureus ", "Azureus", "%c.%c.%c.%c" },
 		{ '-', 'U', 'T',  -1,  -1,  -1,  -1, '-',  -1,  -1, VERSION_METHOD_1, "uTorrent", "uTorrent", "%c.%c.%c.%c" },
@@ -96,6 +96,7 @@ inline void UTIL_GetClientIdentity( const string &cstrPeerID, const string &cstr
 		{ '-', 'D', 'E',  -1,  -1,  -1,  -1, '-',  -1,  -1, VERSION_METHOD_1, "Deluge", "Deluge", "%c.%c.%c.%c" },
 		{ '-', 'L', 'T',  -1,  -1,  -1,  -1, '-',  -1,  -1, VERSION_METHOD_1, "", "libtorrent", "%c.%c.%c.%c" },
 		{ '-', 'l', 't',  -1,  -1,  -1,  -1, '-',  -1,  -1, VERSION_METHOD_8, "rtorrent", "", "" },
+		{ '-', 'U', 'M',  -1,  -1,  -1,  -1,  -1,  -1,  -1, VERSION_METHOD_8, "uTorrentMac", "", "" },
 		{   0,   0,   0,   0,   0,   0,   0,   0,   0,   0, VERSION_METHOD_8, "", "Not Identifiable", "" },
 	};
 
@@ -1904,7 +1905,7 @@ void CTracker :: serverResponseStatsGET( struct request_t *pRequest, struct resp
 										pResponse->strContent += "<span class=\"free_down\" title=\"" + UTIL_Xsprintf( gmapLANG_CFG["free_down"].c_str( ), CAtomInt( pTorrents[ulKey].iFreeDown ).toString( ).c_str( ) ) + "\">" + UTIL_Xsprintf( gmapLANG_CFG["free_down_short"].c_str( ), CAtomInt( pTorrents[ulKey].iFreeDown ).toString( ).c_str( ) )+ "</span>";
 								}
 								if( pTorrents[ulKey].iFreeUp != 100 )
-									pResponse->strContent += "<span class=\"free_up\" title=\"" + UTIL_Xsprintf( gmapLANG_CFG["free_up"].c_str( ), CAtomInt( pTorrents[ulKey].iFreeUp ).toString( ).c_str( ) ) + "\"> " + UTIL_Xsprintf( gmapLANG_CFG["free_up_short"].c_str( ), CAtomInt( pTorrents[ulKey].iFreeUp ).toString( ).c_str( ) )+ "</span>";
+									pResponse->strContent += "<span class=\"free_up\" title=\"" + UTIL_Xsprintf( gmapLANG_CFG["free_up"].c_str( ), CAtomInt( pTorrents[ulKey].iFreeUp ).toString( ).c_str( ) ) + "\">" + UTIL_Xsprintf( gmapLANG_CFG["free_up_short"].c_str( ), CAtomInt( pTorrents[ulKey].iFreeUp ).toString( ).c_str( ) )+ "</span>";
 								if( day_left >= 0 && ( pTorrents[ulKey].iDefaultDown > pTorrents[ulKey].iFreeDown || pTorrents[ulKey].iDefaultUp < pTorrents[ulKey].iFreeUp ) )
 								{
 									pResponse->strContent += "<span class=\"free_recover\" title=\"" + gmapLANG_CFG["free_recover"];
@@ -2047,6 +2048,10 @@ void CTracker :: serverResponseStatsGET( struct request_t *pRequest, struct resp
 							pResponse->strContent += "<td class=\"file_info_subs\">";
 						}
 
+						pResponse->strContent += gmapLANG_CFG["stats_sub_not_found"];
+						pResponse->strContent += " <a class=\"index_filter\" href=\"javascript: ;\" onclick=\"javascript: this.innerHTML=change_version('stats_subs_imdb','" + gmapLANG_CFG["version_show"] + "','" + gmapLANG_CFG["version_hide"] + "')\">";
+						pResponse->strContent += "<span class=\"blue\">" + gmapLANG_CFG["version_show"] + "</span></a>";
+						pResponse->strContent += "<div id=\"stats_subs_imdb\" style=\"display: none\">\n";
 						pResponse->strContent += "<span class=\"subs_imdb\">" + gmapLANG_CFG["stats_sub_imdb"] + "</span>";
 						pResponse->strContent += "<table class=\"subs\">\n";
 						
@@ -2066,6 +2071,7 @@ void CTracker :: serverResponseStatsGET( struct request_t *pRequest, struct resp
 						}
 
 						pResponse->strContent += "</table>\n";
+						pResponse->strContent += "</div>\n";
 					}
 					
 					delete pQuerySub;

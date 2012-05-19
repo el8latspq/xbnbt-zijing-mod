@@ -1369,7 +1369,7 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 					pResponse->strContent += "</td>\n";
 					pResponse->strContent += "<td class=\"bonus_function\">\n";
 					pResponse->strContent += "<input name=\"submit_bonus_trade_invite_button\" alt=\"" + gmapLANG_CFG["yes"] + "\" type=submit value=\"" + gmapLANG_CFG["yes"] + "\"";
-					if( !( ( user.ucAccess & m_ucAccessTradeInvites ) && ( user.flShareRatio > atof( strInviteRatioLimit.c_str( ) ) || user.flShareRatio < 0 ) ) )
+					if( !( CFG_GetInt( "bnbt_invite_enable", 0 ) == 1 && ( user.ucAccess & m_ucAccessInvites ) && ( user.ucAccess & m_ucAccessTradeInvites ) && user.ucInvitable == 1 && ( user.flShareRatio > atof( strInviteRatioLimit.c_str( ) ) || user.flShareRatio < 0 ) && !( m_bRatioRestrict && checkShareRatio( user.ulDownloaded, user.flShareRatio ) ) ) )
 						pResponse->strContent += " disabled=true";
 					pResponse->strContent += ">\n";
 					pResponse->strContent += "</td>\n";
@@ -1472,7 +1472,7 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 						return;
 //						return JS_ReturnToPage( pRequest, pResponse, strPageParameters );
 					}
-					if( ( user.ucAccess & m_ucAccessTradeInvites ) && ( user.flShareRatio > atof( strInviteRatioLimit.c_str( ) ) || user.flShareRatio < 0 ) )
+					if( CFG_GetInt( "bnbt_invite_enable", 0 ) == 1 && ( user.ucAccess & m_ucAccessInvites ) && ( user.ucAccess & m_ucAccessTradeInvites ) && user.ucInvitable == 1 && ( user.flShareRatio > atof( strInviteRatioLimit.c_str( ) ) || user.flShareRatio < 0 ) && !( m_bRatioRestrict && checkShareRatio( user.ulDownloaded, user.flShareRatio ) ) )
 					{
 						int64 iInvite = atoi( cstrInvite.c_str( ) );
 						if( user.ulBonus >= iInvite * iInviteRate * 100 )
@@ -1589,15 +1589,15 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 				pResponse->strContent += "<table class=\"user_detail_table\" id=\"user_invites\">\n";
 				pResponse->strContent += "<tr><th colspan=4>" + gmapLANG_CFG["user_detail_invites"] + "</th></tr>\n";
 					
-				CMySQLQuery *pQuery = new CMySQLQuery( "SELECT bcode,bcreated,bused,binvitee,binviteeid FROM invites WHERE bownerid=" + user.strUID + " ORDER BY bcreated DESC" );
+				CMySQLQuery *pQuery = new CMySQLQuery( "SELECT bcode,bcreated,bquota,bused,binvitee,binviteeid FROM invites WHERE bownerid=" + user.strUID + " ORDER BY bcreated DESC" );
 				
 				vector<string> vecQuery;
 			
-				vecQuery.reserve(5);
+				vecQuery.reserve(6);
 
 				vecQuery = pQuery->nextRow( );
 				
-				if( vecQuery.size( ) == 5 )
+				if( vecQuery.size( ) == 6 )
 				{
 					pResponse->strContent += "<tr>\n";
 					
@@ -1619,20 +1619,20 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 					
 					pResponse->strContent += "</tr>\n";
 					
-					while( vecQuery.size( ) == 5 )
+					while( vecQuery.size( ) == 6 )
 					{
 						pResponse->strContent += "<tr>\n";
 						
 						pResponse->strContent += "<td class=\"hash\">" + vecQuery[0] + "</td>\n";
 						pResponse->strContent += "<td class=\"date\">" + vecQuery[1] + "</td>\n";
 						pResponse->strContent += "<td class=\"status\">";
-						if( vecQuery[2] == "0" )
-							pResponse->strContent +=  "<span class=\"red\">" + gmapLANG_CFG["invite_unused"] + "</span>";
+						if( vecQuery[3] == "0" )
+							pResponse->strContent +=  "<span class=\"red\">" + UTIL_Xsprintf( gmapLANG_CFG["invite_unused"].c_str( ), vecQuery[2].c_str( ) ) + "</span>";
 						else
 							pResponse->strContent +=  "<span class=\"green\">" + gmapLANG_CFG["invite_used"] + "</span>";
 						pResponse->strContent += "</td>\n";
 						pResponse->strContent += "<td class=\"uploader\">";
-						pResponse->strContent += getUserLink( vecQuery[4], vecQuery[3] );
+						pResponse->strContent += getUserLink( vecQuery[5], vecQuery[4] );
 						pResponse->strContent += "</td>\n";
 						
 						pResponse->strContent += "</tr>\n";

@@ -1169,6 +1169,38 @@ const string UTIL_BBCode( const string &cstrHTML )
 		else
 			iStart = UTIL_ToLower( strHTML ).find( "[size=", iStart + 6 );
 	}
+	iStart = UTIL_ToLower( strHTML ).find( "[quote=" );
+	while( iStart != string :: npos )
+	{
+		string strUser;
+		string :: size_type iUserStart = 0;
+		string :: size_type iUserEnd = 0;
+		iEnd = UTIL_ToLower( strHTML ).find( "[/quote]", iStart );
+		if( iEnd != string :: npos )
+			iStart = UTIL_ToLower( strHTML ).substr( 0, iEnd ).rfind( "[quote=" );
+		iUserStart = UTIL_ToLower( strHTML ).substr( 0, iEnd ).find( "[user]", iStart );
+		if( iUserStart != string :: npos )
+		{
+			iUserEnd = UTIL_ToLower( strHTML ).substr( 0, iEnd ).find( "[/user]", iStart );
+			if( iUserEnd != string :: npos && ( strHTML[ iUserStart - 1 ] != '[' || strHTML[ iUserEnd + 7 ] != ']' ) )
+			{
+				iURL = UTIL_ToLower( strHTML ).find( "]", iUserEnd + 7 );
+			}
+			else
+				iURL = UTIL_ToLower( strHTML ).find( "]", iStart );
+		}
+		else
+			iURL = UTIL_ToLower( strHTML ).find( "]", iStart );
+		if( iURL < iEnd && strHTML[ iStart - 1 ] != '[' && strHTML[ iEnd + 8 ] != ']' && iEnd != string :: npos )
+		{
+			strHTML.replace( iEnd, 8, "</div></fieldset>" );
+			strHTML.replace( iURL, 1, "</b></legend><div class=\"quote\">" );
+			strHTML.replace( iStart, 7, "<fieldset class=\"quote\"><legend><b>" + gmapLANG_CFG["quote"] );
+			iStart = UTIL_ToLower( strHTML ).find( "[quote=" );
+		}
+		else
+			iStart = UTIL_ToLower( strHTML ).find( "[quote=", iStart + 7 );
+	}
 	iStart = UTIL_ToLower( strHTML ).find( "[user]" );
 	while( iStart != string :: npos )
 	{
@@ -1256,6 +1288,32 @@ const string UTIL_BBCode( const string &cstrHTML )
 		}
 		else
 			iStart = UTIL_ToLower( strHTML ).find( "[pre]", iStart + 5 );
+	}
+	iStart = UTIL_ToLower( strHTML ).find( "[sup]" );
+	while( iStart != string :: npos )
+	{
+		iEnd = UTIL_ToLower( strHTML ).find( "[/sup]", iStart );
+		if( iEnd != string :: npos && ( strHTML[ iStart - 1 ] != '[' || strHTML[ iEnd + 6 ] != ']' ) )
+		{
+			strHTML.replace( iEnd, 6, "</sup>" );
+			strHTML.replace( iStart, 5, "<sup>" );
+			iStart = UTIL_ToLower( strHTML ).find( "[sup]", iStart );
+		}
+		else
+			iStart = UTIL_ToLower( strHTML ).find( "[sup]", iStart + 5 );
+	}
+	iStart = UTIL_ToLower( strHTML ).find( "[sub]" );
+	while( iStart != string :: npos )
+	{
+		iEnd = UTIL_ToLower( strHTML ).find( "[/sub]", iStart );
+		if( iEnd != string :: npos && ( strHTML[ iStart - 1 ] != '[' || strHTML[ iEnd + 6 ] != ']' ) )
+		{
+			strHTML.replace( iEnd, 6, "</sub>" );
+			strHTML.replace( iStart, 5, "<sub>" );
+			iStart = UTIL_ToLower( strHTML ).find( "[sub]", iStart );
+		}
+		else
+			iStart = UTIL_ToLower( strHTML ).find( "[sub]", iStart + 5 );
 	}
 	iStart = UTIL_ToLower( strHTML ).find( "[b]" );
 	while( iStart != string :: npos )

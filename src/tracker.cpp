@@ -1320,6 +1320,158 @@ CTracker :: CTracker( )
 //	}
 //	delete pQueryTalk;
 
+//	CMySQLQuery *pQueryBets = new CMySQLQuery( "SELECT bid,btitle,UNIX_TIMESTAMP(bclosed),UNIX_TIMESTAMP(bdealed),bresult,bpayback FROM bets" );
+//
+//	vector<string> vecQueryBets;
+//
+//	vecQueryBets.reserve(6);
+//
+//	vecQueryBets = pQueryBets->nextRow( );
+//
+//	while( vecQueryBets.size( ) == 6 )
+//	{
+//		string cstrBet = string( );
+//		string cstrOptionID = string( );
+//		string cstrRate = string( );
+//		bool bPayback = false;
+//
+//		if( vecQueryBets.size( ) == 6 && !vecQueryBets[4].empty( ) && !vecQueryBets[5].empty( ) )
+//		{
+//			cstrBet = vecQueryBets[0];
+//			cstrOptionID = vecQueryBets[4];
+//			if( vecQueryBets[5] == "1" )
+//				bPayback = true;
+//
+//			if( vecQueryBets[2] != "0" && vecQueryBets[3] != "0" )
+//			{
+//				if( !bPayback )
+//				{
+//					bool bDynamic = true;
+//					bool bWinHalf = false;
+//
+//					CMySQLQuery *pQueryBet = new CMySQLQuery( "SELECT boptionid,boption,bbetrate,bresult,bresult_half FROM betsoption WHERE bid=" + cstrBet );
+//
+//					vector<string> vecQueryBet;
+//			
+//					vecQueryBet.reserve(5);
+//
+//					vecQueryBet = pQueryBet->nextRow( );
+//
+//					while( vecQueryBet.size( ) == 5 )
+//					{
+//						if( vecQueryBet[2] != "0.00" )
+//							bDynamic = false;
+//
+//						if( vecQueryBet[0] == cstrOptionID && ( vecQueryBet[3] == "1" || vecQueryBet[4] == "1" ) ) 
+//						{
+//							cstrRate = vecQueryBet[2];
+//
+//							if( vecQueryBet[4] == "1" )
+//							{
+//								bWinHalf = true;
+//							}
+//						}
+//
+//						vecQueryBet = pQueryBet->nextRow( );
+//					}
+//				
+//					delete pQueryBet;
+//
+//					if( !cstrRate.empty( ) )
+//					{
+//						float flRate = 0.0;
+//
+//
+//						if( bDynamic )
+//						{
+//							unsigned long ulAll = 0, ulWin = 0;
+//
+//							CMySQLQuery *pQueryBonus = new CMySQLQuery( "SELECT boptionid,SUM(bbetbonus) FROM betsticket WHERE bid=" + cstrBet + " GROUP BY boptionid" );
+//			
+//							vector<string> vecQueryBonus;
+//					
+//							vecQueryBonus.reserve(2);
+//
+//							vecQueryBonus = pQueryBonus->nextRow( );
+//
+//							while( vecQueryBonus.size( ) == 2 )
+//							{
+//								if( vecQueryBonus[0] == cstrOptionID )
+//									ulWin = atoi( vecQueryBonus[1].c_str( ) );
+//								ulAll += atoi( vecQueryBonus[1].c_str( ) );
+//
+//								vecQueryBonus = pQueryBonus->nextRow( );
+//							}
+//
+//							delete pQueryBonus;
+//
+//							flRate = ( (float)ulAll ) / ulWin;
+//						}
+//						else if( bWinHalf )
+//							flRate = ( 1 + atof( cstrRate.c_str( ) ) ) / 2;
+//						else
+//							flRate = atof( cstrRate.c_str( ) );
+//
+//						CMySQLQuery *pQueryTickets = new CMySQLQuery( "SELECT buid,boptionid,bbetbonus FROM betsticket WHERE bid=" + cstrBet + " AND boptionid>0" );
+//		
+//						vector<string> vecQueryTickets;
+//				
+//						vecQueryTickets.reserve(3);
+//
+//						vecQueryTickets = pQueryTickets->nextRow( );
+//					
+//						while( vecQueryTickets.size( ) == 3 )
+//						{
+//							if( vecQueryTickets[1] == cstrOptionID )
+//							{
+//								unsigned long ulBonus = atoi( vecQueryTickets[2].c_str( ) ) * flRate * 100 + 0.5;
+//								CMySQLQuery mq04( "UPDATE betsticket SET bgetback=" + CAtomLong( ulBonus ).toString( ) + " WHERE bid=" + cstrBet + " AND buid=" + vecQueryTickets[0] );
+//
+//							}
+//							else if( bWinHalf )
+//							{
+//								unsigned long ulBonus = atoi( vecQueryTickets[2].c_str( ) ) * 0.5 * 100 + 0.5;
+//								CMySQLQuery mq04( "UPDATE betsticket SET bgetback=" + CAtomLong( ulBonus ).toString( ) + " WHERE bid=" + cstrBet + " AND buid=" + vecQueryTickets[0] );
+//
+//							}
+//
+//							vecQueryTickets = pQueryTickets->nextRow( );
+//						}
+//
+//						delete pQueryTickets;
+//
+//						m_pCache->ResetUsers( );
+//					}
+//				}
+//				else
+//				{
+//
+//					CMySQLQuery *pQueryTickets = new CMySQLQuery( "SELECT buid,bbetbonus FROM betsticket WHERE bid=" + vecQueryBets[0] + " AND boptionid>0" );
+//	
+//					vector<string> vecQueryTickets;
+//			
+//					vecQueryTickets.reserve(2);
+//
+//					vecQueryTickets = pQueryTickets->nextRow( );
+//				
+//					while( vecQueryTickets.size( ) == 2 )
+//					{
+//						CMySQLQuery mq04( "UPDATE betsticket SET bgetback=" + CAtomLong( atoi( vecQueryTickets[1].c_str( ) ) * 100 ).toString( ) + " WHERE bid=" + cstrBet + " AND buid=" + vecQueryTickets[0] );
+//
+//
+//						vecQueryTickets = pQueryTickets->nextRow( );
+//					}
+//
+//					delete pQueryTickets;
+//				}
+//			}
+//		}
+//
+//		vecQueryBets = pQueryBets->nextRow( );
+//	}
+//	
+//	delete pQueryBets;
+
 	if( gbDebug )
 		if( gucDebugLevel & DEBUG_TRACKER )
 			UTIL_LogPrint( "CTracker: Constructor completed\n" );
@@ -1478,6 +1630,327 @@ void CTracker :: sendMessage( const string &strLogin, const string &strUID, cons
 	delete pQuery;
 }
 
+void *CTracker :: threadSeedBonus( void *arg )
+{
+	MYSQL *pMySQL = 0;
+
+	if( !( pMySQL = mysql_init( 0 ) ) )
+	{
+		UTIL_LogPrint( ( gmapLANG_CFG["bnbt_mysql_error"] + "\n" ).c_str( ), mysql_error( pMySQL ) );
+
+//		return;
+	}
+	else
+	{
+		if( !( mysql_real_connect( pMySQL, gstrMySQLHost.c_str( ), gstrMySQLUser.c_str( ), gstrMySQLPassword.c_str( ), 0, guiMySQLPort, 0, 0 ) ) )
+		{
+			UTIL_LogPrint( ( gmapLANG_CFG["bnbt_mysql_error"] + "\n" ).c_str( ), mysql_error( pMySQL ) );
+
+//			return;
+		}
+		else
+		{
+			if( mysql_select_db( pMySQL, gstrMySQLDatabase.c_str( ) ) )
+			{
+				UTIL_LogPrint( ( gmapLANG_CFG["bnbt_mysql_error"] + "\n" ).c_str( ), mysql_error( pMySQL ) );
+
+//				return;
+			}
+		}
+	}
+
+	if( pMySQL )
+	{
+		gmtxMySQL.Claim( );
+		gmapMySQL[pthread_self( )] = pMySQL;
+		gmtxMySQL.Release( );
+
+		CMySQLQuery mq01( "UPDATE users SET bseedbonus=0.00" );
+		
+		CMySQLQuery *pQuerySeeding = new CMySQLQuery( "SELECT bid,buid,bupspeed FROM dstate WHERE bleft=0 ORDER BY buid" );
+		
+		vector<string> vecQuerySeeding;
+
+		vecQuerySeeding.reserve(3);
+
+		vecQuerySeeding = pQuerySeeding->nextRow( );
+
+		string strUID = string( );
+		time_t now_t = GetTime( );
+		
+		int uiSeeding = 0;
+		float flSeedBonus = 0.0;
+
+		while( vecQuerySeeding.size( ) == 3 )
+		{
+			if( strUID.empty( ) || strUID == vecQuerySeeding[1] )
+			{
+				if( strUID.empty( ) )
+				{
+					strUID = vecQuerySeeding[1];
+					uiSeeding = 0;
+					flSeedBonus = 0.0;
+				}
+
+				string strAdded = string( );
+				int64 iSize = 0;
+				int64 ulUpSpeed = 0;
+				int uiSeeders = 0;
+				
+				float passed = 0;
+			
+				CMySQLQuery *pQuery = new CMySQLQuery( "SELECT badded,bsize,bseeders FROM allowed WHERE bid=" + vecQuerySeeding[0] );
+				
+				vector<string> vecQuery;
+				
+				vecQuery.reserve(3);
+
+				vecQuery = pQuery->nextRow( );
+				
+				if( vecQuery.size( ) == 3 )
+				{
+					if( !vecQuery[0].empty( ) )
+						strAdded = vecQuery[0];
+
+					if( !vecQuery[1].empty( ) )
+						iSize = UTIL_StringTo64( vecQuery[1].c_str( ) );
+					
+					if( !vecQuery[2].empty( ) )
+						uiSeeders = atoi( vecQuery[2].c_str( ) );
+						
+					struct tm *now_tm, time_tm;
+					int64 year, month, day, hour, minute, second;
+					
+					sscanf( strAdded.c_str( ), "%d-%d-%d %d:%d:%d",&year,&month,&day,&hour,&minute,&second );
+					time_tm.tm_year = year-1900;
+					time_tm.tm_mon = month-1;
+					time_tm.tm_mday = day;
+					time_tm.tm_hour = hour;
+					time_tm.tm_min = minute;
+					time_tm.tm_sec = second;
+					passed = difftime(now_t, mktime(&time_tm));
+					
+					if( !vecQuerySeeding[2].empty( ) && uiSeeders > 0 )
+					{
+						ulUpSpeed = UTIL_StringTo64( vecQuerySeeding[2].c_str( ) );
+						if( uiSeeders > 0 )
+						{
+							uiSeeding++;
+							flSeedBonus += ( 1.0 - 1.0 / pow( 10, passed / 3600 / 24 / 7 / 4 ) ) * ( 1.5 - 0.5 / pow( 10, ulUpSpeed / 1024.0 / 1024 / 10 ) ) * sqrt( iSize / 1024.0 / 1024 / 1024 ) * ( 1 + sqrt( 2 ) / pow( 10, ( uiSeeders - 1 ) / ( 10.0 - 1.0 ) ) ) / 100;
+						}
+	// 						flSeedBonus += sqrt( passed / 3600 / 24 ) * ( iSize / 1024.0 / 1024 / 1024 ) * ( 1 + 5 * 2 * atan( ulUpSpeed / 1024.0 / 1024 ) / Pi ) / uiSeeders / uiSeeders / 5000;
+					}
+				}
+				delete pQuery;
+				
+				vecQuerySeeding = pQuerySeeding->nextRow( );
+			}
+			else
+			{
+				if( uiSeeding >20 )
+					uiSeeding = 20;
+				flSeedBonus = uiSeeding + 80 * 2 * atan( flSeedBonus ) / Pi;
+				char szFloat[16];
+				memset( szFloat, 0, sizeof( szFloat ) / sizeof( char ) );
+
+				snprintf( szFloat, sizeof( szFloat ) / sizeof( char ), "%0.2f", flSeedBonus );
+				
+				string strQuery = "UPDATE users SET bseedbonus=";
+				strQuery += szFloat;
+				strQuery += ",bbonus=bbonus+" + CAtomLong( flSeedBonus * ( (CTracker *)arg )->m_uiGetSeedBonusInterval * 100.0 / 3600 ).toString( ) + " WHERE buid=" + strUID;
+				
+				CMySQLQuery mq02( strQuery );
+				
+				strUID.erase( );
+			}
+		}
+
+		if( !strUID.empty( ) )
+		{
+			if( uiSeeding >20 )
+				uiSeeding = 20;
+			flSeedBonus = uiSeeding + 80 * 2 * atan( flSeedBonus ) / Pi;
+			char szFloat[16];
+			memset( szFloat, 0, sizeof( szFloat ) / sizeof( char ) );
+			snprintf( szFloat, sizeof( szFloat ) / sizeof( char ), "%0.2f", flSeedBonus );
+		
+			string strQuery = "UPDATE users SET bseedbonus=";
+			strQuery += szFloat;
+			strQuery += ",bbonus=bbonus+" + CAtomLong( flSeedBonus * ( (CTracker *)arg )->m_uiGetSeedBonusInterval * 100.0 / 3600 ).toString( ) + " WHERE buid=" + strUID;
+		
+			CMySQLQuery mq02( strQuery );
+		}
+		
+		delete pQuerySeeding;
+		
+		( (CTracker *)arg )->m_pCache->ResetUsers( );
+
+		if( gbDebug && ( gucDebugLevel & DEBUG_BNBT ) )
+			UTIL_LogPrint( "Closing MySQL local connection\n" );
+
+		mysql_close( pMySQL );
+
+		gmtxMySQL.Claim( );
+		gmapMySQL.erase( pthread_self( ) );
+		gmtxMySQL.Release( );
+	}
+
+	pthread_exit( NULL );
+
+	return NULL;
+}
+
+void *CTracker :: threadExpire( void *arg )
+{
+//	CMySQLQueryLocal *pQuery = new CMySQLQueryLocal( );
+//
+//	if( pQuery )
+//	{
+	MYSQL *pMySQL = 0;
+
+	if( !( pMySQL = mysql_init( 0 ) ) )
+	{
+		UTIL_LogPrint( ( gmapLANG_CFG["bnbt_mysql_error"] + "\n" ).c_str( ), mysql_error( pMySQL ) );
+
+//		return;
+	}
+	else
+	{
+		if( !( mysql_real_connect( pMySQL, gstrMySQLHost.c_str( ), gstrMySQLUser.c_str( ), gstrMySQLPassword.c_str( ), 0, guiMySQLPort, 0, 0 ) ) )
+		{
+			UTIL_LogPrint( ( gmapLANG_CFG["bnbt_mysql_error"] + "\n" ).c_str( ), mysql_error( pMySQL ) );
+
+//			return;
+		}
+		else
+		{
+			if( mysql_select_db( pMySQL, gstrMySQLDatabase.c_str( ) ) )
+			{
+				UTIL_LogPrint( ( gmapLANG_CFG["bnbt_mysql_error"] + "\n" ).c_str( ), mysql_error( pMySQL ) );
+
+//				return;
+			}
+		}
+	}
+
+	if( pMySQL )
+	{
+		gmtxMySQL.Claim( );
+		gmapMySQL[pthread_self( )] = pMySQL;
+		gmtxMySQL.Release( );
+
+		CMySQLQuery mq01( "DELETE FROM dstate WHERE bupdated<NOW()-INTERVAL " + CAtomInt( ( (CTracker *)arg )->m_uiDownloaderTimeOutInterval ).toString( ) + " SECOND" );
+		
+		CMySQLQuery mq02( "UPDATE offer SET bseeded=0 WHERE bseeded<NOW()-INTERVAL " + CAtomInt( ( (CTracker *)arg )->m_uiDownloaderTimeOutInterval ).toString( ) + " SECOND" );
+		
+		CMySQLQuery mq03( "UPDATE allowed SET bseeders=0,bseeders6=0,bleechers=0,bleechers6=0" );
+			
+		CMySQLQuery mq04( "UPDATE allowed,(SELECT bid,COUNT(*) AS bseeders FROM dstate WHERE bleft=0 GROUP BY bid) AS seeders SET allowed.bseeders=seeders.bseeders WHERE allowed.bid=seeders.bid" );
+		CMySQLQuery mq05( "UPDATE allowed,(SELECT bid,COUNT(*) AS bseeders6 FROM dstate WHERE bleft=0 AND bip6!='' GROUP BY bid) AS seeders6 SET allowed.bseeders6=seeders6.bseeders6 WHERE allowed.bid=seeders6.bid" );
+		CMySQLQuery mq06( "UPDATE allowed,(SELECT bid,COUNT(*) AS bleechers FROM dstate WHERE bleft!=0 GROUP BY bid) AS leechers SET allowed.bleechers=leechers.bleechers WHERE allowed.bid=leechers.bid" );
+		CMySQLQuery mq07( "UPDATE allowed,(SELECT bid,COUNT(*) AS bleechers6 FROM dstate WHERE bleft!=0 AND bip6!='' GROUP BY bid) AS leechers6 SET allowed.bleechers6=leechers6.bleechers6 WHERE allowed.bid=leechers6.bid" );
+		
+//		pQuery->query( "DELETE FROM dstate WHERE bupdated<NOW()-INTERVAL " + CAtomInt( ( (CTracker *)arg )->m_uiDownloaderTimeOutInterval ).toString( ) + " SECOND" );
+//		
+//		pQuery->query( "UPDATE offer SET bseeded=0 WHERE bseeded<NOW()-INTERVAL " + CAtomInt( ( (CTracker *)arg )->m_uiDownloaderTimeOutInterval ).toString( ) + " SECOND" );
+//
+//		pQuery->query( "UPDATE allowed SET bseeders=0,bseeders6=0,bleechers=0,bleechers6=0" );
+//
+//		pQuery->query( "UPDATE allowed,(SELECT bid,COUNT(*) AS bseeders FROM dstate WHERE bleft=0 GROUP BY bid) AS seeders SET allowed.bseeders=seeders.bseeders WHERE allowed.bid=seeders.bid" );
+//		pQuery->query( "UPDATE allowed,(SELECT bid,COUNT(*) AS bseeders6 FROM dstate WHERE bleft=0 AND bip6!='' GROUP BY bid) AS seeders6 SET allowed.bseeders6=seeders6.bseeders6 WHERE allowed.bid=seeders6.bid" );
+//		pQuery->query( "UPDATE allowed,(SELECT bid,COUNT(*) AS bleechers FROM dstate WHERE bleft!=0 GROUP BY bid) AS leechers SET allowed.bleechers=leechers.bleechers WHERE allowed.bid=leechers.bid" );
+//		pQuery->query( "UPDATE allowed,(SELECT bid,COUNT(*) AS bleechers6 FROM dstate WHERE bleft!=0 AND bip6!='' GROUP BY bid) AS leechers6 SET allowed.bleechers6=leechers6.bleechers6 WHERE allowed.bid=leechers6.bid" );
+
+		( (CTracker *)arg )->m_pCache->Reset( );
+		( (CTracker *)arg )->m_pCache->Reset( true );
+
+		CMySQLQuery mq08( "UPDATE users SET bseeding=0,bleeching=0" );
+		
+		CMySQLQuery mq09( "UPDATE users,(SELECT buid,COUNT(*) AS bseeding FROM dstate WHERE bleft=0 GROUP BY buid) AS seeding SET users.bseeding=seeding.bseeding WHERE users.buid=seeding.buid" );
+		
+		CMySQLQuery mq10( "UPDATE users,(SELECT buid,COUNT(*) AS bleeching FROM dstate WHERE bleft!=0 GROUP BY buid) AS leeching SET users.bleeching=leeching.bleeching WHERE users.buid=leeching.buid" );
+	
+//		pQuery->query( "UPDATE users SET bseeding=0,bleeching=0" );
+//
+//		pQuery->query( "UPDATE users,(SELECT buid,COUNT(*) AS bseeding FROM dstate WHERE bleft=0 GROUP BY buid) AS seeding SET users.bseeding=seeding.bseeding WHERE users.buid=seeding.buid" );
+//
+//		pQuery->query( "UPDATE users,(SELECT buid,COUNT(*) AS bleeching FROM dstate WHERE bleft!=0 GROUP BY buid) AS leeching SET users.bleeching=leeching.bleeching WHERE users.buid=leeching.buid" );
+		
+		( (CTracker *)arg )->m_pCache->ResetUsers( );
+
+		if( ( (CTracker *)arg )->m_bCountUniquePeers )
+		{
+			if( gbDebug )
+				if( gucDebugLevel & DEBUG_TRACKER )
+					UTIL_LogPrint( "CTracker: Counting the unique peers\n" );
+
+			if( gbDebug )
+				if( gucDebugLevel & DEBUG_TRACKER )
+					UTIL_LogPrint( "CountUniquePeers: started\n" );
+				
+			CMySQLQuery mq01( "TRUNCATE TABLE ips" );
+			
+			CMySQLQuery mq02( "INSERT INTO ips SELECT bip,COUNT(*) FROM dstate WHERE bip!='' GROUP BY bip" );
+
+			CMySQLQuery mq03( "INSERT INTO ips SELECT bip6,COUNT(*) FROM dstate WHERE bip='' GROUP BY bip6" );
+
+			CMySQLQuery *pQueryIP = new CMySQLQuery( "SELECT COUNT(*) FROM ips" );
+			
+			vector<string> vecQueryIP;
+			
+			vecQueryIP.reserve(1);
+
+			vecQueryIP = pQueryIP->nextRow( );
+			
+			delete pQueryIP;
+
+//			pQuery->query( "TRUNCATE TABLE ips" );
+//
+//			pQuery->query( "INSERT INTO ips SELECT bip,COUNT(*) FROM dstate WHERE bip!='' GROUP BY bip" );
+//
+//			pQuery->query( "INSERT INTO ips SELECT bip6,COUNT(*) FROM dstate WHERE bip='' GROUP BY bip6" );
+//
+//			pQuery->query( "SELECT COUNT(*) FROM ips" );
+//			
+//			vector<string> vecQueryIP;
+//			
+//			vecQueryIP.reserve(1);
+//
+//			vecQueryIP = pQuery->nextRow( );
+			
+			int64 iGreatestUnique = UTIL_StringTo64( vecQueryIP[0].c_str( ) );
+			
+			if( iGreatestUnique > gtXStats.peer.iGreatestUnique )
+			{
+				gmtxMySQL.Claim( );
+				gtXStats.peer.iGreatestUnique = iGreatestUnique;
+				gmtxMySQL.Release( );
+			}
+
+			if( gbDebug )
+				if( gucDebugLevel & DEBUG_TRACKER )
+					UTIL_LogPrint( "CountUniquePeers: completed (%i)\n", iGreatestUnique );
+		}
+
+		if( gbDebug && ( gucDebugLevel & DEBUG_BNBT ) )
+			UTIL_LogPrint( "Closing MySQL local connection\n" );
+
+		mysql_close( pMySQL );
+
+		gmtxMySQL.Claim( );
+		gmapMySQL.erase( pthread_self( ) );
+		gmtxMySQL.Release( );
+	}
+
+//	}
+
+//	delete pQuery;
+	
+	pthread_exit( NULL );
+
+	return NULL;
+}
+
 // Expire downloaders 
 void CTracker :: expireDownloaders( )
 {
@@ -1485,21 +1958,68 @@ void CTracker :: expireDownloaders( )
 		if( gucDebugLevel & DEBUG_TRACKER )
 			UTIL_LogPrint( "expireDownloaders: started\n" );
 
-	CMySQLQuery mq01( "DELETE FROM dstate WHERE bupdated<NOW()-INTERVAL " + CAtomInt( m_uiDownloaderTimeOutInterval ).toString( ) + " SECOND" );
-	
-	CMySQLQuery mq02( "UPDATE offer SET bseeded=0 WHERE bseeded<NOW()-INTERVAL " + CAtomInt( m_uiDownloaderTimeOutInterval ).toString( ) + " SECOND" );
-	
-	CMySQLQuery mq03( "UPDATE allowed SET bseeders=0,bseeders6=0,bleechers=0,bleechers6=0" );
-		
-	CMySQLQuery mq04( "UPDATE allowed,(SELECT bid,COUNT(*) AS bseeders FROM dstate WHERE bleft=0 GROUP BY bid) AS seeders SET allowed.bseeders=seeders.bseeders WHERE allowed.bid=seeders.bid" );
-	CMySQLQuery mq05( "UPDATE allowed,(SELECT bid,COUNT(*) AS bseeders6 FROM dstate WHERE bleft=0 AND bip6!='' GROUP BY bid) AS seeders6 SET allowed.bseeders6=seeders6.bseeders6 WHERE allowed.bid=seeders6.bid" );
-	CMySQLQuery mq06( "UPDATE allowed,(SELECT bid,COUNT(*) AS bleechers FROM dstate WHERE bleft!=0 GROUP BY bid) AS leechers SET allowed.bleechers=leechers.bleechers WHERE allowed.bid=leechers.bid" );
-	CMySQLQuery mq07( "UPDATE allowed,(SELECT bid,COUNT(*) AS bleechers6 FROM dstate WHERE bleft!=0 AND bip6!='' GROUP BY bid) AS leechers6 SET allowed.bleechers6=leechers6.bleechers6 WHERE allowed.bid=leechers6.bid" );
-	
-	m_pCache->Reset( );
-	m_pCache->Reset( true );
-	
-	UpdateUserState( );
+	pthread_t pid;
+	pthread_attr_t attr;
+	int err;
+
+	pthread_attr_init( &attr );
+	pthread_attr_setdetachstate( &attr, PTHREAD_CREATE_DETACHED );
+
+	err = pthread_create( &pid, &attr, threadExpire, (void *)this );
+
+	pthread_attr_destroy( &attr );
+
+	if( err != 0 )
+		UTIL_LogPrint( "expireDownloaders: pthread failed\n" );
+
+//	CMySQLQuery mq01( "DELETE FROM dstate WHERE bupdated<NOW()-INTERVAL " + CAtomInt( m_uiDownloaderTimeOutInterval ).toString( ) + " SECOND" );
+//	
+//	CMySQLQuery mq02( "UPDATE offer SET bseeded=0 WHERE bseeded<NOW()-INTERVAL " + CAtomInt( m_uiDownloaderTimeOutInterval ).toString( ) + " SECOND" );
+//	
+//	CMySQLQuery mq03( "UPDATE allowed SET bseeders=0,bseeders6=0,bleechers=0,bleechers6=0" );
+//		
+//	CMySQLQuery mq04( "UPDATE allowed,(SELECT bid,COUNT(*) AS bseeders FROM dstate WHERE bleft=0 GROUP BY bid) AS seeders SET allowed.bseeders=seeders.bseeders WHERE allowed.bid=seeders.bid" );
+//	CMySQLQuery mq05( "UPDATE allowed,(SELECT bid,COUNT(*) AS bseeders6 FROM dstate WHERE bleft=0 AND bip6!='' GROUP BY bid) AS seeders6 SET allowed.bseeders6=seeders6.bseeders6 WHERE allowed.bid=seeders6.bid" );
+//	CMySQLQuery mq06( "UPDATE allowed,(SELECT bid,COUNT(*) AS bleechers FROM dstate WHERE bleft!=0 GROUP BY bid) AS leechers SET allowed.bleechers=leechers.bleechers WHERE allowed.bid=leechers.bid" );
+//	CMySQLQuery mq07( "UPDATE allowed,(SELECT bid,COUNT(*) AS bleechers6 FROM dstate WHERE bleft!=0 AND bip6!='' GROUP BY bid) AS leechers6 SET allowed.bleechers6=leechers6.bleechers6 WHERE allowed.bid=leechers6.bid" );
+//	
+//	m_pCache->Reset( );
+//	m_pCache->Reset( true );
+//	
+//	UpdateUserState( );
+
+	m_vecSearches.clear( );
+
+	CMySQLQuery *pQuerySearches = new CMySQLQuery( "SELECT bsearch,btype,bmatch,COUNT(*) AS bcount FROM searches WHERE bsearchat>NOW()-INTERVAL 1 WEEK GROUP BY bsearch,btype ORDER BY bcount DESC LIMIT 8" );
+
+	vector<string> vecQuerySearches;
+
+	vecQuerySearches.reserve(4);
+
+	vecQuerySearches = pQuerySearches->nextRow( );
+
+	while( vecQuerySearches.size( ) == 4 )
+	{
+		string strSearch = string( );
+
+		if( !vecQuerySearches[0].empty( ) )
+		{
+			if( vecQuerySearches[1] == "uploader" )
+				strSearch += "uploader=" + UTIL_StringToEscaped( vecQuerySearches[0] );
+			else if( vecQuerySearches[1] == "imdb" )
+				strSearch += "imdb=" + UTIL_StringToEscaped( vecQuerySearches[0] );
+			else
+				strSearch += "search=" + UTIL_StringToEscaped( vecQuerySearches[0] );
+//			if( !vecQuerySearches[2].empty( ) )
+//				strSearch += "&match=" + UTIL_StringToEscaped( vecQuerySearches[2] );
+		}
+
+		m_vecSearches.push_back( pair<string, string>( strSearch, vecQuerySearches[0] ) );
+
+		vecQuerySearches = pQuerySearches->nextRow( );
+	}
+
+	delete pQuerySearches;
 	
 	m_vecNotes.clear( );
 
@@ -1539,14 +2059,14 @@ void CTracker :: expireDownloaders( )
 	
 	delete pQueryTag;
 
-	if( m_bCountUniquePeers )
-	{
-		if( gbDebug )
-			if( gucDebugLevel & DEBUG_TRACKER )
-				UTIL_LogPrint( "CTracker: Counting the unique peers\n" );
-
-		CountUniquePeers( );
-	}
+//	if( m_bCountUniquePeers )
+//	{
+//		if( gbDebug )
+//			if( gucDebugLevel & DEBUG_TRACKER )
+//				UTIL_LogPrint( "CTracker: Counting the unique peers\n" );
+//
+//		CountUniquePeers( );
+//	}
 
 	if( gbDebug )
 		if( gucDebugLevel & DEBUG_TRACKER )
@@ -4542,7 +5062,7 @@ void CTracker :: Announce( const struct announce_t &ann, bool &bRespond )
 //							if( bSeedtime )
 //							{
 								m_pCache->setOrder( ann.strID, strOrder, SET_SEEDER_A_LEECHER_M_BOTH );
-								CMySQLQuery mq02( "UPDATE allowed SET breq=0,border=\'" + strOrder + "\',bseeders=bseeders+1,bseeders6=bseeders6+1,bleechers=bleechers-1,bleechers6=bleechers6-1,bcompleted=bcompleted+1,bupdated=NOW(),bseeded=NOW() WHERE bid=" + ann.strID + " AND bleechers>0" );
+								CMySQLQuery mq02( "UPDATE allowed SET breq=0,border=\'" + strOrder + "\',bseeders=bseeders+1,bseeders6=bseeders6+1,bleechers=bleechers-1,bleechers6=bleechers6-1,bcompleted=bcompleted+1,bupdated=NOW(),bseeded=NOW() WHERE bid=" + ann.strID + " AND bleechers>0 AND bleechers6>0" );
 //								CMySQLQuery mq03( "DELETE FROM talkrequest WHERE btid=" + ann.strID );
 //							}
 //							else
@@ -4557,7 +5077,7 @@ void CTracker :: Announce( const struct announce_t &ann, bool &bRespond )
 //							m_pCache->setActive( ann.strID, SET_SEEDER_A_LEECHER_M_BOTH );
 //							CMySQLQuery mq02( "UPDATE allowed SET bseeders=bseeders+1,bseeders6=bseeders6+1,bleechers=bleechers-1,bleechers6=bleechers6-1,bcompleted=bcompleted+1,bupdated=NOW(),bseeded=NOW() WHERE bid=" + ann.strID + " AND bleechers>0" );
 							m_pCache->setOrder( ann.strID, string( ), SET_SEEDER_A_LEECHER_M_BOTH );
-							CMySQLQuery mq02( "UPDATE allowed SET breq=0,bseeders=bseeders+1,bseeders6=bseeders6+1,bleechers=bleechers-1,bleechers6=bleechers6-1,bcompleted=bcompleted+1,bupdated=NOW(),bseeded=NOW() WHERE bid=" + ann.strID + " AND bleechers>0" );
+							CMySQLQuery mq02( "UPDATE allowed SET breq=0,bseeders=bseeders+1,bseeders6=bseeders6+1,bleechers=bleechers-1,bleechers6=bleechers6-1,bcompleted=bcompleted+1,bupdated=NOW(),bseeded=NOW() WHERE bid=" + ann.strID + " AND bleechers>0 AND bleechers6>0" );
 						}
 						if( bReq )
 							CMySQLQuery mq03( "DELETE FROM talkrequest WHERE btid=" + ann.strID );
@@ -4635,7 +5155,7 @@ void CTracker :: Announce( const struct announce_t &ann, bool &bRespond )
 				if( bIPv6 )
 				{
 					m_pCache->setActive( ann.strID, SET_SEEDER_MINUS_BOTH );
-					CMySQLQuery mq02( "UPDATE allowed SET bseeders=bseeders-1,bseeders6=bseeders6-1,bupdated=NOW() WHERE bid=" + ann.strID + " AND bseeders>0" );
+					CMySQLQuery mq02( "UPDATE allowed SET bseeders=bseeders-1,bseeders6=bseeders6-1,bupdated=NOW() WHERE bid=" + ann.strID + " AND bseeders>0 AND bseeders6>0" );
 				}
 				else
 				{
@@ -4650,7 +5170,7 @@ void CTracker :: Announce( const struct announce_t &ann, bool &bRespond )
 				if( bIPv6 )
 				{
 					m_pCache->setActive( ann.strID, SET_LEECHER_MINUS_BOTH );
-					CMySQLQuery mq02( "UPDATE allowed SET bleechers=bleechers-1,bleechers6=bleechers6-1,bupdated=NOW() WHERE bid=" + ann.strID + " AND bleechers>0" );
+					CMySQLQuery mq02( "UPDATE allowed SET bleechers=bleechers-1,bleechers6=bleechers6-1,bupdated=NOW() WHERE bid=" + ann.strID + " AND bleechers>0 AND bleechers6>0" );
 				}
 
 				else
@@ -5413,126 +5933,140 @@ void CTracker :: Update( )
 			if( gucDebugLevel & DEBUG_TRACKER )
 				UTIL_LogPrint( "CTracker: adding seedbonus\n" );
 			
-		CMySQLQuery mq01( "UPDATE users SET bseedbonus=0.00" );
-		
-		CMySQLQuery *pQuerySeeding = new CMySQLQuery( "SELECT bid,buid,bupspeed FROM dstate WHERE bleft=0 ORDER BY buid" );
-		
-		vector<string> vecQuerySeeding;
-	
-		vecQuerySeeding.reserve(3);
+		pthread_t pid;
+		pthread_attr_t attr;
+		int err;
 
-		vecQuerySeeding = pQuerySeeding->nextRow( );
+		pthread_attr_init( &attr );
+		pthread_attr_setdetachstate( &attr, PTHREAD_CREATE_DETACHED );
 
-		string strUID = string( );
-		time_t now_t = GetTime( );
-		
-		int uiSeeding = 0;
-		float flSeedBonus = 0.0;
+		err = pthread_create( &pid, &attr, threadSeedBonus, (void *)this );
 
-		while( vecQuerySeeding.size( ) == 3 )
-		{
-			if( strUID.empty( ) || strUID == vecQuerySeeding[1] )
-			{
-				if( strUID.empty( ) )
-				{
-					strUID = vecQuerySeeding[1];
-					uiSeeding = 0;
-					flSeedBonus = 0.0;
-				}
+		pthread_attr_destroy( &attr );
 
-				string strAdded = string( );
-				int64 iSize = 0;
-				int64 ulUpSpeed = 0;
-				int uiSeeders = 0;
-				
-				float passed = 0;
-			
-				CMySQLQuery *pQuery = new CMySQLQuery( "SELECT badded,bsize,bseeders FROM allowed WHERE bid=" + vecQuerySeeding[0] );
-				
-				vector<string> vecQuery;
-				
-				vecQuery.reserve(3);
+		if( err != 0 )
+			UTIL_LogPrint( "expireSeedBonus: pthread failed\n" );
 
-				vecQuery = pQuery->nextRow( );
-				
-				if( vecQuery.size( ) == 3 )
-				{
-					if( !vecQuery[0].empty( ) )
-						strAdded = vecQuery[0];
-
-					if( !vecQuery[1].empty( ) )
-						iSize = UTIL_StringTo64( vecQuery[1].c_str( ) );
-					
-					if( !vecQuery[2].empty( ) )
-						uiSeeders = atoi( vecQuery[2].c_str( ) );
-						
-					struct tm *now_tm, time_tm;
-					int64 year, month, day, hour, minute, second;
-					
-					sscanf( strAdded.c_str( ), "%d-%d-%d %d:%d:%d",&year,&month,&day,&hour,&minute,&second );
-					time_tm.tm_year = year-1900;
-					time_tm.tm_mon = month-1;
-					time_tm.tm_mday = day;
-					time_tm.tm_hour = hour;
-					time_tm.tm_min = minute;
-					time_tm.tm_sec = second;
-					passed = difftime(now_t, mktime(&time_tm));
-					
-					if( !vecQuerySeeding[2].empty( ) && uiSeeders > 0 )
-					{
-						ulUpSpeed = UTIL_StringTo64( vecQuerySeeding[2].c_str( ) );
-						if( uiSeeders > 0 )
-						{
-							uiSeeding++;
-							flSeedBonus += ( 1.0 - 1.0 / pow( 10, passed / 3600 / 24 / 7 / 4 ) ) * ( 1.5 - 0.5 / pow( 10, ulUpSpeed / 1024.0 / 1024 / 10 ) ) * sqrt( iSize / 1024.0 / 1024 / 1024 ) * ( 1 + sqrt( 2 ) / pow( 10, ( uiSeeders - 1 ) / ( 10.0 - 1.0 ) ) ) / 100;
-						}
-// 						flSeedBonus += sqrt( passed / 3600 / 24 ) * ( iSize / 1024.0 / 1024 / 1024 ) * ( 1 + 5 * 2 * atan( ulUpSpeed / 1024.0 / 1024 ) / Pi ) / uiSeeders / uiSeeders / 5000;
-					}
-				}
-				delete pQuery;
-				
-				vecQuerySeeding = pQuerySeeding->nextRow( );
-			}
-			else
-			{
-				if( uiSeeding >20 )
-					uiSeeding = 20;
-				flSeedBonus = uiSeeding + 80 * 2 * atan( flSeedBonus ) / Pi;
-				char szFloat[16];
-				memset( szFloat, 0, sizeof( szFloat ) / sizeof( char ) );
-
-				snprintf( szFloat, sizeof( szFloat ) / sizeof( char ), "%0.2f", flSeedBonus );
-				
-				string strQuery = "UPDATE users SET bseedbonus=";
-				strQuery += szFloat;
-				strQuery += ",bbonus=bbonus+" + CAtomLong( flSeedBonus * m_uiGetSeedBonusInterval * 100.0 / 3600 ).toString( ) + " WHERE buid=" + strUID;
-				
-				CMySQLQuery mq02( strQuery );
-
-				
-				strUID.erase( );
-			}
-		}
-		
-		if( !strUID.empty( ) )
-		{
-			if( uiSeeding >20 )
-				uiSeeding = 20;
-			flSeedBonus = uiSeeding + 80 * 2 * atan( flSeedBonus ) / Pi;
-			char szFloat[16];
-			memset( szFloat, 0, sizeof( szFloat ) / sizeof( char ) );
-			snprintf( szFloat, sizeof( szFloat ) / sizeof( char ), "%0.2f", flSeedBonus );
-		
-			string strQuery = "UPDATE users SET bseedbonus=";
-			strQuery += szFloat;
-			strQuery += ",bbonus=bbonus+" + CAtomLong( flSeedBonus * m_uiGetSeedBonusInterval * 100.0 / 3600 ).toString( ) + " WHERE buid=" + strUID;
-		
-			CMySQLQuery mq02( strQuery );
-		}
-		
-		delete pQuerySeeding;
-		
-		m_pCache->ResetUsers( );
+//		CMySQLQuery mq01( "UPDATE users SET bseedbonus=0.00" );
+//		
+//		CMySQLQuery *pQuerySeeding = new CMySQLQuery( "SELECT bid,buid,bupspeed FROM dstate WHERE bleft=0 ORDER BY buid" );
+//		
+//		vector<string> vecQuerySeeding;
+//	
+//		vecQuerySeeding.reserve(3);
+//
+//		vecQuerySeeding = pQuerySeeding->nextRow( );
+//
+//		string strUID = string( );
+//		time_t now_t = GetTime( );
+//		
+//		int uiSeeding = 0;
+//		float flSeedBonus = 0.0;
+//
+//		while( vecQuerySeeding.size( ) == 3 )
+//		{
+//			if( strUID.empty( ) || strUID == vecQuerySeeding[1] )
+//			{
+//				if( strUID.empty( ) )
+//				{
+//					strUID = vecQuerySeeding[1];
+//					uiSeeding = 0;
+//					flSeedBonus = 0.0;
+//				}
+//
+//				string strAdded = string( );
+//				int64 iSize = 0;
+//				int64 ulUpSpeed = 0;
+//				int uiSeeders = 0;
+//				
+//				float passed = 0;
+//			
+//				CMySQLQuery *pQuery = new CMySQLQuery( "SELECT badded,bsize,bseeders FROM allowed WHERE bid=" + vecQuerySeeding[0] );
+//				
+//				vector<string> vecQuery;
+//				
+//				vecQuery.reserve(3);
+//
+//				vecQuery = pQuery->nextRow( );
+//				
+//				if( vecQuery.size( ) == 3 )
+//				{
+//					if( !vecQuery[0].empty( ) )
+//						strAdded = vecQuery[0];
+//
+//					if( !vecQuery[1].empty( ) )
+//						iSize = UTIL_StringTo64( vecQuery[1].c_str( ) );
+//					
+//					if( !vecQuery[2].empty( ) )
+//						uiSeeders = atoi( vecQuery[2].c_str( ) );
+//						
+//					struct tm *now_tm, time_tm;
+//					int64 year, month, day, hour, minute, second;
+//					
+//					sscanf( strAdded.c_str( ), "%d-%d-%d %d:%d:%d",&year,&month,&day,&hour,&minute,&second );
+//					time_tm.tm_year = year-1900;
+//					time_tm.tm_mon = month-1;
+//					time_tm.tm_mday = day;
+//					time_tm.tm_hour = hour;
+//					time_tm.tm_min = minute;
+//					time_tm.tm_sec = second;
+//					passed = difftime(now_t, mktime(&time_tm));
+//					
+//					if( !vecQuerySeeding[2].empty( ) && uiSeeders > 0 )
+//					{
+//						ulUpSpeed = UTIL_StringTo64( vecQuerySeeding[2].c_str( ) );
+//						if( uiSeeders > 0 )
+//						{
+//							uiSeeding++;
+//							flSeedBonus += ( 1.0 - 1.0 / pow( 10, passed / 3600 / 24 / 7 / 4 ) ) * ( 1.5 - 0.5 / pow( 10, ulUpSpeed / 1024.0 / 1024 / 10 ) ) * sqrt( iSize / 1024.0 / 1024 / 1024 ) * ( 1 + sqrt( 2 ) / pow( 10, ( uiSeeders - 1 ) / ( 10.0 - 1.0 ) ) ) / 100;
+//						}
+//// 						flSeedBonus += sqrt( passed / 3600 / 24 ) * ( iSize / 1024.0 / 1024 / 1024 ) * ( 1 + 5 * 2 * atan( ulUpSpeed / 1024.0 / 1024 ) / Pi ) / uiSeeders / uiSeeders / 5000;
+//					}
+//				}
+//				delete pQuery;
+//				
+//				vecQuerySeeding = pQuerySeeding->nextRow( );
+//			}
+//			else
+//			{
+//				if( uiSeeding >20 )
+//					uiSeeding = 20;
+//				flSeedBonus = uiSeeding + 80 * 2 * atan( flSeedBonus ) / Pi;
+//				char szFloat[16];
+//				memset( szFloat, 0, sizeof( szFloat ) / sizeof( char ) );
+//
+//				snprintf( szFloat, sizeof( szFloat ) / sizeof( char ), "%0.2f", flSeedBonus );
+//				
+//				string strQuery = "UPDATE users SET bseedbonus=";
+//				strQuery += szFloat;
+//				strQuery += ",bbonus=bbonus+" + CAtomLong( flSeedBonus * m_uiGetSeedBonusInterval * 100.0 / 3600 ).toString( ) + " WHERE buid=" + strUID;
+//				
+//				CMySQLQuery mq02( strQuery );
+//
+//				
+//				strUID.erase( );
+//			}
+//		}
+//		
+//		if( !strUID.empty( ) )
+//		{
+//			if( uiSeeding >20 )
+//				uiSeeding = 20;
+//			flSeedBonus = uiSeeding + 80 * 2 * atan( flSeedBonus ) / Pi;
+//			char szFloat[16];
+//			memset( szFloat, 0, sizeof( szFloat ) / sizeof( char ) );
+//			snprintf( szFloat, sizeof( szFloat ) / sizeof( char ), "%0.2f", flSeedBonus );
+//		
+//			string strQuery = "UPDATE users SET bseedbonus=";
+//			strQuery += szFloat;
+//			strQuery += ",bbonus=bbonus+" + CAtomLong( flSeedBonus * m_uiGetSeedBonusInterval * 100.0 / 3600 ).toString( ) + " WHERE buid=" + strUID;
+//		
+//			CMySQLQuery mq02( strQuery );
+//		}
+//		
+//		delete pQuerySeeding;
+//		
+//		m_pCache->ResetUsers( );
 
 		m_ulGetSeedBonusNext = GetTime( ) + m_uiGetSeedBonusInterval;
 	}

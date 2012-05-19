@@ -1230,7 +1230,7 @@ void CTracker :: serverResponseTalkGET( struct request_t *pRequest, struct respo
 		// delete talk
 		//
 
-		if( pRequest->user.ucAccess & m_ucAccessDelOwn )
+		if( ( pRequest->user.ucAccess & m_ucAccessDelOwn ) || ( pRequest->user.ucAccess & m_ucAccessAdmin ) )
 		{
 			string cstrDel( pRequest->mapParams["del"] );
 
@@ -1251,7 +1251,7 @@ void CTracker :: serverResponseTalkGET( struct request_t *pRequest, struct respo
 
 				if( vecQueryTalk.size( ) == 6 )
 				{
-					if( vecQueryTalk[0] == pRequest->user.strUID )
+					if( vecQueryTalk[0] == pRequest->user.strUID || ( pRequest->user.ucAccess & m_ucAccessAdmin ) )
 					{
 //						CMySQLQuery *pQueryRef = new CMySQLQuery( "SELECT buid FROM talkref WHERE brefid=" + cstrDel );
 //			

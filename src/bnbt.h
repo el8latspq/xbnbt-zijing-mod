@@ -428,6 +428,7 @@ extern string gstrNTServiceName;
 
 // Threads
 extern CMutex gmtxOutput;
+extern CMutex gmtxMySQL;
 
 // TCP window size
 extern unsigned int guiSO_RECBUF;

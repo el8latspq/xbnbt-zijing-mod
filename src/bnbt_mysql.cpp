@@ -34,6 +34,7 @@
 #if defined ( BNBT_MYSQL )
 
 MYSQL *gpMySQL = 0;
+map<pthread_t, MYSQL *> gmapMySQL;
 string gstrMySQLHost = string( );
 string gstrMySQLDatabase = string( );
 string gstrMySQLUser = string( );
@@ -68,12 +69,12 @@ void UTIL_MySQLCreateDatabase( )
 
 void UTIL_MySQLCreateTables( )
 {
-	string strCreate[35];
+	string strCreate[36];
 
-	strCreate[0] = "CREATE TABLE IF NOT EXISTS allowed ( bid MEDIUMINT UNSIGNED NOT NULL AUTO_INCREMENT, bhash BLOB, bfilename VARCHAR(255) NOT NULL, bname VARCHAR(255) NOT NULL, badded DATETIME NOT NULL, bsize BIGINT UNSIGNED NOT NULL DEFAULT 0, bfiles INT UNSIGNED NOT NULL DEFAULT 0, bcomment VARCHAR(255) NOT NULL, btag VARCHAR(255) NOT NULL, btitle VARCHAR(255) NOT NULL, bintr TEXT, bip VARCHAR(40) NOT NULL, buploader VARCHAR(16) NOT NULL, buploaderid MEDIUMINT UNSIGNED NOT NULL, bimdb VARCHAR(4) NOT NULL, bimdbid VARCHAR(16) NOT NULL, bimdbupdated DATETIME NOT NULL, bdefault_down SMALLINT UNSIGNED NOT NULL DEFAULT 100, bdefault_up SMALLINT UNSIGNED NOT NULL DEFAULT 100, bfree_down SMALLINT UNSIGNED NOT NULL DEFAULT 100, bfree_up SMALLINT UNSIGNED NOT NULL DEFAULT 100, bfree_time SMALLINT UNSIGNED NOT NULL DEFAULT 0, bfree_to DATETIME NOT NULL, btop TINYINT(1) UNSIGNED NOT NULL DEFAULT 0, btop_intag TINYINT(1) UNSIGNED NOT NULL DEFAULT 0, btop_time SMALLINT UNSIGNED NOT NULL DEFAULT 0, btop_to DATETIME NOT NULL, bhl TINYINT(1) UNSIGNED NOT NULL DEFAULT 0, bclassic TINYINT(1) UNSIGNED NOT NULL DEFAULT 0, breq TINYINT(1) UNSIGNED NOT NULL DEFAULT 0, bnodownload TINYINT(1) UNSIGNED NOT NULL DEFAULT 0, bnocomment TINYINT(1) UNSIGNED NOT NULL DEFAULT 0, border DATETIME NOT NULL, bseeders INT UNSIGNED NOT NULL, bseeders6 INT UNSIGNED NOT NULL, bleechers INT UNSIGNED NOT NULL, bleechers6 INT UNSIGNED NOT NULL, bcompleted INT UNSIGNED NOT NULL, bcomments MEDIUMINT UNSIGNED NOT NULL DEFAULT 0, bthanks MEDIUMINT UNSIGNED NOT NULL DEFAULT 0, bshares MEDIUMINT UNSIGNED NOT NULL DEFAULT 0, bsubs MEDIUMINT UNSIGNED NOT NULL DEFAULT 0, bupdated DATETIME NOT NULL, bseeded DATETIME NOT NULL, bpost TINYINT(1) UNSIGNED NOT NULL DEFAULT 0, PRIMARY KEY( bid ), UNIQUE KEY( bhash(20) ), INDEX( buploaderid ), INDEX( bimdbid(9) ) ) ENGINE=InnoDB";
-	strCreate[1] = "CREATE TABLE IF NOT EXISTS offer ( bid MEDIUMINT UNSIGNED NOT NULL AUTO_INCREMENT, bhash BLOB, bfilename VARCHAR(255) NOT NULL, bname VARCHAR(255) NOT NULL, badded DATETIME NOT NULL, bsize BIGINT UNSIGNED NOT NULL DEFAULT 0, bfiles INT UNSIGNED NOT NULL DEFAULT 0, bcomment VARCHAR(255) NOT NULL, btag VARCHAR(255) NOT NULL, btitle VARCHAR(255) NOT NULL, bintr TEXT, bip VARCHAR(40) NOT NULL, buploader VARCHAR(16) NOT NULL, buploaderid MEDIUMINT UNSIGNED NOT NULL, bimdb VARCHAR(4) NOT NULL, bimdbid VARCHAR(16) NOT NULL, bimdbupdated DATETIME NOT NULL, border DATETIME NOT NULL, bseeded DATETIME NOT NULL, bcomments MEDIUMINT UNSIGNED NOT NULL DEFAULT 0, PRIMARY KEY( bid ), UNIQUE KEY( bhash(20) ), INDEX( bimdbid(9) ) ) ENGINE=InnoDB";
-	strCreate[2] = "CREATE TABLE IF NOT EXISTS dstate ( bid MEDIUMINT UNSIGNED NOT NULL, bpeerid BLOB, buseragent VARCHAR(40) NOT NULL, busername VARCHAR(16) NOT NULL, buid MEDIUMINT UNSIGNED NOT NULL, bip VARCHAR(40) NOT NULL, bip6 VARCHAR(40) NOT NULL, bport SMALLINT UNSIGNED NOT NULL, bkey BLOB, buploaded BIGINT UNSIGNED NOT NULL DEFAULT 0, bdownloaded BIGINT UNSIGNED NOT NULL DEFAULT 0, bleft BIGINT UNSIGNED NOT NULL, bconnected DATETIME NOT NULL, bupdated DATETIME NOT NULL, bcompleted TINYINT(1) UNSIGNED NOT NULL DEFAULT 0, bkeeptime INT UNSIGNED NOT NULL DEFAULT 0, bupspeed BIGINT UNSIGNED NOT NULL DEFAULT 0, bdownspeed BIGINT UNSIGNED NOT NULL DEFAULT 0, PRIMARY KEY( bid, buid, bpeerid(20) ), INDEX( buid ), INDEX( bip(16) ), INDEX( bip6(32) ) ) ENGINE=InnoDB";
-	strCreate[3] = "CREATE TABLE IF NOT EXISTS dstate_store ( bid MEDIUMINT UNSIGNED NOT NULL, bpeerid BLOB, buseragent VARCHAR(40) NOT NULL, busername VARCHAR(16) NOT NULL, buid MEDIUMINT UNSIGNED NOT NULL, bip VARCHAR(40) NOT NULL, bip6 VARCHAR(40) NOT NULL, bport SMALLINT UNSIGNED NOT NULL, bkey BLOB, buploaded BIGINT UNSIGNED NOT NULL DEFAULT 0, bdownloaded BIGINT UNSIGNED NOT NULL DEFAULT 0, bleft BIGINT UNSIGNED NOT NULL, bconnected DATETIME NOT NULL, bupdated DATETIME NOT NULL, bcompleted TINYINT(1) UNSIGNED NOT NULL DEFAULT 0, bkeeptime INT UNSIGNED NOT NULL DEFAULT 0, bupspeed BIGINT UNSIGNED NOT NULL DEFAULT 0, bdownspeed BIGINT UNSIGNED NOT NULL DEFAULT 0, PRIMARY KEY( bid, buid, bpeerid(20) ), INDEX( buid ), INDEX( bip(16) ), INDEX( bip6(32) ) ) ENGINE=InnoDB";
+	strCreate[0] = "CREATE TABLE IF NOT EXISTS allowed ( bid MEDIUMINT UNSIGNED NOT NULL AUTO_INCREMENT, bhash BLOB, bfilename VARCHAR(255) NOT NULL, bname VARCHAR(255) NOT NULL, badded DATETIME NOT NULL, bsize BIGINT UNSIGNED NOT NULL DEFAULT 0, bfiles INT UNSIGNED NOT NULL DEFAULT 0, bcomment VARCHAR(255) NOT NULL, btag VARCHAR(255) NOT NULL, btitle VARCHAR(255) NOT NULL, bintr LONGTEXT, bip VARCHAR(40) NOT NULL, buploader VARCHAR(16) NOT NULL, buploaderid MEDIUMINT UNSIGNED NOT NULL, bimdb VARCHAR(4) NOT NULL, bimdbid VARCHAR(16) NOT NULL, bimdbupdated DATETIME NOT NULL, bdefault_down SMALLINT UNSIGNED NOT NULL DEFAULT 100, bdefault_up SMALLINT UNSIGNED NOT NULL DEFAULT 100, bfree_down SMALLINT UNSIGNED NOT NULL DEFAULT 100, bfree_up SMALLINT UNSIGNED NOT NULL DEFAULT 100, bfree_time SMALLINT UNSIGNED NOT NULL DEFAULT 0, bfree_to DATETIME NOT NULL, btop TINYINT(1) UNSIGNED NOT NULL DEFAULT 0, btop_intag TINYINT(1) UNSIGNED NOT NULL DEFAULT 0, btop_time SMALLINT UNSIGNED NOT NULL DEFAULT 0, btop_to DATETIME NOT NULL, bhl TINYINT(1) UNSIGNED NOT NULL DEFAULT 0, bclassic TINYINT(1) UNSIGNED NOT NULL DEFAULT 0, breq TINYINT(1) UNSIGNED NOT NULL DEFAULT 0, bnodownload TINYINT(1) UNSIGNED NOT NULL DEFAULT 0, bnocomment TINYINT(1) UNSIGNED NOT NULL DEFAULT 0, border DATETIME NOT NULL, bseeders INT UNSIGNED NOT NULL, bseeders6 INT UNSIGNED NOT NULL, bleechers INT UNSIGNED NOT NULL, bleechers6 INT UNSIGNED NOT NULL, bcompleted INT UNSIGNED NOT NULL, bcomments MEDIUMINT UNSIGNED NOT NULL DEFAULT 0, bthanks MEDIUMINT UNSIGNED NOT NULL DEFAULT 0, bshares MEDIUMINT UNSIGNED NOT NULL DEFAULT 0, bsubs MEDIUMINT UNSIGNED NOT NULL DEFAULT 0, bupdated DATETIME NOT NULL, bseeded DATETIME NOT NULL, bpost TINYINT(1) UNSIGNED NOT NULL DEFAULT 0, PRIMARY KEY( bid ), UNIQUE KEY( bhash(20) ), INDEX( buploaderid ), INDEX( bimdbid(9) ) ) ENGINE=InnoDB";
+	strCreate[1] = "CREATE TABLE IF NOT EXISTS offer ( bid MEDIUMINT UNSIGNED NOT NULL AUTO_INCREMENT, bhash BLOB, bfilename VARCHAR(255) NOT NULL, bname VARCHAR(255) NOT NULL, badded DATETIME NOT NULL, bsize BIGINT UNSIGNED NOT NULL DEFAULT 0, bfiles INT UNSIGNED NOT NULL DEFAULT 0, bcomment VARCHAR(255) NOT NULL, btag VARCHAR(255) NOT NULL, btitle VARCHAR(255) NOT NULL, bintr LONGTEXT, bip VARCHAR(40) NOT NULL, buploader VARCHAR(16) NOT NULL, buploaderid MEDIUMINT UNSIGNED NOT NULL, bimdb VARCHAR(4) NOT NULL, bimdbid VARCHAR(16) NOT NULL, bimdbupdated DATETIME NOT NULL, border DATETIME NOT NULL, bseeded DATETIME NOT NULL, bcomments MEDIUMINT UNSIGNED NOT NULL DEFAULT 0, PRIMARY KEY( bid ), UNIQUE KEY( bhash(20) ), INDEX( bimdbid(9) ) ) ENGINE=InnoDB";
+	strCreate[2] = "CREATE TABLE IF NOT EXISTS dstate ( bid MEDIUMINT UNSIGNED NOT NULL, bpeerid VARBINARY(40) NOT NULL, buseragent VARCHAR(40) NOT NULL, busername VARCHAR(16) NOT NULL, buid MEDIUMINT UNSIGNED NOT NULL, bip VARCHAR(40) NOT NULL, bip6 VARCHAR(40) NOT NULL, bport SMALLINT UNSIGNED NOT NULL, bkey VARBINARY(16) NOT NULL, buploaded BIGINT UNSIGNED NOT NULL DEFAULT 0, bdownloaded BIGINT UNSIGNED NOT NULL DEFAULT 0, bleft BIGINT UNSIGNED NOT NULL, bconnected DATETIME NOT NULL, bupdated DATETIME NOT NULL, bcompleted TINYINT(1) UNSIGNED NOT NULL DEFAULT 0, bkeeptime INT UNSIGNED NOT NULL DEFAULT 0, bupspeed BIGINT UNSIGNED NOT NULL DEFAULT 0, bdownspeed BIGINT UNSIGNED NOT NULL DEFAULT 0, PRIMARY KEY( bid, buid, bpeerid(20) ), INDEX( buid ), INDEX( bip(16) ), INDEX( bip6(32) ) ) ENGINE=InnoDB";
+	strCreate[3] = "CREATE TABLE IF NOT EXISTS dstate_store ( bid MEDIUMINT UNSIGNED NOT NULL, bpeerid VARBINARY(40) NOT NULL, buseragent VARCHAR(40) NOT NULL, busername VARCHAR(16) NOT NULL, buid MEDIUMINT UNSIGNED NOT NULL, bip VARCHAR(40) NOT NULL, bip6 VARCHAR(40) NOT NULL, bport SMALLINT UNSIGNED NOT NULL, bkey VARBINARY(16) NOT NULL, buploaded BIGINT UNSIGNED NOT NULL DEFAULT 0, bdownloaded BIGINT UNSIGNED NOT NULL DEFAULT 0, bleft BIGINT UNSIGNED NOT NULL, bconnected DATETIME NOT NULL, bupdated DATETIME NOT NULL, bcompleted TINYINT(1) UNSIGNED NOT NULL DEFAULT 0, bkeeptime INT UNSIGNED NOT NULL DEFAULT 0, bupspeed BIGINT UNSIGNED NOT NULL DEFAULT 0, bdownspeed BIGINT UNSIGNED NOT NULL DEFAULT 0, PRIMARY KEY( bid, buid, bpeerid(20) ), INDEX( buid ), INDEX( bip(16) ), INDEX( bip6(32) ) ) ENGINE=InnoDB";
 	strCreate[4] = "CREATE TABLE IF NOT EXISTS peers ( bid MEDIUMINT UNSIGNED NOT NULL, busername VARCHAR(16) NOT NULL, buid MEDIUMINT UNSIGNED NOT NULL, bip VARCHAR(40) NOT NULL, buploaded BIGINT UNSIGNED NOT NULL DEFAULT 0, bdownloaded BIGINT UNSIGNED NOT NULL DEFAULT 0, bstarted DATETIME NOT NULL, bcompleted DATETIME NOT NULL, INDEX( bid, buid ), INDEX( buid ) ) ENGINE=MyISAM";
 	strCreate[5] = "CREATE TABLE IF NOT EXISTS statistics ( buid MEDIUMINT UNSIGNED NOT NULL, bid MEDIUMINT UNSIGNED NOT NULL, busername VARCHAR(16) NOT NULL, bip VARCHAR(40) NOT NULL, buploaded BIGINT UNSIGNED NOT NULL DEFAULT 0, bdownloaded BIGINT UNSIGNED NOT NULL DEFAULT 0, bstarted DATETIME NOT NULL, bcompleted DATETIME NOT NULL, bdowntime INT UNSIGNED NOT NULL DEFAULT 0, bseedtime INT UNSIGNED NOT NULL DEFAULT 0, PRIMARY KEY( buid, bid ), INDEX( bid ) ) ENGINE=InnoDB";
 	strCreate[6] = "CREATE TABLE IF NOT EXISTS users ( buid MEDIUMINT UNSIGNED NOT NULL AUTO_INCREMENT, busername VARCHAR(16) NOT NULL, bmd5 BLOB, bmd5_recover BLOB, bcreated DATETIME NOT NULL, bpasskey CHAR(32) NOT NULL, bemail VARCHAR(80) NOT NULL, baccess TINYINT UNSIGNED NOT NULL DEFAULT 1, bgroup TINYINT UNSIGNED NOT NULL DEFAULT 0, btitle VARCHAR(32) NOT NULL, buploaded BIGINT UNSIGNED NOT NULL DEFAULT 0, bdownloaded BIGINT UNSIGNED NOT NULL DEFAULT 0, bbonus BIGINT UNSIGNED NOT NULL DEFAULT 0, bip VARCHAR(40) NOT NULL, bseeding MEDIUMINT UNSIGNED NOT NULL DEFAULT 0, bleeching MEDIUMINT UNSIGNED NOT NULL DEFAULT 0, bseedbonus DECIMAL(8,2) NOT NULL DEFAULT 0.00, blast DATETIME NOT NULL, blast_index DATETIME NOT NULL, blast_index_2 DATETIME NOT NULL, blast_offer DATETIME NOT NULL, blast_info DATETIME NOT NULL, bwarned DATETIME NOT NULL, bnote TEXT, binvites SMALLINT UNSIGNED NOT NULL DEFAULT 0, binviter VARCHAR(16) NOT NULL, binviterid MEDIUMINT UNSIGNED NOT NULL, binvitable TINYINT(1) UNSIGNED NOT NULL DEFAULT 1, btalk MEDIUMINT UNSIGNED NOT NULL DEFAULT 0, btalkref MEDIUMINT UNSIGNED NOT NULL DEFAULT 0, btalktorrent MEDIUMINT UNSIGNED NOT NULL DEFAULT 0, btalkrequest MEDIUMINT UNSIGNED NOT NULL DEFAULT 0, bperpage SMALLINT UNSIGNED NOT NULL, PRIMARY KEY( buid ), UNIQUE KEY( busername(16) ), INDEX( bpasskey(16) ), INDEX( bemail(16) ) ) ENGINE=InnoDB";
@@ -85,7 +86,7 @@ void UTIL_MySQLCreateTables( )
 	strCreate[12] = "CREATE TABLE IF NOT EXISTS lily ( blilyid VARCHAR(16) NOT NULL, busername VARCHAR(16) NOT NULL, buid MEDIUMINT UNSIGNED NOT NULL, bpassword VARCHAR(8) NOT NULL, bdata VARCHAR(64) NOT NULL, PRIMARY KEY( blilyid(16) ) ) ENGINE=MyISAM";
 	strCreate[13] = "CREATE TABLE IF NOT EXISTS bookmarks ( busername VARCHAR(16) NOT NULL, buid MEDIUMINT UNSIGNED NOT NULL, bid MEDIUMINT UNSIGNED NOT NULL, bshare TINYINT(1) UNSIGNED NOT NULL DEFAULT 0, PRIMARY KEY( buid, bid ), INDEX( bid ) ) ENGINE=MyISAM";
 	strCreate[14] = "CREATE TABLE IF NOT EXISTS friends ( buid MEDIUMINT UNSIGNED NOT NULL, bfriendid MEDIUMINT UNSIGNED NOT NULL, bfriendname VARCHAR(16) NOT NULL, PRIMARY KEY( buid, bfriendid ), INDEX( bfriendid ) ) ENGINE=MyISAM";
-	strCreate[15] = "CREATE TABLE IF NOT EXISTS invites ( bcode CHAR(32) NOT NULL, bownerid MEDIUMINT UNSIGNED NOT NULL, bcreated DATETIME NOT NULL, bused TINYINT(1) UNSIGNED NOT NULL DEFAULT 0, binvitee VARCHAR(16) NOT NULL, binviteeid MEDIUMINT UNSIGNED NOT NULL, PRIMARY KEY( bcode(16) ), INDEX( bownerid ) ) ENGINE=MyISAM";
+	strCreate[15] = "CREATE TABLE IF NOT EXISTS invites ( bcode CHAR(32) NOT NULL, bownerid MEDIUMINT UNSIGNED NOT NULL, bcreated DATETIME NOT NULL, bquota SMALLINT UNSIGNED NOT NULL DEFAULT 1, bused TINYINT(1) UNSIGNED NOT NULL DEFAULT 0, binvitee VARCHAR(16) NOT NULL, binviteeid MEDIUMINT UNSIGNED NOT NULL, PRIMARY KEY( bcode(16) ), INDEX( bownerid ) ) ENGINE=MyISAM";
 	strCreate[16] = "CREATE TABLE IF NOT EXISTS thanks ( bid MEDIUMINT UNSIGNED NOT NULL, bthankerid MEDIUMINT UNSIGNED NOT NULL, bthanker VARCHAR(16) NOT NULL, bthanktime DATETIME NOT NULL, PRIMARY KEY( bid, bthankerid ), INDEX( bthankerid ) ) ENGINE=MyISAM";
 	strCreate[17] = "CREATE TABLE IF NOT EXISTS subs ( bid MEDIUMINT UNSIGNED NOT NULL AUTO_INCREMENT, btid MEDIUMINT UNSIGNED NOT NULL, boid MEDIUMINT UNSIGNED NOT NULL, buid MEDIUMINT UNSIGNED NOT NULL, busername VARCHAR(16) NOT NULL, bsub VARCHAR(128) NOT NULL, bfilename VARCHAR(255) NOT NULL, bname VARCHAR(255) NOT NULL, bimdbid VARCHAR(16) NOT NULL, buploadtime DATETIME NOT NULL, PRIMARY KEY( bid ), INDEX( btid ), INDEX( boid ), INDEX( bimdbid(9) ) ) ENGINE=MyISAM";
 	strCreate[18] = "CREATE TABLE IF NOT EXISTS talk ( bid MEDIUMINT UNSIGNED NOT NULL AUTO_INCREMENT, busername VARCHAR(16) NOT NULL, buid MEDIUMINT UNSIGNED NOT NULL, bip VARCHAR(40) NOT NULL, bposted DATETIME NOT NULL, btalk TEXT, btalkstore TEXT, bchannel VARCHAR(64) NOT NULL, breply MEDIUMINT UNSIGNED NOT NULL, breply_real MEDIUMINT UNSIGNED NOT NULL, breplyto VARCHAR(16) NOT NULL, breplytoid MEDIUMINT UNSIGNED NOT NULL, breplytimes MEDIUMINT UNSIGNED NOT NULL DEFAULT 0, brt MEDIUMINT UNSIGNED NOT NULL, brtto VARCHAR(16) NOT NULL, brttoid MEDIUMINT UNSIGNED NOT NULL, brttimes MEDIUMINT UNSIGNED NOT NULL DEFAULT 0, PRIMARY KEY( bid ), INDEX( buid ), INDEX( bchannel(16) ), INDEX( breply ), INDEX( breply_real ) ) ENGINE=MyISAM";
@@ -103,11 +104,12 @@ void UTIL_MySQLCreateTables( )
 //	strCreate[12] = "CREATE TABLE IF NOT EXISTS allowed_cache ( bid MEDIUMINT UNSIGNED NOT NULL AUTO_INCREMENT, bfilename VARCHAR(255) NOT NULL, bname VARCHAR(255) NOT NULL, badded DATETIME NOT NULL, bsize BIGINT UNSIGNED NOT NULL DEFAULT 0, bfiles INT UNSIGNED NOT NULL DEFAULT 0, bcomment VARCHAR(255) NOT NULL, btag VARCHAR(255) NOT NULL, btitle VARCHAR(255) NOT NULL, bip VARCHAR(40) NOT NULL, buploader VARCHAR(16) NOT NULL, buploaderid MEDIUMINT UNSIGNED NOT NULL, bimdb VARCHAR(4) NOT NULL, bimdbid VARCHAR(16) NOT NULL, bdefault_down SMALLINT UNSIGNED NOT NULL DEFAULT 100, bdefault_up SMALLINT UNSIGNED NOT NULL DEFAULT 100, bfree_down SMALLINT UNSIGNED NOT NULL DEFAULT 100, bfree_up SMALLINT UNSIGNED NOT NULL DEFAULT 100, bfree_to DATETIME NOT NULL, btop TINYINT(1) UNSIGNED NOT NULL DEFAULT 0, bhl TINYINT(1) UNSIGNED NOT NULL DEFAULT 0, bclassic TINYINT(1) UNSIGNED NOT NULL DEFAULT 0, breq TINYINT(1) UNSIGNED NOT NULL DEFAULT 0, bnodownload TINYINT(1) UNSIGNED NOT NULL DEFAULT 0, bseeders INT UNSIGNED NOT NULL, bleechers INT UNSIGNED NOT NULL, bcompleted INT UNSIGNED NOT NULL, bcomments MEDIUMINT UNSIGNED NOT NULL DEFAULT 0, PRIMARY KEY( bid ), INDEX( bimdbid(8) ) ) ENGINE=MEMORY";
 //	strCreate[13] = "TRUNCATE TABLE allowed_cache";
 //	strCreate[14] = "INSERT INTO allowed_cache SELECT bid,bfilename,bname,badded,bsize,bfiles,bcomment,btag,btitle,bip,buploader,buploaderid,bimdb,bimdbid,bdefault_down,bdefault_up,bfree_down,bfree_up,bfree_to,btop,bhl,bclassic,breq,bnodownload,bseeders,bleechers,bcompleted,bcomments FROM allowed";
-	strCreate[30] = "CREATE TABLE IF NOT EXISTS allowed_archive ( bid MEDIUMINT UNSIGNED NOT NULL, bhash BLOB, bfilename VARCHAR(255) NOT NULL, bname VARCHAR(255) NOT NULL, badded DATETIME NOT NULL, bsize BIGINT UNSIGNED NOT NULL DEFAULT 0, bfiles INT UNSIGNED NOT NULL DEFAULT 0, bcomment VARCHAR(255) NOT NULL, btag VARCHAR(255) NOT NULL, btitle VARCHAR(255) NOT NULL, bintr TEXT, bip VARCHAR(40) NOT NULL, buploader VARCHAR(16) NOT NULL, buploaderid MEDIUMINT UNSIGNED NOT NULL, bimdb VARCHAR(4) NOT NULL, bimdbid VARCHAR(16) NOT NULL, bimdbupdated DATETIME NOT NULL, bdefault_down SMALLINT UNSIGNED NOT NULL DEFAULT 100, bdefault_up SMALLINT UNSIGNED NOT NULL DEFAULT 100, bfree_down SMALLINT UNSIGNED NOT NULL DEFAULT 100, bfree_up SMALLINT UNSIGNED NOT NULL DEFAULT 100, bfree_time SMALLINT UNSIGNED NOT NULL DEFAULT 0, bfree_to DATETIME NOT NULL, btop TINYINT(1) UNSIGNED NOT NULL DEFAULT 0, btop_intag TINYINT(1) UNSIGNED NOT NULL DEFAULT 0, btop_time SMALLINT UNSIGNED NOT NULL DEFAULT 0, btop_to DATETIME NOT NULL, bhl TINYINT(1) UNSIGNED NOT NULL DEFAULT 0, bclassic TINYINT(1) UNSIGNED NOT NULL DEFAULT 0, breq TINYINT(1) UNSIGNED NOT NULL DEFAULT 0, bnodownload TINYINT(1) UNSIGNED NOT NULL DEFAULT 0, bnocomment TINYINT(1) UNSIGNED NOT NULL DEFAULT 0, border DATETIME NOT NULL, bseeders INT UNSIGNED NOT NULL, bseeders6 INT UNSIGNED NOT NULL, bleechers INT UNSIGNED NOT NULL, bleechers6 INT UNSIGNED NOT NULL, bcompleted INT UNSIGNED NOT NULL, bcomments MEDIUMINT UNSIGNED NOT NULL DEFAULT 0, bthanks MEDIUMINT UNSIGNED NOT NULL DEFAULT 0, bshares MEDIUMINT UNSIGNED NOT NULL DEFAULT 0, bsubs MEDIUMINT UNSIGNED NOT NULL DEFAULT 0, bupdated DATETIME NOT NULL, bseeded DATETIME NOT NULL, bpost TINYINT(1) UNSIGNED NOT NULL DEFAULT 0, PRIMARY KEY( bid ) ) ENGINE=MyISAM";
+	strCreate[30] = "CREATE TABLE IF NOT EXISTS allowed_archive ( bid MEDIUMINT UNSIGNED NOT NULL, bhash BLOB, bfilename VARCHAR(255) NOT NULL, bname VARCHAR(255) NOT NULL, badded DATETIME NOT NULL, bsize BIGINT UNSIGNED NOT NULL DEFAULT 0, bfiles INT UNSIGNED NOT NULL DEFAULT 0, bcomment VARCHAR(255) NOT NULL, btag VARCHAR(255) NOT NULL, btitle VARCHAR(255) NOT NULL, bintr LONGTEXT, bip VARCHAR(40) NOT NULL, buploader VARCHAR(16) NOT NULL, buploaderid MEDIUMINT UNSIGNED NOT NULL, bimdb VARCHAR(4) NOT NULL, bimdbid VARCHAR(16) NOT NULL, bimdbupdated DATETIME NOT NULL, bdefault_down SMALLINT UNSIGNED NOT NULL DEFAULT 100, bdefault_up SMALLINT UNSIGNED NOT NULL DEFAULT 100, bfree_down SMALLINT UNSIGNED NOT NULL DEFAULT 100, bfree_up SMALLINT UNSIGNED NOT NULL DEFAULT 100, bfree_time SMALLINT UNSIGNED NOT NULL DEFAULT 0, bfree_to DATETIME NOT NULL, btop TINYINT(1) UNSIGNED NOT NULL DEFAULT 0, btop_intag TINYINT(1) UNSIGNED NOT NULL DEFAULT 0, btop_time SMALLINT UNSIGNED NOT NULL DEFAULT 0, btop_to DATETIME NOT NULL, bhl TINYINT(1) UNSIGNED NOT NULL DEFAULT 0, bclassic TINYINT(1) UNSIGNED NOT NULL DEFAULT 0, breq TINYINT(1) UNSIGNED NOT NULL DEFAULT 0, bnodownload TINYINT(1) UNSIGNED NOT NULL DEFAULT 0, bnocomment TINYINT(1) UNSIGNED NOT NULL DEFAULT 0, border DATETIME NOT NULL, bseeders INT UNSIGNED NOT NULL, bseeders6 INT UNSIGNED NOT NULL, bleechers INT UNSIGNED NOT NULL, bleechers6 INT UNSIGNED NOT NULL, bcompleted INT UNSIGNED NOT NULL, bcomments MEDIUMINT UNSIGNED NOT NULL DEFAULT 0, bthanks MEDIUMINT UNSIGNED NOT NULL DEFAULT 0, bshares MEDIUMINT UNSIGNED NOT NULL DEFAULT 0, bsubs MEDIUMINT UNSIGNED NOT NULL DEFAULT 0, bupdated DATETIME NOT NULL, bseeded DATETIME NOT NULL, bpost TINYINT(1) UNSIGNED NOT NULL DEFAULT 0, PRIMARY KEY( bid ) ) ENGINE=MyISAM";
 	strCreate[31] = "CREATE TABLE IF NOT EXISTS bets ( bid SMALLINT UNSIGNED NOT NULL AUTO_INCREMENT, btitle VARCHAR(255) NOT NULL, bcreated DATETIME NOT NULL, bopen DATETIME NOT NULL, bclosed DATETIME NOT NULL, bdealed DATETIME NOT NULL, bbetbonus_min MEDIUMINT UNSIGNED NOT NULL DEFAULT 0, bbetbonus_max MEDIUMINT UNSIGNED NOT NULL DEFAULT 0, bbetnote VARCHAR(255) NOT NULL, bautoclose DATETIME NOT NULL, bbetcount MEDIUMINT UNSIGNED NOT NULL DEFAULT 0, bresult TINYINT(1) UNSIGNED NOT NULL DEFAULT 0, bpayback TINYINT(1) UNSIGNED NOT NULL DEFAULT 0, PRIMARY KEY( bid ) ) ENGINE=MyISAM";
 	strCreate[32] = "CREATE TABLE IF NOT EXISTS betsoption ( bid SMALLINT UNSIGNED NOT NULL, boptionid TINYINT UNSIGNED NOT NULL, boption VARCHAR(255) NOT NULL, bbetrate DECIMAL(8,2) NOT NULL DEFAULT 0.00, bbetcount MEDIUMINT UNSIGNED NOT NULL DEFAULT 0, bresult TINYINT(1) UNSIGNED NOT NULL DEFAULT 0, bresult_half TINYINT(1) UNSIGNED NOT NULL DEFAULT 0, PRIMARY KEY( bid, boptionid ) ) ENGINE=MyISAM";
-	strCreate[33] = "CREATE TABLE IF NOT EXISTS betsticket ( bid SMALLINT UNSIGNED NOT NULL, buid MEDIUMINT UNSIGNED NOT NULL, boptionid TINYINT UNSIGNED NOT NULL, bbetbonus MEDIUMINT UNSIGNED NOT NULL DEFAULT 0, bbettime DATETIME NOT NULL, PRIMARY KEY( bid, buid ) ) ENGINE=MyISAM";
+	strCreate[33] = "CREATE TABLE IF NOT EXISTS betsticket ( bid SMALLINT UNSIGNED NOT NULL, buid MEDIUMINT UNSIGNED NOT NULL, boptionid TINYINT UNSIGNED NOT NULL, bbetbonus MEDIUMINT UNSIGNED NOT NULL DEFAULT 0, bbettime DATETIME NOT NULL, bgetback BIGINT UNSIGNED NOT NULL DEFAULT 0, PRIMARY KEY( bid, buid ) ) ENGINE=MyISAM";
 	strCreate[34] = "CREATE TABLE IF NOT EXISTS listen ( buid MEDIUMINT UNSIGNED NOT NULL, bchannel VARCHAR(64) NOT NULL, btalk MEDIUMINT UNSIGNED NOT NULL DEFAULT 0, PRIMARY KEY( buid, bchannel ), INDEX( bchannel(16) ) ) ENGINE=MyISAM";
+	strCreate[35] = "CREATE TABLE IF NOT EXISTS searches ( bsearch VARCHAR(64) NOT NULL, btype VARCHAR(16) NOT NULL, bmatch VARCHAR(8) NOT NULL, buid MEDIUMINT UNSIGNED NOT NULL, bsearchat DATETIME NOT NULL, INDEX( bsearch(16) ), INDEX( buid ) ) ENGINE=MyISAM";
 	
 	unsigned char ucQueries = 0;
 
@@ -128,17 +130,19 @@ void UTIL_MySQLCreateTables( )
 
 CMySQLQuery :: CMySQLQuery( const string cstrQuery )
 {
-	mysql_real_query( gpMySQL, cstrQuery.c_str( ), ( unsigned long )cstrQuery.size( ) );
+	pMySQL = gmapMySQL[pthread_self( )];
 
-	m_pRes = mysql_store_result( gpMySQL );
+	mysql_real_query( pMySQL, cstrQuery.c_str( ), ( unsigned long )cstrQuery.size( ) );
 
-	if( mysql_errno( gpMySQL ) )
+	m_pRes = mysql_store_result( pMySQL );
+
+	if( mysql_errno( pMySQL ) )
 	{
 		m_pRes = 0;
 
 //		if( gbDebug )
 			UTIL_LogPrint( "mysql error - %s\n", cstrQuery.c_str( ) );
-			UTIL_LogPrint( "mysql error - %s\n", mysql_error( gpMySQL ) );
+			UTIL_LogPrint( "mysql error - %s\n", mysql_error( pMySQL ) );
 	}
 }
 
@@ -210,9 +214,138 @@ const unsigned long CMySQLQuery :: numRows( )
 const unsigned long CMySQLQuery :: lastInsertID( )
 {
 
-	if( m_pRes == 0 && mysql_field_count( gpMySQL ) == 0 && mysql_insert_id( gpMySQL ) != 0 )
+	if( m_pRes == 0 && mysql_field_count( pMySQL ) == 0 && mysql_insert_id( pMySQL ) != 0 )
 	{
-		return ( unsigned long )mysql_insert_id( gpMySQL );
+		return ( unsigned long )mysql_insert_id( pMySQL );
+	}
+
+	return 0;
+}
+
+CMySQLQueryLocal :: CMySQLQueryLocal( )
+{
+	// start mysql
+	if( gbDebug )
+		if( gucDebugLevel & DEBUG_BNBT )
+			UTIL_LogPrint( "Setting MySQL local connection\n" );
+
+	pMySQL = 0;
+	m_pRes = 0;
+
+	if( !( pMySQL = mysql_init( 0 ) ) )
+		UTIL_LogPrint( ( gmapLANG_CFG["bnbt_mysql_error"] + "\n" ).c_str( ), mysql_error( pMySQL ) );
+	else
+	{
+		if( !( mysql_real_connect( pMySQL, gstrMySQLHost.c_str( ), gstrMySQLUser.c_str( ), gstrMySQLPassword.c_str( ), 0, guiMySQLPort, 0, 0 ) ) )
+			UTIL_LogPrint( ( gmapLANG_CFG["bnbt_mysql_error"] + "\n" ).c_str( ), mysql_error( pMySQL ) );
+		else
+		{
+			if( mysql_select_db( pMySQL, gstrMySQLDatabase.c_str( ) ) )
+				UTIL_LogPrint( ( gmapLANG_CFG["bnbt_mysql_error"] + "\n" ).c_str( ), mysql_error( pMySQL ) );
+		}
+	}
+}
+
+void CMySQLQueryLocal :: query( const string cstrQuery )
+{
+	if( m_pRes )
+		mysql_free_result( m_pRes );
+
+	mysql_real_query( pMySQL, cstrQuery.c_str( ), ( unsigned long )cstrQuery.size( ) );
+
+	m_pRes = mysql_store_result( pMySQL );
+
+	if( mysql_errno( pMySQL ) )
+	{
+		m_pRes = 0;
+
+//		if( gbDebug )
+			UTIL_LogPrint( "mysql error - %s\n", cstrQuery.c_str( ) );
+			UTIL_LogPrint( "mysql error - %s\n", mysql_error( pMySQL ) );
+	}
+
+}
+
+CMySQLQueryLocal :: ~CMySQLQueryLocal( )
+{
+	if( m_pRes )
+		mysql_free_result( m_pRes );
+
+	// Close the local MySQL connection
+	if( pMySQL )
+	{
+		if( gbDebug && ( gucDebugLevel & DEBUG_BNBT ) )
+			UTIL_LogPrint( "Closing MySQL local connection\n" );
+
+		mysql_close( pMySQL );
+	}
+}
+
+const vector<string> CMySQLQueryLocal :: nextRow( )
+{
+	vector<string> vecReturn;
+
+	if( m_pRes )
+	{
+		const unsigned int num_fields( mysql_num_fields( m_pRes ) );
+
+		vecReturn.reserve( num_fields );
+
+		const MYSQL_ROW row( mysql_fetch_row( m_pRes ) );
+
+		if( row != 0 )
+		{
+			const unsigned long *lengths( mysql_fetch_lengths( m_pRes ) );
+
+			for( unsigned long ulCount = 0; ulCount < num_fields; ulCount++ )
+				vecReturn.push_back( string( row[ulCount], lengths[ulCount] ) );
+		}
+	}
+
+	return vecReturn;
+}
+
+const map<string, string> CMySQLQueryLocal :: nextRowMap( )
+{
+	map<string, string> mapReturn;
+
+	if( m_pRes )
+	{
+		const unsigned int num_fields( mysql_num_fields( m_pRes ) );
+
+		const MYSQL_ROW row( mysql_fetch_row( m_pRes ) );
+		
+		const MYSQL_FIELD *fields( mysql_fetch_fields( m_pRes ) );
+
+		if( row != 0 )
+		{
+			const unsigned long *lengths( mysql_fetch_lengths( m_pRes ) );
+
+			for( unsigned long ulCount = 0; ulCount < num_fields; ulCount++ )
+				mapReturn[fields[ulCount].name] = string( row[ulCount], lengths[ulCount] );
+		}
+	}
+
+	return mapReturn;
+}
+
+const unsigned long CMySQLQueryLocal :: numRows( )
+{
+
+	if( m_pRes )
+	{
+		return ( unsigned long )mysql_num_rows( m_pRes );
+	}
+
+	return 0;
+}
+
+const unsigned long CMySQLQueryLocal :: lastInsertID( )
+{
+
+	if( m_pRes == 0 && mysql_field_count( pMySQL ) == 0 && mysql_insert_id( pMySQL ) != 0 )
+	{
+		return ( unsigned long )mysql_insert_id( pMySQL );
 	}
 
 	return 0;

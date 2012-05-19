@@ -198,7 +198,7 @@ void CTracker :: serverResponseBetGET( struct request_t *pRequest, struct respon
 								bChecked = true;
 							}
 							pResponse->strContent += ">" + UTIL_RemoveHTML( vecQueryBet[1] ) + "</td>";
-							pResponse->strContent += "<td class=\"betoption\">";
+							pResponse->strContent += "<td class=\"betrate\">";
 							if( vecQueryBet[2] == "0.00" )
 								pResponse->strContent += gmapLANG_CFG["bet_rate_dynamic"];
 							else
@@ -212,7 +212,7 @@ void CTracker :: serverResponseBetGET( struct request_t *pRequest, struct respon
 							pResponse->strContent += "\">";
 							pResponse->strContent += "<td class=\"betoption\">";
 							pResponse->strContent += UTIL_RemoveHTML( vecQueryBet[1] ) + "</td>";
-							pResponse->strContent += "<td class=\"betoption\">";
+							pResponse->strContent += "<td class=\"betrate\">";
 							if( vecQueryBet[2] == "0.00" )
 								pResponse->strContent += gmapLANG_CFG["bet_rate_dynamic"];
 							else
@@ -472,7 +472,7 @@ void CTracker :: serverResponseBetsGET( struct request_t *pRequest, struct respo
 					
 						if( vecQueryBets.size( ) == 6 )
 						{
-							CMySQLQuery *pQueryBet = new CMySQLQuery( "SELECT boptionid,boption,bbetrate,bbetcount FROM betsoption WHERE bid=" + vecQueryBets[0] + " ORDER BY boptionid" );
+							CMySQLQuery *pQueryBet = new CMySQLQuery( "SELECT boptionid,boption,bbetrate,bbetcount FROM betsoption WHERE bid=" + cstrBet + " ORDER BY boptionid" );
 		
 							vector<string> vecQueryBet;
 	
@@ -547,7 +547,7 @@ void CTracker :: serverResponseBetsGET( struct request_t *pRequest, struct respo
 						
 							return;
 						}
-						pResponse->strContent += "<script type=\"text/javascript\">window.location=\"" + RESPONSE_STR_BETS_HTML + "\"</script>\n\n";
+						pResponse->strContent += "<script type=\"text/javascript\">window.location=\"" + RESPONSE_STR_BETS_HTML + "?show=undealed\"</script>\n\n";
 					
 						// Output common HTML tail
 						HTML_Common_End( pRequest, pResponse, btv, NOT_INDEX, string( CSS_BET ) );
@@ -579,7 +579,7 @@ void CTracker :: serverResponseBetsGET( struct request_t *pRequest, struct respo
 					
 //						pResponse->strContent += "<p class=\"delete\">" + UTIL_Xsprintf( gmapLANG_CFG["bet_deleted"].c_str( ), string( "<a title=\"" + gmapLANG_CFG["navbar_info"] + "\" href=\"" + RESPONSE_STR_BETS_HTML + "\">" ).c_str( ), "</a>" ) + "</p>\n";
 				
-						pResponse->strContent += "<script type=\"text/javascript\">window.location=\"" + RESPONSE_STR_BETS_HTML + "\"</script>\n\n";
+						pResponse->strContent += "<script type=\"text/javascript\">window.location=\"" + RESPONSE_STR_BETS_HTML + "?show=undealed\"</script>\n\n";
 				
 						// Output common HTML tail
 						HTML_Common_End( pRequest, pResponse, btv, NOT_INDEX, string( CSS_BET ) );
@@ -609,7 +609,7 @@ void CTracker :: serverResponseBetsGET( struct request_t *pRequest, struct respo
 					
 //						pResponse->strContent += "<p class=\"delete\">" + UTIL_Xsprintf( gmapLANG_CFG["bet_deleted"].c_str( ), string( "<a title=\"" + gmapLANG_CFG["navbar_info"] + "\" href=\"" + RESPONSE_STR_BETS_HTML + "\">" ).c_str( ), "</a>" ) + "</p>\n";
 				
-						pResponse->strContent += "<script type=\"text/javascript\">window.location=\"" + RESPONSE_STR_BETS_HTML + "\"</script>\n\n";
+						pResponse->strContent += "<script type=\"text/javascript\">window.location=\"" + RESPONSE_STR_BETS_HTML + "?show=undealed\"</script>\n\n";
 				
 						// Output common HTML tail
 						HTML_Common_End( pRequest, pResponse, btv, NOT_INDEX, string( CSS_BET ) );
@@ -676,7 +676,7 @@ void CTracker :: serverResponseBetsGET( struct request_t *pRequest, struct respo
 								}
 							}
 						}
-						pResponse->strContent += "<script type=\"text/javascript\">window.location=\"" + RESPONSE_STR_BETS_HTML + "\"</script>\n\n";
+						pResponse->strContent += "<script type=\"text/javascript\">window.location=\"" + RESPONSE_STR_BETS_HTML + "?show=undealed\"</script>\n\n";
 				
 						// Output common HTML tail
 						HTML_Common_End( pRequest, pResponse, btv, NOT_INDEX, string( CSS_BET ) );
@@ -796,6 +796,7 @@ void CTracker :: serverResponseBetsGET( struct request_t *pRequest, struct respo
 											{
 												unsigned long ulBonus = atoi( vecQueryTickets[2].c_str( ) ) * flRate * 100 + 0.5;
 												CMySQLQuery mq03( "UPDATE users SET bbonus=bbonus+" + CAtomLong( ulBonus ).toString( ) + " WHERE buid=" + vecQueryTickets[0] );
+												CMySQLQuery mq04( "UPDATE betsticket SET bgetback=" + CAtomLong( ulBonus ).toString( ) + " WHERE bid=" + cstrBet + " AND buid=" + vecQueryTickets[0] );
 
 												string strTitle = gmapLANG_CFG["bet_message_deal_title"];
 												string strMessage = UTIL_Xsprintf( gmapLANG_CFG["bet_message_deal"].c_str( ), vecQueryBets[1].c_str( ), cstrOption.c_str( ), string( CAtomLong( ulBonus / 100 ).toString( ) + "." + CAtomInt( ( ulBonus % 100 ) / 10 ).toString( ) + CAtomInt( ulBonus % 10 ).toString( ) ).c_str( ) );
@@ -805,6 +806,7 @@ void CTracker :: serverResponseBetsGET( struct request_t *pRequest, struct respo
 											{
 												unsigned long ulBonus = atoi( vecQueryTickets[2].c_str( ) ) * 0.5 * 100 + 0.5;
 												CMySQLQuery mq03( "UPDATE users SET bbonus=bbonus+" + CAtomLong( ulBonus ).toString( ) + " WHERE buid=" + vecQueryTickets[0] );
+												CMySQLQuery mq04( "UPDATE betsticket SET bgetback=" + CAtomLong( ulBonus ).toString( ) + " WHERE bid=" + cstrBet + " AND buid=" + vecQueryTickets[0] );
 
 												string strTitle = gmapLANG_CFG["bet_message_deal_title"];
 												string strMessage = UTIL_Xsprintf( gmapLANG_CFG["bet_message_deal_lose_half"].c_str( ), vecQueryBets[1].c_str( ), cstrOption.c_str( ), string( CAtomLong( ulBonus / 100 ).toString( ) + "." + CAtomInt( ( ulBonus % 100 ) / 10 ).toString( ) + CAtomInt( ulBonus % 10 ).toString( ) ).c_str( ) );
@@ -823,7 +825,7 @@ void CTracker :: serverResponseBetsGET( struct request_t *pRequest, struct respo
 								{
 									CMySQLQuery mq01( "UPDATE bets SET bdealed=NOW() WHERE bid=" + cstrBet );
 
-									CMySQLQuery *pQueryTickets = new CMySQLQuery( "SELECT buid,bbetbonus FROM betsticket WHERE bid=" + vecQueryBets[0] + " AND boptionid>0" );
+									CMySQLQuery *pQueryTickets = new CMySQLQuery( "SELECT buid,bbetbonus FROM betsticket WHERE bid=" + cstrBet + " AND boptionid>0" );
 					
 									vector<string> vecQueryTickets;
 							
@@ -834,6 +836,7 @@ void CTracker :: serverResponseBetsGET( struct request_t *pRequest, struct respo
 									while( vecQueryTickets.size( ) == 2 )
 									{
 										CMySQLQuery mq03( "UPDATE users SET bbonus=bbonus+" + CAtomLong( atoi( vecQueryTickets[1].c_str( ) ) * 100 ).toString( ) + " WHERE buid=" + vecQueryTickets[0] );
+										CMySQLQuery mq04( "UPDATE betsticket SET bgetback=" + CAtomLong( atoi( vecQueryTickets[1].c_str( ) ) * 100 ).toString( ) + " WHERE bid=" + cstrBet + " AND buid=" + vecQueryTickets[0] );
 
 										string strTitle = gmapLANG_CFG["bet_message_deal_title"];
 										string strMessage = UTIL_Xsprintf( gmapLANG_CFG["bet_message_deal_payback"].c_str( ), vecQueryBets[1].c_str( ), vecQueryTickets[1].c_str( ) );
@@ -851,7 +854,7 @@ void CTracker :: serverResponseBetsGET( struct request_t *pRequest, struct respo
 					
 //						pResponse->strContent += "<p class=\"delete\">" + UTIL_Xsprintf( gmapLANG_CFG["bet_deleted"].c_str( ), string( "<a title=\"" + gmapLANG_CFG["navbar_info"] + "\" href=\"" + RESPONSE_STR_BETS_HTML + "\">" ).c_str( ), "</a>" ) + "</p>\n";
 				
-						pResponse->strContent += "<script type=\"text/javascript\">window.location=\"" + RESPONSE_STR_BETS_HTML + "\"</script>\n\n";
+						pResponse->strContent += "<script type=\"text/javascript\">window.location=\"" + RESPONSE_STR_BETS_HTML + "?show=dealed\"</script>\n\n";
 				
 						// Output common HTML tail
 						HTML_Common_End( pRequest, pResponse, btv, NOT_INDEX, string( CSS_BET ) );
@@ -972,6 +975,7 @@ void CTracker :: serverResponseBetsGET( struct request_t *pRequest, struct respo
 												unsigned long ulBonus = atoi( vecQueryTickets[2].c_str( ) ) * flRate * 100 + 0.5;
 												CMySQLQuery mq02( "UPDATE users SET bbonus=0 WHERE buid=" + vecQueryTickets[0] + " AND bbonus<" + CAtomLong( ulBonus ).toString( ) );
 												CMySQLQuery mq03( "UPDATE users SET bbonus=bbonus-" + CAtomLong( ulBonus ).toString( ) + " WHERE buid=" + vecQueryTickets[0] + " AND bbonus>=" + CAtomLong( ulBonus ).toString( ) );
+												CMySQLQuery mq04( "UPDATE betsticket SET bgetback=0 WHERE bid=" + cstrBet + " AND buid=" + vecQueryTickets[0] );
 
 												string strTitle = gmapLANG_CFG["bet_message_undeal_title"];
 												string strMessage = UTIL_Xsprintf( gmapLANG_CFG["bet_message_undeal"].c_str( ), vecQueryBets[1].c_str( ), string( CAtomLong( ulBonus / 100 ).toString( ) + "." + CAtomInt( ( ulBonus % 100 ) / 10 ).toString( ) + CAtomInt( ulBonus % 10 ).toString( ) ).c_str( ) );
@@ -982,6 +986,7 @@ void CTracker :: serverResponseBetsGET( struct request_t *pRequest, struct respo
 												unsigned long ulBonus = atoi( vecQueryTickets[2].c_str( ) ) * 0.5 * 100 + 0.5;
 												CMySQLQuery mq02( "UPDATE users SET bbonus=0 WHERE buid=" + vecQueryTickets[0] + " AND bbonus<" + CAtomLong( ulBonus ).toString( ) );
 												CMySQLQuery mq03( "UPDATE users SET bbonus=bbonus-" + CAtomLong( ulBonus ).toString( ) + " WHERE buid=" + vecQueryTickets[0] + " AND bbonus>=" + CAtomLong( ulBonus ).toString( ) );
+												CMySQLQuery mq04( "UPDATE betsticket SET bgetback=0 WHERE bid=" + cstrBet + " AND buid=" + vecQueryTickets[0] );
 
 												string strTitle = gmapLANG_CFG["bet_message_undeal_title"];
 												string strMessage = UTIL_Xsprintf( gmapLANG_CFG["bet_message_undeal"].c_str( ), vecQueryBets[1].c_str( ), string( CAtomLong( ulBonus / 100 ).toString( ) + "." + CAtomInt( ( ulBonus % 100 ) / 10 ).toString( ) + CAtomInt( ulBonus % 10 ).toString( ) ).c_str( ) );
@@ -1000,7 +1005,7 @@ void CTracker :: serverResponseBetsGET( struct request_t *pRequest, struct respo
 								{
 									CMySQLQuery mq01( "UPDATE bets SET bdealed=0 WHERE bid=" + cstrBet );
 
-									CMySQLQuery *pQueryTickets = new CMySQLQuery( "SELECT buid,bbetbonus FROM betsticket WHERE bid=" + vecQueryBets[0] + " AND boptionid>0" );
+									CMySQLQuery *pQueryTickets = new CMySQLQuery( "SELECT buid,bbetbonus FROM betsticket WHERE bid=" + cstrBet + " AND boptionid>0" );
 					
 									vector<string> vecQueryTickets;
 							
@@ -1013,6 +1018,7 @@ void CTracker :: serverResponseBetsGET( struct request_t *pRequest, struct respo
 										unsigned long ulBonus = atoi( vecQueryTickets[1].c_str( ) ) * 100;
 										CMySQLQuery mq02( "UPDATE users SET bbonus=0 WHERE buid=" + vecQueryTickets[0] + " AND bbonus<" + CAtomLong( ulBonus ).toString( ) );
 										CMySQLQuery mq03( "UPDATE users SET bbonus=bbonus-" + CAtomLong( ulBonus ).toString( ) + " WHERE buid=" + vecQueryTickets[0] + " AND bbonus>=" + CAtomLong( ulBonus ).toString( ) );
+										CMySQLQuery mq04( "UPDATE betsticket SET bgetback=0 WHERE bid=" + cstrBet + " AND buid=" + vecQueryTickets[0] );
 
 										string strTitle = gmapLANG_CFG["bet_message_undeal_title"];
 										string strMessage = UTIL_Xsprintf( gmapLANG_CFG["bet_message_undeal"].c_str( ), vecQueryBets[1].c_str( ), vecQueryTickets[1].c_str( ) );
@@ -1030,7 +1036,7 @@ void CTracker :: serverResponseBetsGET( struct request_t *pRequest, struct respo
 					
 //						pResponse->strContent += "<p class=\"delete\">" + UTIL_Xsprintf( gmapLANG_CFG["bet_deleted"].c_str( ), string( "<a title=\"" + gmapLANG_CFG["navbar_info"] + "\" href=\"" + RESPONSE_STR_BETS_HTML + "\">" ).c_str( ), "</a>" ) + "</p>\n";
 				
-						pResponse->strContent += "<script type=\"text/javascript\">window.location=\"" + RESPONSE_STR_BETS_HTML + "\"</script>\n\n";
+						pResponse->strContent += "<script type=\"text/javascript\">window.location=\"" + RESPONSE_STR_BETS_HTML + "?show=undealed\"</script>\n\n";
 				
 						// Output common HTML tail
 						HTML_Common_End( pRequest, pResponse, btv, NOT_INDEX, string( CSS_BET ) );
@@ -1094,7 +1100,7 @@ void CTracker :: serverResponseBetsGET( struct request_t *pRequest, struct respo
 			if( pRequest->user.ucAccess & m_ucAccessAdminBets )
 			{
 				if( cstrShow.empty( ) || cstrShow == "dealed" )
-					pQueryBets = new CMySQLQuery( "SELECT bid,btitle,bcreated,bopen,bclosed,bdealed,bbetbonus_min,bbetbonus_max,bbetnote,bautoclose,bbetcount,bresult,bpayback FROM bets WHERE bdealed>0 ORDER BY bcreated DESC" );
+					pQueryBets = new CMySQLQuery( "SELECT bid,btitle,bcreated,bopen,bclosed,bdealed,bbetbonus_min,bbetbonus_max,bbetnote,bautoclose,bbetcount,bresult,bpayback FROM bets WHERE bdealed>0 ORDER BY bdealed DESC" );
 				else if( cstrShow == "undealed" )
 					pQueryBets = new CMySQLQuery( "SELECT bid,btitle,bcreated,bopen,bclosed,bdealed,bbetbonus_min,bbetbonus_max,bbetnote,bautoclose,bbetcount,bresult,bpayback FROM bets WHERE bdealed=0 ORDER BY bcreated DESC" );
 				else if( cstrShow == "all" )
@@ -1108,7 +1114,7 @@ void CTracker :: serverResponseBetsGET( struct request_t *pRequest, struct respo
 			if( pRequest->user.ucAccess & m_ucAccessAdminBets )
 			{
 				if( cstrShow.empty( ) || cstrShow == "dealed" )
-					pQueryBets = new CMySQLQuery( "SELECT bid,btitle,bcreated,bopen,bclosed,bdealed,bbetbonus_min,bbetbonus_max,bbetnote,bautoclose,bbetcount,bresult,bpayback FROM bets WHERE bdealed>0 ORDER BY bcreated DESC LIMIT 50" );
+					pQueryBets = new CMySQLQuery( "SELECT bid,btitle,bcreated,bopen,bclosed,bdealed,bbetbonus_min,bbetbonus_max,bbetnote,bautoclose,bbetcount,bresult,bpayback FROM bets WHERE bdealed>0 ORDER BY bdealed DESC LIMIT 50" );
 				else if( cstrShow == "undealed" )
 					pQueryBets = new CMySQLQuery( "SELECT bid,btitle,bcreated,bopen,bclosed,bdealed,bbetbonus_min,bbetbonus_max,bbetnote,bautoclose,bbetcount,bresult,bpayback FROM bets WHERE bdealed=0 ORDER BY bcreated DESC LIMIT 50" );
 				else if( cstrShow == "all" )
@@ -1238,7 +1244,7 @@ void CTracker :: serverResponseBetsGET( struct request_t *pRequest, struct respo
 							pResponse->strContent += "ed";
 						pResponse->strContent += "\">";
 						pResponse->strContent += "<td class=\"betoption\">" + UTIL_RemoveHTML( vecQueryBet[1] ) + "</td>";
-						pResponse->strContent += "<td class=\"betoption\">";
+						pResponse->strContent += "<td class=\"betrate\">";
 						if( vecQueryBet[2] == "0.00" )
 							pResponse->strContent += gmapLANG_CFG["bet_rate_dynamic"];
 						else
@@ -1276,7 +1282,7 @@ void CTracker :: serverResponseBetsGET( struct request_t *pRequest, struct respo
 							else if( ( pRequest->user.ucAccess & m_ucAccessAdminBets ) && vecQueryBets[5] == m_strMySQLTimeZero )
 								pResponse->strContent += "<a class=\"betresult\" href=\"" + RESPONSE_STR_BETS_HTML + "?bet=" + vecQueryBets[0] + "&amp;action=result&amp;option=" + vecQueryBet[0] + "\">" + gmapLANG_CFG["bet_result_set"] + "</a>";
 							pResponse->strContent += "</td>\n";
-							pResponse->strContent += "<td class=\"betoption\">";
+							pResponse->strContent += "<td class=\"betrate\">";
 							if( vecQueryBet[2] != "0.00" )
 							{
 								if( vecQueryBet[5] == "1" )

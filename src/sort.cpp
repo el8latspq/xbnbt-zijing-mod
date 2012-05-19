@@ -187,7 +187,7 @@ int asortByDefault( const void *elem1, const void *elem2 )
 	if( asortByTop( elem1, elem2 ) != 0 )
 		return asortByTop( elem1, elem2 );
 	else
-		return ( (const struct torrent_t *)elem1 )->strOrder.compare( ( (const struct torrent_t *)elem2 )->strOrder );
+		return ( ( (const struct torrent_t *)elem1 )->uiSeeders > 0 ? ( (const struct torrent_t *)elem1 )->strOrder : ( (const struct torrent_t *)elem1 )->strAdded ).compare( ( (const struct torrent_t *)elem2 )->uiSeeders > 0 ? ( (const struct torrent_t *)elem2 )->strOrder : ( (const struct torrent_t *)elem2 )->strAdded );
 }
 
 int dsortByName( const void *elem1, const void *elem2 )
@@ -330,7 +330,7 @@ int dsortByDefault( const void *elem1, const void *elem2 )
 	if( asortByTop( elem1, elem2 ) != 0 )
 		return asortByTop( elem1, elem2 );
 	else
-		return ( (const struct torrent_t *)elem2 )->strOrder.compare( ( (const struct torrent_t *)elem1 )->strOrder );
+		return ( ( (const struct torrent_t *)elem2 )->uiSeeders > 0 ? ( (const struct torrent_t *)elem2 )->strOrder : ( (const struct torrent_t *)elem2 )->strAdded ).compare( ( (const struct torrent_t *)elem1 )->uiSeeders > 0 ? ( (const struct torrent_t *)elem1 )->strOrder : ( (const struct torrent_t *)elem1 )->strAdded );
 }
 
 int asortByIP( const void *elem1, const void *elem2 )
@@ -413,7 +413,7 @@ int asortByUploaderNoTop( const void *elem1, const void *elem2 )
 
 int asortByDefaultNoTop( const void *elem1, const void *elem2 )
 {
-	return ( (const struct torrent_t *)elem1 )->strOrder.compare( ( (const struct torrent_t *)elem2 )->strOrder );
+	return ( ( (const struct torrent_t *)elem1 )->uiSeeders > 0 ? ( (const struct torrent_t *)elem1 )->strOrder : ( (const struct torrent_t *)elem1 )->strAdded ).compare( ( (const struct torrent_t *)elem2 )->uiSeeders > 0 ? ( (const struct torrent_t *)elem2 )->strOrder : ( (const struct torrent_t *)elem2 )->strAdded );
 }
 
 int dsortByNameNoTop( const void *elem1, const void *elem2 )
@@ -479,7 +479,7 @@ int dsortByUploaderNoTop( const void *elem1, const void *elem2 )
 
 int dsortByDefaultNoTop( const void *elem1, const void *elem2 )
 {
-	return ( (const struct torrent_t *)elem2 )->strOrder.compare( ( (const struct torrent_t *)elem1 )->strOrder );
+	return ( ( (const struct torrent_t *)elem2 )->uiSeeders > 0 ? ( (const struct torrent_t *)elem2 )->strOrder : ( (const struct torrent_t *)elem2 )->strAdded ).compare( ( (const struct torrent_t *)elem1 )->uiSeeders > 0 ? ( (const struct torrent_t *)elem1 )->strOrder : ( (const struct torrent_t *)elem1 )->strAdded );
 }
 //sortByNoTop Complete
 
@@ -580,7 +580,7 @@ int asortByDefaultInTag( const void *elem1, const void *elem2 )
 	if( asortByTopInTag( elem1, elem2 ) != 0 )
 		return asortByTopInTag( elem1, elem2 );
 	else
-		return ( (const struct torrent_t *)elem1 )->strOrder.compare( ( (const struct torrent_t *)elem2 )->strOrder );
+		return ( ( (const struct torrent_t *)elem1 )->uiSeeders > 0 ? ( (const struct torrent_t *)elem1 )->strOrder : ( (const struct torrent_t *)elem1 )->strAdded ).compare( ( (const struct torrent_t *)elem2 )->uiSeeders > 0 ? ( (const struct torrent_t *)elem2 )->strOrder : ( (const struct torrent_t *)elem2 )->strAdded );
 }
 
 int dsortByNameInTag( const void *elem1, const void *elem2 )
@@ -679,7 +679,7 @@ int dsortByDefaultInTag( const void *elem1, const void *elem2 )
 	if( asortByTopInTag( elem1, elem2 ) != 0 )
 		return asortByTopInTag( elem1, elem2 );
 	else
-		return ( (const struct torrent_t *)elem2 )->strOrder.compare( ( (const struct torrent_t *)elem1 )->strOrder );
+		return ( ( (const struct torrent_t *)elem2 )->uiSeeders > 0 ? ( (const struct torrent_t *)elem2 )->strOrder : ( (const struct torrent_t *)elem2 )->strAdded ).compare( ( (const struct torrent_t *)elem1 )->uiSeeders > 0 ? ( (const struct torrent_t *)elem1 )->strOrder : ( (const struct torrent_t *)elem1 )->strAdded );
 }
 //sortByInTag Complete
 

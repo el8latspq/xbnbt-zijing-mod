@@ -185,6 +185,7 @@ unsigned long GetStartTime( )
 
 CServer *gpServer = 0;	 
 CMutex gmtxOutput;
+CMutex gmtxMySQL;
 CLink *gpLink = 0;
 CLinkServer *gpLinkServer = 0;
 CHUBLink *gpHUBLink = 0;
@@ -472,6 +473,7 @@ int main( int argc, char *argv[] )
 int bnbtmain( )
 {
 	gmtxOutput.Initialize( );
+	gmtxMySQL.Initialize( );
 
 	UTIL_LogPrint( "Tracker Start\n" );
 
@@ -653,6 +655,7 @@ int bnbtmain( )
 
 		UTIL_LogPrint( "Tracker Stop\n" );
 
+		gmtxMySQL.Destroy( );
 		gmtxOutput.Destroy( );
 
 		return 1;
@@ -710,11 +713,14 @@ int bnbtmain( )
 
 		UTIL_LogPrint( "Tracker Stop\n" );
 
+		gmtxMySQL.Destroy( );
 		gmtxOutput.Destroy( );
 
 		return 1;
 	}
 
+	gmapMySQL.clear( );
+	gmapMySQL[pthread_self( )] = gpMySQL;
 	gstrMySQLHost = CFG_GetString( "mysql_host", string( ) );
 	gstrMySQLDatabase = CFG_GetString( "mysql_database", "bnbt" );
 	gstrMySQLUser = CFG_GetString( "mysql_user", string( ) );
@@ -767,6 +773,7 @@ int bnbtmain( )
 
 		UTIL_LogPrint( "Tracker Stop\n" );
 
+		gmtxMySQL.Destroy( );
 		gmtxOutput.Destroy( );
 
 		return 1;
@@ -822,6 +829,7 @@ int bnbtmain( )
 
 		UTIL_LogPrint( "Tracker Stop\n" );
 
+		gmtxMySQL.Destroy( );
 		gmtxOutput.Destroy( );
 
 		return 1;
@@ -1100,6 +1108,7 @@ int bnbtmain( )
 
 	UTIL_LogPrint( "Tracker Stop\n" );
 
+	gmtxMySQL.Destroy( );
 	gmtxOutput.Destroy( );
 
 	return 0;

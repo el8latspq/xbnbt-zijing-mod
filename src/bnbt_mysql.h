@@ -21,6 +21,8 @@
  extern string gstrMySQLPrefix;
  extern unsigned int guiMySQLPort;
 
+ extern map<pthread_t, MYSQL *> gmapMySQL;
+
  const string UTIL_StringToMySQL( const string &strString );
  void UTIL_MySQLCreateTables( );
  void UTIL_MySQLCreateDatabase( );
@@ -36,6 +38,23 @@
 	const unsigned long numRows( );
 	const unsigned long lastInsertID( );
  private:
+	MYSQL *pMySQL;
+	MYSQL_RES *m_pRes;
+ };
+
+ class CMySQLQueryLocal
+ {
+ public:
+	CMySQLQueryLocal( );
+	virtual ~CMySQLQueryLocal( );
+
+	void query( const string cstrQuery );
+	const vector<string> nextRow( );
+	const map<string, string> nextRowMap( );
+	const unsigned long numRows( );
+	const unsigned long lastInsertID( );
+ private:
+	MYSQL *pMySQL;
 	MYSQL_RES *m_pRes;
  };
 #endif

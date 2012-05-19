@@ -363,7 +363,7 @@ void CTracker :: serverResponseInviteGET( struct request_t *pRequest, struct res
 		pResponse->strContent += "<td class=\"signup_form\">\n";
 		pResponse->strContent += "<input id=\"code\" name=\"us_code\" alt=\"[" + gmapLANG_CFG["invite_code"] + "]\" type=text size=40";
 		if( !cstrCode.empty( ) )
-			pResponse->strContent += " value=" + cstrCode;
+			pResponse->strContent += " value=\"" + UTIL_RemoveHTML( cstrCode ) + "\"";
 		pResponse->strContent += ">\n";
 		pResponse->strContent += "</td>\n</tr>\n";
 		pResponse->strContent += "<tr class=\"signup_form\">\n";
@@ -572,7 +572,7 @@ void CTracker :: serverResponseInvitePOST( struct request_t *pRequest, struct re
 				}
 				else
 				{
-					CMySQLQuery *pQuery = new CMySQLQuery( "SELECT bcode,bownerid,users.busername FROM invites LEFT JOIN users ON invites.bownerid=users.buid WHERE bcode=\'" + UTIL_StringToMySQL( cstrCode ) + "\' AND bused=0" );
+					CMySQLQuery *pQuery = new CMySQLQuery( "SELECT bcode,bownerid,users.busername FROM invites LEFT JOIN users ON invites.bownerid=users.buid WHERE bcode=\'" + UTIL_StringToMySQL( cstrCode ) + "\' AND bquota>0 AND bused=0" );
 				
 					vector<string> vecQuery;
 	
@@ -606,8 +606,9 @@ void CTracker :: serverResponseInvitePOST( struct request_t *pRequest, struct re
 						if( !strAdded.empty( ) )
 						{
 							system( string( "./sendschool.sh \"" + cstrMail + "\" \"" + cstrLogin + "\" \"" + cstrPass + "\" &" ).c_str( ) );
-							CMySQLQuery mq01( "UPDATE invites SET binvitee=\'" +  UTIL_StringToMySQL( cstrLogin ) + "\',binviteeid=" + strAdded + ",bused=1 WHERE bcode=\'" + UTIL_StringToMySQL( cstrCode ) + "\'" );
-							CMySQLQuery mq02( "UPDATE users SET binviter=\'" +  UTIL_StringToMySQL( vecQuery[2] ) +"\', binviterid=" + UTIL_StringToMySQL( vecQuery[1] ) + " WHERE buid=" + strAdded );
+							CMySQLQuery mq01( "UPDATE invites SET binvitee=\'" +  UTIL_StringToMySQL( cstrLogin ) + "\',binviteeid=" + strAdded + ",bquota=bquota-1 WHERE bcode=\'" + UTIL_StringToMySQL( cstrCode ) + "\' AND bquota>0" );
+							CMySQLQuery mq02( "UPDATE invites SET bused=1 WHERE bcode=\'" + UTIL_StringToMySQL( cstrCode ) + "\' AND bquota=0" );
+							CMySQLQuery mq03( "UPDATE users SET binviter=\'" +  UTIL_StringToMySQL( vecQuery[2] ) +"\', binviterid=" + UTIL_StringToMySQL( vecQuery[1] ) + " WHERE buid=" + strAdded );
 							m_pCache->addRowUsers( strAdded );
 //							m_pCache->ResetUsers( );
 							// Thanks! You've successfully signed up!

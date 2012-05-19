@@ -736,6 +736,23 @@ void CTracker :: serverResponseIndexGET( struct request_t *pRequest, struct resp
 				pResponse->strContent += "<a class=\"index_messages_unread\" href=\"" + RESPONSE_STR_MESSAGES_HTML + "\">" + gmapLANG_CFG["messages_unread_notice"] + "</a>";
 				pResponse->strContent += "</td></tr></table>\n";
 			}
+			if( m_bFreeGlobal )
+			{
+				pResponse->strContent += "<table class=\"index_free_global\">\n";
+				pResponse->strContent += "<tr class=\"index_free_global\">\n";
+				pResponse->strContent += "<td class=\"index_free_global\">\n";
+				pResponse->strContent += UTIL_Xsprintf( gmapLANG_CFG["index_free_global"].c_str( ) );
+				if( m_iFreeDownGlobal != 100 )
+				{
+					if( m_iFreeDownGlobal == 0 )
+						pResponse->strContent += "<span class=\"stats_free_down_free\">" + gmapLANG_CFG["free_down_free"] + "</span>";
+					else
+						pResponse->strContent += "<span class=\"stats_free_down\">" + UTIL_Xsprintf( gmapLANG_CFG["free_down"].c_str( ), CAtomInt( m_iFreeDownGlobal ).toString( ).c_str( ) ) + "</span>";
+				}
+				if( m_iFreeUpGlobal != 100 )
+					pResponse->strContent += "<span class=\"stats_free_up\">" + UTIL_Xsprintf( gmapLANG_CFG["free_up"].c_str( ), CAtomInt( m_iFreeUpGlobal ).toString( ).c_str( ) ) + "</span>";
+				pResponse->strContent += "</td></tr></table>\n";
+			}
 //		}
 
 		// some preliminary search crap
@@ -791,12 +808,34 @@ void CTracker :: serverResponseIndexGET( struct request_t *pRequest, struct resp
 				bAddedPassed = true;
 //		}
 
+		vector<string> vecDead;
+		vecDead.reserve(64);
 		vector<string> vecBookmark;
 		vecBookmark.reserve(64);
 		vector<string> vecFriend;
 		vecFriend.reserve(64);
 		vector<string> vecNote;
 		vecNote.reserve(64);
+
+		if( cstrMode == "Dead" && ( pRequest->user.ucAccess & ACCESS_LEADER ) )
+		{
+			CMySQLQuery *pQuery = new CMySQLQuery( "SELECT bid FROM allowed WHERE badded<NOW()-INTERVAL 1 YEAR AND bseeded<NOW()-INTERVAL 1 YEAR AND bupdated<NOW()-INTERVAL 3 MONTH AND bseeders=0 AND bpost=0 ORDER BY badded LIMIT 100" );
+		
+			vector<string> vecQuery;
+		
+			vecQuery.reserve(1);
+
+			vecQuery = pQuery->nextRow( );
+
+			while( vecQuery.size( ) == 1 )
+			{
+				vecDead.push_back( vecQuery[0] );
+
+				vecQuery = pQuery->nextRow( );
+			}
+			
+			delete pQuery;
+		}
 
 		if( pRequest->user.ucAccess & m_ucAccessBookmark )
 		{
@@ -1525,6 +1564,16 @@ void CTracker :: serverResponseIndexGET( struct request_t *pRequest, struct resp
 //				pResponse->strContent += "<p><label for=\"toptorrentsearch\">" + gmapLANG_CFG["torrent_search"] + "</label> <input name=\"search\" id=\"toptorrentsearch\" alt=\"[" + gmapLANG_CFG["torrent_search"] + "]\" type=text size=40> <a title=\"" + gmapLANG_CFG["clear_filter_search"] + "\" href=\"" + RESPONSE_STR_INDEX_HTML + "\">" + gmapLANG_CFG["clear_filter_search"] + "</a></p>\n";
 
 			pResponse->strContent += "</td></tr>\n";
+			if( !m_vecSearches.empty( ) )
+			{
+				pResponse->strContent += "<tr class=\"index_search_history\">\n";
+				pResponse->strContent += "<td class=\"index_search_history\">\n";
+				for( vector< pair< string, string > > :: iterator ulKey = m_vecSearches.begin( ); ulKey != m_vecSearches.end( ); ulKey++ )
+				{
+					pResponse->strContent += "<span class=\"history\"><a class=\"history\" href=\"" + RESPONSE_STR_INDEX_HTML + "?" + (*ulKey).first + "\">" + UTIL_RemoveHTML( (*ulKey).second ) + "</a></span>";
+				}
+				pResponse->strContent += "</td></tr>\n";
+			}
 			pResponse->strContent += "</table>\n\n";
 			pResponse->strContent += "</td></tr>\n";
 			pResponse->strContent += "</table>\n\n";
@@ -1549,7 +1598,7 @@ void CTracker :: serverResponseIndexGET( struct request_t *pRequest, struct resp
 
 		pResponse->strContent += "<tr class=\"index_note\">\n";
 		pResponse->strContent += "<th class=\"index_note\">\n";
-		pResponse->strContent += "<a href=\"" + RESPONSE_STR_LOGIN_HTML + "?show=notes\">" + gmapLANG_CFG["index_note_mine"] + "</a>";
+		pResponse->strContent += "<a class=\"table_header\" href=\"" + RESPONSE_STR_LOGIN_HTML + "?show=notes\">" + gmapLANG_CFG["index_note_mine"] + "</a>";
 		pResponse->strContent += "</th>\n";
 		pResponse->strContent += "<td class=\"index_note_mine\">\n";
 //		pResponse->strContent += "<div class=\"notes\">\n";
@@ -1561,6 +1610,9 @@ void CTracker :: serverResponseIndexGET( struct request_t *pRequest, struct resp
 		vecQueryNotes.reserve(1);
 
 		vecQueryNotes = pQueryNotes->nextRow( );
+
+		if( vecQueryNotes.size( ) == 0 )
+			pResponse->strContent += "<span class=\"italic\">" + gmapLANG_CFG["index_note_hint"] + "</span>";
 
 		while( vecQueryNotes.size( ) == 1 )
 		{
@@ -1623,6 +1675,17 @@ void CTracker :: serverResponseIndexGET( struct request_t *pRequest, struct resp
 		pResponse->strContent += strJoined;
 
 		pResponse->strContent += "\">" + gmapLANG_CFG["subfilter_unseeded"] + "</a>\n\n";
+
+		// Dead
+		if( pRequest->user.ucAccess & ACCESS_LEADER )
+		{
+			pResponse->strContent += "<span class=\"pipe\"> | </span>\n";
+			pResponse->strContent += "<a title=\"" + gmapLANG_CFG["subfilter_dead"] + "\" href=\"" + RESPONSE_STR_INDEX_HTML + "?mode=Dead&sort=4";
+			
+			pResponse->strContent += strJoined;
+
+			pResponse->strContent += "\">" + gmapLANG_CFG["subfilter_dead"] + "</a>\n\n";
+		}
 
 		// MyTorrents
 
@@ -1694,12 +1757,12 @@ void CTracker :: serverResponseIndexGET( struct request_t *pRequest, struct resp
 		pResponse->strContent += "<span class=\"pipe\"> | </span>\n";
 		
 		// ReqSeeders
-		pResponse->strContent += "[ <a class=\"req\" title=\"" + gmapLANG_CFG["section_reqseeders"] + "\" href=\"" + RESPONSE_STR_INDEX_HTML + "?section=req";
-		
-		pResponse->strContent += strJoined;
-
-		
-		pResponse->strContent += "\">" + gmapLANG_CFG["section_reqseeders"] + "</a> ]\n\n";
+//		pResponse->strContent += "[ <a class=\"req\" title=\"" + gmapLANG_CFG["section_reqseeders"] + "\" href=\"" + RESPONSE_STR_INDEX_HTML + "?section=req";
+//		
+//		pResponse->strContent += strJoined;
+//
+//		
+//		pResponse->strContent += "\">" + gmapLANG_CFG["section_reqseeders"] + "</a> ]\n\n";
 		
 		// Free
 		pResponse->strContent += "[ <a class=\"stats_free\" title=\"" + gmapLANG_CFG["section_free"] + "\" href=\"" + RESPONSE_STR_INDEX_HTML + "?section=free";
@@ -1871,6 +1934,11 @@ void CTracker :: serverResponseIndexGET( struct request_t *pRequest, struct resp
 						if( pTorrents[ulKey].uiSeeders )
 							continue;
 					}
+					else if( cstrMode == "Dead" and ( pRequest->user.ucAccess & ACCESS_LEADER ) )
+					{
+						if( !UTIL_MatchVector( pTorrents[ulKey].strID, vecDead, MATCH_METHOD_NONCASE_EQ ) )
+							continue;
+					}
 	// 				else if(( cstrMode == "MyTorrents"  ) && ( pRequest->user.ucAccess & ACCESS_UPLOAD ) )
 					else if( cstrMode == "MyTorrents" )
 					{
@@ -1897,6 +1965,7 @@ void CTracker :: serverResponseIndexGET( struct request_t *pRequest, struct resp
 		pResponse->strContent += "<p class=\"search_filter\">\n";
 		
 		string strResult = string( );
+		string strHistory = string( );
 
 		if( !vecSearch.empty( ) )
 		{
@@ -1904,6 +1973,8 @@ void CTracker :: serverResponseIndexGET( struct request_t *pRequest, struct resp
 			strResult += "<span class=\"filtered_by_search\">";
 		 	strResult += UTIL_RemoveHTML( strSearch );
 			strResult += "</span>\n";
+
+			strHistory = "\'" + UTIL_StringToMySQL( strSearch ) + "\',\'name\'";
 		}
 		
 //		if( !strNote.empty() )
@@ -1923,6 +1994,8 @@ void CTracker :: serverResponseIndexGET( struct request_t *pRequest, struct resp
 			strResult += "<span class=\"filtered_by_search\">";
 		 	strResult += UTIL_RemoveHTML( strUploader );
 			strResult += "</span>\n";
+
+			strHistory = "\'" + UTIL_StringToMySQL( strUploader ) + "\',\'uploader\'";
 		}
 			
 		if( !vecIMDb.empty() )
@@ -1934,6 +2007,8 @@ void CTracker :: serverResponseIndexGET( struct request_t *pRequest, struct resp
 			strResult += "<span class=\"filtered_by_search\">";
 		 	strResult += UTIL_RemoveHTML( strIMDbID );
 			strResult += "</span>\n";
+
+			strHistory = "\'" + UTIL_StringToMySQL( strIMDbID ) + "\',\'imdb\'";
 		}
 			
 		if( !strMatch.empty() )
@@ -1942,7 +2017,19 @@ void CTracker :: serverResponseIndexGET( struct request_t *pRequest, struct resp
 			strResult += "<span class=\"filtered_by_search\">";
 		 	strResult += gmapLANG_CFG["match_"+strMatch];
 			strResult += "</span>\n";
+
+			if( !strHistory.empty( ) )
+				strHistory += ",\'" + UTIL_StringToMySQL( strMatch ) + "\'";
 		}
+		else
+		{
+			if( !strHistory.empty( ) )
+				strHistory += ",\'and\'";
+		}
+
+
+		if( !strHistory.empty( ) )
+			CMySQLQuery mq01( "INSERT INTO searches (bsearch,btype,bmatch,buid,bsearchat) VALUES(" + strHistory + "," + pRequest->user.strUID + ",NOW())" );
 
 		if( !vecFilter.empty() )
 		{
@@ -2225,6 +2312,11 @@ void CTracker :: serverResponseIndexGET( struct request_t *pRequest, struct resp
 				else if( cstrMode == "Unseeded"  )
 				{
 					if( pTorrents[ulKey].uiSeeders )
+						continue;
+				}
+				else if( cstrMode == "Dead" and ( pRequest->user.ucAccess & ACCESS_LEADER ) )
+				{
+					if( !UTIL_MatchVector( pTorrents[ulKey].strID, vecDead, MATCH_METHOD_NONCASE_EQ ) )
 						continue;
 				}
 // 				else if(( cstrMode == "MyTorrents"  ) && ( pRequest->user.ucAccess & ACCESS_UPLOAD ) )
@@ -2899,8 +2991,8 @@ void CTracker :: serverResponseIndexGET( struct request_t *pRequest, struct resp
 
 					if( pTorrents[ulKey].uiSeeders == 0 )
 						pResponse->strContent += "red";
-					else if( pTorrents[ulKey].uiSeeders < 5 )
-						pResponse->strContent += "green";
+//					else if( pTorrents[ulKey].uiSeeders < 5 )
+//						pResponse->strContent += "green";
 					else
 						pResponse->strContent += "blue";
 
@@ -2912,9 +3004,9 @@ void CTracker :: serverResponseIndexGET( struct request_t *pRequest, struct resp
 //							pResponse->strContent += "<a class=\"number6_green\"";
 //						else
 //							pResponse->strContent += "<a class=\"number6_blue\"";
-						if( pTorrents[ulKey].uiSeeders < 5 )
-							pResponse->strContent += "<a class=\"green\"";
-						else
+//						if( pTorrents[ulKey].uiSeeders < 5 )
+//							pResponse->strContent += "<a class=\"green\"";
+//						else
 							pResponse->strContent += "<a class=\"blue\"";
 					
 						pResponse->strContent += " href=\"" + RESPONSE_STR_STATS_HTML + strJoined;
@@ -2944,19 +3036,20 @@ void CTracker :: serverResponseIndexGET( struct request_t *pRequest, struct resp
 
 					if( pTorrents[ulKey].uiLeechers == 0 )
 						pResponse->strContent += "red";
-					else if( pTorrents[ulKey].uiLeechers < 5 )
-						pResponse->strContent += "green";
+//					else if( pTorrents[ulKey].uiLeechers < 5 )
 					else
-						pResponse->strContent += "blue";
+						pResponse->strContent += "green";
+//					else
+//						pResponse->strContent += "blue";
 					
 					pResponse->strContent += "\" rowspan=2>";
 
 					if( pTorrents[ulKey].uiLeechers > 0 )
 					{
-						if( pTorrents[ulKey].uiLeechers < 5 )
+//						if( pTorrents[ulKey].uiLeechers < 5 )
 							pResponse->strContent += "<a class=\"green\"";
-						else
-							pResponse->strContent += "<a class=\"blue\"";
+//						else
+//							pResponse->strContent += "<a class=\"blue\"";
 					
 						pResponse->strContent += " href=\"" + RESPONSE_STR_STATS_HTML + strJoined;
 						pResponse->strContent += "&amp;show=active#leechers\">";
@@ -3036,13 +3129,13 @@ void CTracker :: serverResponseIndexGET( struct request_t *pRequest, struct resp
 //					pResponse->strContent += "<tr class=\"index_name\">\n";
 //					pResponse->strContent += "<td class=\"download_left\">";
 					UTIL_StripName( pTorrents[ulKey].strName.c_str( ), strEngName, strChiName );
-					if( ( pTorrents[ulKey].bAllow && !pTorrents[ulKey].bPost && pTorrents[ulKey].uiSeeders == 0 && pTorrents[ulKey].strUploaderID != pRequest->user.strUID ) || pTorrents[ulKey].bReq )
-					{
-						pResponse->strContent += "<span class=\"req\" id=\"request" + pTorrents[ulKey].strID + "_status\"";
-						if( !pTorrents[ulKey].bReq )
-							pResponse->strContent += " style=\"display: none\"";
-						pResponse->strContent += ">[" + gmapLANG_CFG["section_reqseeders"] + "]</span>";
-					}
+//					if( ( pTorrents[ulKey].bAllow && !pTorrents[ulKey].bPost && pTorrents[ulKey].uiSeeders == 0 && pTorrents[ulKey].strUploaderID != pRequest->user.strUID ) || pTorrents[ulKey].bReq )
+//					{
+//						pResponse->strContent += "<span class=\"req\" id=\"request" + pTorrents[ulKey].strID + "_status\"";
+//						if( !pTorrents[ulKey].bReq )
+//							pResponse->strContent += " style=\"display: none\"";
+//						pResponse->strContent += ">[" + gmapLANG_CFG["section_reqseeders"] + "]</span>";
+//					}
 
 					if( tTimeTop > 0 )
 					{
@@ -3069,12 +3162,13 @@ void CTracker :: serverResponseIndexGET( struct request_t *pRequest, struct resp
 							pResponse->strContent += "\">" + gmapLANG_CFG["stats_top_time"];
 						}
 						else
-
 							pResponse->strContent += ">";
+						if( now_t - tTimeAdded > 180*24*3600 )
+							pResponse->strContent += gmapLANG_CFG["top_old"];
 						if( pTorrents[ulKey].ucTopInTag > pTorrents[ulKey].ucTop && bInTag )
-							pResponse->strContent += gmapLANG_CFG["top_level_"+CAtomInt( pTorrents[ulKey].ucTopInTag ).toString( )+"_intag"] + ":</span>";
+							pResponse->strContent += gmapLANG_CFG["top_level_"+CAtomInt( pTorrents[ulKey].ucTopInTag ).toString( )+"_intag"] + "</span>";
 						else
-							pResponse->strContent += gmapLANG_CFG["top_level_"+CAtomInt( pTorrents[ulKey].ucTop ).toString( )] + ":</span>";
+							pResponse->strContent += gmapLANG_CFG["top_level_"+CAtomInt( pTorrents[ulKey].ucTop ).toString( )] + "</span>";
 					}
 					if( strChiName.empty( ) )
 						pResponse->strContent += "<br>";
@@ -3085,11 +3179,11 @@ void CTracker :: serverResponseIndexGET( struct request_t *pRequest, struct resp
 						else
 							pResponse->strContent += "<span class=\"new\">(" + gmapLANG_CFG["new"] + ")</span>";
 					}
-					else
-					{
-						if( tTimeOrder > tTimeAdded )
-							pResponse->strContent += "<span class=\"pop_live\">[" + gmapLANG_CFG["pop_live"] + "]</span>";
-					}
+//					else
+//					{
+//						if( tTimeOrder > tTimeAdded )
+//							pResponse->strContent += "<span class=\"pop_live\">[" + gmapLANG_CFG["pop_live"] + "]</span>";
+//					}
 
 //					if( pTorrents[ulKey].strAdded != pTorrents[ulKey].strOrder )
 //						pResponse->strContent += "<span class=\"pop\">(" + gmapLANG_CFG["pop"] + ")</span>";
@@ -3104,7 +3198,7 @@ void CTracker :: serverResponseIndexGET( struct request_t *pRequest, struct resp
 						else
 							pResponse->strContent += "<a class=\"stats\" title=\"";
 						
-						pResponse->strContent += gmapLANG_CFG["name"] + ": " + UTIL_RemoveHTML( pTorrents[ulKey].strName ) + "\" href=\"" + RESPONSE_STR_STATS_HTML + "?id=" + pTorrents[ulKey].strID;
+						pResponse->strContent += UTIL_RemoveHTML( pTorrents[ulKey].strName ) + "\" href=\"" + RESPONSE_STR_STATS_HTML + "?id=" + pTorrents[ulKey].strID;
 						pResponse->strContent += "\">";
 					
 						pResponse->strContent += UTIL_RemoveHTML( strEngName );
@@ -3396,6 +3490,21 @@ void CTracker :: serverResponseIndexGET( struct request_t *pRequest, struct resp
 					pResponse->strContent += ">\n";
 
 					pResponse->strContent += "<td class=\"second_left\">\n";
+					
+					if( ( int64 )tTimeOrder <= last_time )
+					{
+						if( tTimeOrder > tTimeAdded )
+							pResponse->strContent += "<span class=\"pop_live\">" + gmapLANG_CFG["pop_live"] + "</span>";
+					}
+
+					if( ( pTorrents[ulKey].bAllow && !pTorrents[ulKey].bPost && pTorrents[ulKey].uiSeeders == 0 && pTorrents[ulKey].strUploaderID != pRequest->user.strUID ) || pTorrents[ulKey].bReq )
+					{
+						pResponse->strContent += "<span class=\"req\" id=\"request" + pTorrents[ulKey].strID + "_status\"";
+						if( !pTorrents[ulKey].bReq )
+							pResponse->strContent += " style=\"display: none\"";
+						pResponse->strContent += ">" + gmapLANG_CFG["section_reqseeders"] + "</span>";
+					}
+
 					pResponse->strContent += "<span class=\"index_tools\" id=\"tools" + pTorrents[ulKey].strID + "\" style=\"display: none\">";
 
 					if( ( pRequest->user.ucAccess & m_ucAccessEditOwn ) && !pRequest->user.strUID.empty( ) && pTorrents[ulKey].strUploaderID == pRequest->user.strUID )
@@ -3476,9 +3585,7 @@ void CTracker :: serverResponseIndexGET( struct request_t *pRequest, struct resp
 					}
 
 					if( bThank )
-						pResponse->strContent += "<a class=\"index_thanks\" id=\"saythank" + pTorrents[ulKey].strID + "\" href=\"javascript: ;\" onClick=\"javascript: thank('" + pTorrents[ulKey].strID + "');\">" + gmapLANG_CFG["index_saythank"] + "</a>";
-					else
-						pResponse->strContent += gmapLANG_CFG["index_saythank"];
+						pResponse->strContent += "<a class=\"index_thanks\" id=\"saythank" + pTorrents[ulKey].strID + "\" href=\"javascript: ;\" onClick=\"javascript: thank('" + pTorrents[ulKey].strID + "');\">" + gmapLANG_CFG["thanks_icon"] + "</a>";
 
 					pResponse->strContent += "</span>";
 
@@ -3493,6 +3600,8 @@ void CTracker :: serverResponseIndexGET( struct request_t *pRequest, struct resp
 
 //					pResponse->strContent += "<span class=\"index_thanks_count\">";
 					pResponse->strContent += "<a class=\"index_thanks_count\" href=\"" + RESPONSE_STR_STATS_HTML + "?id=" + pTorrents[ulKey].strID + "#thanks\">";
+					if( !bThank )
+						pResponse->strContent += gmapLANG_CFG["thanks_icon"];
 					pResponse->strContent += UTIL_Xsprintf( gmapLANG_CFG["index_thanks"].c_str( ), string( "<span class=\"" + strColor + "\" id=\"thank" + pTorrents[ulKey].strID + "\">" + CAtomInt( pTorrents[ulKey].uiThanks ).toString( ) + "</span>" ).c_str( ) );
 					pResponse->strContent += "</a>";
 //					pResponse->strContent += "</span>";
@@ -3507,7 +3616,7 @@ void CTracker :: serverResponseIndexGET( struct request_t *pRequest, struct resp
 					else
 						strColor = "blue";
 
-					pResponse->strContent += "<span class=\"index_comments\"><a class=\"index_comments\" href=\"" + RESPONSE_STR_COMMENTS_HTML + strJoined + "\">" + UTIL_Xsprintf( gmapLANG_CFG["index_comments"].c_str( ), string( "<span class=\"" + strColor + "\">" + CAtomInt( pTorrents[ulKey].uiComments ).toString( ) + "</span>" ).c_str( ) ) + "</a></span>";
+					pResponse->strContent += "<span class=\"index_comments\"><a class=\"index_comments\" href=\"" + RESPONSE_STR_COMMENTS_HTML + strJoined + "\">" + gmapLANG_CFG["comments_icon"] + "<span class=\"" + strColor + "\">" + CAtomInt( pTorrents[ulKey].uiComments ).toString( ) + "</span>" + "</a></span>";
 
 					if( pTorrents[ulKey].uiShares == 0 )
 						strColor = "grey";
@@ -3517,7 +3626,7 @@ void CTracker :: serverResponseIndexGET( struct request_t *pRequest, struct resp
 						strColor = "blue";
 
 					if( pRequest->user.ucAccess & m_ucAccessComments )
-						pResponse->strContent += "<a class=\"index_share\" target=\"_blank\" href=\"" + RESPONSE_STR_TALK_HTML + "?talk=" + UTIL_StringToEscaped( gmapLANG_CFG["share"] + "#" + gmapLANG_CFG["torrent"] + pTorrents[ulKey].strID + "#" ) + "&amp;tag=" + UTIL_StringToEscaped( gmapLANG_CFG["torrent"] + pTorrents[ulKey].strID ) + "&amp;tochannel=" + UTIL_StringToEscaped( gmapLANG_CFG["talk_channel_share"] ) + "\">" + UTIL_Xsprintf( gmapLANG_CFG["index_shares"].c_str( ), string( "<span class=\"" + strColor + "\">" + CAtomInt( pTorrents[ulKey].uiShares ).toString( ) + "</span>" ).c_str( ) ) + "</a>";
+						pResponse->strContent += "<span class=\"index_shares\"><a class=\"index_share\" target=\"_blank\" href=\"" + RESPONSE_STR_TALK_HTML + "?talk=" + UTIL_StringToEscaped( gmapLANG_CFG["share"] + "#" + gmapLANG_CFG["torrent"] + pTorrents[ulKey].strID + "#" ) + "&amp;tag=" + UTIL_StringToEscaped( gmapLANG_CFG["torrent"] + pTorrents[ulKey].strID ) + "&amp;tochannel=" + UTIL_StringToEscaped( gmapLANG_CFG["talk_channel_share"] ) + "\">" + gmapLANG_CFG["shares_icon"] + "<span class=\"" + strColor + "\">" + CAtomInt( pTorrents[ulKey].uiShares ).toString( ) + "</span>" + "</a></span>";
 
 //					pResponse->strContent += "</span>";
 					pResponse->strContent += "</td>\n";

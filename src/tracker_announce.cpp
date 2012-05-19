@@ -221,18 +221,18 @@ void CTracker :: serverResponseAnnounce( struct request_t *pRequest,struct respo
 	}
 
 	string strIP = string( pRequest->strIP );
-	string strTempIP = string( );
-	string strIPConv = string( );
+//	string strTempIP = string( );
+//	string strIPConv = string( );
 
-	if( m_ucIPBanMode != 0 || m_bBlockNATedIP || m_bLocalOnly )
-	{
-		if( gbDebug && ( gucDebugLevel & DEBUG_ANNOUNCE ) )
-			UTIL_LogPrint( "serverResponseAnnounce: retrieve IP\n" );
-
-		// retrieve ip
-		strTempIP = pRequest->mapParams["ip"];
-		strIPConv = strIP.c_str( );
-	}
+//	if( m_ucIPBanMode != 0 || m_bBlockNATedIP || m_bLocalOnly )
+//	{
+//		if( gbDebug && ( gucDebugLevel & DEBUG_ANNOUNCE ) )
+//			UTIL_LogPrint( "serverResponseAnnounce: retrieve IP\n" );
+//
+//		// retrieve ip
+//		strTempIP = pRequest->mapParams["ip"];
+//		strIPConv = strIP.c_str( );
+//	}
 
 	// Verify that the IP is permitted to access the tracker
 	if( m_ucIPBanMode != 0 )
@@ -243,7 +243,8 @@ void CTracker :: serverResponseAnnounce( struct request_t *pRequest,struct respo
 		switch( m_ucIPBanMode )
 		{
 		case IP_BLACKLIST:
-			if( UTIL_IsIPBanList( strIP, m_pIPBannedList ) || UTIL_IsIPBanList( strTempIP, m_pIPBannedList ) )
+//			if( UTIL_IsIPBanList( strIP, m_pIPBannedList ) || UTIL_IsIPBanList( strTempIP, m_pIPBannedList ) )
+			if( UTIL_IsIPBanList( strIP, m_pIPBannedList ) )
 			{
 				if( gbDebug && ( gucDebugLevel & DEBUG_ANNOUNCE ) )
 					UTIL_LogPrint( "serverResponseAnnounce: IP blacklisted\n" );
@@ -261,7 +262,8 @@ void CTracker :: serverResponseAnnounce( struct request_t *pRequest,struct respo
 
 			break;
 		case IP_VIPLIST:
-			if( !UTIL_IsIPBanList( strIP, m_pIPBannedList ) && !UTIL_IsIPBanList( strTempIP, m_pIPBannedList ) )
+//			if( !UTIL_IsIPBanList( strIP, m_pIPBannedList ) && !UTIL_IsIPBanList( strTempIP, m_pIPBannedList ) )
+			if( !UTIL_IsIPBanList( strIP, m_pIPBannedList ) )
 			{
 				if( gbDebug && ( gucDebugLevel & DEBUG_ANNOUNCE ) )
 					UTIL_LogPrint( "serverResponseAnnounce: IP not cleared\n" );
@@ -697,64 +699,61 @@ void CTracker :: serverResponseAnnounce( struct request_t *pRequest,struct respo
 	CAtomDicti *pData = new CAtomDicti( );
 
 	// Private IP Spoofing Blocking
-	if( m_bBlockNATedIP )
-	{
-		if( gbDebug && ( gucDebugLevel & DEBUG_ANNOUNCE ) )
-			UTIL_LogPrint( "serverResponseAnnounce: Private IP Spoofing Blocking (enabled)\n" );
-
-		if( !strTempIP.empty( ) && ( strTempIP.substr(0,8) == "192.168." || strTempIP.substr(0,8) == "169.254." || strTempIP.substr(0,3) == "10." || strTempIP == "127.0.0.1" || strTempIP == "0.0.0.0" ) )
-// 		if( !strTempIP.empty( ) && ( strTempIP.substr(0,8) == "192.168." || strTempIP.substr(0,8) == "169.254." || strTempIP.substr(0,3) == "10." || strTempIP.substr(0,7) == "172.16." || strTempIP.substr(0,7) == "172.17." || strTempIP.substr(0,7) == "172.18." || strTempIP.substr(0,7) == "172.19." || strTempIP.substr(0,7) == "172.20." || strTempIP.substr(0,7) == "172.21." || strTempIP.substr(0,7) == "172.22." || strTempIP.substr(0,7) == "172.23." || strTempIP.substr(0,7) == "172.24." || strTempIP.substr(0,7) == "172.25." || strTempIP.substr(0,7) == "172.26." || strTempIP.substr(0,7) == "172.27." || strTempIP.substr(0,7) == "172.28." || strTempIP.substr(0,7) == "172.29." || strTempIP.substr(0,7) == "172.30." || strTempIP.substr(0,7) == "172.31." || strTempIP.substr(0,7) == "172.32." || strTempIP == "127.0.0.1" ) )
-		{
-
-			if( gbDebug && ( gucDebugLevel & DEBUG_ANNOUNCE ) )
-				UTIL_LogPrint( "serverResponseAnnounce: Private IP Spoofing Blocking (detected)\n" );
-	
-			pData->setItem("warning message", new CAtomString( "A122: This tracker does not permit you to specify your IP to it. Using the IP you are connecting from instead." ) );
-
-			strTempIP = string( );
-		}
-	}
+//	if( m_bBlockNATedIP )
+//	{
+//		if( gbDebug && ( gucDebugLevel & DEBUG_ANNOUNCE ) )
+//			UTIL_LogPrint( "serverResponseAnnounce: Private IP Spoofing Blocking (enabled)\n" );
+//
+//		if( !strTempIP.empty( ) && ( strTempIP.substr(0,8) == "192.168." || strTempIP.substr(0,8) == "169.254." || strTempIP.substr(0,3) == "10." || strTempIP == "127.0.0.1" || strTempIP == "0.0.0.0" ) )
+//		{
+//
+//			if( gbDebug && ( gucDebugLevel & DEBUG_ANNOUNCE ) )
+//				UTIL_LogPrint( "serverResponseAnnounce: Private IP Spoofing Blocking (detected)\n" );
+//	
+//			pData->setItem("warning message", new CAtomString( "A122: This tracker does not permit you to specify your IP to it. Using the IP you are connecting from instead." ) );
+//
+//			strTempIP = string( );
+//		}
+//	}
 
 	// Public IP Spoofing Blocking
-	if( m_bLocalOnly )
-	{
-		if( gbDebug && ( gucDebugLevel & DEBUG_ANNOUNCE ) )
-			UTIL_LogPrint( "serverResponseAnnounce: Public IP Spoofing Blocking (enabled)\n" );
-
-		if( !strIPConv.empty( ) && ( strIPConv.substr(0,8) == "192.168." || strIPConv.substr(0,8) == "169.254." || strIPConv.substr(0,3) == "10." || strIPConv == "127.0.0.1" || strIPConv == "0.0.0.0" ) )
-// 		if( !strIPConv.empty( ) && ( strIPConv.substr(0,8) == "192.168." || strIPConv.substr(0,8) == "169.254." || strIPConv.substr(0,3) == "10." || strIPConv.substr(0,7) == "172.16." || strIPConv.substr(0,7) == "172.17." || strIPConv.substr(0,7) == "172.18." || strIPConv.substr(0,7) == "172.19." || strIPConv.substr(0,7) == "172.20." || strIPConv.substr(0,7) == "172.21." || strIPConv.substr(0,7) == "172.22." || strIPConv.substr(0,7) == "172.23." || strIPConv.substr(0,7) == "172.24." || strIPConv.substr(0,7) == "172.25." || strIPConv.substr(0,7) == "172.26." || strIPConv.substr(0,7) == "172.27." || strIPConv.substr(0,7) == "172.28." || strIPConv.substr(0,7) == "172.29." || strIPConv.substr(0,7) == "172.30." || strIPConv.substr(0,7) == "172.31." || strIPConv.substr(0,7) == "172.32." || strIPConv == "127.0.0.1" ) )
-		{
-			if( !strTempIP.empty( ) && strTempIP.find_first_not_of( "1234567890.:" ) == string :: npos )
-				strIP = strTempIP;
-			else
-			{
-				if( !strTempIP.empty( ) )
-					pData->setItem("warning message", new CAtomString( "A473: The IP you have specified is invalid. Using the IP you are connecting from instead." ) );
-
-				strTempIP = string( );	  
-			}
-		}
-		else if( !strIPConv.empty( ) && !( strIPConv.substr(0,8) == "192.168." || strIPConv.substr(0,8) == "169.254." || strIPConv.substr(0,3) == "10." || strIPConv == "127.0.0.1" || strIPConv == "0.0.0.0" ) )
-// 		else if( !strIPConv.empty( ) && !( strIPConv.substr(0,8) == "192.168." || strIPConv.substr(0,8) == "169.254." || strIPConv.substr(0,3) == "10." || strIPConv.substr(0,7) == "172.16." || strIPConv.substr(0,7) == "172.17." || strIPConv.substr(0,7) == "172.18." || strIPConv.substr(0,7) == "172.19." || strIPConv.substr(0,7) == "172.20." || strIPConv.substr(0,7) == "172.21." || strIPConv.substr(0,7) == "172.22." || strIPConv.substr(0,7) == "172.23." || strIPConv.substr(0,7) == "172.24." || strIPConv.substr(0,7) == "172.25." || strIPConv.substr(0,7) == "172.26." || strIPConv.substr(0,7) == "172.27." || strIPConv.substr(0,7) == "172.28." || strIPConv.substr(0,7) == "172.29." || strIPConv.substr(0,7) == "172.30." || strIPConv.substr(0,7) == "172.31." || strIPConv.substr(0,7) == "172.32." || strIPConv == "127.0.0.1" ) )
-		{
-			if( !strTempIP.empty( ) )
-				pData->setItem("warning message", new CAtomString( "A824: This tracker does not permit you to specify your IP to it. Using the IP you are connecting from instead." ) );
-
-			strTempIP = string( );	
-		}
-	}
-	else
-	{
-		if( !strTempIP.empty( ) && strTempIP.find_first_not_of( "1234567890.:" ) == string :: npos )
-			strIP = strTempIP;
-		else
-		{			
-			if( !strTempIP.empty( ) )
-				pData->setItem("warning message", new CAtomString( "A373: The IP you have specified is invalid. Using the IP you are connecting from instead." ) );
-
-			strTempIP = string( );
-		}
-	}
+//	if( m_bLocalOnly )
+//	{
+//		if( gbDebug && ( gucDebugLevel & DEBUG_ANNOUNCE ) )
+//			UTIL_LogPrint( "serverResponseAnnounce: Public IP Spoofing Blocking (enabled)\n" );
+//
+//		if( !strIPConv.empty( ) && ( strIPConv.substr(0,8) == "192.168." || strIPConv.substr(0,8) == "169.254." || strIPConv.substr(0,3) == "10." || strIPConv == "127.0.0.1" || strIPConv == "0.0.0.0" ) )
+//		{
+//			if( !strTempIP.empty( ) && strTempIP.find_first_not_of( "1234567890.:" ) == string :: npos )
+//				strIP = strTempIP;
+//			else
+//			{
+//				if( !strTempIP.empty( ) )
+//					pData->setItem("warning message", new CAtomString( "A473: The IP you have specified is invalid. Using the IP you are connecting from instead." ) );
+//
+//				strTempIP = string( );	  
+//			}
+//		}
+//		else if( !strIPConv.empty( ) && !( strIPConv.substr(0,8) == "192.168." || strIPConv.substr(0,8) == "169.254." || strIPConv.substr(0,3) == "10." || strIPConv == "127.0.0.1" || strIPConv == "0.0.0.0" ) )
+//		{
+//			if( !strTempIP.empty( ) )
+//				pData->setItem("warning message", new CAtomString( "A824: This tracker does not permit you to specify your IP to it. Using the IP you are connecting from instead." ) );
+//
+//			strTempIP = string( );	
+//		}
+//	}
+//	else
+//	{
+//		if( !strTempIP.empty( ) && strTempIP.find_first_not_of( "1234567890.:" ) == string :: npos )
+//			strIP = strTempIP;
+//		else
+//		{			
+//			if( !strTempIP.empty( ) )
+//				pData->setItem("warning message", new CAtomString( "A373: The IP you have specified is invalid. Using the IP you are connecting from instead." ) );
+//
+//			strTempIP = string( );
+//		}
+//	}
 	
 	string cstrKey = string( );
 

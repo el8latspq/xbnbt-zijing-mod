@@ -460,6 +460,7 @@ void CTracker :: serverResponseOfferGET( struct request_t *pRequest, struct resp
 						if( pRequest->mapParams["submit_delete_button"] == gmapLANG_CFG["yes"] )
 						{
 							strPageParameters += "?del=" + strDelID + "&reason=" + strDelReason + "&ok=1";
+							strPageParameters += "&return=" + strReturnPageResp;
 							return JS_ReturnToPage( pRequest, pResponse, strPageParameters );
 						}
 						
@@ -554,7 +555,7 @@ void CTracker :: serverResponseOfferGET( struct request_t *pRequest, struct resp
 							pResponse->strContent += "<div>\n";
 							pResponse->strContent += Button_Submit( "submit_delete", string( gmapLANG_CFG["yes"] ) );
 							pResponse->strContent += Button_Back( "cancel_delete", string( gmapLANG_CFG["no"] ) );
-							pResponse->strContent += "\n</div>\n</div></form>\n";
+							pResponse->strContent += "\n</div></form>\n</div>\n";
 
 							// Output common HTML tail
 							HTML_Common_End( pRequest, pResponse, btv, NOT_INDEX, string( CSS_OFFER ) );

@@ -772,6 +772,9 @@ public:
 #endif
 
 private:
+	static void *threadSeedBonus( void *arg );
+	static void *threadExpire( void *arg );
+
 	string m_strAllowedDir;
 	string m_strOfferDir;
 	string m_strRulesDir;
@@ -916,6 +919,7 @@ private:
 	vector< string > m_vecMediums;
 	vector< string > m_vecEncodes;
 	
+	vector< pair< string, string > > m_vecSearches;
 	vector< pair< string, string > > m_vecNotes;
 	vector< pair< string, string > > m_vecTalkTags;
 
