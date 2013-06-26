@@ -184,6 +184,7 @@ const string UTIL_HTMLJoin( vector< pair< string, string > > &vecParams, const s
 const vector<string> UTIL_SplitToVector( const string &cstrJoined, const string &cstrSplit );
 const vector<string> UTIL_SplitToVectorStrict( const string &cstrJoined, const string &cstrSplit );
 const bool UTIL_MatchVector( const string &cstrText, vector<string> &vecMatch, const unsigned char cucMatchMethod );
+const int UTIL_MatchVectorEqualPos( const string &cstrText, vector<string> &vecMatch );
 const string UTIL_PageBarIndex( unsigned long ulCount, const string &cstrPage, const unsigned int cuiPerPage, const string &cstrRef, const string &cstrParams, const bool bPageBarTop, const bool bShowPageNum = false );
 const string UTIL_PageBar( unsigned long ulCount, const string &cstrPage, const unsigned int cuiPerPage, const string &cstrRef, const string &cstrParams, const bool bPageBarTop, const bool bShowPageNum = false );
 const string UTIL_PageBarAJAX( unsigned long ulCount, const string &cstrPage, const unsigned int cuiPerPage, const string &cstrRef, const string &cstrParams, const string &cstrTagName, const string &cstrID, const bool bPageBarTop, const bool bShowPageNum = false );

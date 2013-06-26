@@ -26,6 +26,7 @@
 #endif
 
 #include "bnbt.h"
+#include "bnbt_mysql.h"
 #include "atom.h"
 #include "client.h"
 #include "config.h"
@@ -214,6 +215,36 @@ bool CServer :: isDying( )
 	return m_bKill;
 }
 
+void *threadClient( void *arg )
+{
+	//MILLISLEEP( 10 );
+
+	MYSQL *pMySQL = 0;
+	
+	if( (CClient *)arg )
+		pMySQL = ( (CClient *)arg )->pMySQL;
+
+	if( pMySQL )
+	{
+		gmtxMySQL.Claim( );
+		gmapMySQL[pthread_self( )] = pMySQL;
+		gmtxMySQL.Release( );
+
+		if( ( (CClient *)arg )->Update( ) )
+		{
+			( (CClient *)arg )->Done = true;
+		}
+
+		gmtxMySQL.Claim( );
+		gmapMySQL.erase( pthread_self( ) );
+		gmtxMySQL.Release( );
+	}
+
+	pthread_exit( NULL );
+
+	return NULL;
+}
+
 bool CServer :: Update( const bool &bBlock )
 {
 	if( m_vecClients.size( ) < guiMaxConns )
@@ -266,9 +297,67 @@ bool CServer :: Update( const bool &bBlock )
 	}
 
 	// process the clients
+//	for( vector<CClient *> :: iterator itClient = m_vecClients.begin( ); itClient != m_vecClients.end( ); )
+//	{
+//		if( (*itClient)->Update( ) )
+//		{
+//			delete *itClient;
+//
+//			itClient = m_vecClients.erase( itClient );
+//		}
+//		else
+//			itClient++;
+//	}
+
+//	pthread_t pid[2*guiMaxConns];
+//	int err[2*guiMaxConns];
+	pthread_t pid[guiMaxConns];
+	int err[guiMaxConns];
+	int i = 0;
+
 	for( vector<CClient *> :: iterator itClient = m_vecClients.begin( ); itClient != m_vecClients.end( ); )
 	{
-		if( (*itClient)->Update( ) )
+		//pthread_attr_t attr;
+
+		//pthread_attr_init( &attr );
+		//std::size_t stack_size = 128*1024;
+		//pthread_attr_setdetachstate( &attr, PTHREAD_CREATE_DETACHED );
+		//pthread_attr_setstacksize( &attr, stack_size );
+
+		err[i] = pthread_create( &pid[i], NULL, threadClient, *itClient );
+
+		//pthread_attr_destroy( &attr );
+
+		itClient++;
+		i++;
+
+		if( i == 5 || itClient == m_vecClients.end( ) )
+		{
+			for( int n = 0; n < i; n++ )
+			{
+				if( err[n] == 0 )
+				{
+					pthread_join( pid[n], NULL );
+				}
+			}
+			i = 0;
+		}
+	}
+//	for( int n = 0; n < i; n++ )
+//	{
+//		if( err[n] == 0 )
+//		{
+//			pthread_join( pid[n], NULL );
+//		}
+//		//else
+//		//	UTIL_LogPrint( "%s\n", strerror( err[n] ) );
+//	}
+//	i = 0;
+	for( vector<CClient *> :: iterator itClient = m_vecClients.begin( ); itClient != m_vecClients.end( ); )
+	{
+	//	pthread_join( pid[i++], NULL );
+
+		if( (*itClient)->Done )
 		{
 			delete *itClient;
 
@@ -277,7 +366,6 @@ bool CServer :: Update( const bool &bBlock )
 		else
 			itClient++;
 	}
-
 	if( m_pTracker )
 		m_pTracker->Update( );
 

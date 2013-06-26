@@ -75,7 +75,7 @@ void CTracker :: serverResponseTalkGET( struct request_t *pRequest, struct respo
 		pResponse->strContent += "  alert( \"" + gmapLANG_CFG["js_fill_fields"] + "\" );\n";
 		pResponse->strContent += "  return false; }\n";
 		pResponse->strContent += "if( theform.talk.value.getBytes() > " + CAtomInt( m_uiTalkLength ).toString( ) + " ) {\n";
-		pResponse->strContent += "  alert( \"" + gmapLANG_CFG["js_too_long"] + "\\n" + m_strJSTalkLength + "\\n" + m_strJSReduce + "\" );\n";
+		pResponse->strContent += "  alert( \"" + gmapLANG_CFG["js_too_long"] + "\\n" + m_strJSTalkLength + "\\n" + m_strJSTalkReduce + "\" );\n";
 		pResponse->strContent += "  return false; }\n";
 		pResponse->strContent += "else { return true; }\n";
 		pResponse->strContent += "}\n\n";
@@ -2063,7 +2063,14 @@ void CTracker :: serverResponseTalkGET( struct request_t *pRequest, struct respo
 						if( !strUID.empty( ) )
 							pQueryTalk = new CMySQLQuery( "SELECT bid,busername,buid,bposted,btalk,btalkstore,bchannel,breply,breply_real,breplyto,breplytoid,breplytimes,brt,brtto,brttoid FROM talk WHERE buid=" + strUID + " AND breply=0 ORDER BY bposted DESC LIMIT " + CAtomLong( ulStart ).toString( ) + "," + CAtomLong( uiOverridePerPage ).toString( ) );
 						else if( !strChannel.empty( ) )
-							pQueryTalk = new CMySQLQuery( "SELECT bid,busername,buid,bposted,btalk,btalkstore,bchannel,breply,breply_real,breplyto,breplytoid,breplytimes,brt,brtto,brttoid FROM talk WHERE bchannel=\'" + UTIL_StringToMySQL( strChannel ) + "\' AND breply=0 ORDER BY bposted DESC LIMIT " + CAtomLong( ulStart ).toString( ) + "," + CAtomLong( uiOverridePerPage ).toString( ) );
+						{
+							if( strChannel == gmapLANG_CFG["talk_channel_all"] )
+								pQueryTalk = new CMySQLQuery( "SELECT bid,busername,buid,bposted,btalk,btalkstore,bchannel,breply,breply_real,breplyto,breplytoid,breplytimes,brt,brtto,brttoid FROM talk WHERE breply=0 ORDER BY bposted DESC LIMIT " + CAtomLong( ulStart ).toString( ) + "," + CAtomLong( uiOverridePerPage ).toString( ) );
+							else
+								pQueryTalk = new CMySQLQuery( "SELECT bid,busername,buid,bposted,btalk,btalkstore,bchannel,breply,breply_real,breplyto,breplytoid,breplytimes,brt,brtto,brttoid FROM talk WHERE bchannel=\'" + UTIL_StringToMySQL( strChannel ) + "\' AND breply=0 ORDER BY bposted DESC LIMIT " + CAtomLong( ulStart ).toString( ) + "," + CAtomLong( uiOverridePerPage ).toString( ) );
+						}
+//						else if( !strChannel.empty( ) )
+//							pQueryTalk = new CMySQLQuery( "SELECT bid,busername,buid,bposted,btalk,btalkstore,bchannel,breply,breply_real,breplyto,breplytoid,breplytimes,brt,brtto,brttoid FROM talk WHERE bchannel=\'" + UTIL_StringToMySQL( strChannel ) + "\' AND breply=0 ORDER BY bposted DESC LIMIT " + CAtomLong( ulStart ).toString( ) + "," + CAtomLong( uiOverridePerPage ).toString( ) );
 
 						vecQueryTalk = pQueryTalk->nextRow( );
 					}

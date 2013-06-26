@@ -1729,6 +1729,59 @@ const bool UTIL_MatchVector( const string &cstrText, vector<string> &vecMatch, c
 	return true;
 }
 
+const int UTIL_MatchVectorEqualPos( const string &cstrText, vector<string> &vecMatch )
+{
+	unsigned int uiBegin = 0;
+	unsigned int uiMiddle = 0;
+	unsigned int uiEnd = 0;
+	unsigned int uiSize = vecMatch.size( );
+	int iText = atoi( cstrText.c_str( ) );
+
+	if( uiSize )  
+	{
+		uiEnd = uiSize - 1;
+
+		if( uiEnd == uiBegin )
+		{
+			if( cstrText == vecMatch[uiBegin] )
+				return (int)uiBegin;
+			else
+				return -1;
+		}
+
+		while( uiEnd > uiBegin )
+		{
+			uiMiddle = ( uiBegin + uiEnd ) / 2;
+
+			int iBegin = atoi( vecMatch[uiBegin].c_str( ) );
+			int iMiddle = atoi( vecMatch[uiMiddle].c_str( ) );
+			int iEnd = atoi( vecMatch[uiEnd].c_str( ) );
+
+			if( iEnd <= iText && iText <= iBegin )
+			{
+				if( iBegin == iText )
+					return (int)uiBegin;
+				else if( iText == iEnd )
+					return (int)uiEnd;
+				else if( uiMiddle == uiBegin )
+					break;
+				else
+				{
+					if( iText <= iMiddle )
+						uiBegin = uiMiddle;
+					else
+						uiEnd = uiMiddle;
+				}
+			}
+			else
+				return -1;
+		}
+		return -1;
+	}
+	else
+		return -1;
+}
+
 const string UTIL_PageBarIndex( unsigned long ulCount, const string &cstrPage, const unsigned int cuiPerPage, const string &cstrRef, const string &cstrParams, const bool bPageBarTop, const bool bShowPageNum )
 {
 	string strPageNav = string( );

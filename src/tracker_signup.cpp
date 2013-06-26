@@ -890,7 +890,7 @@ void CTracker :: serverResponseSignupSchoolPOST( struct request_t *pRequest, str
 
 				return;
 			}
-			if( cstrType == "1" && cstrLowerMail.find( "b0" ) != 0 && cstrLowerMail.find( "b1" ) != 0 && cstrLowerMail.find( "mg" ) != 0 && cstrLowerMail.find( "mf" ) != 0 && cstrLowerMail.find( "dg" ) != 0 )
+			if( cstrType == "1" && cstrLowerMail.find( "b0" ) != 0 && ( cstrLowerMail.find( "b1" ) != 0 || cstrLowerMail.find( "b12" ) == 0 ) && cstrLowerMail.find( "12" ) != 0 && cstrLowerMail.find( "mg" ) != 0 && cstrLowerMail.find( "mf" ) != 0 && cstrLowerMail.find( "dg" ) != 0 )
 			{
 				// Unable to signup. Your e-mail address is invalid.
 				pResponse->strContent += "<p class=\"signup_failed\">" + UTIL_Xsprintf( gmapLANG_CFG["signup_email_error_smail"].c_str( ), string( "<a title=\"" + gmapLANG_CFG["navbar_sign_up_school"] + "\" href=\"" + RESPONSE_STR_SIGNUP_SCHOOL_HTML + "\">" ).c_str( ), "</a>" ) + "</p>\n\n";

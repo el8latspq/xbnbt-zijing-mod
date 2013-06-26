@@ -1276,7 +1276,7 @@ void CTracker :: serverResponseBetsGET( struct request_t *pRequest, struct respo
 						pResponse->strContent += "</td>\n";
 						if( vecQueryBets[4] != m_strMySQLTimeZero )
 						{
-							pResponse->strContent += "<td class=\"betoption\">";
+							pResponse->strContent += "<td class=\"betresult\">";
 							if( vecQueryBet[4] == "1" )
 								pResponse->strContent += "<span class=\"betresult\">" + gmapLANG_CFG["bet_result_yes"] + "</span>";
 							else if( ( pRequest->user.ucAccess & m_ucAccessAdminBets ) && vecQueryBets[5] == m_strMySQLTimeZero )
@@ -1311,7 +1311,7 @@ void CTracker :: serverResponseBetsGET( struct request_t *pRequest, struct respo
 					pResponse->strContent += "<tr class=\"betpayback\">";
 					pResponse->strContent += "<td class=\"betoption\">" + UTIL_RemoveHTML( gmapLANG_CFG["bet_payback"] ) + "</td>";
 					pResponse->strContent += "<td class=\"betoption\" colspan=3>" + UTIL_RemoveHTML( gmapLANG_CFG["bet_payback_note"] ) + "</td>";
-					pResponse->strContent += "<td class=\"betoption\" colspan=2>";
+					pResponse->strContent += "<td class=\"betresult\" colspan=2>";
 					if( vecQueryBets[12] == "1" )
 						pResponse->strContent += "<span class=\"betresult\">" + gmapLANG_CFG["bet_result_yes"] + "</span>";
 					else if( ( pRequest->user.ucAccess & m_ucAccessAdminBets ) && vecQueryBets[5] == m_strMySQLTimeZero )

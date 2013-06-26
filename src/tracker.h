@@ -992,6 +992,7 @@ private:
 	string m_strValidate2;
 	string m_strJSReduce;
 	string m_strJSMsgReduce;
+	string m_strJSTalkReduce;
 	string m_strJSLength;
 	string m_strJSMsgLength;
 	string m_strJSTalkLength;

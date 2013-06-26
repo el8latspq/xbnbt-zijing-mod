@@ -607,6 +607,12 @@ void CTracker :: serverResponseIndexGET( struct request_t *pRequest, struct resp
 		pResponse->strContent += "//-->\n";
 		pResponse->strContent += "</script>\n\n";
 		
+		char pTime[256];
+		memset( pTime, 0, sizeof( pTime ) / sizeof( char ) );
+		strftime( pTime, sizeof( pTime ) / sizeof( char ), "%Y-%m-%d", localtime( &now_t ) );
+		string strToday = string( pTime );
+
+		string strCreated = string( );
 		int64 ulUploaded = 0;
 		int64 ulDownloaded = 0;
 		float flShareRatio = 0;
@@ -618,21 +624,22 @@ void CTracker :: serverResponseIndexGET( struct request_t *pRequest, struct resp
 
 //		if( !pRequest->user.strUID.empty( ) )
 //		{
-			CMySQLQuery *pQueryUser = new CMySQLQuery( "SELECT buploaded,bdownloaded,bbonus,UNIX_TIMESTAMP(blast_index),UNIX_TIMESTAMP(blast_info),UNIX_TIMESTAMP(bwarned) FROM users WHERE buid=" + pRequest->user.strUID );
+			CMySQLQuery *pQueryUser = new CMySQLQuery( "SELECT bcreated,buploaded,bdownloaded,bbonus,UNIX_TIMESTAMP(blast_index),UNIX_TIMESTAMP(blast_info),UNIX_TIMESTAMP(bwarned) FROM users WHERE buid=" + pRequest->user.strUID );
 	
 			vector<string> vecQueryUser;
 	
-			vecQueryUser.reserve(6);
+			vecQueryUser.reserve(7);
 			
 			vecQueryUser = pQueryUser->nextRow( );
 		
 			delete pQueryUser;
 			
-			if( vecQueryUser.size( ) == 6 )
+			if( vecQueryUser.size( ) == 7 )
 			{
-				ulUploaded = UTIL_StringTo64( vecQueryUser[0].c_str( ) );
-				ulDownloaded = UTIL_StringTo64( vecQueryUser[1].c_str( ) );
-				ulBonus = UTIL_StringTo64( vecQueryUser[2].c_str( ) );
+				strCreated = vecQueryUser[0];
+				ulUploaded = UTIL_StringTo64( vecQueryUser[1].c_str( ) );
+				ulDownloaded = UTIL_StringTo64( vecQueryUser[2].c_str( ) );
+				ulBonus = UTIL_StringTo64( vecQueryUser[3].c_str( ) );
 		
 				if( ulDownloaded == 0 )
 				{
@@ -644,9 +651,9 @@ void CTracker :: serverResponseIndexGET( struct request_t *pRequest, struct resp
 				else
 					flShareRatio = (float)ulUploaded / (float)ulDownloaded;
 				
-				last_time = UTIL_StringTo64( vecQueryUser[3].c_str( ) );
-				last_time_info = UTIL_StringTo64( vecQueryUser[4].c_str( ) );
-				warned = UTIL_StringTo64( vecQueryUser[5].c_str( ) );
+				last_time = UTIL_StringTo64( vecQueryUser[4].c_str( ) );
+				last_time_info = UTIL_StringTo64( vecQueryUser[5].c_str( ) );
+				warned = UTIL_StringTo64( vecQueryUser[6].c_str( ) );
 			}
 //		}
 		
@@ -678,6 +685,26 @@ void CTracker :: serverResponseIndexGET( struct request_t *pRequest, struct resp
 
 //		if( !pRequest->user.strUID.empty( ) )
 //		{
+			if( !strCreated.empty( ) && !strToday.empty( ) )
+			{
+				if( strCreated.substr( 5, 5 ) == strToday.substr( 5, 5 ) )
+				{
+					if( atoi( strToday.substr( 0, 4 ).c_str( ) ) > 0 && atoi( strCreated.substr( 0, 4 ).c_str( ) ) > 0 )
+					{
+						int iAge = atoi( strToday.substr( 0, 4 ).c_str( ) ) - atoi( strCreated.substr( 0, 4 ).c_str( ) );
+
+						if( iAge > 0 )
+						{
+							pResponse->strContent += "<table class=\"index_birthday\">\n";
+							pResponse->strContent += "<tr class=\"index_birthday\">\n";
+							pResponse->strContent += "<td class=\"index_birthday\">\n";
+							pResponse->strContent += UTIL_Xsprintf( gmapLANG_CFG["index_birthday"].c_str( ), CAtomInt( iAge ).toString( ).c_str( ) );
+							pResponse->strContent += "</td></tr></table>";
+						}
+					}
+				}
+			}
+
 			if( warned > 0 )
 			{
 				pResponse->strContent += "<table class=\"index_warned\">\n";
@@ -948,9 +975,9 @@ void CTracker :: serverResponseIndexGET( struct request_t *pRequest, struct resp
 		{
 			string strQuery = string( );
 			if( strMatch == "eor" )
-				strQuery += "SELECT bid FROM notes WHERE bnote=\'" + UTIL_StringToMySQL( vecSearch[0] ) + "\'";
+				strQuery += "SELECT DISTINCT bid FROM notes WHERE bnote=\'" + UTIL_StringToMySQL( vecSearch[0] ) + "\'";
 			else
-				strQuery += "SELECT bid FROM notes WHERE bnote LIKE \'%" + UTIL_StringToMySQL( vecSearch[0] ) + "%\'";
+				strQuery += "SELECT DISTINCT bid FROM notes WHERE bnote LIKE \'%" + UTIL_StringToMySQL( vecSearch[0] ) + "%\'";
 
 			for( vector<string> :: iterator ulKey = vecSearch.begin( ) + 1; ulKey != vecSearch.end( ); ulKey++ )
 			{
@@ -961,6 +988,9 @@ void CTracker :: serverResponseIndexGET( struct request_t *pRequest, struct resp
 				else
 					strQuery += " AND bnote LIKE \'%" + UTIL_StringToMySQL( *ulKey ) + "%\'";
 			}
+
+			strQuery += " ORDER BY bid DESC";
+			
 			CMySQLQuery *pQuery = new CMySQLQuery( strQuery );
 		
 			vector<string> vecQuery;
@@ -1566,10 +1596,17 @@ void CTracker :: serverResponseIndexGET( struct request_t *pRequest, struct resp
 			pResponse->strContent += "</td></tr>\n";
 			if( !m_vecSearches.empty( ) )
 			{
+				int iMax = 0;
+
 				pResponse->strContent += "<tr class=\"index_search_history\">\n";
 				pResponse->strContent += "<td class=\"index_search_history\">\n";
 				for( vector< pair< string, string > > :: iterator ulKey = m_vecSearches.begin( ); ulKey != m_vecSearches.end( ); ulKey++ )
 				{
+					iMax++;
+
+					if( iMax > CFG_GetInt( "bnbt_index_search_history_max", 10 ) )
+						break;
+
 					pResponse->strContent += "<span class=\"history\"><a class=\"history\" href=\"" + RESPONSE_STR_INDEX_HTML + "?" + (*ulKey).first + "\">" + UTIL_RemoveHTML( (*ulKey).second ) + "</a></span>";
 				}
 				pResponse->strContent += "</td></tr>\n";
@@ -1589,8 +1626,15 @@ void CTracker :: serverResponseIndexGET( struct request_t *pRequest, struct resp
 		pResponse->strContent += "<td class=\"index_note_users\">\n";
 //		pResponse->strContent += "<div class=\"notes\">\n";
 
+		int iMax = 0;
+
 		for( vector< pair< string, string > > :: iterator ulKey = m_vecNotes.begin( ); ulKey != m_vecNotes.end( ); ulKey++ )
 		{
+			iMax++;
+
+			if( iMax > CFG_GetInt( "bnbt_index_note_users_max", 10 ) )
+				break;
+
 			pResponse->strContent += "<span class=\"note\"><a class=\"note\" href=\"" + RESPONSE_STR_INDEX_HTML + "?search=" + UTIL_StringToEscaped( (*ulKey).first ) + "\">" + UTIL_RemoveHTML( (*ulKey).first ) + "</a></span>";
 		}
 //		pResponse->strContent += "</div>\n";
@@ -1680,7 +1724,7 @@ void CTracker :: serverResponseIndexGET( struct request_t *pRequest, struct resp
 		if( pRequest->user.ucAccess & ACCESS_LEADER )
 		{
 			pResponse->strContent += "<span class=\"pipe\"> | </span>\n";
-			pResponse->strContent += "<a title=\"" + gmapLANG_CFG["subfilter_dead"] + "\" href=\"" + RESPONSE_STR_INDEX_HTML + "?mode=Dead&sort=4";
+			pResponse->strContent += "<a title=\"" + gmapLANG_CFG["subfilter_dead"] + "\" href=\"" + RESPONSE_STR_INDEX_HTML + "?mode=Dead";
 			
 			pResponse->strContent += strJoined;
 
@@ -2196,8 +2240,11 @@ void CTracker :: serverResponseIndexGET( struct request_t *pRequest, struct resp
 
 		for( unsigned long ulKey = ulKeyStart; ulKey < ulKeySize; ulKey++ )
 		{
-			if( !vecSearch.empty( ) && !UTIL_MatchVector( pTorrents[ulKey].strName, vecSearch, ucMatchMethod ) && !UTIL_MatchVector( pTorrents[ulKey].strID, vecNote, MATCH_METHOD_NONCASE_EQ ) )
+			int intEqualPos = -1;
+			if( !vecSearch.empty( ) && !UTIL_MatchVector( pTorrents[ulKey].strName, vecSearch, ucMatchMethod ) && ( intEqualPos = UTIL_MatchVectorEqualPos( pTorrents[ulKey].strID, vecNote ) < 0 ) )
 				continue;
+			else if( intEqualPos >= 0 )
+				vecNote.erase( vecNote.begin( ) + intEqualPos );
 			if( !vecUploader.empty( ) && !UTIL_MatchVector( pTorrents[ulKey].strUploader, vecUploader, ucMatchMethod ) )
 				continue;
 			if( !vecIMDb.empty( ) && !UTIL_MatchVector( pTorrents[ulKey].strIMDbID, vecIMDb, ucMatchMethod ) )

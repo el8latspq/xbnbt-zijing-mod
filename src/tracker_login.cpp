@@ -1207,7 +1207,7 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 		{
 			if( pRequest->user.strUID == user.strUID && ( pRequest->user.ucAccess & m_ucAccessView ) )
 			{
-				CMySQLQuery *pQueryPrefs = new CMySQLQuery( "SELECT bdefaulttag,baddedpassed,bperpage,bsavesent,bmsgcomment,bmsgcommentbm FROM users_prefs WHERE buid=" + user.strUID );
+				CMySQLQuery *pQueryPrefs = new CMySQLQuery( "SELECT bdefaulttag,baddedpassed,bperpage,bsavesent,bmsgcomment,bmsgcommentbm,bmsgcommentref FROM users_prefs WHERE buid=" + user.strUID );
 				
 				map<string, string> mapPrefs;
 
@@ -1300,6 +1300,10 @@ void CTracker :: serverResponseLoginGET( struct request_t *pRequest, struct resp
 				if( !mapPrefs["bmsgcommentbm"].empty( ) && mapPrefs["bmsgcommentbm"] == "1" )
 					pResponse->strContent += " checked=\"checked\"";
 				pResponse->strContent += ">" + gmapLANG_CFG["prefs_messages_new_comment_bookmarked"];
+				pResponse->strContent += "<br><input name=\"messages_new_comment_ref\" alt=\"[" + gmapLANG_CFG["prefs_messages_new_comment_ref"] + "]\" type=checkbox";
+				if( !mapPrefs["bmsgcommentref"].empty( ) && mapPrefs["bmsgcommentref"] == "1" )
+					pResponse->strContent += " checked=\"checked\"";
+				pResponse->strContent += ">" + gmapLANG_CFG["prefs_messages_new_comment_ref"];
 				pResponse->strContent += "</td>\n</tr>\n";
 				pResponse->strContent += "<tr class=\"preferences\">\n<th class=\"preferences\">" + gmapLANG_CFG["prefs_save"] + "</th>";
 				pResponse->strContent += "<td class=\"preferences\">";
@@ -3840,6 +3844,7 @@ void CTracker :: serverResponseLoginPOST( struct request_t *pRequest, struct res
 	string cstrTorrentsAdded = string( );
 	string cstrMessagesNewComment = string( );
 	string cstrMessagesNewCommentBookmarked = string( );
+	string cstrMessagesNewCommentRef = string( );
 	string cstrMessagesSaveSent = string( );
 	string cstrSubmitLogin = string( );
 	string cstrSubmitPrefs = string( );
@@ -3902,6 +3907,8 @@ void CTracker :: serverResponseLoginPOST( struct request_t *pRequest, struct res
 							cstrMessagesNewComment = pData->toString( );
 						else if( strName == "messages_new_comment_bookmarked" )
 							cstrMessagesNewCommentBookmarked = pData->toString( );
+						else if( strName == "messages_new_comment_ref" )
+							cstrMessagesNewCommentRef = pData->toString( );
 						else if( strName == "messages_save_sent" )
 							cstrMessagesSaveSent = pData->toString( );
 						else if( strName == "submit_login_button" )
@@ -4153,6 +4160,7 @@ void CTracker :: serverResponseLoginPOST( struct request_t *pRequest, struct res
 			unsigned char ucMessagesSaveSent = 0;
 			unsigned char ucMessagesNewComment = 0;
 			unsigned char ucMessagesNewCommentBookmarked = 0;
+			unsigned char ucMessagesNewCommentRef = 0;
 			
 			if( !cstrTorrentsAdded.empty( ) && cstrTorrentsAdded == "passed" )
 				ucTorrentsAdded = 1;
@@ -4172,6 +4180,8 @@ void CTracker :: serverResponseLoginPOST( struct request_t *pRequest, struct res
 				ucMessagesNewComment = 1;
 			if( !cstrMessagesNewCommentBookmarked.empty( ) && cstrMessagesNewCommentBookmarked == "on" )
 				ucMessagesNewCommentBookmarked = 1;
+			if( !cstrMessagesNewCommentRef.empty( ) && cstrMessagesNewCommentRef == "on" )
+				ucMessagesNewCommentRef = 1;
 
 			string strQuery( "UPDATE users_prefs SET " );
 			strQuery += "bdefaulttag='" + UTIL_StringToMySQL( cstrFilter ) + "'";
@@ -4180,6 +4190,7 @@ void CTracker :: serverResponseLoginPOST( struct request_t *pRequest, struct res
 			strQuery += ",bsavesent=" + CAtomInt( ucMessagesSaveSent ).toString( );
 			strQuery += ",bmsgcomment=" + CAtomInt( ucMessagesNewComment ).toString( );
 			strQuery += ",bmsgcommentbm=" + CAtomInt( ucMessagesNewCommentBookmarked ).toString( );
+			strQuery += ",bmsgcommentref=" + CAtomInt( ucMessagesNewCommentRef ).toString( );
 			strQuery += " WHERE buid=" + pRequest->user.strUID;
 			
 			CMySQLQuery mq01( strQuery );

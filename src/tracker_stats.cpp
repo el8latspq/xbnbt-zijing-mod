@@ -1003,15 +1003,15 @@ void CTracker :: serverResponseStatsGET( struct request_t *pRequest, struct resp
 		{
 			if( bOffer )
 			{
-				pQuery = new CMySQLQuery( "SELECT bhash,bfilename,bname,badded,bsize,bfiles,bcomment,btag,btitle,bintr,buploader,buploaderid,bimdb,bimdbid,bimdbupdated FROM " + strDatabase + " WHERE bid=" + cstrID );
+				pQuery = new CMySQLQuery( "SELECT bhash,bfilename,bname,badded,bsize,bfiles,bcomment,btag,btitle,bintr,buploader,buploaderid,bimdb,bimdbcount,bimdbid,bimdbupdated FROM " + strDatabase + " WHERE bid=" + cstrID );
 		
-				vecQuery.reserve(15);
+				vecQuery.reserve(16);
 			}
 			else
 			{
-				pQuery = new CMySQLQuery( "SELECT bhash,bfilename,bname,badded,bsize,bfiles,bcomment,btag,btitle,bintr,buploader,buploaderid,bimdb,bimdbid,bimdbupdated,bdefault_down,bdefault_up,bfree_down,bfree_up,bfree_time,UNIX_TIMESTAMP(bfree_to),btop,btop_intag,btop_time,UNIX_TIMESTAMP(btop_to),bclassic,breq,bnodownload,bnocomment,bseeders,bleechers,bcompleted,bupdated,bseeded,bpost FROM " + strDatabase + " WHERE bid=" + cstrID );
+				pQuery = new CMySQLQuery( "SELECT bhash,bfilename,bname,badded,bsize,bfiles,bcomment,btag,btitle,bintr,buploader,buploaderid,bimdb,bimdbcount,bimdbid,bimdbupdated,bdefault_down,bdefault_up,bfree_down,bfree_up,bfree_time,UNIX_TIMESTAMP(bfree_to),btop,btop_intag,btop_time,UNIX_TIMESTAMP(btop_to),bclassic,breq,bnodownload,bnocomment,bseeders,bleechers,bcompleted,bupdated,bseeded,bpost FROM " + strDatabase + " WHERE bid=" + cstrID );
 		
-				vecQuery.reserve(35);
+				vecQuery.reserve(36);
 			}
 
 			vecQuery = pQuery->nextRow( );
@@ -1025,10 +1025,10 @@ void CTracker :: serverResponseStatsGET( struct request_t *pRequest, struct resp
 			return;
 		}
 		
-		if( vecQuery.size( ) == 15 || vecQuery.size( ) == 35 )
+		if( vecQuery.size( ) == 16 || vecQuery.size( ) == 36 )
 			cstrHash = vecQuery[0];
 		
-		if( vecQuery.size( ) == 35 && vecQuery[34] == "1" )
+		if( vecQuery.size( ) == 36 && vecQuery[35] == "1" )
 			bPost = true;
 		
 		if( !cstrHash.empty( ) )
@@ -1043,6 +1043,7 @@ void CTracker :: serverResponseStatsGET( struct request_t *pRequest, struct resp
 			string strOldUploader = string( );
 			string strOldUploaderID = string( );
 			string strOldIMDb = string( );
+			string strOldIMDbCount = string( );
 			string strOldIMDbID = string( );
 			string strOldIMDbUpdated = string( );
 			string strOldIntr = string( );
@@ -1059,16 +1060,17 @@ void CTracker :: serverResponseStatsGET( struct request_t *pRequest, struct resp
 			strOldUploader = vecQuery[10];
 			strOldUploaderID = vecQuery[11];
 			strOldIMDb = vecQuery[12];
-			strOldIMDbID = vecQuery[13];
-			strOldIMDbUpdated = vecQuery[14];
+			strOldIMDbCount = vecQuery[13];
+			strOldIMDbID = vecQuery[14];
+			strOldIMDbUpdated = vecQuery[15];
 			if( !bOffer )
 			{
-				strOldDefaultDown = vecQuery[15];
-				strOldDefaultUp = vecQuery[16];
-				strOldFreeDown = vecQuery[17];
-				strOldFreeUp = vecQuery[18];
-				strOldFreeTime = vecQuery[19];
-				strOldTopTime = vecQuery[23];
+				strOldDefaultDown = vecQuery[16];
+				strOldDefaultUp = vecQuery[17];
+				strOldFreeDown = vecQuery[18];
+				strOldFreeUp = vecQuery[19];
+				strOldFreeTime = vecQuery[20];
+				strOldTopTime = vecQuery[24];
 			}
 
 			const string cstrReturnPage( pRequest->mapParams["return"] );
@@ -1240,7 +1242,7 @@ void CTracker :: serverResponseStatsGET( struct request_t *pRequest, struct resp
 							for( unsigned char ucLoop = 0; ucLoop < 3; ucLoop++ )
 							{
 								pResponse->strContent += "<option value=\"" + CAtomInt( ucLoop ).toString( ) + "\"";
-								if( CAtomInt( ucLoop ).toString( ) == vecQuery[21] )
+								if( CAtomInt( ucLoop ).toString( ) == vecQuery[22] )
 									pResponse->strContent += " selected";
 								pResponse->strContent += ">" + gmapLANG_CFG["top_level_"+CAtomInt( ucLoop ).toString( )] + "\n";
 							}
@@ -1250,7 +1252,7 @@ void CTracker :: serverResponseStatsGET( struct request_t *pRequest, struct resp
 							for( unsigned char ucLoop = 0; ucLoop < 3; ucLoop++ )
 							{
 								pResponse->strContent += "<option value=\"" + CAtomInt( ucLoop ).toString( ) + "\"";
-								if( CAtomInt( ucLoop ).toString( ) == vecQuery[22] )
+								if( CAtomInt( ucLoop ).toString( ) == vecQuery[23] )
 									pResponse->strContent += " selected";
 								pResponse->strContent += ">" + gmapLANG_CFG["top_level_"+CAtomInt( ucLoop ).toString( )+"_intag"] + "\n";
 							}
@@ -1263,7 +1265,7 @@ void CTracker :: serverResponseStatsGET( struct request_t *pRequest, struct resp
 							pResponse->strContent += "</select>\n";
 							pResponse->strContent += gmapLANG_CFG["stats_top_time"] + "<input name=\"top_time\" type=text size=5 maxlength=3 value=\"" + strOldTopTime + "\">" + gmapLANG_CFG["stats_top_hours"] + "</span><br>";
 //							pResponse->strContent += "<input id=\"id_top\" name=\"top\" alt=\"[" + gmapLANG_CFG["top"] + "]\" type=checkbox";
-//							if( vecQuery[20] == "1" )
+//							if( vecQuery[21] == "1" )
 //								pResponse->strContent += " checked";
 //							pResponse->strContent += "> <label for=\"id_top\">" + gmapLANG_CFG["top"] + "</label> \n";
 							pResponse->strContent += gmapLANG_CFG["classic"];
@@ -1271,13 +1273,13 @@ void CTracker :: serverResponseStatsGET( struct request_t *pRequest, struct resp
 							for( unsigned char ucLoop = 0; ucLoop < 4; ucLoop++ )
 							{
 								pResponse->strContent += "<option value=\"" + CAtomInt( ucLoop ).toString( ) + "\"";
-								if( CAtomInt( ucLoop ).toString( ) == vecQuery[25] )
+								if( CAtomInt( ucLoop ).toString( ) == vecQuery[26] )
 									pResponse->strContent += " selected";
 								pResponse->strContent += ">" + gmapLANG_CFG["classic_level_"+CAtomInt( ucLoop ).toString( )] + "\n";
 							}
 							pResponse->strContent += "</select>\n";
 //							pResponse->strContent += "<input id=\"id_hl\" name=\"hl\" alt=\"[" + gmapLANG_CFG["hl"] + "]\" type=checkbox";
-//							if( vecQuery[21] == "1" )
+//							if( vecQuery[22] == "1" )
 //								pResponse->strContent += " checked";
 //							pResponse->strContent += "> <label for=\"id_hl\">" + gmapLANG_CFG["hl"] + "</label> \n";
 //							pResponse->strContent += "<input id=\"id_classic\" name=\"classic\" alt=\"[" + gmapLANG_CFG["classic"] + "]\" type=checkbox";
@@ -1287,16 +1289,16 @@ void CTracker :: serverResponseStatsGET( struct request_t *pRequest, struct resp
 							if( !bPost )
 							{
 								pResponse->strContent += "<input id=\"id_req\" name=\"req\" alt=\"[" + gmapLANG_CFG["section_reqseeders"] + "]\" type=checkbox";
-								if( vecQuery[26] == "1" )
+								if( vecQuery[27] == "1" )
 									pResponse->strContent += " checked";
 								pResponse->strContent += "> <label for=\"id_req\">" + gmapLANG_CFG["section_reqseeders"] + "</label> \n";
 								pResponse->strContent += "<input id=\"id_nodownload\" name=\"nodownload\" alt=\"[" + gmapLANG_CFG["no_download"] + "]\" type=checkbox";
-								if( vecQuery[27] == "1" )
+								if( vecQuery[28] == "1" )
 									pResponse->strContent += " checked";
 								pResponse->strContent += "> <label for=\"id_nodownload\">" + gmapLANG_CFG["no_download"] + "</label> \n";
 							}
 							pResponse->strContent += "<input id=\"id_nocomment\" name=\"nocomment\" alt=\"[" + gmapLANG_CFG["no_comment"] + "]\" type=checkbox";
-							if( vecQuery[28] == "1" )
+							if( vecQuery[29] == "1" )
 								pResponse->strContent += " checked";
 							pResponse->strContent += "> <label for=\"id_nocomment\">" + gmapLANG_CFG["no_comment"] + "</label> \n";
 							pResponse->strContent += "</td>\n</tr>\n";
@@ -1380,11 +1382,11 @@ void CTracker :: serverResponseStatsGET( struct request_t *pRequest, struct resp
 				int64 iFreeUp = 100;
 				int64 iFreeTo = 0;
 
-				iDefaultDown = UTIL_StringTo64( vecQuery[15].c_str( ) );
-				iDefaultUp = UTIL_StringTo64( vecQuery[16].c_str( ) );
-				iFreeDown = UTIL_StringTo64( vecQuery[17].c_str( ) );
-				iFreeUp = UTIL_StringTo64( vecQuery[18].c_str( ) );
-				iFreeTo = UTIL_StringTo64( vecQuery[20].c_str( ) );
+				iDefaultDown = UTIL_StringTo64( vecQuery[16].c_str( ) );
+				iDefaultUp = UTIL_StringTo64( vecQuery[17].c_str( ) );
+				iFreeDown = UTIL_StringTo64( vecQuery[18].c_str( ) );
+				iFreeUp = UTIL_StringTo64( vecQuery[19].c_str( ) );
+				iFreeTo = UTIL_StringTo64( vecQuery[21].c_str( ) );
 			
 				if( m_bFreeGlobal )
 				{
@@ -1466,7 +1468,7 @@ void CTracker :: serverResponseStatsGET( struct request_t *pRequest, struct resp
 				bool bNoDownload = false;
 				if( !bOffer )
 				{
-					if( ( !vecQuery[27].empty( ) && vecQuery[27] == "1" ) || bPost )
+					if( ( !vecQuery[28].empty( ) && vecQuery[28] == "1" ) || bPost )
 						bNoDownload = true;
 				}
 				string strFunction = string( );
@@ -1492,9 +1494,9 @@ void CTracker :: serverResponseStatsGET( struct request_t *pRequest, struct resp
 
 						if( ( pRequest->user.ucAccess & m_ucAccessReq ) && passed > m_uiDownloaderTimeOutInterval )
 						{
-							if( !vecQuery[26].empty( ) && vecQuery[26] == "1" )
+							if( !vecQuery[27].empty( ) && vecQuery[27] == "1" )
 							{
-								if( atoi( vecQuery[29].c_str( ) ) > 0 )
+								if( atoi( vecQuery[30].c_str( ) ) > 0 )
 								{
 									strFunction += "<span class=\"pipe\"> | </span>";
 									strFunction += "<a id=\"request" + cstrID + "\" class=\"noreq\" href=\"javascript: ;\" onclick=\"javascript: request('" + cstrID + "','false','" + gmapLANG_CFG["cancel"] + gmapLANG_CFG["section_reqseeders_success"] + "');\">";
@@ -1505,7 +1507,7 @@ void CTracker :: serverResponseStatsGET( struct request_t *pRequest, struct resp
 							}
 							else
 							{
-								if( atoi( vecQuery[29].c_str( ) ) == 0 && strOldUploaderID != pRequest->user.strUID )
+								if( atoi( vecQuery[30].c_str( ) ) == 0 && strOldUploaderID != pRequest->user.strUID )
 								{
 									strFunction += "<span class=\"pipe\"> | </span>";
 									strFunction += "<a id=\"request" + cstrID + "\" class=\"req\" href=\"javascript: ;\" onclick=\"javascript: request('" + cstrID + "','true','" + gmapLANG_CFG["section_reqseeders_success"] + "');\">";
@@ -1696,25 +1698,25 @@ void CTracker :: serverResponseStatsGET( struct request_t *pRequest, struct resp
 				pResponse->strContent += "<tr class=\"file_info\">";
 				pResponse->strContent += "<th class=\"file_info\">" + gmapLANG_CFG["stats_live"] + ":</th>\n";
 				pResponse->strContent += "<td class=\"file_info\">";
-				if( ( atoi( vecQuery[29].c_str( ) ) > 0 || atoi( vecQuery[30].c_str( ) ) > 0 ) )
+				if( ( atoi( vecQuery[30].c_str( ) ) > 0 || atoi( vecQuery[31].c_str( ) ) > 0 ) )
 				{
 					pResponse->strContent += "<a class=\"active\" href=\"" + RESPONSE_STR_STATS_HTML + strJoined;
 					pResponse->strContent += "&amp;show=active#seeders\">";
 				}
-				pResponse->strContent += gmapLANG_CFG["stats_active_seeders"] + "(" + vecQuery[29] + ")/" + gmapLANG_CFG["stats_active_leechers"] + "(" + vecQuery[30] + ")";
-				if( ( atoi( vecQuery[29].c_str( ) ) > 0 || atoi( vecQuery[30].c_str( ) ) > 0 ) )
+				pResponse->strContent += gmapLANG_CFG["stats_active_seeders"] + "(" + vecQuery[30] + ")/" + gmapLANG_CFG["stats_active_leechers"] + "(" + vecQuery[31] + ")";
+				if( ( atoi( vecQuery[30].c_str( ) ) > 0 || atoi( vecQuery[31].c_str( ) ) > 0 ) )
 					pResponse->strContent += "</a>";
 				pResponse->strContent += "<span class=\"pipe\"> | </span>";
 				
-				if( atoi( vecQuery[31].c_str( ) ) > 0 )
+				if( atoi( vecQuery[32].c_str( ) ) > 0 )
 				{
 					pResponse->strContent += "<a href=\"" + RESPONSE_STR_STATS_HTML + strJoined;
 					pResponse->strContent += "&amp;show=completes#completes\">";
 				}
-				pResponse->strContent += gmapLANG_CFG["stats_completes"] + " (" + vecQuery[31] + ")";
-				if( atoi( vecQuery[31].c_str( ) ) > 0 )
+				pResponse->strContent += gmapLANG_CFG["stats_completes"] + " (" + vecQuery[32] + ")";
+				if( atoi( vecQuery[32].c_str( ) ) > 0 )
 					pResponse->strContent += "</a>";
-				pResponse->strContent += " <span class=\"italic\">" + UTIL_Xsprintf( gmapLANG_CFG["stats_last_active"].c_str( ), vecQuery[32].c_str( ), vecQuery[33].c_str( ) ) + "</span>";
+				pResponse->strContent += " <span class=\"italic\">" + UTIL_Xsprintf( gmapLANG_CFG["stats_last_active"].c_str( ), vecQuery[33].c_str( ), vecQuery[34].c_str( ) ) + "</span>";
 
 				pResponse->strContent += "</td>\n</tr>\n";
 			}
@@ -1732,6 +1734,10 @@ void CTracker :: serverResponseStatsGET( struct request_t *pRequest, struct resp
 					else
 						pResponse->strContent += gmapLANG_CFG["na"];
 					pResponse->strContent += "</a>";
+					if( !strOldIMDb.empty( ) )
+						pResponse->strContent += " <span class=\"italic\">" + UTIL_Xsprintf( gmapLANG_CFG["stats_imdb_count"].c_str( ), strOldIMDbCount.c_str( ) ) + "</span>";
+					else
+						pResponse->strContent += " <span class=\"italic\">" + gmapLANG_CFG["stats_imdb_count_less_than_five"] + "</span>";
 					pResponse->strContent += " <span class=\"italic\">" + UTIL_Xsprintf( gmapLANG_CFG["stats_last_imdb_updated"].c_str( ), strOldIMDbUpdated.c_str( ) ) + "</span>";
 					pResponse->strContent += "</td>\n</tr>\n";
 					
@@ -2297,132 +2303,194 @@ void CTracker :: serverResponseStatsGET( struct request_t *pRequest, struct resp
 			{
 				if( !cstrShow.empty( ) && cstrShow == "contents" )
 				{
-					CAtom *pDecoded = 0;
-					if( bOffer )
-						pDecoded = DecodeFile( ( m_strOfferDir + strFileName ).c_str( ) );
-					else
-						pDecoded = DecodeFile( ( m_strAllowedDir + strFileName ).c_str( ) );
+					CMySQLQuery *pQueryFiles = new CMySQLQuery( "SELECT bpath,bsize FROM " + strDatabase + "_files WHERE bid=" + cstrID );
 
-					if( pDecoded && pDecoded->isDicti( ) )
+					vector<string> vecQueryFiles;
+
+					vecQueryFiles.reserve(2);
+
+					vecQueryFiles = pQueryFiles->nextRow( );
+
+					if( vecQueryFiles.size( ) == 2 )
 					{
-						CAtom *pInfo = ( (CAtomDicti *)pDecoded )->getItem( "info" );
+						pResponse->strContent += "<div class=\"stats_table\">\n";
+						pResponse->strContent += "<p class=\"contents\" id=\"contents\">" + gmapLANG_CFG["contents"] + "</p>\n";
+						pResponse->strContent += "<table summary=\"contents\">\n<tr>\n";
+						pResponse->strContent += "<th class=\"path\">" + gmapLANG_CFG["file"] + "</th>\n";
+						pResponse->strContent += "<th class=\"bytes\">" + gmapLANG_CFG["size"] + "</th>\n";
 
-						if( pInfo && pInfo->isDicti( ) )
+						pResponse->strContent += "</tr>\n";
+
+						while( vecQueryFiles.size( ) == 2 )
 						{
-							CAtom *pFiles = ( (CAtomDicti *)pInfo )->getItem( "files" );
-
-							if( pFiles && dynamic_cast<CAtomList *>( pFiles ) )
+							if( !vecQueryFiles[0].empty( ) )
 							{
-								bool bFound = false;
+								pResponse->strContent += "<tr class=\"odd\">\n";
 
-								unsigned int uiAdded = 0;
+								pResponse->strContent += "<td class=\"path\">" + UTIL_RemoveHTML( vecQueryFiles[0] ) + "</td>\n";
 
+								if( !vecQueryFiles[1].empty( ) )
+									pResponse->strContent += "<td class=\"bytes\">" + UTIL_BytesToString( UTIL_StringTo64( vecQueryFiles[1].c_str( ) ) ) + "</td>";
 
-								vector<CAtom *> *pvecFiles = dynamic_cast<CAtomList *>( pFiles )->getValuePtr( );
+								pResponse->strContent += "</tr>\n";
+							}
+							
+							vecQueryFiles = pQueryFiles->nextRow( );
+						}
 
-								CAtom *pPath = 0;
-								CAtom *pLen = 0;
+						pResponse->strContent += "</table>\n</div>\n\n";
+					}
+					else
+					{
+						CAtom *pDecoded = 0;
+						if( bOffer )
+							pDecoded = DecodeFile( ( m_strOfferDir + strFileName ).c_str( ) );
+						else
+							pDecoded = DecodeFile( ( m_strAllowedDir + strFileName ).c_str( ) );
 
-								string strPath = string( );
+						if( pDecoded && pDecoded->isDicti( ) )
+						{
+							CAtom *pInfo = ( (CAtomDicti *)pDecoded )->getItem( "info" );
 
-								vector<CAtom *> *pvecPath = 0;
+							if( pInfo && pInfo->isDicti( ) )
+							{
+								CAtom *pFiles = ( (CAtomDicti *)pInfo )->getItem( "files" );
 
-								for( vector<CAtom *> :: iterator it = pvecFiles->begin( ); it != pvecFiles->end( ); it++ )
+								if( pFiles && dynamic_cast<CAtomList *>( pFiles ) )
 								{
-									if( (*it)->isDicti( ) )
+									bool bFound = false;
+
+	//								unsigned int uiAdded = 0;
+
+
+									vector<CAtom *> *pvecFiles = dynamic_cast<CAtomList *>( pFiles )->getValuePtr( );
+
+									CAtom *pPath = 0;
+									CAtom *pLen = 0;
+
+									string strPath = string( );
+
+									vector<CAtom *> *pvecPath = 0;
+
+									for( vector<CAtom *> :: iterator it = pvecFiles->begin( ); it != pvecFiles->end( ); it++ )
 									{
-										pPath = ( (CAtomDicti *)(*it) )->getItem( "path" );
-										pLen = ( (CAtomDicti *)(*it) )->getItem( "length" );
-
-										if( pPath && dynamic_cast<CAtomList *>( pPath ) )
+										if( (*it)->isDicti( ) )
 										{
-											if( !bFound )
+											pPath = ( (CAtomDicti *)(*it) )->getItem( "path" );
+											pLen = ( (CAtomDicti *)(*it) )->getItem( "length" );
+
+											if( pPath && dynamic_cast<CAtomList *>( pPath ) )
 											{
-												pResponse->strContent += "<div class=\"stats_table\">\n";
-												pResponse->strContent += "<p class=\"contents\" id=\"contents\">" + gmapLANG_CFG["contents"] + "</p>\n";
-												pResponse->strContent += "<table summary=\"contents\">\n<tr>\n";
-												pResponse->strContent += "<th class=\"path\">" + gmapLANG_CFG["file"] + "</th>\n";
+												if( !bFound )
+												{
+													pResponse->strContent += "<div class=\"stats_table\">\n";
+													pResponse->strContent += "<p class=\"contents\" id=\"contents\">" + gmapLANG_CFG["contents"] + "</p>\n";
+													pResponse->strContent += "<table summary=\"contents\">\n<tr>\n";
+													pResponse->strContent += "<th class=\"path\">" + gmapLANG_CFG["file"] + "</th>\n";
 
-												if( pLen && dynamic_cast<CAtomLong *>( pLen ) )
-													pResponse->strContent += "<th class=\"bytes\">" + gmapLANG_CFG["size"] + "</th>\n";
+													if( pLen && dynamic_cast<CAtomLong *>( pLen ) )
+														pResponse->strContent += "<th class=\"bytes\">" + gmapLANG_CFG["size"] + "</th>\n";
 
-												pResponse->strContent += "</tr>\n";
+													pResponse->strContent += "</tr>\n";
 
-												bFound = true;
-											}
-	
-											strPath = string( );
+													bFound = true;
+												}
+		
+												strPath = string( );
 
-											pvecPath = dynamic_cast<CAtomList *>( pPath )->getValuePtr( );
+												pvecPath = dynamic_cast<CAtomList *>( pPath )->getValuePtr( );
 
-											for( vector<CAtom *> :: iterator it2 = pvecPath->begin( ); it2 != pvecPath->end( ); it2++ )
-											{
-												if( it2 != pvecPath->begin( ) )
-													strPath += '/';
+												for( vector<CAtom *> :: iterator it2 = pvecPath->begin( ); it2 != pvecPath->end( ); it2++ )
+												{
+													if( it2 != pvecPath->begin( ) )
+														strPath += '/';
 
-												strPath += (*it2)->toString( );
-											}
+													strPath += (*it2)->toString( );
+												}
 
-											if( !strPath.empty( ) )
-											{
-//												if( uiAdded % 2 )
-//													pResponse->strContent += "<tr class=\"even\">\n";
-//												else
-													pResponse->strContent += "<tr class=\"odd\">\n";
+												if( !strPath.empty( ) )
+												{
+													string strQuery = "INSERT INTO " + strDatabase + "_files (bid,bpath,bsize) VALUES(" + cstrID + ",\'" + UTIL_StringToMySQL( strPath ) + "\',";
+	//												if( uiAdded % 2 )
+	//													pResponse->strContent += "<tr class=\"even\">\n";
+	//												else
+														pResponse->strContent += "<tr class=\"odd\">\n";
 
-												pResponse->strContent += "<td class=\"path\">" + UTIL_RemoveHTML( strPath ) + "</td>\n";
+													pResponse->strContent += "<td class=\"path\">" + UTIL_RemoveHTML( strPath ) + "</td>\n";
 
-												if( pLen && dynamic_cast<CAtomLong *>( pLen ) )
-													pResponse->strContent += "<td class=\"bytes\">" + UTIL_BytesToString( dynamic_cast<CAtomLong *>( pLen )->getValue( ) ) + "</td>";
+													if( pLen && dynamic_cast<CAtomLong *>( pLen ) )
+													{
+														strQuery += dynamic_cast<CAtomLong *>( pLen )->toString( );
+														pResponse->strContent += "<td class=\"bytes\">" + UTIL_BytesToString( dynamic_cast<CAtomLong *>( pLen )->getValue( ) ) + "</td>";
+													}
+													else
+														strQuery += "0";
 
-												pResponse->strContent += "</tr>\n";
+													strQuery += ")";
+													CMySQLQuery mq01( strQuery );
 
-												uiAdded++;
+													pResponse->strContent += "</tr>\n";
+
+	//												uiAdded++;
+												}
 											}
 										}
 									}
+
+									if( bFound )
+										pResponse->strContent += "</table>\n</div>\n\n";
 								}
-
-								if( bFound )
-									pResponse->strContent += "</table>\n</div>\n\n";
-							}
-							else
-							{
-								CAtom *pName = 0;
-								CAtom *pLen = 0;
-								
-								pName = ( (CAtomDicti *)pInfo )->getItem( "name" );
-								pLen = ( (CAtomDicti *)pInfo )->getItem( "length" );
-								
-								if( pName )
+								else
 								{
-									pResponse->strContent += "<div class=\"stats_table\">\n";
-									pResponse->strContent += "<p class=\"contents\" id=\"contents\">" + gmapLANG_CFG["contents"] + "</p>\n";
-									pResponse->strContent += "<table summary=\"contents\">\n<tr>\n";
-									pResponse->strContent += "<th class=\"path\">" + gmapLANG_CFG["file"] + "</th>\n";
+									CAtom *pName = 0;
+									CAtom *pLen = 0;
 									
-									if( pLen && dynamic_cast<CAtomLong *>( pLen ) )
-										pResponse->strContent += "<th class=\"bytes\">" + gmapLANG_CFG["size"] + "</th>\n";
+									pName = ( (CAtomDicti *)pInfo )->getItem( "name" );
+									pLen = ( (CAtomDicti *)pInfo )->getItem( "length" );
+									
+									if( pName )
+									{
+										string strQuery = "INSERT INTO " + strDatabase + "_files (bid,bpath,bsize) VALUES(" + cstrID + ",\'" + UTIL_StringToMySQL( pName->toString( ) ) + "\',";
 
-									pResponse->strContent += "</tr>\n";
-									
-									pResponse->strContent += "<tr class=\"odd\">\n";
-									
-									pResponse->strContent += "<td class=\"path\">" + UTIL_RemoveHTML( pName->toString( ) ) + "</td>\n";
+										pResponse->strContent += "<div class=\"stats_table\">\n";
+										pResponse->strContent += "<p class=\"contents\" id=\"contents\">" + gmapLANG_CFG["contents"] + "</p>\n";
+										pResponse->strContent += "<table summary=\"contents\">\n<tr>\n";
+										pResponse->strContent += "<th class=\"path\">" + gmapLANG_CFG["file"] + "</th>\n";
+										
+										if( pLen && dynamic_cast<CAtomLong *>( pLen ) )
+											pResponse->strContent += "<th class=\"bytes\">" + gmapLANG_CFG["size"] + "</th>\n";
 
-									if( pLen && dynamic_cast<CAtomLong *>( pLen ) )
-										pResponse->strContent += "<td class=\"bytes\">" + UTIL_BytesToString( dynamic_cast<CAtomLong *>( pLen )->getValue( ) ) + "</td>";
+										pResponse->strContent += "</tr>\n";
+										
+										pResponse->strContent += "<tr class=\"odd\">\n";
+										
+										pResponse->strContent += "<td class=\"path\">" + UTIL_RemoveHTML( pName->toString( ) ) + "</td>\n";
 
-									pResponse->strContent += "</tr>\n";
-									
-									pResponse->strContent += "</table>\n</div>\n\n";
+										if( pLen && dynamic_cast<CAtomLong *>( pLen ) )
+										{
+											strQuery += dynamic_cast<CAtomLong *>( pLen )->toString( );
+
+											pResponse->strContent += "<td class=\"bytes\">" + UTIL_BytesToString( dynamic_cast<CAtomLong *>( pLen )->getValue( ) ) + "</td>";
+										}
+										else
+											strQuery += "0";
+
+										strQuery += ")";
+										CMySQLQuery mq01( strQuery );
+
+										pResponse->strContent += "</tr>\n";
+										
+										pResponse->strContent += "</table>\n</div>\n\n";
+									}
 								}
 							}
 						}
+
+						if( pDecoded )
+							delete pDecoded;
 					}
 
-					if( pDecoded )
-						delete pDecoded;
+					delete pQueryFiles;
 				}
 				else
 				{
@@ -2436,7 +2504,7 @@ void CTracker :: serverResponseStatsGET( struct request_t *pRequest, struct resp
 			bool bNoComment = false;
 			if( !bOffer )
 			{
-				if( !vecQuery[28].empty( ) && vecQuery[28] == "1" )
+				if( !vecQuery[29].empty( ) && vecQuery[29] == "1" )
 					bNoComment = true;
 			}
 			
@@ -4092,20 +4160,20 @@ void CTracker :: serverResponseStatsPOST( struct request_t *pRequest, struct res
 				
 				if( !cstrIMDbID.empty( ) )
 				{
-					CMySQLQuery *pQuery = new CMySQLQuery( "SELECT bimdb,bimdbid,bimdbupdated from allowed WHERE bimdbid=\'" + UTIL_StringToMySQL( cstrIMDbID ) + "\' AND bimdbupdated>NOW()-INTERVAL 3 DAY GROUP BY bimdbid UNION SELECT bimdb,bimdbid,bimdbupdated from offer WHERE bimdbid=\'" + UTIL_StringToMySQL( cstrIMDbID ) + "\' AND bimdbupdated>NOW()-INTERVAL 3 DAY GROUP BY bimdbid" );
+					CMySQLQuery *pQuery = new CMySQLQuery( "SELECT bimdb,bimdbcount,bimdbid,bimdbupdated from allowed WHERE bimdbid=\'" + UTIL_StringToMySQL( cstrIMDbID ) + "\' AND bimdbupdated>NOW()-INTERVAL 3 DAY GROUP BY bimdbid UNION SELECT bimdb,bimdbcount,bimdbid,bimdbupdated from offer WHERE bimdbid=\'" + UTIL_StringToMySQL( cstrIMDbID ) + "\' AND bimdbupdated>NOW()-INTERVAL 3 DAY GROUP BY bimdbid" );
 	
 					vector<string> vecQuery;
 
-					vecQuery.reserve(3);
+					vecQuery.reserve(4);
 
 					vecQuery = pQuery->nextRow( );
 					
 					delete pQuery;
 					
-					if( vecQuery.size( ) == 3 )
+					if( vecQuery.size( ) == 4 )
 					{
 						strIMDb = vecQuery[0];
-						CMySQLQuery mq01( "UPDATE " + strDatabase + " SET bimdb=\'" + UTIL_StringToMySQL( strIMDb ) + "\',bimdbid=\'" + UTIL_StringToMySQL( cstrIMDbID ) + "\',bimdbupdated=\'" + vecQuery[2] + "\' WHERE bid=" + cstrID );
+						CMySQLQuery mq01( "UPDATE " + strDatabase + " SET bimdb=\'" + UTIL_StringToMySQL( strIMDb ) + "\',bimdbcount=" + vecQuery[1] + ",bimdbid=\'" + UTIL_StringToMySQL( cstrIMDbID ) + "\',bimdbupdated=\'" + vecQuery[3] + "\' WHERE bid=" + cstrID );
 					}
 					else
 					{

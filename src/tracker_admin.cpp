@@ -1661,6 +1661,7 @@ void CTracker :: serverResponseAdmin( struct request_t *pRequest, struct respons
 								CMySQLQuery mq08( "DELETE FROM talktorrent WHERE btid=" + cstrRecycleID );
 								CMySQLQuery mq09( "DELETE FROM talkrequest WHERE btid=" + cstrRecycleID );
 								CMySQLQuery mq10( "DELETE FROM comments WHERE btid=" + cstrRecycleID );
+								CMySQLQuery mq11( "DELETE FROM allowed_files WHERE bid=" + cstrRecycleID );
 
 								UTIL_LogFilePrint( "recycleTorrent: %s permanently deleted torrent %s\n", pRequest->user.strLogin.c_str( ), strFileName.c_str( ) );
 

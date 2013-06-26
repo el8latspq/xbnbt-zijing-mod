@@ -340,8 +340,12 @@ void CTracker :: serverResponseOfferGET( struct request_t *pRequest, struct resp
 //											m_pCache->setLatest( vecQueryAllowed[0] );
 //										m_pCache->Reset( );
 										
-										CMySQLQuery mq05( "DELETE FROM offer WHERE bid=" + strAllowID );
+										CMySQLQuery mq05( "INSERT INTO allowed_files (SELECT " + strAllowedID + ",bpath,bsize FROM offer_files WHERE bid=" + strAllowID + ")" );
+
+										CMySQLQuery mq06( "DELETE FROM offer_files WHERE bid=" + strAllowID );
 									
+										CMySQLQuery mq07( "DELETE FROM offer WHERE bid=" + strAllowID );
+
 										m_pCache->deleteRow( strAllowID, true );
 //										m_pCache->Reset( true );
 										

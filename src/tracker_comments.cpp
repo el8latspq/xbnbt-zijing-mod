@@ -1191,7 +1191,8 @@ void CTracker :: serverResponseCommentsPOST( struct request_t *pRequest, struct 
 				
 				CMySQLQuery mq01( "UPDATE " + strDatabase + " SET bcomments=bcomments+1 WHERE bid=" + cstrID );
 
-				if( !vecQuery[3].empty( ) && vecQuery[3] != pRequest->user.strUID )
+//				if( !vecQuery[3].empty( ) && vecQuery[3] != pRequest->user.strUID )
+				if( !vecQuery[3].empty( ) )
 				{
 					bool bMsgUploader = false;
 					set<string> setMessage;
@@ -1204,7 +1205,7 @@ void CTracker :: serverResponseCommentsPOST( struct request_t *pRequest, struct 
 				
 					delete pQueryPrefs;
 					
-					if( bSendMessage || ( mapPrefs.size( ) == 1 && mapPrefs["bmsgcomment"] == "1" ) )
+					if( ( bSendMessage || ( mapPrefs.size( ) == 1 && mapPrefs["bmsgcomment"] == "1" ) ) && vecQuery[3] != pRequest->user.strUID )
 					{
 						setMessage.insert( vecQuery[3] );
 						bMsgUploader = true;
@@ -1267,6 +1268,85 @@ void CTracker :: serverResponseCommentsPOST( struct request_t *pRequest, struct 
 
 								sendMessage( "", "0", (*it), "127.0.0.1", strTitle, strMessage );
 							}
+						}
+						
+						delete pQueryUser;
+					}
+					
+					set<string> setRef;
+
+					string :: size_type iStart = 0;
+					string :: size_type iEnd = 0;
+
+					iStart = UTIL_ToLower( strComment ).find( "[user]" );
+					while( iStart != string :: npos )
+					{
+						iEnd = UTIL_ToLower( strComment ).find( "[/user]", iStart );
+
+						if( iEnd != string :: npos && ( strComment[ iStart - 1 ] != '[' || strComment[ iEnd + 7 ] != ']' ) )
+						{
+							string strUsername = strComment.substr( iStart + 6, iEnd - iStart - 6 );
+
+							if( strUsername.size( ) > 0 && strUsername.size( ) <= 16 )
+							{
+								CMySQLQuery *pQueryUser = new CMySQLQuery( "SELECT buid,busername FROM users WHERE busername=\'" + UTIL_StringToMySQL( strUsername ) + "\'" );
+
+								vector<string> vecQueryUser;
+
+								vecQueryUser.reserve(2);
+
+								vecQueryUser = pQueryUser->nextRow( );
+
+								delete pQueryUser;
+
+								if( vecQueryUser.size( ) == 2 && !vecQueryUser[0].empty( ) && vecQueryUser[0] != pRequest->user.strUID )
+								{
+									set<string> :: iterator itMessage;
+
+									itMessage = setMessage.find( vecQueryUser[0] );
+
+									if( itMessage == setMessage.end( ) )
+									{
+										CMySQLQuery *pQueryPrefs = new CMySQLQuery( "SELECT bmsgcommentref FROM users_prefs WHERE buid=" + vecQueryUser[0] );
+									
+										map<string, string> mapPrefs;
+
+										mapPrefs = pQueryPrefs->nextRowMap( );
+									
+										delete pQueryPrefs;
+
+										if( mapPrefs.size( ) == 1 && mapPrefs["bmsgcommentref"] == "1" )
+											setRef.insert( vecQueryUser[0] );
+									}
+								}
+							}
+						}
+						
+						iStart = UTIL_ToLower( strComment ).find( "[user]", iStart + 6 );
+					}
+
+					for ( set<string> :: iterator it = setRef.begin( ); it != setRef.end( ); it++ )
+					{
+						CMySQLQuery *pQueryUser = new CMySQLQuery( "SELECT buid FROM users WHERE buid=" + (*it) );
+					
+						if( pQueryUser->numRows( ) == 1 )
+						{
+							string strName = vecQuery[2];
+							string strPage = RESPONSE_STR_STATS_HTML;
+							if( bOffer )
+								strPage += "?oid=";
+							else
+								strPage += "?id=";
+							strPage += vecQuery[0];
+							if( strName.empty( ) )
+								strName = vecQuery[1];
+					
+							string strTitle = gmapLANG_CFG["admin_add_comment_title"];
+							string strMessage = string( );
+
+							strMessage = UTIL_Xsprintf( gmapLANG_CFG["admin_add_comment_ref"].c_str( ), UTIL_AccessToString( pRequest->user.ucAccess ).c_str( ), pRequest->user.strLogin.c_str( ), strPage.c_str( ), strName.c_str( ) );
+
+							sendMessage( "", "0", (*it), "127.0.0.1", strTitle, strMessage );
 						}
 						
 						delete pQueryUser;

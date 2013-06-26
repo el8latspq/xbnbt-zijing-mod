@@ -360,6 +360,7 @@ CTracker :: CTracker( )
 	// JS Reduce Characters - JS_Valid_Check( )
 	m_strJSReduce = UTIL_Xsprintf( gmapLANG_CFG["js_reduce_characters"].c_str( ), CAtomInt( m_uiCommentLength ).toString( ).c_str( ) );
 	m_strJSMsgReduce = UTIL_Xsprintf( gmapLANG_CFG["js_reduce_characters"].c_str( ), CAtomInt( m_uiMessageLength ).toString( ).c_str( ) );
+	m_strJSTalkReduce = UTIL_Xsprintf( gmapLANG_CFG["js_reduce_characters"].c_str( ), CAtomInt( m_uiTalkLength ).toString( ).c_str( ) );
 	// JS Message Length - JS_Valid_Check( )
 // 	m_strJSLength = UTIL_Xsprintf( gmapLANG_CFG["js_message_length"].c_str( ), "\" + theform.comment.value.length + \"" );
 	m_strJSLength = UTIL_Xsprintf( gmapLANG_CFG["js_comment_length"].c_str( ), "\" + theform.comment.value.getBytes() + \"" );
@@ -1989,8 +1990,9 @@ void CTracker :: expireDownloaders( )
 //	UpdateUserState( );
 
 	m_vecSearches.clear( );
+	m_vecSearches.reserve(15);
 
-	CMySQLQuery *pQuerySearches = new CMySQLQuery( "SELECT bsearch,btype,bmatch,COUNT(*) AS bcount FROM searches WHERE bsearchat>NOW()-INTERVAL 1 WEEK GROUP BY bsearch,btype ORDER BY bcount DESC LIMIT 8" );
+	CMySQLQuery *pQuerySearches = new CMySQLQuery( "SELECT bsearch,btype,bmatch,COUNT(*) AS bcount FROM searches WHERE bsearchat>NOW()-INTERVAL 3 DAY GROUP BY bsearch,btype ORDER BY bcount DESC LIMIT 15" );
 
 	vector<string> vecQuerySearches;
 
@@ -2014,7 +2016,8 @@ void CTracker :: expireDownloaders( )
 //				strSearch += "&match=" + UTIL_StringToEscaped( vecQuerySearches[2] );
 		}
 
-		m_vecSearches.push_back( pair<string, string>( strSearch, vecQuerySearches[0] ) );
+		if( vecQuerySearches[0].size( ) < CFG_GetInt( "bnbt_index_search_length_max", 32 ) )
+			m_vecSearches.push_back( pair<string, string>( strSearch, vecQuerySearches[0] ) );
 
 		vecQuerySearches = pQuerySearches->nextRow( );
 	}
@@ -2022,8 +2025,9 @@ void CTracker :: expireDownloaders( )
 	delete pQuerySearches;
 	
 	m_vecNotes.clear( );
+	m_vecNotes.reserve(15);
 
-	CMySQLQuery *pQueryNotes = new CMySQLQuery( "SELECT bnote,COUNT(*) AS bcount FROM notes WHERE badded>NOW()-INTERVAL 1 WEEK GROUP BY bnote ORDER BY bcount DESC LIMIT 8" );
+	CMySQLQuery *pQueryNotes = new CMySQLQuery( "SELECT bnote,COUNT(*) AS bcount FROM notes WHERE badded>NOW()-INTERVAL 1 WEEK GROUP BY bnote ORDER BY bcount DESC LIMIT 15" );
 
 	vector<string> vecQueryNotes;
 
@@ -2033,7 +2037,8 @@ void CTracker :: expireDownloaders( )
 
 	while( vecQueryNotes.size( ) == 2 )
 	{
-		m_vecNotes.push_back( pair<string, string>( vecQueryNotes[0], vecQueryNotes[1] ) );
+		if( vecQueryNotes[0].size( ) < CFG_GetInt( "bnbt_index_note_length_max", 32 ) )
+			m_vecNotes.push_back( pair<string, string>( vecQueryNotes[0], vecQueryNotes[1] ) );
 
 		vecQueryNotes = pQueryNotes->nextRow( );
 	}
@@ -2041,6 +2046,7 @@ void CTracker :: expireDownloaders( )
 	delete pQueryNotes;
 
 	m_vecTalkTags.clear( );
+	m_vecTalkTags.reserve(5);
 
 	CMySQLQuery *pQueryTag = new CMySQLQuery( "SELECT btag,COUNT(*) AS bcount FROM talktag WHERE bposted>NOW()-INTERVAL " + CAtomInt( CFG_GetInt( "bnbt_hot_day", 3 ) ).toString( ) + " DAY GROUP BY btag ORDER BY bcount DESC LIMIT 5");
 
@@ -2974,11 +2980,15 @@ void CTracker :: deleteTag( const string &strID, const bool bOffer, const bool b
 		}
 		
 		CMySQLQuery mq10( "DELETE FROM comments WHERE " + strIDKey + "=" + strID );
+		CMySQLQuery mq11( "DELETE FROM " + strDatabase + "_files WHERE bid=" + strID );
 	}
 	else
 	{
 		if( bOffer )
+		{
 			CMySQLQuery mq10( "DELETE FROM comments WHERE " + strIDKey + "=" + strID );
+			CMySQLQuery mq11( "DELETE FROM " + strDatabase + "_files WHERE bid=" + strID );
+		}
 	}
 	
 	if( gbDebug )
@@ -3949,7 +3959,7 @@ void CTracker :: CBTTParseList( )
 
 		m_pClientBannedList->clear( );
 		m_pClientBannedList = new CAtomList( );
-//		m_pClientBannedList->clear( );
+		m_pClientBannedList->clear( );
 
 		const string cstrClientBanListData( UTIL_ReadFile( m_strClientBanFile.c_str( ) ) ); 
 		const string :: size_type ciClientBanListDataLength( cstrClientBanListData.length( ) );
@@ -6089,12 +6099,12 @@ void CTracker :: Update( )
 // 	}
 	
 #define STR_SEPARATORS "\n\r"	
- 	if( GetTime( ) > m_ulRefreshCBTTListNext )
- 	{
- 		CBTTParseList( );
- 		
- 		m_ulRefreshCBTTListNext = GetTime( ) + m_uiRefreshCBTTListInterval * 60;
- 	}
+// 	if( GetTime( ) > m_ulRefreshCBTTListNext )
+// 	{
+// 		CBTTParseList( );
+// 		
+// 		m_ulRefreshCBTTListNext = GetTime( ) + m_uiRefreshCBTTListInterval * 60;
+// 	}
 
 	if( GetTime( ) > m_ulRefreshIMDbNext )
 	{

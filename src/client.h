@@ -28,6 +28,9 @@ public:
  
 	bool Update( );
 
+	MYSQL *pMySQL;
+	bool Done;
+
 	void Reset( );
 
 private:
