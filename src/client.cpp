@@ -629,23 +629,6 @@ CClient :: CClient( SOCKET &sckClient, struct sockaddr_in6 &sinAddress, const un
 		return;
 	}
 		
-	Done = false;
-
-	pMySQL = 0;
-
-	if( !( pMySQL = mysql_init( 0 ) ) )
-		UTIL_LogPrint( ( gmapLANG_CFG["bnbt_mysql_error"] + "\n" ).c_str( ), mysql_error( pMySQL ) );
-	else
-	{
-		if( !( mysql_real_connect( pMySQL, gstrMySQLHost.c_str( ), gstrMySQLUser.c_str( ), gstrMySQLPassword.c_str( ), 0, guiMySQLPort, 0, 0 ) ) )
-			UTIL_LogPrint( ( gmapLANG_CFG["bnbt_mysql_error"] + "\n" ).c_str( ), mysql_error( pMySQL ) );
-		else
-		{
-			if( mysql_select_db( pMySQL, gstrMySQLDatabase.c_str( ) ) )
-				UTIL_LogPrint( ( gmapLANG_CFG["bnbt_mysql_error"] + "\n" ).c_str( ), mysql_error( pMySQL ) );
-		}
-	}
-
 	Reset( );
 
 }
@@ -664,14 +647,6 @@ CClient :: ~CClient( )
 //	epoll_ctl( epfd_client, EPOLL_CTL_DEL, m_sckClient, &ev );
 	
 	close( epfd_client );
-
-	if( pMySQL )
-	{
-		if( gbDebug && ( gucDebugLevel & DEBUG_BNBT ) )
-			UTIL_LogPrint( "Closing MySQL local connection\n" );
-
-		mysql_close( pMySQL );
-	}
 }
 
 bool CClient :: Update( )

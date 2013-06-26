@@ -87,9 +87,9 @@ endif
 CFLAGS += $(OFLAGS) $(DFLAGS) $(WFLAGS) $(WPPFLAGS) $(IFLAGS) -I.
 
 # OBJS = atom.o base64.o bencode.o client.o config.o link.o md5.o server.o sha1.o sort.o tracker_log.o tracker_file.o tracker_rules.o tracker_faq.o  util.o
-OBJS = atom.o base64.o bencode.o config.o md5.o sha1.o sort.o tracker_faq.o tracker_log.o tracker_php.o tracker_rules.o util.o
+OBJS = atom.o base64.o bencode.o client.o config.o md5.o server.o sha1.o sort.o tracker_faq.o tracker_log.o tracker_php.o tracker_rules.o util.o
 OBJS_BNBT = bnbt.o bnbt_mysql.o tracker.o tracker_announce.o tracker_scrape.o
-OBJS_BNBTMYSQL = bnbt.mysql.o bnbt_mysql.mysql.o client.mysql.o server.mysql.o tracker.mysql.o tracker_admin.mysql.o tracker_announce.mysql.o tracker_bet.mysql.o tracker_comments.mysql.o tracker_file.mysql.o tracker_index.mysql.o tracker_info.mysql.o tracker_login.mysql.o tracker_messages.mysql.o tracker_offer.mysql.o tracker_query.mysql.o tracker_rss.mysql.o tracker_scrape.mysql.o tracker_signup.mysql.o tracker_staff.mysql.o tracker_stats.mysql.o tracker_talk.mysql.o tracker_torrent.mysql.o tracker_upload.mysql.o tracker_users.mysql.o
+OBJS_BNBTMYSQL = bnbt.mysql.o bnbt_mysql.mysql.o tracker.mysql.o tracker_admin.mysql.o tracker_announce.mysql.o tracker_bet.mysql.o tracker_comments.mysql.o tracker_file.mysql.o tracker_index.mysql.o tracker_info.mysql.o tracker_login.mysql.o tracker_messages.mysql.o tracker_offer.mysql.o tracker_query.mysql.o tracker_rss.mysql.o tracker_scrape.mysql.o tracker_signup.mysql.o tracker_staff.mysql.o tracker_stats.mysql.o tracker_talk.mysql.o tracker_torrent.mysql.o tracker_upload.mysql.o tracker_users.mysql.o
 
 OBJS_GD = atom.gd.o base64.gd.o bencode.gd.o client.gd.o config.gd.o link.gd.o md5.gd.o server.gd.o sha1.gd.o sort.gd.o tracker_admin.gd.o tracker_comments.gd.o tracker_file.gd.o tracker_index.gd.o tracker_info.gd.o tracker_login.gd.o tracker_signup.gd.o tracker_stats.gd.o tracker_torrent.gd.o tracker_upload.gd.o tracker_users.gd.o util.gd.o
 OBJS_XBNBTGD = bnbt.gd.o bnbt_mysql.gd.o tracker.gd.o tracker_announce.gd.o tracker_scrape.gd.o
@@ -240,8 +240,6 @@ util.o: bnbt.h atom.h bencode.h server.h sha1.h tracker.h util.h config.h
 
 bnbt.mysql.o: bnbt.h bnbt_mysql.h config.h server.h util.h
 bnbt_mysql.mysql.o: bnbt.h bnbt_mysql.h util.h
-client.mysql.o: bnbt.h bnbt_mysql.h atom.h base64.h client.h md5.h server.h tracker.h util.h
-server.mysql.o: bnbt.h bnbt_mysql.h client.h config.h server.h tracker.h util.h
 tracker.mysql.o: bnbt.h bnbt_mysql.h atom.h bencode.h config.h html.h md5.h server.h sort.h tracker.h util.h
 tracker_admin.mysql.o: bnbt.h atom.h bencode.h bnbt_mysql.h config.h html.h link.h tracker.h server.h util.h
 tracker_announce.mysql.o: bnbt.h bnbt_mysql.h atom.h bencode.h config.h link.h tracker.h util.h
