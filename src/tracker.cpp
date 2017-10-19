@@ -5357,7 +5357,6 @@ void CTracker :: serverResponseGET( struct request_t *pRequest, struct response_
 	else if( pRequest->strURL == RESPONSE_STR_FAVICON_ICO ) ucResponse = RESPONSE_FAVICON;
 //	else if( pRequest->strURL == RESPONSE_STR_BENCODE_INFO ) ucResponse = RESPONSE_BENCODE;
 // 	else if( !rssdump.strName.empty( ) && pRequest->strURL == RESPONSE_STR_SEPERATOR + rssdump.strName ) ucResponse = RESPONSE_RSS;
-	else if( getFileExt( pRequest->strURL ) == ".php" ) ucResponse = RESPONSE_PHP;
 	else if( pRequest->strURL == RESPONSE_STR_QUERY_HTML ) ucResponse = RESPONSE_QUERY;
 	else if( pRequest->strURL == RESPONSE_STR_RSS_HTML ) ucResponse = RESPONSE_RSS;
 	else if( !rssdump.strName.empty( ) && pRequest->strURL == RESPONSE_STR_RSS_XSL ) ucResponse = RESPONSE_RSSXSL;
@@ -5413,10 +5412,6 @@ void CTracker :: serverResponseGET( struct request_t *pRequest, struct response_
 
 			gtXStats.page.iError404++;
 		}
-
-		break;
-	case RESPONSE_PHP:
-		serverResponsePHPGET( pRequest, pResponse );
 
 		break;
 	case RESPONSE_QUERY:
@@ -5729,8 +5724,6 @@ void CTracker :: serverResponsePOST( struct request_t *pRequest, struct response
 			serverResponseVotesPOST( pRequest, pResponse, pPost );
 		else if( pRequest->strURL == RESPONSE_STR_BETS_HTML )
 			serverResponseBetsPOST( pRequest, pResponse, pPost );
-		else if( getFileExt( pRequest->strURL ) == ".php" )
-			serverResponsePHPPOST( pRequest, pResponse, pPost );
 		else
 			pResponse->strCode = "404 " + gmapLANG_CFG["server_response_404"];
 	}
